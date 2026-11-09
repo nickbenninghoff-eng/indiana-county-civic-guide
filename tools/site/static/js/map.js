@@ -16,6 +16,7 @@
   // selected: an area chosen by tap (touch). last: the area most recently hovered or focused; the panel
   // keeps showing it after the pointer leaves the map, until another area is hovered or the layer changes.
   var selected = null, last = null, lastTouch = false;
+  var noHash = root.getAttribute("data-hash") === "off";
   doc.body.classList.add("cmap-js");
   tabs.hidden = false;
 
@@ -33,10 +34,36 @@
     panel.appendChild(el("h3", null, u.n));
     panel.appendChild(el("p", "cmap-type", u.t));
     var dl = el("dl", "cmap-facts");
-    u.f.forEach(function (r) { dl.appendChild(el("dt", null, r[0])); dl.appendChild(el("dd", null, r[1])); });
+    // data-lead on the map (the indicator maps): the fact with that key (u.fk) is marked as the one shaded
+    var lead = root.getAttribute("data-lead");
+    u.f.forEach(function (r, i) {
+      var on = lead && u.fk && u.fk[i] === lead;
+      dl.appendChild(el("dt", on ? "is-lead" : null, r[0])); dl.appendChild(el("dd", on ? "is-lead" : null, r[1]));
+    });
     panel.appendChild(dl);
+    // optional money-map fields (civic/money_map.py): ranked share bars, then caveat lines
+    if (u.bars) u.bars.forEach(function (g) {
+      panel.appendChild(el("p", "cmap-bars-h", g[0]));
+      var ol = el("ol", "cmap-bars");
+      g[1].forEach(function (b) {
+        var li = el("li");
+        var top = el("span", "cmap-bar-top");
+        top.appendChild(el("span", "cmap-bar-l", b[0]));
+        top.appendChild(el("span", "cmap-bar-v", b[1] + " \u00b7 " + b[3]));
+        li.appendChild(top);
+        var track = el("span", "cmap-bar-t");
+        track.setAttribute("aria-hidden", "true");
+        var fill = el("span", "cmap-bar-f");
+        fill.style.width = Math.max(0, Math.min(100, Number(b[2]) || 0)) + "%";
+        track.appendChild(fill);
+        li.appendChild(track);
+        ol.appendChild(li);
+      });
+      panel.appendChild(ol);
+    });
     if (u.note) panel.appendChild(el("p", "cmap-note", u.note));
-    var link = el("a", "btn cmap-open", "Open page");
+    if (u.cav) u.cav.forEach(function (c) { panel.appendChild(el("p", "cmap-note", c)); });
+    var link = el("a", "btn cmap-open", u.open || "Open page");
     link.setAttribute("href", u.href);
     panel.appendChild(link);
   }
@@ -109,14 +136,23 @@
     setSelected(null);
     // Only the standalone map page records its layer in the address; an embedded map (the landing
     // page's picker) must leave the reader's own hash alone.
-    if (!root.closest(".pick")) { try { history.replaceState(null, "", "#" + tab); } catch (e) {} }
+    // A map marked data-hash="off" (the budgets page's money map) also leaves it alone.
+    if (!root.closest(".pick") && !noHash) { try { history.replaceState(null, "", "#" + tab); } catch (e) {} }
     root.dispatchEvent(new CustomEvent("cmap-layer", { detail: tab }));
   }
+  // a mode script that changes what the panel shows (static/js/indicator_map.js) asks for a redraw
+  root.addEventListener("cmap-refresh", rest);
   tabs.addEventListener("click", function (ev) {
     var b = ev.target.closest && ev.target.closest(".cmap-tab");
     if (b) setLayer(b.getAttribute("data-layer"));
   });
-  var want = (location.hash || "").replace("#", "");
+  var want = noHash ? "" : (location.hash || "").replace("#", "");
+  // #race-<race id> (links from the Results page): open "How areas voted" with that race; map_votes.js reads
+  // data-want-race when its data file has loaded.
+  if (/^race-[A-Za-z0-9-]+$/.test(want) && root.querySelector(".cmap-vctl")) {
+    root.setAttribute("data-want-race", want.slice(5));
+    want = "votes";
+  }
   if (want === "cities" || want === "townships" || want === "schools" || (want === "votes" && root.querySelector(".cmap-vctl"))) setLayer(want);
   else setLayer(root.getAttribute("data-default-layer"));
 })();

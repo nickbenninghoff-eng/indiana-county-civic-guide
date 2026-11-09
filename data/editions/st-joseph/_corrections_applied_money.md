@@ -35,3 +35,75 @@ Fact-check report: `planning/fact-check-report.md` (MON-023). Build script: `too
 - Unit ids are provisional slugs (`county-st-joseph`, `city-south-bend`, `city-mishawaka`, `town-*`, `township-*`, `school-*`, `library-*`, `special-*`); map to `units.csv` ids when merged. Examples: `school-sbcsc` is South Bend Community School Corporation, `library-mishawaka` is the Mishawaka-Penn-Harris Public Library, `special-airport` is the St. Joseph County airport authority.
 - Gateway "Centre Township" is Center Township (state spelling kept in unit label).
 - Campaign finance: filing-year basis (reports filed in that calendar year), spelling variants split funder names, so only funder TYPE totals are given; cash on hand is not in the bulk data (blank); 2026 is partial (extracted 2026-11-07); a few rows flagged Amended may repeat originals (counts in row notes).
+
+## 2026-11-08: gap-fill D (money)
+
+Source: `planning/qa/gapfill-2026-11-08-D-money.md` and `-edits.csv` (215 rows). Edited by hand with Python csv; `tools/build_money.py` was NOT run, so a rebuild from raw data would drop these edits unless the builder is updated. New sources MON-033 to MON-037 (ids below MON-060, which is reserved for another agent's rows; sources_money.csv was re-read right before an append-only write). Log: `planning/qa/gapfill-2026-11-08-applied.md`.
+
+### Applied
+- tax_rates.csv: 93 rows of certified_district_rate for 2022, 2023 and 2024 (31 districts each), unit county-st-joseph, status official, sources MON-033/034/035. All 93 were re-derived from the DLGF statewide xlsx files and matched to 4 decimals: for 2022 and 2023 the "Certified Gross Tax Rate (per $100 AV)" column; for 2024 the sum of CERTD_TAX_RATE_PCNT over county-71 rows, which is the same method that reproduces the existing 2025 rates. The rows sit after the 2025 district block, in the file's year-block layout.
+- budgets.csv, school-sbcsc 2026 board-vote row (series sbcsc-news-board-vote): the note now carries the DLGF certified fund list. The order (p.37) was re-checked, and its six funds sum to $246,289,187. Leaving out the referendum operating fund gives $213,886,174, within 0.3% of the board's $213,254,807. The note says this match is not confirmed, and it adds the WVPE "$257 million" figure (MON-036).
+- gaps_money narrowed:
+  - South Bend 2026 budget: the deck figure is described but not encoded.
+  - Net AV: 2026 values found; file not created.
+  - Combined district rates: only 2012-2021 still missing.
+  - Enrollment and per-student: sources found; no indicator ids exist.
+  - HB 1210: corrected from the DLGF memo (MON-037). Section 133 is about eligibility for the small-town LIT rate, not cities setting their own rate. Current ordinances expire 2029-01-01.
+  - SEA 1: SBCSC estimates only.
+  - SBCSC scope: the referendum-fund explanation is "likely".
+  - Redevelopment Commission: the March 2026 amended figure is described and not encoded.
+  - Jail: still not found.
+  - Mishawaka revenue: the 2026 budget file has a text layer when opened in a browser.
+- gaps_money "unexplained budget jump" rows (23) narrowed with fund-level detail from Gateway (MON-001, deduplicated). Spot checks match: Portage 2025, Union 2026 and Centre 2019.
+  - Explained: Portage 2024-25 (new St. Joseph County Fire Territory), Liberty 2025-26 (by fund detail) and Union 2025-26 (a matching amount).
+  - "Likely": the towns' new ARPA, grant-match and bond funds; Centre and Portage 2018-19; Olive 2019-20; Warren 2021-23; Walkerton library.
+  - Not explained: Harris 2015-16, Liberty 2020-21, Penn 2012-13 and Warren 2015-16 and 2018-19. The Airport is "not confirmed". South Bend 2016-17 is partly explained and 2021-22 is reframed.
+
+### Notes-only
+- The SEA 1 SBCSC estimates ($4.87M, $7.36M and $15.20M) are in the gap text as reported legislative estimates.
+- The LSA HB 1210 county estimate is cited only as "county-wide only". Its figures came from a mirror of the fiscal note and were not re-read.
+
+### Not applied (listed for the main session)
+- net_assessed_value.csv (37 proposed rows): a new file needs a schema decision, and certified AV differs by fund within a unit.
+- indicator_values (42 rows: IDOE enrollment and DLGF expenditure per student): indicators.csv has no enrollment or per-student indicator, and the IDOE sheet's school-year labels are unclear.
+- budgets: the South Bend 2026 $429,975,283 row and the Redevelopment Commission amended 2026 $135,109,942 row (instructed not to add).
+- debt: the $298,686,137 row (instructed not to add).
+- sources_money: the March 2026 Monthly Financial Report, the DLGF Expenditures Per Capita report and the IDOE enrollment file were not added as sources, because no applied row cites them. The gap text names them.
+
+### Checks
+- tools/check_money.py (known stale; not fixed): FAILED with 611 errors. The baseline on the HEAD money files is 518. All 93 new errors are "bad rate_kind" on certified_district_rate, a kind the checker does not list, which it also flags on the existing 2025 and 2026 rows. No duplicate-key or rate-range errors were added.
+
+## 2026-11-08: five held money datasets (main-session follow-up to gap-fill D)
+
+Approved by Nick 2026-11-08. Full report: `planning/qa/held-money-data-2026-11-08.md`. Nothing committed; `tools/build_money.py` and `tools/res_main.py` were not run.
+
+### Added
+- **assessed_values.csv (new, 732 rows)**, written by the new `tools/build_assessed_values.py` (test: `tools/tests/test_build_assessed_values.py`).
+  - 256 `dlgf_certified` rows: 37 units for 2023-2026, 36 for 2020-2022 (the Olive-New Carlisle-Hudson fire territory first appears in 2023), read from the DLGF certified budget orders 2020-2026 (MON-074, MON-073, MON-072, MON-071, MON-070, MON-027, MON-026), General fund (schools: Operations).
+  - 476 `gateway_budget_estimate` rows, 2012-2026, from the Gateway budget download (MON-001), deduplicated (every fund row appears exactly 5 times; no conflicting duplicates).
+  - Correction to the plan: the Gateway "Net Assessed Valuation" is NOT the certified tax base. For 2026 it differs from the budget order for every unit (from 35.7% below for Mishawaka to 2.7% above for the Airport; the county's is a round $10,000,000,000 against a certified $14,611,493,562). It is kept as a separately labelled estimate, and each row says by how much it differs where a certified value exists.
+  - The 37 values D proposed for 2026 are reproduced exactly. Hand-checked against the PDF: county p.5, South Bend p.21 (rendered page viewed), Mishawaka p.23, Penn p.16, Portage p.17, SBCSC p.37, PHM p.35, SJCPL p.42.
+- **indicator_values.csv (+104 rows)** and **data/indiana/indicators.csv (+3 definitions)**:
+  - `school_enrollment_total`: 6 corporations x school years 2011-12 to 2025-26 (MON-075). Year convention verified: the IDOE data page lists the file as "Updated - SY 2025-2026", so sheet "2026" = 2025-26. Corroboration: the statewide kindergarten count drops in sheet "2021" (78,649 to 72,993), the fall-2020 school year.
+  - `school_spending_per_student`: 6 corporations x calendar years 2024 and 2025 (MON-076).
+  - `school_spending_per_student_median`: 2 state rows.
+  - All 12 per-student values and ranks were checked visually on the rendered report pages (PDF p.54-56). They match D's values. The word-position extraction used here also puts them on the right rows.
+- **budgets.csv (+2 rows)**:
+  - South Bend 2026, all funds incl. utilities: $437,446,265, adopted, Ordinance 11229-25 (MON-078). The ordinance was found in WebLink Ordinances > 2025 (doc 401021).
+    - Exhibit A's grand total was read on the page image (p.8). Department totals sum to $437,446,264. The OCR text layer misreads the City Clerk total as 672,863; the image shows 572,863.
+    - Water works (620, 622, 625) and sewage works (641, 642, 649) funds are in Exhibit A.
+    - The row is inserted before the 2027 rows; 2027 adopted is still South Bend's last row (checked in the built place page).
+    - The $429,975,283 overview figure was NOT used. It is $7,470,982 below the ordinance, with no stated reason (gap row kept).
+  - Redevelopment Commission 2026: $135,109,942, basis `amended_all_funds`, kind `amended` (MON-077, p.15). Revenue of $48,613,328 (p.12) is in the note. The row routes to the "Other reported figures" table, not a chart.
+- **debt.csv (+1 row)**: South Bend $298,686,137 at 2026-01-01 (MON-077, pp.26-27).
+  - Civil city $181,211,137 plus RDC revenue bonds $117,475,000; the components were checked.
+  - Inserted after the existing 2026-09-04 row, so money.py's "first non-2024 South Bend row" is unchanged.
+- **sources_money.csv (+9)**: MON-070 to MON-078.
+- **gaps_money.csv**: 4 rows narrowed to what is still missing: South Bend 2026 ordinance vs overview; certified AV 2012-2019; per-student before 2024; RDC adopted budget.
+- **data/SCHEMA.md**: assessed_values.csv; the table-only budget bases and kinds; debt_type convention; the school indicators.
+
+### Checks
+- `python -P -E tools/site/build.py --edition st-joseph --check`: PASSED (60 pages, no unknown source ids).
+- `python -P -E -m unittest discover -s tools/tests`: 49 tests OK (8 new).
+- `python -P -E tools/check_gov.py`: errors=0, warnings=23 (unchanged).
+- `tools/check_money.py` (known stale): 613 errors, against 611 before. The 2 new errors are the RDC row's basis `amended_all_funds` and kind `amended`, which the checker does not know.

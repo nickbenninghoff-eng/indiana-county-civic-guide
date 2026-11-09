@@ -42,3 +42,40 @@ Source of findings: `planning/fact-check-report.md` (2026-11-07), cited here as 
 - Skipped by instruction: federal races, precinct-committee and convention-delegate races, precinct-level files.
 - Rows with no readable votes or percent were not encoded and are listed in `gaps_results.csv` (2015-2019 lines 476, 740, 752, 787, 791).
 - `office_id` is blank in `results.csv`; the main session joins it to the offices file.
+
+## 2026-11-08: gap-fill F (canvass re-reads), plus results edits from C1 and A
+
+Source: `planning/qa/gapfill-2026-11-08-F-canvass.md` and `-edits.csv` (104 rows). Every changed contest was re-summed against its printed total (pct within 0.1). Summary and verification log: `planning/qa/gapfill-2026-11-08-applied.md`.
+
+### F: applied
+- New rows (16), each noted "re-read 2026-11-08 from <doc> p.<n>": 2016g New Prairie at-large Shail (60008); 2018g Clay Fountain, Greene Whitesel, Penn Hahn, Portage Ashe (60006); 2015p South Bend D at-large Tom Price (60011); 2015g Lakeville council Debra L. Law and Martha Tyler (60010); 2022g Union trustee Carrico and Watts, Union board Schafer, T. Carrico and Wozny, New Carlisle council Kauffman, North Liberty council G. Brown and T. England (57716 p.7).
+- 2016g Zeiger: confidence high and status official (name printed clearly, 60008 p.3).
+- 2018g Clay: Baxmeyer 4,180 -> 4,189 (matches printed 15.74%); winners derived for Clay, Greene, Penn (top three) and Portage (all three elected); "further candidate" notes cleared.
+- 2018g Harris trustee: "(name not captured)" -> William Price, 4,002 (60006 p.2); Lindsay winner Y.
+- 2018g Penn: Brandon K. Tran confidence high; printed "TRTAN" is noted as a probable typo.
+- 2015p South Bend D at-large: the notes about percents summing to 90.68 removed, now that the missing candidate (Price) has been added.
+- 2015g Walkerton clerk-treasurer: Terri Buckmaster (60010 p.2).
+- 2015g Lakeville council: Eric -> April L. Hathaway (pct 29.86) and Karen S. Loving -> Karen S. Iovino (44, 20.85); both winners, vote_for 3. Iovino matches the SBOA Schedule of Officials.
+- 2024g New Prairie at-large: Yacullo 877 -> 677 (36.52), Smith 63.48 (total 1,854; 64951 p.5); vote_for 1; status official.
+- 2024g probate judge: status official (printed total 108,353 matches; 64951 p.3).
+- 2012g page-1 contests (straight party, statewide offices, state senate 8/9/10, house 5-8): status official, since page 1 is stamped OFFICIAL RESULTS (60015 p.1).
+- elections.csv 2015p: registered 112,482, ballots 13,642, turnout 12.13 (computed); the note says these cover only the precincts that held the municipal primary.
+- gaps_results.csv: 13 rows removed as resolved and 5 narrowed (2012 stamp, 2010 retention headings, 2010/2011 primary stamps, 2020 Court of Appeals names, 2024 now presidential write-ins only).
+
+### F: adapted
+- 2018g State Rep 8, Dvorak: 16,141 -> 14,772 (county tally on 60006 p.1). This also changed the label to "State Representative, District 8", the status to official and the source from Ballotpedia RES-035 to the county canvass RES-016.
+- 2012g HD7 Niezgodski: status kept from_scan, because the vote figure is OCR-flagged and was not re-read. Its note records the page-1 stamp.
+- 2015g Lakeville Law and Tyler (new rows): confidence medium -> high after a second independent read.
+- 2018g Clay Fountain (new row): confidence high -> medium, because the party is inferred from a truncated "(DE".
+- 2015g Lakeville clerk-treasurer McQueen (proposed confidence medium): applied as "Cindy McQueen". The surname is printed; the first name comes from the SBOA Schedule of Officials (GOV-092), because the first letter is clipped.
+- elections.csv 2012g: the note now says which pages are official. The row's own status was left unofficial pending a decision.
+
+### C1 (results rows)
+- Applied: 2026g Court of Appeals and Tax Court retention labels for DeBoer (Fourth District), Felix (Fifth District) and McAdam (Tax Court), from the Indiana Judicial Branch release of 2026-08-27 (new RES-045).
+- Notes-only: 2026g Francisco and Fronk. Both are St. Joseph Superior judges (county directory), so the contest is most likely the county Superior Court retention. The contest_id and the "state" label were kept: no renames without the certified canvass.
+- Notes-only: 2010g May, Brown and Robb (Court of Appeals) and Chamblee (probably a county Superior Court retention). The Indiana Lawyer article was not re-opened, and the county page prints no court heading.
+- Notes-only: 2016g Hostetler/Hurley (probably county retentions), 2022g county retention (probably Hurley; inferred) and 2020g Supreme Court retention (Goff; search snippet only).
+
+### A (results rows)
+- Applied: 2010g-state-public-question label -> "Public Question #1: property tax caps in the state constitution (Art. 10, Sec. 1)", from the Election Division's prescribed ballot text (new RES-046).
+- Skipped: elections.csv 2016 and 2018 question text. The county results have no 2016 or 2018 statewide question rows to attach it to.

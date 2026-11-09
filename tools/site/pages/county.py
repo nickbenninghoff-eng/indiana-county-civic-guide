@@ -11,6 +11,8 @@ from civic.data import fmt_date, parse_date, split_ids
 from civic.answers import answer_box
 from civic.html import Markup, h, join
 from civic.layers import county_scope_boards
+from civic.spending import has_money_in_out, money_in_out
+from civic.tax_base import tax_base_line
 
 ROW_TYPES = ("county_auditor", "county_treasurer", "county_recorder", "county_clerk", "county_sheriff",
              "county_coroner", "county_surveyor", "county_assessor", "county_prosecutor")
@@ -189,7 +191,7 @@ def build(site):
     # ------------------------------------------------------------------ hero
     toc = [("structure", "How it's organized"), ("officeholders", "Who holds office"), ("row-officers", "Row officers"),
            ("courts", "Courts"), ("boards", "Appointed boards"), ("control", "Party control over time"),
-           ("results", "Recent results"), ("gaps", "Gaps"), ("sources", "Sources")]
+           ("results", "Recent results")] + ([("money", "Money in and out")] if has_money_in_out(ed, "county-st-joseph") else []) +           [("gaps", "Gaps"), ("sources", "Sources")]
     page.add(h("header", {"class": "page-hero"},
                h("p", {"class": "eyebrow mono"}, "Reference · County"),
                h("h1", None, "County government"),
@@ -403,6 +405,17 @@ def build(site):
                                   "race. Percentages are computed from the vote counts where the canvass doesn't print them. ",
                        h("a", {"href": page.rel("elections/results/index.html")}, "All results, 2010 to 2026")),
                      scope="county", ed=ed))
+
+    flows = money_in_out(ed, page, "county-st-joseph", level=3, label="County government money in and money out")
+    if flows:
+        page.add(section("money", 8, "Money in and money out",
+                         h("p", None, "What county government received and spent, from the annual financial report the "
+                                      "county files with the state. ",
+                           h("a", {"href": page.rel("money/budgets/index.html#county")}, "Budgets over time"),
+                           " are on the budgets page."),
+                         tax_base_line(ed, page, "county-st-joseph", county_label=ed.county_label,
+                                       extra=" It covers all property in the county, inside the cities and towns too."),
+                         flows, scope="county", ed=ed))
 
     gaps = ed.gaps(files=["gaps_gov", "gaps_results"], pattern=GAP_PATTERN)
     page.finish(gaps=gaps)

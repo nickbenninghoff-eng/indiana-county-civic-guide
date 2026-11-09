@@ -13,12 +13,16 @@ import re
 from functools import partial
 from pathlib import Path
 
-from civic.charts import columns, party_timeline, results_bars
+from civic.charts import columns, line, party_timeline, results_bars
 from civic.components import (bodies_block, name_with_party, data_table, officeholder_card, party_label, scope_badge, section,
                               status_badge, callout)
 from civic.data import fmt_date, fmt_int, parse_date, split_ids
 from civic.answers import answer_box, place_budget_row
 from civic.html import Markup, h, join
+from civic.spending import money_id_for, money_in_out
+from civic.tax_base import money_id as tax_base_id, tax_base_line
+from civic import school_stats
+from civic.map import embedded_map, load_shapes
 
 from .county import CONTROL_METHOD, _contest_figure, ballot_order_note, control_by_year
 
@@ -402,15 +406,20 @@ def _budget_block(ed, page, unit):
     uid = unit["unit_id"]
     rows = _budget_rows(ed, uid)
     link = h("a", {"href": page.rel(f"money/budgets/index.html#{uid}")}, f"Budget section for {_short(unit)}")
+    mid = money_id_for(ed, uid)
+    flows = money_in_out(ed, page, mid, level=3) if mid else None
+    base = tax_base_line(ed, page, mid or tax_base_id(ed, uid), county_label=ed.county_label)
     if not rows:
-        return None
+        return [x for x in (base, flows) if x] or None
     last = rows[-1]
     return [h("p", None, f"The guide has {len(rows)} budget-year rows for {_short(unit)}, {rows[0]['year']} to {rows[-1]['year']}. "
                          f"Latest: {_money(last['amount'])} for {last['year']} ({last['adopted_or_actual']}, "
                          f"{BASIS.get(last['basis'], last['basis'])}). ", status_badge(last["status"], page),
               page.cites.cite(last["source_ids"]),
               " Reporting bases differ between series, so compare only within one basis."),
-            h("p", None, link, " on the budgets page shows every year and series breaks.")]
+            h("p", None, link, " on the budgets page shows every year and series breaks."),
+            base,
+            flows]
 
 
 def _audits_block(ed, page, unit):
@@ -710,7 +719,8 @@ def build_index(site):
     page = site.page("places/index.html", banners=False)
     c = page.cites
     units = {k: sorted([u for u in ed.units.values() if u["unit_type"] == k], key=lambda u: _short(u).lower()) for k in KINDS}
-    toc = [(f"{k}s", PLURAL[k]) for k in KINDS if units[k]] + [("gaps", "Gaps"), ("sources", "Sources")]
+    toc = ([("map", "Map")] if load_shapes(ed) is not None else []) + \
+          [(f"{k}s", PLURAL[k]) for k in KINDS if units[k]] + [("gaps", "Gaps"), ("sources", "Sources")]
     page.add(h("header", {"class": "page-hero"},
                h("p", {"class": "eyebrow mono"}, "Reference · Places"),
                h("h1", None, page.title),
@@ -720,6 +730,18 @@ def build_index(site):
                h("p", None, h("a", {"href": page.rel("map/index.html")}, "See every city, town, township and school corporation on the map")),
                h("p", {"class": "hero-badges"}, scope_badge("county", ed)),
                h("nav", {"class": "toc", "aria-label": "On this page"}, h("ol", None, [h("li", None, h("a", {"href": f"#{a}"}, t)) for a, t in toc]))))
+    shapes = load_shapes(ed)
+    if shapes is not None:
+        page.add(section("map", None, "On the map",
+                         embedded_map(page, ed, shapes, ("cities", "townships"), "cities",
+                                      label=f"Map of the cities, towns and townships of {ed.county_label}. Every area is a "
+                                            "link to its page; the same places are listed below."),
+                         h("p", {"class": "muted cmap-embed-note"},
+                           "Color shows the type of government only, never party. Townships cover the whole county, so "
+                           "every city and town also lies in a township. ",
+                           h("a", {"href": page.rel("map/index.html")}, "Full map with school corporations and past votes"),
+                           ".", c.cite_compact("MAP-001;MAP-002;MAP-003;MAP-004")),
+                         scope="county", ed=ed))
     n = 0
     for kind in KINDS:
         if not units[kind]:
@@ -758,6 +780,83 @@ def _label_counts(ed, unit_id, year):
         for r in c["rows"]:
             tally[r["party"] or "none listed"] = tally.get(r["party"] or "none listed", 0) + 1
     return tally
+
+
+def _school_board_facts(ed, uid):
+    """Panel facts for one school corporation on the Schools page map: seats, how they are elected, current members in
+    the guide's data, next election. Same counts as the 'Corporations at a glance' table."""
+    offs = ed.offices_for(uid)
+    if not offs:
+        return [["Board seats", "not in the guide's data"]]
+    seats = [o["seats"] for o in offs]
+    total = sum(int(s) for s in seats if s.isdigit())
+    known = all(s.isdigit() for s in seats)
+    groups = {}
+    for o in offs:
+        how = _how_elected(o)
+        key = "By district (voters in each district)" if how.startswith("Voters in District") else how
+        n = int(o["seats"]) if o["seats"].isdigit() else None
+        cnt, unknown = groups.get(key, (0, False))
+        groups[key] = (cnt + (n or 0), unknown or n is None)
+    how_txt = "; ".join(f"{k}: {'at least ' if unk else ''}{n} seat{'s' if n != 1 else ''}" for k, (n, unk) in groups.items())
+    n_cur = sum(len(ed.current_terms(o["office_id"])) for o in offs)
+    nxt = ", ".join(sorted({o["next_election"] for o in offs if o["next_election"]})) or "not in sources"
+    return [["Board seats", f"{total}{'' if known else '+ (not all stated in sources)'}"],
+            ["How they are chosen", how_txt],
+            ["Current members in the guide's data", str(n_cur)],
+            ["Next election", nxt]] + school_stats.panel_facts(ed, uid)
+
+
+def _school_stats_block(ed, page, uid):
+    """Schools page: enrollment (latest, trend chart) and spending per student beside the state median."""
+    c = page.cites
+    series = school_stats.enrollment(ed, uid)
+    row, med = school_stats.per_student(ed, uid)
+    items, fig = [], None
+    if series:
+        last = series[-1][2]
+        srcs = ";".join(dict.fromkeys(x for _, _, r in series for x in split_ids(r["source_ids"])))
+        items.append(h("li", None, h("strong", None, "Enrollment: "),
+                       school_stats.enrollment_text(series),
+                       ". Whole corporation, pre-kindergarten through grade 12 plus adult students, as reported to the "
+                       "Indiana Department of Education. ", status_badge(last["status"], page), c.cite(srcs)))
+        if len(series) > 1:
+            pts = [(int(y[:4]), v) for y, v, _ in series]
+            fig = line(f"enroll-{uid}", "Students enrolled, by school year",
+                       [{"name": "Students enrolled", "mark": "m-accent", "points": pts}],
+                       subtitle=f"Whole corporation, school years {series[0][0]} to {series[-1][0]}",
+                       value_fmt=lambda v: f"{v:,.0f}", status=last["status"], page=page,
+                       x_fmt=lambda x: f"{x}-{(x + 1) % 100:02d}",
+                       note=("Total enrollment from the Indiana Department of Education, including pre-kindergarten and "
+                             "adult students and any part of the corporation outside the county. It is a count of "
+                             "students, not the average daily membership the state uses for funding."),
+                       cite=c.cite(srcs))
+    else:
+        items.append(h("li", None, h("strong", None, "Enrollment: "), _cov("none", "Not in the guide's data yet")))
+    if row:
+        srcs = ";".join(dict.fromkeys(split_ids(row["source_ids"]) + (split_ids(med["source_ids"]) if med else [])))
+        items.append(h("li", None, h("strong", None, "Spending per student: "),
+                       school_stats.per_student_text(row, med), ". ",
+                       school_stats.PER_STUDENT_CAPTION[0].upper() + school_stats.PER_STUDENT_CAPTION[1:], ". ",
+                       status_badge(row["status"], page), c.cite(srcs)))
+    else:
+        items.append(h("li", None, h("strong", None, "Spending per student: "), _cov("none", "Not in the guide's data yet")))
+    return items, fig
+
+
+def _school_map_area(ed):
+    """government_layers callback for the Schools page map: board facts in the panel; a click goes to the district's
+    section on this page (#<unit_id>)."""
+    def area(key, tab, n, it, uid, unit):
+        note = ""
+        if it.get("share_inside") is not None and it["share_inside"] < 0.97:
+            note = (f"Partly outside the county: about {round(it['share_inside'] * 100)}% of this district's land area is "
+                    f"inside {ed.county_label} (computed from Census boundaries).")
+        entry = {"n": unit["name"], "t": "School corporation", "f": _school_board_facts(ed, uid), "note": note,
+                 "href": f"#{uid}", "l": tab, "d": it["d"], "open": "Go to its section"}
+        return (f"cmap-s cmap-school cmap-school-{n % 3}", f"#{uid}",
+                f"{unit['name']}, school corporation. Go to its section on this page.", entry, "cmap-dot")
+    return area
 
 
 def build_schools(site):
@@ -812,7 +911,19 @@ def build_schools(site):
                      f"{sum(1 for o in offs if o['office_type'] != 'school_board_appointed' and not o['district'].lower().startswith('at-large'))} district, "
                      f"{sum(1 for o in offs if o['district'].lower().startswith('at-large'))} at-large seat group(s)" if offs else "",
                      str(n_cur) if offs else "0", ", ".join(sorted({o["next_election"] for o in offs if o["next_election"]})) or "not in sources"])
+    shapes = load_shapes(ed)
+    smap = None
+    if shapes is not None:
+        smap = [embedded_map(page, ed, shapes, ("schools",), "schools", area=_school_map_area(ed),
+                             label=f"Map of the school corporations in {ed.county_label}. Every district is a link to its "
+                                   "section on this page.",
+                             hint="Hover, focus or tap a district to see its board here. Select it again, or use the link, "
+                                  "to go to its section below."),
+                h("p", {"class": "muted cmap-embed-note"},
+                  "Shading only separates neighboring districts. Districts that extend past the county line are cut at it. "
+                  "Board figures are the same as the table below.", c.cite_compact("MAP-001;MAP-002;MAP-003;MAP-004"))]
     page.add(section("overview", 2, "Corporations at a glance",
+                     smap,
                      data_table("schools-overview", ["Corporation", "Board seats stated", "Seat groups", "Current members in data", "Next elections"], rows,
                                 caption="School corporations", numeric=(1, 3), min_width="42rem"), scope="county", ed=ed))
 
@@ -862,11 +973,18 @@ def build_schools(site):
         for b in ab:
             parts.append(h("p", None, h("strong", None, b["name"] + ": "), b["what_it_decides"], " Appointed by: ", b["appointing_authorities"], ". ",
                            status_badge(b["status"], page), c.cite(b["source_ids"])))
+        stat_items, enroll_fig = _school_stats_block(ed, page, uid)
+        smid = money_id_for(ed, uid)
         parts += [h("h3", None, "Superintendent, budget and enrollment"),
                   h("ul", None,
                     h("li", None, h("strong", None, "Superintendent: "), _cov("none", "Not in the guide's data yet")),
-                    h("li", None, h("strong", None, "Enrollment: "), _cov("none", "Not in the guide's data yet")),
-                    h("li", None, h("strong", None, "Budget: "), *(_sch_budget(ed, page, uid))))]
+                    *stat_items,
+                    h("li", None, h("strong", None, "Budget: "), *(_sch_budget(ed, page, uid)))),
+                  tax_base_line(ed, page, smid or tax_base_id(ed, uid), county_label=ed.county_label),
+                  enroll_fig]
+        sflows = money_in_out(ed, page, smid, level=3) if smid else None
+        if sflows:
+            parts.append(sflows)
         refs = [cc for cc in _school_contests(ed, uid) if "question" in cc["contest_id"] or "referend" in cc["contest_id"]]
         if refs:
             parts += [h("h3", None, "Referenda and public questions"), h("div", {"class": "chart-grid"}, [_contest_figure(ed, page, cc, question=True) for cc in refs])]

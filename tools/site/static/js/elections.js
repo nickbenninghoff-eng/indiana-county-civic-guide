@@ -136,6 +136,14 @@
         list.appendChild(li);
       });
       art.appendChild(list);
+      // races on the map's "How areas voted" layer (civic/map.py race_by_contest): open the map on this race
+      if (c.m && data.links.map) {
+        var mp = el("p", "elx-maplink");
+        var ma = el("a", null, "See this race by area on the map");
+        ma.href = data.links.map + "#race-" + c.m;
+        mp.appendChild(ma);
+        art.appendChild(mp);
+      }
       var foot = el("p", "elx-card-foot muted");
       if (c.n !== undefined) foot.appendChild(doc.createTextNode("Note: " + data.notes[c.n] + " "));
       foot.appendChild(doc.createTextNode("Source: "));

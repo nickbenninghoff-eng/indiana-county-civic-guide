@@ -22,7 +22,9 @@ from civic.charts import (_svg, _txt, bar_path, columns, figure, hbar, legend, l
                           party_mark, party_timeline)
 from civic.components import (callout, data_table, name_with_party, party_label, section, status_badge)
 from civic.data import PARTY_LABELS, SELECTED_BY_LABELS, fmt_date, parse_date, split_ids
-from civic.html import Markup, h, join
+from civic.html import Markup, h, join, json_script
+from civic.map import LAYERS, TYPE_LABEL, embedded_map, load_shapes, shade_defs
+from civic.shading import classify, shade_class, shade_legend
 
 CV_LIMIT = 0.30            # display rule in data/indiana/indicators.csv
 Z90 = 1.645                # ACS MOEs are published at 90% confidence
@@ -267,6 +269,135 @@ def dollar_basis(iv, ind, vintage) -> str:
     return f"{m.group(1)} dollars" if m else ""
 
 
+# ------------------------------------------------------------------------------ indicator map
+# The boundary map (civic/map.py embedded_map) shaded by one indicator at a time, with the shared sequential ramp and
+# rounded natural breaks (civic/shading.py), computed separately for each indicator and each layer. The indicators are
+# the ones in the page's own township and place tables. Estimates with a CV above 30% are never shaded (the page's
+# rule: unreliable estimates are not used in charts); they show in the panel, greyed text, with their CV.
+# static/js/indicator_map.js switches the indicator.
+MAP_GEO_TYPES = {"place": ("place", "town"), "township": ("county_subdivision",)}
+MAP_LAYERS = ("cities", "townships")
+OVERLAP_NOTE = ("Areas overlap: every city and town lies inside a township, and its residents are counted in both. "
+                "Don't add areas together, and compare shades only within one layer.")
+
+
+def _geo_for_shape(iv, census_name, layer_key):
+    """indicator geo_id for a map shape: same geography type, same Census name before the first comma."""
+    want = (census_name or "").strip().lower()
+    for g, r in iv.geo.items():
+        if r["geo_type"] in MAP_GEO_TYPES.get(layer_key, ()) and r["geo_name"].split(",")[0].strip().lower() == want:
+            return g
+    return None
+
+
+def _break_text(ind, v) -> str:
+    """Legend figure for a break: whole or one-decimal, in the indicator's unit."""
+    s = f"{v:,.0f}" if float(v).is_integer() else f"{v:,.1f}"
+    if ind in MONEY:
+        return "$" + s
+    if ind in COUNTS or ind == "median_age":
+        return s
+    return s + "%"
+
+
+def _fact_text(ind, row) -> str:
+    if not row or _f(row.get("value")) is None:
+        return "not in data"
+    v, m = _f(row["value"]), _f(row.get("moe"))
+    s = fmt_value(ind, v) + (f" ± {fmt_moe(ind, m)}" if m is not None and m > 0 else "")
+    if unreliable(row):
+        c = cv_of(row)
+        cvs = "undefined, the estimate is zero" if c == float("inf") else f"CV {c * 100:.0f}%"
+        s += f" (unreliable: margin of error large compared with the estimate, {cvs}; not shaded)"
+    return s
+
+
+def indicator_map_section(page, ed, iv, inds, vintage, sid, num, title):
+    """A section with the indicator map: indicator picker, map (cities and towns, townships), legend per indicator
+    and layer, panel with the area's whole row (estimate ± MOE, CV flag), method and overlap notes. None without
+    map shapes."""
+    shapes = load_shapes(ed)
+    if shapes is None or not inds:
+        return None
+    c = page.cites
+    labels = {i: iv.label(i) for i in inds}
+    geo_of, used = {}, []
+    for key, tab, _l, _h in LAYERS:
+        if tab not in MAP_LAYERS:
+            continue
+        for it in shapes["layers"].get(key, []):
+            if it.get("id") in ed.units:
+                geo_of[it["id"]] = (key, tab, _geo_for_shape(iv, it.get("census_name"), key))
+    # shade per indicator and layer (reliable estimates only)
+    shade, legends = {}, []
+    for ind in inds:
+        shade[ind] = {}
+        for key, tab, _l, _h in LAYERS:
+            if tab not in MAP_LAYERS:
+                continue
+            vals = {}
+            for uid, (k2, t2, g) in geo_of.items():
+                if t2 != tab:
+                    continue
+                r = iv.get(g, ind, vintage) if g else None
+                used.append(r)
+                vals[uid] = _f(r["value"]) if r and not unreliable(r) and _f(r.get("value")) is not None else None
+            min_unit = 1 if (ind in MONEY or ind in COUNTS) else 0.1
+            cls = classify(vals, min_unit=min_unit)
+            shade[ind].update({uid: s or 0 for uid, s in cls["shade"].items()})
+            extra = [("cmap-mm-back", "Outside any city or town (not shaded)")] if key == "place" else []
+            on = ind == inds[0]
+            legends.append(shade_legend(
+                f"{labels[ind]}, {vintage}", cls, fmt=lambda v, ind=ind: _break_text(ind, v),
+                none_label="Not shaded: no estimate, or margin of error too large (CV above 30%)", extra=extra,
+                attrs={"class": "cmap-mlegend" + (" is-on" if tab == "cities" else ""), "data-layer": tab,
+                       "data-ind": ind, "hidden": None if on else True}))
+
+    first = inds[0]
+
+    def area(key, tab, n, it, uid, unit):
+        g = geo_of[uid][2]
+        rows = [iv.get(g, ind, vintage) if g else None for ind in inds]
+        facts = [[labels[ind], _fact_text(ind, r)] for ind, r in zip(inds, rows)]
+        href = page.rel(f"places/{uid}/index.html#context")
+        tl = TYPE_LABEL.get(unit["unit_type"], unit["unit_type"])
+        entry = {"n": unit["name"], "t": tl, "f": facts, "fk": list(inds),
+                 "note": (f"American Community Survey {vintage} estimates for the Census area "
+                          f"{iv.geo[g]['geo_name'].split(',')[0]}. ± is the 90% margin of error." if g else
+                          "No survey estimates for this area in the guide's data."),
+                 "href": href, "l": tab, "d": it["d"], "open": "Open its page"}
+        cls = shade_class(shade[first].get(uid) or None)
+        return (f"cmap-s cmap-mm {cls}", href, f"{unit['name']}, {tl.lower()}. Open its page.", entry,
+                f"cmap-dot cmap-mm-dot {cls}")
+
+    picker = h("div", {"class": "cmap-ind", "hidden": True},
+               h("label", {"class": "cmap-chips-l", "for": f"cmap-ind-{sid}"}, "Shade by"),
+               h("select", {"id": f"cmap-ind-{sid}", "class": "cmap-select cmap-ind-select"},
+                 [h("option", {"value": i, "selected": i == first or None}, labels[i]) for i in inds]))
+    cmap = embedded_map(page, ed, shapes, MAP_LAYERS, "cities", area=area,
+                        label=f"Map of {ed.county_label}'s cities, towns and townships shaded by one survey estimate. "
+                              "Every area is a link to its page; the tables on this page have every figure.",
+                        hint="Hover, focus or tap an area to see all of its estimates here. Select it again, or use "
+                             "the link, to open its page.",
+                        legend=legends, defs=shade_defs(), extra_cls="cmap-indmap", controls=picker,
+                        back_cls="cmap-s cmap-mm-back", attrs={"data-lead": first},
+                        extra=json_script("cmap-shade", shade))
+    src = _union(used)
+    return section(sid, num, title,
+                   h("p", None, f"Each area shaded by one estimate from the {vintage} survey: pick it above the map. "
+                                "Point at an area (or tap it, or move to it with Tab) to see all of its estimates with "
+                                "their margins of error.", c.cite(src) if src else None, " ", status_badges(used, page)),
+                   cmap,
+                   h("p", {"class": "muted cmap-mnote"},
+                     "Shading uses natural breaks rounded to readable figures, set separately for each estimate and "
+                     "each layer; a figure equal to a break falls in the higher step. Estimates with a coefficient of "
+                     "variation above 30% are not shaded (hatched) and are marked unreliable in the panel, the same "
+                     "rule as the tables. Towns are small, so most of their estimates are unreliable."),
+                   cv_legend(),
+                   h("p", {"class": "muted cmap-mnote"}, OVERLAP_NOTE),
+                   scope="county", ed=ed)
+
+
 def hero(page, eyebrow, toc, dek=None):
     return h("header", {"class": "page-hero"},
              h("p", {"class": "eyebrow mono"}, eyebrow),
@@ -410,7 +541,7 @@ def build_people(site):
     main_geos = [iv.county] + iv.places + [iv.state, iv.nation]
     toc = [("who", "Population over time"), ("age", "Age"), ("race", "Race and ethnicity"),
            ("foreign-born", "Born in another country"), ("households", "Households"),
-           ("townships", "Townships"), ("gaps", "Gaps"), ("sources", "Sources")]
+           ("townships", "Townships"), *([("map", "On the map")] if load_shapes(ed) else []), ("gaps", "Gaps"), ("sources", "Sources")]
     page.add(hero(page, "Reference · Community", toc))
 
     # ---- 1 population over time
@@ -551,6 +682,10 @@ def build_people(site):
                      h("p", {"class": "muted"}, "Cities cross township lines, so city and township figures overlap. "
                                                 "Don't add them together."),
                      scope="county", ed=ed))
+    # Race and Hispanic-origin shares stay in the page's tables only, not as map shading or panel rows (Nick,
+    # 2026-11-08: "table only").
+    page.add(indicator_map_section(page, ed, iv, ["pop_total", "median_age", "foreign_born_pct"], now,
+                                   "map", 7, "On the map: townships, cities and towns"))
 
     gaps = community_gaps(ed, r"small townships|Cities cross|Decennial population|Township decennial|ACS 2006-2010")
     gaps += [page_gap("Households: number of households, household size and household types",
@@ -573,7 +708,8 @@ def build_income_work(site):
     now, then = iv.acs_now, iv.acs_then
     main_geos = [iv.county] + iv.places + [iv.state, iv.nation]
     toc = [("work", "Income and poverty"), ("unemployment", "Unemployment"), ("industries", "Jobs by industry"),
-           ("residents-work", "What residents do"), ("employers", "Employer lists"), ("gaps", "Gaps"), ("sources", "Sources")]
+           ("residents-work", "What residents do"), ("employers", "Employer lists"), *([("map", "On the map")] if load_shapes(ed) else []),
+           ("gaps", "Gaps"), ("sources", "Sources")]
     page.add(hero(page, "Reference · Community", toc))
 
     # ---- 1 income and poverty
@@ -755,6 +891,7 @@ def build_income_work(site):
                                "newest first. Names and sectors are as the data records them.")),
                      blocks,
                      scope="county", ed=ed))
+    page.add(indicator_map_section(page, ed, iv, inds, now, "map", 6, "On the map: townships, cities and towns"))
 
     gaps = community_gaps(ed, r"Unemployment rate for 2025|QCEW|employer|ACS 2006-2010|small townships|Income comparison")
     page.finish(gaps=gaps)
@@ -770,7 +907,7 @@ def build_housing(site):
     c = page.cites
     now, then = iv.acs_now, iv.acs_then
     main_geos = [iv.county] + iv.places + [iv.state, iv.nation]
-    toc = [("housing", "Housing"), ("education", "Education"), ("townships", "Townships"),
+    toc = [("housing", "Housing"), ("education", "Education"), ("townships", "Townships"), *([("map", "On the map")] if load_shapes(ed) else []),
            ("gaps", "Gaps"), ("sources", "Sources")]
     page.add(hero(page, "Reference · Community", toc))
     hinds = ["owner_occupied_pct", "median_home_value", "median_gross_rent", "rent_burdened_pct"]
@@ -808,9 +945,9 @@ def build_housing(site):
                      data_table("bachelors-table", ["Place", then, now], erows,
                                 caption=iv.label("bachelors_plus_pct"), numeric=(1, 2), min_width="30rem"),
                      h("p", {"class": "muted"}, f"How the {then} figure was built: {note_then}") if note_then else None,
-                     h("p", {"class": "muted"}, "Other attainment levels (high school, some college) and school "
-                                                "enrollment are not in the guide's data yet. School corporations are "
-                                                "covered on the ", h("a", {"href": page.rel("schools/index.html")}, "Schools page"), "."),
+                     h("p", {"class": "muted"}, "Other attainment levels (high school, some college) are not in the "
+                                                "guide's data yet. Each school corporation's enrollment and spending per "
+                                                "student are on the ", h("a", {"href": page.rel("schools/index.html")}, "Schools page"), "."),
                      scope="county", ed=ed))
     tt, tu = matrix_table(page, iv, "townships-housing", "Townships: housing and degrees", iv.townships,
                           hinds + ["bachelors_plus_pct"], now, "Township", "64rem")
@@ -820,13 +957,18 @@ def build_housing(site):
                      cv_legend(), tt,
                      h("p", {"class": "muted"}, "Cities cross township lines, so city and township figures overlap."),
                      scope="county", ed=ed))
+    page.add(indicator_map_section(page, ed, iv, hinds + ["bachelors_plus_pct"], now, "map", 4,
+                                   "On the map: townships, cities and towns"))
     gaps = community_gaps(ed, r"ACS 2006-2010|small townships|Cities cross")
-    gaps += [page_gap("Educational attainment below the bachelor's level, and school enrollment",
-                      "Only bachelor's-or-higher is in indicator_values.csv.",
+    gaps += [page_gap("Educational attainment below the bachelor's level, and the survey count of residents in school",
+                      "Only bachelor's-or-higher is in indicator_values.csv. The school corporations' own enrollment "
+                      "counts (Indiana Department of Education) are on the Schools page; the survey's count of residents "
+                      "enrolled in school is a different measure and is not in the data.",
                       "Add ACS tables B15003 (all levels) and B14001 (enrollment) to indicators.csv and re-run the fetch."),
-             page_gap("School-district indicators (ACS school districts, SAIPE child poverty)",
-                      "No school_district rows in indicator_values.csv.",
-                      "Pull the same indicators for each school district geography.")]
+             page_gap("SAIPE school-district poverty estimates",
+                      "The survey (ACS) indicators for each school district are in indicator_values.csv, but the Census "
+                      "Bureau's SAIPE model estimates of school-age poverty by school district are not.",
+                      "Pull the SAIPE school district estimates for the county's school corporations.")]
     page.finish(gaps=gaps)
     return page
 

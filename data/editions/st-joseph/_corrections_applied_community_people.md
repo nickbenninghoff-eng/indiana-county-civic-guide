@@ -48,3 +48,12 @@ Source of findings: `planning/fact-check-report.md` (2026-11-07). IDs: PPL-034 /
 - TENURE counts cumulative years in elected seats within the same governmental unit (county, city, or the General Assembly). It needs 16+ documented years.
 - TURNING_POINT is applied only where the event appears in the sourced turning-point lists in research 01/02/10 (not to every notable election).
 - Excluded because no criterion is met by the sources: James Mueller (current mayor), John Hiler, Bob Kovach, Alexis Coquillard, Jeff Rea, Frank Bruggner, Edward Voorde. See `gaps_community_people.csv`.
+
+## 2026-11-08: gap-fill C1 (people)
+
+Source: `planning/qa/gapfill-2026-11-08-C1-people.md` and `-edits.csv`. Log: `planning/qa/gapfill-2026-11-08-applied.md`.
+
+- Applied: gaps_community_people "Boykins/police-recordings appeal". It is a state case: Judge Jamie Woods ruled May 28, 2026, and the council filed notice of appeal (WVPE 2026-06-24, new source PPL-044). how_to_fill now points to the Court of Appeals docket.
+- Applied: PPL-025 (Prickett). "First woman mayor" is now quoted from the City of Mishawaka timeline (GOV-039), and that clause was removed from the Braboy/Prickett gap row.
+- Notes-only: PPL-016 (B. Patrick Bauer). "First elected in 1964" comes from Wikipedia only, and the "Burnett" spelling from a snippet only.
+- Notes-only: PPL-017. The start date conflict (Nov 4 vs Nov 16, 2020, both from Wikipedia) is recorded, not resolved.

@@ -372,12 +372,18 @@ class Edition:
         for t in self.tables["terms"]:
             if t["office_id"] not in self.offices:
                 w.append(f"terms: {t['term_id']} has unknown office_id")
-        for name in ("budgets", "budget_breakdowns", "tax_rates", "debt"):
+        for name in ("budgets", "budget_breakdowns", "spending_breakdowns", "tax_rates", "debt"):
             bad = sorted({r["unit_id"] for r in self.table(name) if r["unit_id"] not in self.units})
             unmapped = [b for b in bad if not self.unit_alias(b)]
             if bad:
                 w.append(f"{name}: {len(bad)} unit_ids use a different id scheme than units.csv "
                          f"(mapped via derived/unit_id_aliases.csv; unmapped: {', '.join(unmapped) or 'none'})")
+        # spending_breakdowns.csv (tools/build_spending.py): money in and out by unit; views are fixed
+        views = {"income", "income_excluded", "by_purpose", "by_type", "spending_excluded", "passthrough_detail",
+                 "passthrough_in_detail"}
+        bad_views = sorted({r["view"] for r in self.table("spending_breakdowns")} - views)
+        if bad_views:
+            w.append(f"spending_breakdowns: unknown view(s) {', '.join(bad_views)}")
         blank = sum(1 for r in self.tables["results"] if not r["office_id"])
         if blank:
             linked = sum(1 for c in self.contests.values() if c["office_id"])

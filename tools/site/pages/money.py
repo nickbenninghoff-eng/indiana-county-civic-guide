@@ -21,6 +21,10 @@ from civic.components import callout, data_table, scope_badge, section, status_b
 from civic.data import fmt_date, split_ids
 from civic.html import Markup, h, join, json_script
 from civic.layers import build_layers
+from civic.spending import has_money_in_out, money_in_out
+from civic.map import load_shapes
+from civic import tax_base as tb
+from civic.money_map import county_figure, method_note, money_map, money_map_data, money_map_tables
 
 # Unit names as the state budget file (Gateway, MON-001) lists them; tools/build_money.py
 # carries the same mapping. Used for units with no units.csv row and to match gaps_money items.
@@ -67,8 +71,8 @@ GATEWAY_LABELS = {
     "special-redevelopment-authority": "St. Joseph Redevelopment Authority",
 }
 
-# money ids with a units.csv row that derived/unit_id_aliases.csv doesn't map yet
-EXTRA_UNIT_IDS = {"school-new-prairie": "new-prairie"}
+# money ids with a units.csv row that derived/unit_id_aliases.csv doesn't map yet (shared with civic/tax_base.py)
+EXTRA_UNIT_IDS = tb.EXTRA_UNIT_IDS
 
 GROUPS = [("county", "County"), ("city", "Cities"), ("town", "Towns"), ("township", "Townships"),
           ("school", "School corporations"), ("library", "Public libraries"), ("special", "Special units")]
@@ -85,6 +89,10 @@ BASIS = {
 # a one-off basis shown in tables only (never charted): the DLGF budget order total
 BASIS["dlgf_certified"] = ("State-certified budget (DLGF budget order)",
                            "The total of the funds the state's Department of Local Government Finance certified in its budget order.")
+# a one-off basis shown in tables only (never charted): the current amended budget from a later financial report
+BASIS["amended_all_funds"] = ("Amended budget, all funds (later financial report)",
+                              "The unit's current amended budget for every fund it controls, from a financial report "
+                              "published after the budget was adopted.")
 BASIS_ORDER = ["general_fund", "advertised_all_funds", "all_funds_incl_utilities", "gateway_reported_funds"]
 
 JUMP_THRESHOLD = 0.40   # same rule as tools/check_money.py
@@ -417,22 +425,25 @@ def _unit_charts(mo: Money, page, mid: str, gap_flags: dict) -> tuple[list, list
             secondary = s not in primary
             for r in s["rows"]:
                 by_year[int(r["year"])] = (s, r, secondary)
-        common = None
+        # each primary series' shared first sentence goes once under the chart, not on every row
+        commons = {}
         for s in primary:
             notes = [r["notes"] for r in s["rows"]]
             first = sentences(notes[0])[:1] if notes else []
-            common = first[0] if first and all(n.startswith(first[0]) for n in notes) else None
+            commons[s["id"]] = first[0] if first and all(n.startswith(first[0]) for n in notes) else None
         points, flags = [], {}
         for i, yv in enumerate(years):
             if yv not in by_year:
                 points.append({"x": yv, "value": None})
                 continue
             s, r, secondary = by_year[yv]
+            common = commons.get(s["id"])
             extra = r["notes"][len(common):].strip() if common and r["notes"].startswith(common) else r["notes"]
             extra = clean_note(extra)
+            src_label = "news report (secondary)" if secondary else _source_label(s)
             points.append({"x": yv, "value": float(r["amount"]), "status": r["status"],
                            "mark": "m-ink" if secondary else "m-accent",
-                           "tip": f"{yv} · {'news report (secondary)' if secondary else BASIS[basis][0]}",
+                           "tip": f"{yv} · {BASIS[basis][0]} · {src_label}",
                            "row_note": extra if (secondary or extra) else ""})
         for j in mo.jumps:
             if any(j["series"] == s["id"] for s in in_chart):
@@ -453,16 +464,21 @@ def _unit_charts(mo: Money, page, mid: str, gap_flags: dict) -> tuple[list, list
                                      c.cite(b["source_ids"])))
         legend_items = []
         if len(in_chart) > 1:
-            legend_items = [("m-accent", "Gateway (state budget file), adopted"),
-                            ("m-ink", "News report, rounded (secondary)")]
+            # the solid columns are every primary (official) series; name each one's real source and years
+            prim_labels = [f"{_source_label(s)}, {_year_span(s)}" for s in primary]
+            legend_items = [("m-accent", "Adopted: " + "; ".join(prim_labels))]
+            if any(s not in primary for s in in_chart):
+                legend_items.append(("m-ink", "News report, rounded (secondary)"))
         status = "official" if all(s["status"] == ["official"] for s in primary) else "computed"
         name = mo.label(mid)
         title = f"{name}: {BASIS[basis][0].lower()}, adopted" if basis != "gateway_reported_funds" else f"{name}: {BASIS[basis][0]}"
         n_years = len([p for p in points if p.get("value") is not None])
         sub = f"{BASIS[basis][1]} {n_years} years with figures, {years[0]} to {years[-1]}. Nominal dollars."
         note_parts = []
-        if common:
-            note_parts.append(h("span", None, common, " "))
+        for s in primary:
+            if commons.get(s["id"]):
+                lead = f"{_source_label(s)[0].upper()}{_source_label(s)[1:]}, {_year_span(s)}: " if len(primary) > 1 else ""
+                note_parts.append(h("span", None, lead, commons[s["id"]], " "))
         note_parts += break_notes
         src = union_sources(r for s in in_chart for r in s["rows"])
         fid = f"bud-{mid}-{basis.replace('_', '-')}"
@@ -529,6 +545,24 @@ def _dollars_toggle(mo: Money, page):
                "nominal."))
 
 
+def _source_label(s) -> str:
+    """Plain name of where a budget series comes from: the state's Gateway budget file (MON-001), a council
+    budget ordinance, or (otherwise) the unit's own official document."""
+    firsts = {split_ids(r["source_ids"])[0] for r in s["rows"] if split_ids(r.get("source_ids"))}
+    if firsts == {"MON-001"}:
+        return "Gateway state budget file"
+    if "ordinance" in s["id"]:
+        return "council budget ordinance"
+    return "the unit's own budget document"
+
+
+def _year_span(s) -> str:
+    ys = sorted({int(r["year"]) for r in s["rows"]})
+    if not ys:
+        return ""
+    return f"{ys[0]}" if ys[0] == ys[-1] else f"{ys[0]}-{ys[-1]}"
+
+
 def _series_charted(s, unit_series) -> bool:
     """True when a secondary series was drawn as a continuation on a chart (see _unit_charts)."""
     group = [x for x in unit_series if x["basis"] == s["basis"]]
@@ -545,8 +579,10 @@ def build_budgets(site):
     mo = money(ed)
     page = site.page("money/budgets/index.html", banners=False)
     c = page.cites
-    toc = [("over-time", "Budgets over time"), ("per-resident", "Per resident"), ("breakdowns", "2024 spending and revenue"),
-           ("debt", "Debt"), ("tax-base", "How the tax base shapes budgets"), ("gaps", "Gaps"), ("sources", "Sources")]
+    has_map = load_shapes(ed) is not None and bool(ed.table("spending_breakdowns"))
+    toc = ([("money-map", "Money map")] if has_map else []) + [("over-time", "Budgets over time"), ("per-resident", "Per resident"), ("breakdowns", "2024 spending and revenue"),
+           ("debt", "Debt"), ("tax-base", "How the tax base shapes budgets"),
+           ("money-in-out", "Money in and out: libraries and special units"), ("gaps", "Gaps"), ("sources", "Sources")]
     n_units = len({r["unit_id"] for r in mo.budgets})
     page.add(hero(page, "Reference · Money", page.title,
                   h("span", None, f"Adopted budgets for {n_units} local units in {ed.county_label}, {mo.y0} to {mo.y1}, "
@@ -556,7 +592,10 @@ def build_budgets(site):
                   toc, [scope_badge("county", ed), " ", h("a", {"href": page.rel("money/what-is-a-budget/index.html")},
                                                           "What counts as a budget?")]))
 
-    # ------------------------------------------------------------------ 1 over time
+    # ------------------------------------------------------------------ 1 money map
+    page.add(_money_map_section(mo, page))
+
+    # ------------------------------------------------------------------ 2 over time
     n_flags = len(mo.jumps)
     nav = []
     for g, glabel in GROUPS:
@@ -610,7 +649,7 @@ def build_budgets(site):
                             h("p", {"class": "mn-nodata"}, "No budget data for this unit in the guide's data."
                               if not mo.has_budget(mid) else "No adopted multi-year series for this unit in the guide's data."),
                             other_tbl))
-    page.add(section("over-time", 1, "Budgets over time",
+    page.add(section("over-time", 2, "Budgets over time",
                      h("p", None, "Each unit's adopted budget for every year the state file has it. A chart never mixes two ways "
                                   "of totaling a budget. Where a unit changed how it reports, the chart shows a break line, and "
                                   "the years on either side should not be compared.", c.cite("MON-001;MON-023")),
@@ -627,7 +666,7 @@ def build_budgets(site):
                      blocks, scope="county", ed=ed))
 
     # ------------------------------------------------------------------ 2 per resident
-    def per_res_rows(ids, basis):
+    def per_res_rows(ids, basis, year):
         rows, srcs = [], []
         for mid in ids:
             s = next((s for s in mo.series.values() if s["unit"] == mid and s["basis"] == basis
@@ -635,7 +674,7 @@ def build_budgets(site):
             pop = mo.population(mid)
             if not s or not pop:
                 continue
-            r = next((r for r in s["rows"] if int(r["year"]) == mo.y1), None)
+            r = next((r for r in s["rows"] if int(r["year"]) == year), None)
             if not r:
                 continue
             v = float(r["amount"]) / float(pop["value"])
@@ -644,29 +683,43 @@ def build_budgets(site):
                                 + (f" (MOE ±{int(float(pop['moe'])):,})" if pop.get("moe") else "")})
             srcs += [r, pop]
         return rows, union_sources(srcs)
-    gf_rows, gf_src = per_res_rows(["county-st-joseph", "city-south-bend", "city-mishawaka"], "general_fund")
+    gf_ids = ["county-st-joseph", "city-south-bend", "city-mishawaka"]
     tw_ids = ["county-st-joseph", "city-mishawaka"] + [m for m in mo.unit_ids if group_of(m) == "township"]
-    af_rows, af_src = per_res_rows(tw_ids, "advertised_all_funds")
+    pr_year = comparison_year(mo, gf_ids + tw_ids, ("general_fund", "advertised_all_funds"))
+    gf_rows, gf_src = per_res_rows(gf_ids, "general_fund", pr_year)
+    af_rows, af_src = per_res_rows(tw_ids, "advertised_all_funds", pr_year)
+    av_ids = gf_ids + [m for m in mo.unit_ids if group_of(m) == "township"]
+    av_rows, av_src, av_year = av_per_resident_rows(mo, av_ids)
     pop_note = ("Computed: the adopted amount divided by the Census Bureau's American Community Survey 2020-2024 5-year "
                 "population estimate. The estimate is a five-year average, so per-resident figures are approximate.")
-    page.add(section("per-resident", 2, f"Comparing units: {mo.y1} budgets per resident",
+    av_chart = (hbar("perres-av", f"Certified assessed value per resident, {av_year}", av_rows,
+                     subtitle="County, the two cities and the townships", money=True, value_fmt=lambda v: f"${v:,.0f}",
+                     status="computed", page=page,
+                     note=("Computed: the state-certified net assessed value (the tax base property taxes are levied on) "
+                           "divided by the same 2020-2024 population estimate. The county's value covers everyone in the "
+                           "county, city residents included. A township's value includes the cities and towns inside it, "
+                           "as its population does."),
+                     headers=["Unit", "Per resident"], cite=c.cite(av_src)) if av_rows else None)
+    page.add(section("per-resident", 3, f"Comparing units: {pr_year} budgets per resident",
                      h("p", None, "Units differ in size, so totals alone don't compare well. These charts divide each unit's "
-                                  f"{mo.y1} adopted budget by its population. Each chart uses one basis."),
+                                  f"{pr_year} adopted budget by its population. Each chart uses one basis."
+                                  + (f" The last chart divides each unit's {av_year} tax base the same way." if av_rows else "")),
                      h("div", {"class": "chart-grid"},
-                       hbar("perres-gf", f"General fund per resident, {mo.y1}", gf_rows, subtitle="County and the two cities",
+                       hbar("perres-gf", f"General fund per resident, {pr_year}", gf_rows, subtitle="County and the two cities",
                             money=True, value_fmt=lambda v: f"${v:,.0f}", status="computed", page=page,
                             note=pop_note + " The county's figure is divided by the whole county's population, which includes city residents.",
                             headers=["Unit", "Per resident"], cite=c.cite(gf_src)),
-                       hbar("perres-af", f"All advertised funds per resident, {mo.y1}", af_rows,
+                       hbar("perres-af", f"All advertised funds per resident, {pr_year}", af_rows,
                             subtitle="County, Mishawaka (civil city) and the townships", money=True,
                             value_fmt=lambda v: f"${v:,.0f}", status="computed", page=page,
                             note=pop_note + " Township populations include residents of cities and towns inside the township. "
                                             "South Bend is left out: from 2024 the state file lists only 10 of its funds.",
-                            headers=["Unit", "Per resident"], cite=c.cite(af_src))),
+                            headers=["Unit", "Per resident"], cite=c.cite(af_src)),
+                       av_chart),
                      scope="county", ed=ed))
 
     # ------------------------------------------------------------------ 3 breakdowns
-    page.add(section("breakdowns", 3, "2024 spending and revenue: county, South Bend, Mishawaka",
+    page.add(section("breakdowns", 4, "2024 spending and revenue: county, South Bend, Mishawaka",
                      h("p", None, "What each government actually spent and received in 2024, from the annual financial reports "
                                   "units file with the state. These files have their own scope: each chart's note says what it "
                                   "covers. They are not the same as the budget totals above.", c.cite("MON-002;MON-003")),
@@ -676,15 +729,15 @@ def build_budgets(site):
 
     # ------------------------------------------------------------------ 4 debt
     tot = [r for r in mo.debt if r["debt_type"].startswith("Total end-of-year principal")]
-    drows = [{"label": re.sub(r" \(state data: .*\)$", "", mo.label(r["unit_id"])), "value": float(r["amount"]),
-              "display": usd_short(r["amount"]), "tip": f"{usd(r['amount'])} at the end of {r['year']}"}
+    drows = [{"label": chart_label(mo, r["unit_id"]), "value": float(r["amount"]),
+              "display": usd_short(r["amount"]),
+              "tip": f"{mo.label(r['unit_id'])}: {usd(r['amount'])} at the end of {r['year']}"}
              for r in sorted(tot, key=lambda r: mo.unit_ids.index(r["unit_id"]))]
     cls_rows = []
     for r in sorted(mo.debt, key=lambda r: (mo.unit_ids.index(r["unit_id"]), r["year"], r["debt_type"])):
         cls_rows.append([mo.label(r["unit_id"]), r["year"], r["debt_type"], usd(r["amount"]),
                          h("span", None, status_badge(r["status"], page), c.cite(r["source_ids"])), r["notes"]])
-    sb_city = next((r for r in mo.debt if r["unit_id"] == "city-south-bend" and r["year"] != "2024"), None)
-    page.add(section("debt", 4, "Debt",
+    page.add(section("debt", 5, "Debt",
                      h("p", None, f"Principal still owed at the end of 2024, as each unit reported it to the state. "
                                   f"{len(tot)} units report debt in the file. Totals include utility debt where a unit has utilities.",
                        c.cite("MON-004")),
@@ -693,10 +746,7 @@ def build_budgets(site):
                           note="Computed: the sum of each unit's debt-class rows in the state's 2024 annual financial report "
                                "debt file. Units in the order used across the guide (county, cities, towns, townships, schools, "
                                "libraries, special units).", cite=c.cite("MON-004")),
-                     h("p", None, f"South Bend's own budget page gave a different, later figure: roughly "
-                                  f"{usd_short(sb_city['amount'])} outstanding as of {fmt_date(sb_city['year'] if False else '2026-09-04')}. "
-                                  "It is a different date and source, so it is not on the chart.",
-                       c.cite(sb_city["source_ids"]), " ", status_badge(sb_city["status"], page)) if sb_city else None,
+                     later_debt_note(mo, page, "city-south-bend"),
                      data_table("debt-classes", ["Unit", "Year", "Debt type", "Amount", "Status", "Note"], cls_rows,
                                 caption="Debt by class and unit", numeric=(3,), min_width="54rem"),
                      scope="county", ed=ed))
@@ -704,10 +754,132 @@ def build_budgets(site):
     # ------------------------------------------------------------------ 5 tax base
     page.add(_tax_base(mo, page))
 
+    # ------------------------------------------------------------------ 6 money in and out (libraries, special units)
+    page.add(_flows_section(mo, page))
+
     gaps = mo.jump_gap_rows() + nodata_gaps + money_gaps(ed) + cpi_gaps(mo)
     page.finish(gaps=gaps, gaps_intro=("What the guide looked for and hasn't found or confirmed yet. The first "
                                        f"{len(mo.jumps)} items are the year-over-year changes flagged on the charts."))
     return page
+
+
+def comparison_year(mo: Money, ids, bases) -> int:
+    """The latest budget year that the most of these units have an adopted figure for (on any of the bases), so one
+    unit's early figures (South Bend adopts next year's budget before the state file lists it) don't empty the
+    comparison."""
+    have = {}
+    for s in mo.series.values():
+        if s["unit"] in ids and s["basis"] in bases and s["kinds"] == ["adopted"]:
+            for r in s["rows"]:
+                if r["amount"]:
+                    have.setdefault(int(r["year"]), set()).add(s["unit"])
+    if not have:
+        return mo.y1
+    return max(have, key=lambda y: (len(have[y]), y))
+
+
+def av_per_resident_rows(mo: Money, ids) -> tuple[list, str, str | None]:
+    """hbar rows of certified net assessed value divided by Money.population (ACS 2020-2024), for the latest
+    certified year. Units whose value covers only the county's part of the unit are left out."""
+    picked = []
+    for mid in ids:
+        r, pop = tb.latest_certified(mo.ed, mid), mo.population(mid)
+        if not r or not pop or tb.part_only(r):
+            continue
+        v = tb.av_per_resident(tb.av_value(r), pop["value"])
+        if v is not None:
+            picked.append((mid, r, pop, v))
+    if not picked:
+        return [], "", None
+    year = max(r["year"] for _, r, _, _ in picked)
+    picked = [t for t in picked if t[1]["year"] == year]
+    rows = [{"label": re.sub(r" \(state data: .*\)$", "", mo.label(mid)), "value": v, "display": f"${v:,.0f}",
+             "tip": f"{usd(tb.av_value(r))} / {int(float(pop['value'])):,} residents"
+                    + (f" (MOE ±{int(float(pop['moe'])):,})" if pop.get("moe") else "")}
+            for mid, r, pop, v in picked]
+    return rows, union_sources(x for _, r, pop, _ in picked for x in (r, pop)), year
+
+
+_DEBT_AS_OF = re.compile(r"^Total debt outstanding as of (\d{4}-\d{2}-\d{2})\s*(?:\((.*)\))?\s*$")
+
+
+def later_debt_rows(mo: Money, mid: str) -> list[tuple[str, str, dict]]:
+    """The unit's own later debt totals: rows whose debt_type reads "Total debt outstanding as of <date> (<source>)",
+    as [(ISO date, source words, row)], oldest date first."""
+    found = []
+    for r in mo.debt:
+        m = _DEBT_AS_OF.match(r["debt_type"]) if r["unit_id"] == mid else None
+        if m and r["amount"]:
+            found.append((m.group(1), (m.group(2) or "").strip(), r))
+    return sorted(found, key=lambda t: t[0])
+
+
+def later_debt_note(mo: Money, page, mid: str) -> Markup | None:
+    """One paragraph with every later_debt_rows figure. They are different dates and sources from the state file
+    (and from each other), so they are never charted or added together."""
+    c = page.cites
+    found = later_debt_rows(mo, mid)
+    if not found:
+        return None
+    parts = []
+    for i, (d, where, r) in enumerate(found):
+        rounded = "rounded" in (r.get("notes") or "").lower()
+        parts += ["; " if i else "", ("roughly " if rounded else "") + usd_short(r["amount"]),
+                  f" as of {fmt_date(d, long=True)}", f" ({where})" if where else "",
+                  c.cite(r["source_ids"]), " ", status_badge(r["status"], page)]
+    name = re.sub(r" \(.*\)$", "", mo.label(mid))
+    if len(found) > 1:
+        lead = f"{name}'s own reports give later figures: "
+        tail = (". They are different dates and sources from the state file and from each other, so they are not on "
+                "the chart and are not added together.")
+    else:
+        lead = f"{name}'s own report gives a later figure: "
+        tail = ". It is a different date and source, so it is not on the chart."
+    return h("p", None, lead, *parts, tail)
+
+
+def _money_map_section(mo: Money, page) -> Markup | None:
+    """Section 1: every city, town, township and school corporation shaded by counted spending per resident
+    (civic/money_map.py), the county as one figure, and tables with every figure (the no-JavaScript view)."""
+    ed = mo.ed
+    shapes = load_shapes(ed)
+    if shapes is None or not ed.table("spending_breakdowns"):
+        return None
+    mm = money_map_data(ed, shapes)
+    label = lambda m: re.sub(r" \(state data: .*\)$", "", mo.label(m))
+    return section("money-map", 1, "Money map: spending per resident",
+                   h("p", None, "Each area is shaded by how much its government spent per resident in its latest year in "
+                                "the state's annual financial reports. Point at an area (or tap it, or move to it with Tab) "
+                                "to see where its money came from and how it was spent; select it again, or press Enter, "
+                                "to open its full breakdown. Pick cities and towns, townships or school corporations with "
+                                "the buttons above the map."),
+                   county_figure(page, ed, mm),
+                   money_map(page, ed, shapes, mm),
+                   method_note(page, ed),
+                   money_map_tables(page, ed, mm, label),
+                   scope="county", ed=ed)
+
+
+def _flows_section(mo: Money, page) -> Markup:
+    """Section 6: income and spending charts for the libraries and special units (they have no pages of their own).
+    The county, cities, towns, townships and schools show the same block on their own pages."""
+    ed = mo.ed
+    c = page.cites
+    ids = [m for m in mo.unit_ids if group_of(m) in ("library", "special") and has_money_in_out(ed, m)]
+    ids += sorted(m for m in {r["unit_id"] for r in ed.table("spending_breakdowns")}
+                  if group_of(m) in ("library", "special") and m not in ids)
+    blocks = [h("article", {"class": "mn-unit", "aria-label": mo.label(m)},
+                money_in_out(ed, page, m, level=3, label=re.sub(r" \(state data: .*\)$", "", mo.label(m))))
+              for m in ids]
+    links = [h("a", {"href": page.rel("county/index.html#money")}, "the county")]
+    for path, lab in (("places/index.html", "each city, town and township"), ("schools/index.html", "each school corporation")):
+        links.append(h("a", {"href": page.rel(path)}, lab))
+    return section("money-in-out", 7, "Money in and out: libraries and special units",
+                   h("p", None, "Where each library and special unit's money came from and how it was spent, from the "
+                                "annual financial reports they file with the state, with money that only passes through "
+                                "their books or moves between their own funds shown separately. The same charts for ",
+                     join(links, ", "), " are on their own pages.", c.cite("MON-060;MON-063")),
+                   blocks, scope="county", ed=ed)
 
 
 def _scope_note(rows) -> str:
@@ -776,6 +948,94 @@ def _other_breakdowns(mo: Money, page) -> Markup:
              blocks)
 
 
+AV_GROUPS = [("County and cities", ("county", "city")), ("Towns", ("town",)), ("Townships", ("township",)),
+             ("School corporations, libraries and special units", ("school", "library", "special"))]
+
+
+def chart_label(mo: Money, mid: str) -> str:
+    """A unit's name, short enough for a bar label (the bar's tip keeps the full name)."""
+    name = re.sub(r" \(.*\)$", "", mo.label(mid))
+    name = name.replace(" Corporation", " Corp.").replace(" Fire Protection Territory", " Fire Territory")
+    if group_of(mid) == "special":
+        name = re.sub(r"^St\. Joseph County ", "", name)
+    if group_of(mid) == "library":
+        name = name.replace(" Public Library", " Library") if len(name) > 30 else name
+    return name
+
+
+def _assessed_value_block(mo: Money, page) -> Markup | None:
+    """The tax base: certified net assessed value (dlgf_certified rows only) over time for the county and the two
+    cities, and by unit for the latest certified year. The units' own Gateway estimates are never charted."""
+    ed = mo.ed
+    c = page.cites
+    series, srcs = [], []
+    for mid, mark in (("county-st-joseph", "m-accent"), ("city-south-bend", "m-ink"), ("city-mishawaka", "mn-m3")):
+        rows = tb.certified(ed, mid)
+        if rows:
+            series.append({"name": mo.label(mid).replace(" (civil city)", ""), "mark": mark,
+                           "points": [(int(y), tb.av_value(rows[y])) for y in sorted(rows)]})
+            srcs += [rows[y] for y in sorted(rows)]
+    latest = {mid: tb.latest_certified(ed, mid) for mid in mo.unit_ids}
+    latest = {m: r for m, r in latest.items() if r}
+    if not series and not latest:
+        return None
+    year = max(r["year"] for r in latest.values()) if latest else None
+    latest = {m: r for m, r in latest.items() if r["year"] == year}
+    years = sorted({x for s in series for x, _ in s["points"]})
+    # units that levy on exactly the same value as another unit (the same area): say so in the tip
+    by_value = {}
+    for m, r in latest.items():
+        by_value.setdefault(r["net_assessed_value"], []).append(m)
+    figs, part_units = [], []
+    for title, groups in AV_GROUPS:
+        ids = [m for m in mo.unit_ids if m in latest and group_of(m) in groups]
+        if not ids:
+            continue
+        rows = []
+        for m in ids:
+            r = latest[m]
+            v = tb.av_value(r)
+            part = tb.part_only(r)
+            if part:
+                part_units.append(m)
+            same = [mo.label(x) for x in by_value[r["net_assessed_value"]] if x != m]
+            tip = f"{mo.label(m)}: {usd(v)}, fund {r['fund']}"
+            if part:
+                tip += "; St. Joseph County part only"
+            if same:
+                tip += "; same value as " + ", ".join(same)
+            rows.append({"label": chart_label(mo, m) + (" *" if part else ""), "value": v,
+                         "display": usd_short(v), "tip": tip})
+        note = ["Each unit's value is read from its General fund (Operations for school corporations; the "
+                "unit's own fund for special units) in the state's certified budget order."]
+        if any(tb.part_only(latest[m]) for m in ids):
+            note.append(" * St. Joseph County part only: the corporation also lies in another county, and the "
+                        "other county's part is not included.")
+        figs.append(hbar(f"av-{year}-{groups[0]}", f"{title}: certified net assessed value, {year}", rows,
+                         money=True, value_fmt=usd_short, status="official", page=page,
+                         headers=["Unit", "Net assessed value"], note="".join(note),
+                         cite=c.cite(union_sources(latest[m] for m in ids))))
+    lead = h("p", None, "The tax base is the net assessed value of the property a government can tax: the assessed "
+                        "value after deductions and exemptions. Each year the state's Department of Local Government "
+                        "Finance certifies it for every unit, in the same budget order that certifies the budget and the "
+                        "rates. A unit's levy is its tax rate times this value. The values overlap: the county's value "
+                        "includes every city, town and township in it, and a township's includes the cities and towns "
+                        "inside it, so they are never added together.", c.cite(union_sources(latest.values())))
+    est = h("p", {"class": "muted"}, "The state's budget file also has a figure each unit entered with its budget, "
+                                     "back to 2012. Those are the units' own estimates, made before the value is "
+                                     "certified, so the guide does not chart them with the certified values.",
+            c.cite("MON-001"))
+    over_time = (line("av-over-time", "Certified net assessed value", series,
+                      subtitle=f"County and the two cities, {years[0]} to {years[-1]}", money=True,
+                      value_fmt=usd_short, status="official", page=page,
+                      note=("From each year's certified budget order (General fund). The county's value includes both "
+                            "cities. Nominal dollars."),
+                      cite=c.cite(union_sources(srcs))) if series else None)
+    return h("div", None, h("h3", None, "The tax base: certified assessed value"), lead,
+             h("div", {"class": "chart-grid chart-grid-wide"}, over_time) if over_time else None,
+             h("div", {"class": "chart-grid"}, figs) if figs else None, est)
+
+
 def _tax_base(mo: Money, page) -> Markup:
     ed = mo.ed
     c = page.cites
@@ -796,7 +1056,8 @@ def _tax_base(mo: Money, page) -> Markup:
             for r in ptax]
     flag_txt = "; ".join(f"{mo.label(r['unit_id'])} {r['year']}: " + re.search(r"Changed [^;]+", r["notes"]).group(0)
                          for r in flagged)
-    return section("tax-base", 5, "How the tax base shapes budgets",
+    rate_years = sorted({x for s in series for x, _ in s["points"]})
+    return section("tax-base", 6, "How the tax base shapes budgets",
                    h("p", None, levy.get("plain_language", ""), c.cite(levy.get("source_ids")), " ",
                      caps.get("plain_language", ""), c.cite(caps.get("source_ids")), " ", scope_badge("indiana", ed)),
                    h("p", None, "The state's budget file lists an adopted tax rate for each fund a government levies, in "
@@ -807,18 +1068,20 @@ def _tax_base(mo: Money, page) -> Markup:
                      h("a", {"href": page.rel("money/your-tax-bill/index.html")}, "Your tax bill"), ".",
                      c.cite("MON-001")),
                    line("rates-over-time", "Unit-wide adopted property-tax rate, per $100 of assessed value", series,
-                        subtitle=f"County and the two cities' civil governments, {mo.y0} to {mo.y1}",
+                        subtitle=(f"County and the two cities' civil governments, {rate_years[0]} to {rate_years[-1]}"
+                                  if rate_years else "County and the two cities' civil governments"),
                         value_fmt=lambda v: f"${v:.2f}", status="computed", page=page,
                         note=h("span", None, "Computed: the sum of the adopted net tax rate of every fund the unit levies. "
                                              "This is not the rate on a tax bill: the rates of overlapping units (township, "
                                              "school, library) are not added. ",
                                f"Changes of more than 40% with no reason found in the state data: {flag_txt}." if flag_txt else ""),
                         cite=c.cite("MON-001")),
+                   _assessed_value_block(mo, page),
                    h("p", None, "General property taxes received in 2024, from the annual financial report receipts:"),
                    data_table("ptax-2024", ["Unit", "General property taxes, 2024", "Status"], prow,
                               caption="Property-tax receipts, 2024 actual", numeric=(1,)),
-                   h("p", None, "The guide does not yet have reliable assessed values by unit, or the dollar amount of "
-                                "tax-cap credits each unit loses (see Gaps). See ",
+                   h("p", None, "The guide does not yet have certified assessed values before 2020, or the dollar amount of "
+                                "tax-cap credits each unit loses (see ", h("a", {"href": "#gaps"}, "Gaps"), "). See ",
                      h("a", {"href": page.rel("money/your-tax-bill/index.html")}, "Your tax bill"), " for how one bill is split, and ",
                      h("a", {"href": page.rel("community/housing-and-education/index.html")}, "Housing and education"),
                      " for home values."),

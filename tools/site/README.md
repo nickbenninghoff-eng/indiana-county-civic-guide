@@ -28,6 +28,12 @@ the landing page renders without the host's skeleton.
 | `civic/answers.py` | `answer_box(ed, page, unit, offices, links=...)`: the four-answer "At a glance" box on place pages and the county page |
 | `civic/search.py` | Builds `assets/search-index.json` from the rendered pages (called by `Site.write`); party tags are display-only, never matched |
 | `static/js/here.js`, `static/js/search.js` | Saved place (localStorage `civic-place`, ids only): bar, picker, layer rows, landing map as picker, page markers; header search combobox |
+| `civic/map.py` (shared parts) | `government_layers` draws the three boundary layers for any map; `embedded_map` embeds a subset (places index, Schools page, shaded maps) without touching the URL hash; `race_by_contest` links Results contests to the "How areas voted" layer (`map/index.html#race-<id>`) |
+| `civic/shading.py` | Sequential shading for maps: rounded natural breaks per layer (`class_breaks`, `classify`), the 5-step teal ramp (`static/css/money_map.css`), `shade_legend` |
+| `civic/money_map.py` | Budgets page money map: counted spending per resident from `spending_breakdowns.csv` and the 2020 Census counts; panel, tables for units with no boundary |
+| `civic/tax_base.py` | Tax base: certified net assessed value from `assessed_values.csv` (`dlgf_certified` rows only; the Gateway estimates are never charted), the "Tax base:" line on place, school and county pages, map panel facts |
+| `civic/school_stats.py` | School corporation enrollment (IDOE) and spending per student with the state median (DLGF) from `indicator_values.csv`; Schools page and map panel facts |
+| `static/js/indicator_map.js` | "Shade by" picker of the community pages' indicator maps (`pages/community_history.py indicator_map_section`) |
 | `civic/sitemap.py` | Every page (`entries()`), the Reference menu groups and the learning `PATHS` |
 | `civic/glyph.py` | Indiana glyph (masthead) and the 92-county map |
 | `civic/neutrality.py` | Banned-term list used by the checker |

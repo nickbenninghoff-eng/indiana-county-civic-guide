@@ -76,12 +76,40 @@ def _vyear(v: str) -> int:
     return int(ys[-1]) if ys else 0
 
 
+SHAPE_GEO_TYPES = {"place": ("place", "town"), "township": ("county_subdivision",), "school": ("school_district",)}
+
+
+def _shape_names(ed) -> dict:
+    """{unit_id: (layer key, Census name)} from the map shapes (cached); {} when there are no shapes."""
+    idx = ed.__dict__.get("_cmap_shape_names")
+    if idx is None:
+        idx = {}
+        shapes = load_shapes(ed)
+        for key, items in ((shapes or {}).get("layers") or {}).items():
+            if key in SHAPE_GEO_TYPES:
+                for it in items:
+                    if it.get("id") and it.get("census_name"):
+                        idx[it["id"]] = (key, it["census_name"])
+        ed.__dict__["_cmap_shape_names"] = idx
+    return idx
+
+
 def population(ed, unit: dict) -> dict | None:
     """Latest ACS pop_total (with margin of error and CV) plus a 2020 Census count when the data has one.
-    Geographies are matched to the unit by name; nothing is hard-coded."""
+    The geography is the unit's map shape's own Census name (exact, before the first comma) when the unit has a shape;
+    otherwise it is matched by the unit's name. Nothing is hard-coded. (Matching only by unit name missed School City
+    of Mishawaka and LaVille, whose unit names differ from their Census names.)"""
     import re
     name = unit["name"]
     t = unit["unit_type"]
+    rows = None
+    shape = _shape_names(ed).get(unit.get("unit_id"))
+    if shape:
+        types, want = SHAPE_GEO_TYPES[shape[0]], shape[1].strip().lower()
+        for (gt, gname), v in _pop_index(ed).items():
+            if gt in types and gname.split(",")[0].strip() == want:
+                rows = v
+                break
     if t == "township":
         base = re.sub(r" township$", "", name, flags=re.I).lower()
         want, types = f"{base} township", ("county_subdivision",)
@@ -90,8 +118,7 @@ def population(ed, unit: dict) -> dict | None:
     else:
         base = re.sub(r"^(city|town) of ", "", name, flags=re.I).lower()
         want, types = f"{base} {t}", ("town",) if t == "town" else ("place",)
-    rows = None
-    for (gt, gname), v in _pop_index(ed).items():
+    for (gt, gname), v in (_pop_index(ed).items() if rows is None else ()):
         if gt in types and gname.startswith(want):
             rows = v
             break
@@ -427,6 +454,43 @@ def margin_cell(r: dict, v) -> str:
     return pair_margin_text({p: v[i] for p, i in VIDX.items()}, a, b)
 
 
+# Race ids in map_votes.json (tools/build_map.py) use the precinct file's contest keys; results.csv names the same contests
+# differently for statewide offices, townships and towns. These rules bridge the two id schemes.
+STATE_CONTEST = {"governor": "state-governor", "attorney-general": "state-attorney-general",
+                 "secretary-of-state": "state-secretary-of-state", "auditor": "state-auditor-of-state",
+                 "treasurer": "state-treasurer-of-state"}
+
+
+def results_contest_ids(eid: str, contest: str) -> list[str]:
+    """Candidate results.csv contest_ids for a map race (election id, precinct-file contest key), most direct first."""
+    import re
+    out = [f"{eid}-{contest}"]
+    if contest in STATE_CONTEST:
+        out.append(f"{eid}-{STATE_CONTEST[contest]}")
+    m = re.fullmatch(r"township-(trustee|board|assessor)-([a-z0-9-]+)", contest)
+    if m:
+        out.append(f"{eid}-{m.group(2)}-township-{m.group(1)}")
+    m = re.fullmatch(r"town-council-([a-z0-9-]+?)-ward-(\d+)", contest)
+    if m:
+        out.append(f"{eid}-{m.group(1)}-council-ward-{m.group(2)}")
+    elif contest.startswith("town-council-"):
+        out.append(f"{eid}-{contest[len('town-council-'):]}-council-at-large")
+    return out
+
+
+def race_by_contest(ed, votes: dict | None) -> dict:
+    """{results.csv contest_id: map race id} for every race on the "How areas voted" layer that the results file has."""
+    if not votes:
+        return {}
+    have = {r["contest_id"] for r in ed.table("results")}
+    out = {}
+    for r in votes["races"]:
+        hit = next((c for c in results_contest_ids(r["eid"], r["contest"]) if c in have), None)
+        if hit:
+            out[hit] = r["id"]
+    return out
+
+
 def vote_layer_group(page, ed, shapes, votes):
     """SVG sub-groups for the layer: townships, cities and towns, precincts."""
     uni = ed.units
@@ -564,7 +628,8 @@ def vote_tables(page, ed, shapes, votes):
     sum_rows = []
     for r in races:
         a, b = pair_sides(r)
-        sum_rows.append([r["label"], lv_label[r["level"]], scope_text(r)] + _vote_cells(r, r["county"]) +
+        # id race-<race id>: the Results page links here (map/index.html#race-<id>); map.js opens the layer on that race
+        sum_rows.append([h("span", {"id": f"race-{r['id']}"}, r["label"]), lv_label[r["level"]], scope_text(r)] + _vote_cells(r, r["county"]) +
                         ["matches the official canvass" if r["county_checked"] else "not checked"])
     summary = h("div", {"class": "cmap-vt"},
                 h("h4", None, "Every race on the map: county or district totals"),
@@ -615,14 +680,21 @@ def vote_tables(page, ed, shapes, votes):
                h("ul", None, unp)) if unp else None)
 
 
-def boundary_map(page, ed, shapes: dict, default_layer: str = "cities", votes: dict | None = None) -> Markup:
+def government_layers(page, ed, shapes: dict, default_layer: str, area, back_cls: str = "cmap-s cmap-township cmap-back-s",
+                      only: tuple | None = None):
+    """The three government layers (cities and towns, townships, school corporations) as SVG groups, plus the layer
+    tabs. Shared by boundary_map and the budgets page's money map (civic/money_map.py).
+
+    area(key, tab, n, it, uid, unit) -> (path_class, href, aria_label, data_entry, dot_class) for each shape with a
+    unit; data_entry goes into the #cmap-data blob that static/js/map.js reads. Returns (groups, tabs, data)."""
     vb = shapes["viewBox"]
     units = ed.units
     data = {}
-    layer_groups = []
-    legends = []
+    groups = []
     tabs = []
     for key, tab, label, _heading in LAYERS:
+        if only is not None and tab not in only:
+            continue
         items = shapes["layers"].get(key, [])
         paths, texts = [], []
         for n, it in enumerate(items):
@@ -632,16 +704,11 @@ def boundary_map(page, ed, shapes: dict, default_layer: str = "cities", votes: d
                 paths.append(h("path", {"d": it["d"], "class": "cmap-s cmap-nolink", "data-tv": it["census_name"],
                                         "data-tl": "No page for this area in the guide yet"}))
                 continue
-            f = unit_facts(ed, uid, it)
-            href = unit_href(page, uid, unit)
-            tlabel = TYPE_LABEL.get(unit["unit_type"], unit["unit_type"])
-            data[uid] = {"n": unit["name"], "t": tlabel, "f": f["facts"], "note": f["note"], "href": href, "l": tab,
-                         "d": it["d"]}
-            name_for_aria = f"{unit['name']}, {tlabel.lower()}"
-            aria = f"{name_for_aria}. Open page." + (f" {f['note']}" if f["note"] else "")
-            kids = [h("path", {"d": it["d"], "class": f"cmap-s {_kind_class(unit, n)}"})]
+            path_cls, href, aria, entry, dot_cls = area(key, tab, n, it, uid, unit)
+            data[uid] = entry
+            kids = [h("path", {"d": it["d"], "class": path_cls})]
             if key == "place" and it["label_r"] < 6:   # tiny places get a tappable dot
-                kids.append(h("circle", {"cx": it["label"][0], "cy": it["label"][1], "r": 5, "class": "cmap-dot"}))
+                kids.append(h("circle", {"cx": it["label"][0], "cy": it["label"][1], "r": 5, "class": dot_cls}))
             paths.append(h("a", {"href": href, "class": "cmap-a", "data-uid": uid, "aria-label": aria}, kids))
             it["short"] = unit["name"].replace("City of ", "").replace("Town of ", "").replace(" Township", "").replace(" School Corporation", "")
             if key == "place" or key == "township":
@@ -656,29 +723,51 @@ def boundary_map(page, ed, shapes: dict, default_layer: str = "cities", votes: d
                                          "class": "cmap-label cmap-label-township"}, it["short"]))
         if key == "place":
             back = h("g", {"class": "cmap-back", "aria-hidden": "true"},
-                     [h("path", {"d": t["d"], "class": "cmap-s cmap-township cmap-back-s"}) for t in shapes["layers"]["township"]])
+                     [h("path", {"d": t["d"], "class": back_cls}) for t in shapes["layers"]["township"]])
             body = [back, paths, labels]
         elif key == "school":
             body = [h("g", {"clip-path": "url(#cmap-clip)"}, paths)]
         else:
             body = [paths, labels]
         on = tab == default_layer
-        layer_groups.append(h("g", {"class": "cmap-layer" + (" is-on" if on else ""), "data-layer": tab,
-                                    "role": "group", "aria-label": f"Layer: {label}"}, body))
+        groups.append(h("g", {"class": "cmap-layer" + (" is-on" if on else ""), "data-layer": tab,
+                              "role": "group", "aria-label": f"Layer: {label}"}, body))
         tabs.append(h("button", {"type": "button", "class": "cmap-tab", "data-layer": tab,
                                  "aria-pressed": "true" if on else "false"}, label))
-        legends.append((tab, key))
+    return groups, tabs, data
+
+
+def facts_area(page, ed):
+    """The boundary map's area callback for government_layers: type colors, unit_facts panel, link to the unit's page."""
+    def area(key, tab, n, it, uid, unit):
+        f = unit_facts(ed, uid, it)
+        href = unit_href(page, uid, unit)
+        tlabel = TYPE_LABEL.get(unit["unit_type"], unit["unit_type"])
+        entry = {"n": unit["name"], "t": tlabel, "f": f["facts"], "note": f["note"], "href": href, "l": tab, "d": it["d"]}
+        name_for_aria = f"{unit['name']}, {tlabel.lower()}"
+        aria = f"{name_for_aria}. Open page." + (f" {f['note']}" if f["note"] else "")
+        return f"cmap-s {_kind_class(unit, n)}", href, aria, entry, "cmap-dot"
+    return area
+
+
+LEGEND_ITEMS = {
+    "cities": [("cmap-city", "City"), ("cmap-town", "Town"), ("cmap-township cmap-back-s", "Unincorporated area (township background)")],
+    "townships": [("cmap-township", "Township")],
+    "schools": [("cmap-school cmap-school-0", "School corporation (shading only separates neighbors)")],
+}
+
+
+def boundary_map(page, ed, shapes: dict, default_layer: str = "cities", votes: dict | None = None) -> Markup:
+    vb = shapes["viewBox"]
+    layer_groups, tabs, data = government_layers(page, ed, shapes, default_layer, facts_area(page, ed))
+    legends = [(tab, key) for key, tab, _label, _heading in LAYERS]
 
     if votes:
         layer_groups.append(h("g", {"class": "cmap-layer", "data-layer": "votes", "role": "group", "aria-label": "Layer: How areas voted"},
                               vote_layer_group(page, ed, shapes, votes)))
         tabs.append(h("button", {"type": "button", "class": "cmap-tab", "data-layer": "votes", "aria-pressed": "false"}, "How areas voted"))
 
-    legend_items = {
-        "cities": [("cmap-city", "City"), ("cmap-town", "Town"), ("cmap-township cmap-back-s", "Unincorporated area (township background)")],
-        "townships": [("cmap-township", "Township")],
-        "schools": [("cmap-school cmap-school-0", "School corporation (shading only separates neighbors)")],
-    }
+    legend_items = LEGEND_ITEMS
     legend = [h("ul", {"class": "cmap-legend" + (" is-on" if tab == default_layer else ""), "data-layer": tab},
                 [h("li", None, h("span", {"class": f"cmap-key {cls}", "aria-hidden": "true"}), txt) for cls, txt in legend_items[tab]])
               for tab, _k in legends]
@@ -708,6 +797,50 @@ def boundary_map(page, ed, shapes: dict, default_layer: str = "cities", votes: d
                  h("div", {"class": "cmap-drill", "hidden": True}) if votes and precinct_view(ed) else None),
                panel),
              json_script("cmap-data", data))
+
+
+def shade_defs():
+    """SVG <pattern> for the shaded maps' "no data" hatch (static/css/money_map.css .cmap-mm-none)."""
+    return h("pattern", {"id": "cmap-mhatch", "patternUnits": "userSpaceOnUse", "width": 6, "height": 6,
+                         "patternTransform": "rotate(45)"},
+             h("rect", {"width": 6, "height": 6, "class": "cmap-mhatch-bg"}),
+             h("line", {"x1": 0, "y1": 0, "x2": 0, "y2": 6, "class": "cmap-mhatch-ln"}))
+
+
+def embedded_map(page, ed, shapes: dict, layers: tuple, default_layer: str, area=None, label: str | None = None,
+                 hint: str | None = None, legend=None, defs=None, extra_cls: str = "", controls=None,
+                 back_cls: str = "cmap-s cmap-township cmap-back-s", attrs: dict | None = None, extra=None) -> Markup:
+    """The boundary map limited to some layers, for embedding in another page (places index, Schools page). Same
+    component as boundary_map: static/js/map.js gives the panel, touch select-then-open and the tabs. It never reads or
+    writes the URL hash (data-hash="off"), so the host page's own #anchors keep working. With one layer the tab bar is
+    hidden (cmap-single). area: a government_layers callback (default: the boundary map's facts panel).
+    Shaded maps (civic/shading.py) pass their own legend blocks, the hatch defs, controls for the bar above the map,
+    the township background class for the places layer, wrapper attrs and extra markup (JSON blobs) after the map."""
+    vb = shapes["viewBox"]
+    groups, tabs, data = government_layers(page, ed, shapes, default_layer, area or facts_area(page, ed), back_cls=back_cls,
+                                           only=layers)
+    shown = [tab for _k, tab, _l, _h in LAYERS if tab in layers]
+    legend = legend if legend is not None else [h("ul", {"class": "cmap-legend" + (" is-on" if tab == default_layer else ""), "data-layer": tab},
+                [h("li", None, h("span", {"class": f"cmap-key {cls}", "aria-hidden": "true"}), txt) for cls, txt in LEGEND_ITEMS[tab]])
+              for tab in shown]
+    svg = h("svg", {"class": "cmap-svg", "viewBox": f"{vb[0]} {vb[1]} {vb[2]} {vb[3]}", "role": "group",
+                    "aria-label": label or f"Boundary map of {ed.county_label}. Every area is a link."},
+            h("defs", None, h("clipPath", {"id": "cmap-clip"}, h("path", {"d": shapes["county"]["d"]})), defs),
+            groups,
+            h("path", {"d": shapes["county"]["d"], "class": "cmap-outline", "aria-hidden": "true"}),
+            h("g", {"class": "cmap-hl-g", "aria-hidden": "true"}))
+    panel = h("aside", {"class": "cmap-panel", "id": "cmap-panel", "aria-live": "polite", "aria-label": "Selected area"},
+              h("p", {"class": "cmap-hint"}, hint or "Hover, focus or tap an area to see details here. Select it again, "
+                                                     "or use the link, to open its page."))
+    root = {"class": "cmap" + (" cmap-single" if len(shown) == 1 else "") + (f" {extra_cls}" if extra_cls else ""),
+            "data-default-layer": default_layer, "data-hash": "off"}
+    root.update(attrs or {})
+    return h("div", root,
+             h("div", {"class": "cmap-bar"},
+               h("div", {"class": "cmap-tabs", "role": "group", "aria-label": "Map layer", "hidden": True}, tabs),
+               controls),
+             h("div", {"class": "cmap-grid"}, h("div", {"class": "cmap-stage"}, svg, legend), panel),
+             json_script("cmap-data", data), extra)
 
 
 def area_lists(page, ed, shapes: dict) -> Markup:

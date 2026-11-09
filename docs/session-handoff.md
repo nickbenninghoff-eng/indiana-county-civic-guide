@@ -48,6 +48,7 @@ built to be reusable for other Indiana counties. Python stdlib generator; data i
 - SBCSC 2016 at-large fixed 2026-11-08 (two seats; McCullough did not win in 2016). Only the printed "Vote for" line on View/60008 is unread.
 - **tools/site/ (the whole generator) was never in git**: .gitignore `site/` matched it. Now `/site/`; 58 files untracked, waiting on Nick's commit.
 - Don't rerun tools/res_main.py over results.csv: it drops ~30 later hand fixes (see Roadmap).
+- 2026-11-08 later: gap-fill pass applied (~340 edits; planning/qa/gapfill-2026-11-08-applied.md) and Money in and money out charts built (tools/build_spending.py → spending_breakdowns.csv; tests: `python -P -E -m unittest discover -s tools/tests`). Both UNCOMMITTED; decisions for Nick listed in Roadmap Phase 5. Never run res_main.py or build_money.py (they erase hand edits).
 - 2026-11-08 research applied: SB 2027 adopted $439,062,691; LaVille rename 4-0 June 9, 2025; Wax seated Nov 24-Dec 14, 2020; Roseland no charges as of 2026-11-08. check_money.py is stale (518 false errors).
 - Still not found: Eli Wax's oath day (window Nov 24-Dec 14, 2020); South Bend 2026 adopted all-funds total; the June 8,
   2026 LaVille resolution tally (minutes have none).
@@ -67,14 +68,81 @@ built to be reusable for other Indiana counties. Python stdlib generator; data i
 - Commit and deploy only on Nick's explicit trigger words (global CLAUDE.md). Public hosting = deploy trigger.
 
 ## Waiting on Nick
+- Commit + push of everything since b2f89ed (gap-fill edits, money charts, budgets map when done) — only on his "commit"/"push".
+- Which map-navigation pages to build next (audit 2026-11-08 recommends: Places, Schools, election-results links to the
+  map; then Community data pages reusing the budgets map's shading mode; skip Your tax bill unless he wants it).
+- Format for held money data (item 4 of his decisions): net_assessed_value.csv (37 units, DLGF 2026 budget order),
+  school enrollment + per-pupil spending (42 rows; need indicator ids), SB 2026 $429,975,283 (derived from a 2027 deck,
+  not the ordinance), RDC 2026 $135.1M amended budget, city debt $298.7M at 1/1/2026. I owe him a concrete proposal.
 - License for the public repo (suggested: MIT for code, CC BY 4.0 for data/text) — none added yet.
 - Whether to keep the Gmail address on commits or switch git to the GitHub noreply address.
 - Close Adobe Acrobat, then the 21 leftover PDFs in Downloads can go to the Recycle Bin (all have copies in `sources/`).
 - Optional: research the 2013 Roseland clerk theft case for the town's history.
 - Public hosting of the site: only on Nick's explicit deploy trigger.
 
+## Session 2026-11-08 (evening) — state at compaction
+- Committed/pushed: b2f89ed (site generator into git, SBCSC 2016 fix, SB 2027 adopted budget, LaVille, Wax, Roseland,
+  map panel keeps last area). Everything after that is UNCOMMITTED in the working tree.
+- Done, uncommitted, verified: gap-fill pass (~340 edits; planning/qa/gapfill-2026-11-08-applied.md; check_gov 0 errors;
+  I spot-checked judges, Robles/Monterrosa, Lakeville 2015, New Prairie 2024) and Money in and money out charts
+  (tools/build_spending.py → spending_breakdowns.csv; civic/spending.py; 17 tests pass; I re-checked reconciliation
+  against the raw Gateway files to the dollar; county page viewed at 1280px). Build PASSED.
+- New sources downloaded (Nick gave blanket permission for public source material; saved as memory): Gateway AFR
+  Disbursements by Fund 2024/2025 and Detailed Receipts 2025, filtered to county 71 in sources/money/*.psv.
+- Running: Opus agent building the budgets-page money map (spending per resident shading, Nick's choice; hover panel;
+  click → unit's money section; table for units without boundaries). Report → planning/qa/budgets-map-2026-11-08.md.
+- Nick's decisions (2026-11-08): (1) investigate county "Refunds and reimbursements" $71.0M — IN PROGRESS: $61.2M is
+  R906 receipts into New Carlisle Dev Area #1 ($33.8M) and #2 ($27.4M) TIF funds, which spent ~$68M that year; need a
+  public source for who paid (likely developer reimbursement under a development agreement), then relabel/annotate in
+  tools/build_spending.py (I_REFUND rule ~L596-617) and rerun it + tests. (2) Find and fix the SBCSC 2025 income
+  discrepancy ($619.7M in vs $365.2M out; $251.8M property tax in the Education Fund) — NOT STARTED. (3) Greene Twp
+  trustee phone: publish (already in units.csv) — resolved. (4) He asked what I need for the held money data → give a
+  concrete format proposal.
+- Rules learned: never run tools/res_main.py or tools/build_money.py (both erase hand edits); check_money.py is stale.
+
+- UPDATE (later 2026-11-08): decisions (1)-(3) DONE (see Roadmap). Nick said "yes, go ahead with all five" for the
+  held money data → Opus data agent running (assessed_values.csv + tools/build_assessed_values.py, enrollment and
+  per-pupil indicators, SB 2026 adopted from the Oct 2025 ordinance, RDC 2026 amended, city debt 1/1/2026; data files
+  only; report planning/qa/held-money-data-2026-11-08.md with DISPLAY HOOKS). Budgets-map agent also queued (Nick
+  approved): Places map, Schools map, election-results → map race links, Community data "shade by indicator";
+  NOT the tax-bill page. After both finish: send the display hooks to the map agent (it owns places.py/money.py/map
+  code), then verify (build, tests, browser), then ask Nick to commit.
+
+- UPDATE 2: budgets map + Places/Schools/results-links/Community maps DONE (49 tests, build PASSED, I checked the budgets
+  map in the browser). Nick: race/Hispanic shares TABLE ONLY on community maps (done: RACE_IDS removed from the people
+  page map call); keep towns visible. Held money data DONE (planning/qa/held-money-data-2026-11-08.md): assessed values
+  from DLGF certified budget orders 2020-2026 (Gateway NAV is NOT the tax base; kept as labelled estimates), SB 2026
+  adopted $437,446,265 (Ord. 11229-25), enrollment + per-student indicators, RDC amended, city debt. Map agent resumed
+  to wire them into pages, fix the population-name bug (map.py), and update stale check_money.py. Then: verify, ask
+  Nick to commit.
+
+- UPDATE 3: map agent round 2 DONE, per its report (planning/qa/budgets-map-2026-11-08.md sections 7-10), not yet
+  verified by me:
+  - population() now matches by census_name (School City of Mishawaka 30,799; LaVille 7,532);
+  - new civic/tax_base.py: certified AV line and bars on the budgets page, AV per resident, a "Tax base:" line on
+    place, county and school pages, and in the map panels;
+  - new civic/school_stats.py: enrollment and spending per student vs the state median on the Schools page and panels;
+  - legend, amended_all_funds label, two city debt figures;
+  - per-resident charts were empty (picked 2027); they now compare 2026;
+  - check_money.py: 0 errors (was 613);
+  - 67 tests pass.
+  Items for Nick: per-resident AV uses ACS on the page but the 2020 Census in the panel; cross-county AV is the
+  county part only; optional extras were skipped (levy example, AV per budget block, SB "Debt:" line, per-student
+  bars); LaVille has no budget rows.
+  VERIFIED by me 2026-11-08: build PASSED (60 pages), 67 tests OK, check_gov 0 errors, check_money 0 errors, browser:
+  budgets AV-per-resident chart, money-map panel tax base, Schools enrollment/per-student lines. NEXT: ask Nick to commit;
+  everything since b2f89ed is still UNCOMMITTED.
+
+- 2026-11-09 NEW REQUEST (Nick): reorganize /money/campaigns/ (one 384 KB page; 479 filings, 231 candidates) around a map
+  with a race-type filter and a side panel like /budgets. Nick's answers: (1) FIND OFFICIAL DISTRICT MAPS FIRST
+  (county commissioner + council, city council, SBCSC board, Walkerton wards; plus state House/Senate) so each district
+  is its own shape; (2) panel money = WHOLE-CYCLE spending per candidate summed across reports on file + party sums,
+  with reports-on-file vs expected and an 'incomplete' flag; (3) SPLIT into area pages (index = map + filter + short
+  list; Campaigns > <area> pages: races > candidates > filings; full table moves to an 'All filings' page + CSV);
+  (4) INCLUDE state legislative districts (cf_state = sitting legislators by filing year, label the different basis).
+  Status: plan + token estimate given to Nick; waiting on his go before launching agents.
+
 ## Next step
-Session ended 2026-11-08 for a computer restart, with everything committed and pushed (`main` = `origin/main`;
-working tree clean before this handoff edit). Nothing was mid-stride: no agents running, no pending downloads.
-On resume: read Roadmap.md Phase 5, rebuild the site, restart the preview (command above), then take Nick's answers
-on the items above or continue with Phase 5's open optional items.
+(Superseded by the UPDATEs above.) Finish decision (1) (source + relabel the New Carlisle TIF reimbursements), then (2) the SBCSC 2025 receipts check,
+then answer (4) with a concrete proposal; review the budgets-map agent's report when it lands (rerun build + tests,
+look at the page in the browser); then ask Nick which map pages to build next and whether to commit.

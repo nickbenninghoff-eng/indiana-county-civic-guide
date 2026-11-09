@@ -4,12 +4,19 @@ Run:  python -P -E tools/check_money.py
 Exit status 1 if any check fails. Prints each unit's budget series and flags
 year-over-year jumps over 40% that are not explained by a series_break row.
 """
-import csv, collections, sys
+import csv, collections, datetime, sys
 
 D = 'C:/Users/nickb/local-gov-guide/data/editions/st-joseph/'
 STATUS = {'official', 'unofficial', 'computed', 'from_scan', 'secondary', 'single_source'}
 BASES = {'general_fund', 'advertised_all_funds', 'all_funds_incl_utilities', 'gateway_reported_funds'}
-AOA = {'adopted', 'actual', 'proposed', 'series_break'}
+# table-only bases (never charted; see data/SCHEMA.md): the DLGF budget-order total and a later amended budget
+TABLE_BASES = {'dlgf_certified', 'amended_all_funds'}
+AOA = {'adopted', 'actual', 'proposed', 'amended', 'series_break'}
+# units adopt next year's budget in the fall, so the latest budget year is next calendar year
+MAX_BUDGET_YEAR = datetime.date.today().year + 1
+RATE_KINDS = {'sum_of_fund_net_rates', 'general_fund_net_rate', 'park_fund_net_rate'}
+# rates from the DLGF certified budget orders; a unit with a certified levy of $0 has a certified rate of 0
+CERTIFIED_RATE_KINDS = {'certified_unit_rate', 'certified_district_rate', 'certified_district_unit_rate'}
 HEADERS = {
     'budgets.csv': 'unit_id,year,basis,amount,adopted_or_actual,series_id,status,source_ids,notes',
     'budget_breakdowns.csv': 'unit_id,year,kind,category,amount,basis,status,source_ids,notes',
@@ -76,8 +83,10 @@ def common(fn, rows, amount_cols):
 B = load('budgets.csv')
 for i, r in B:
     brk = r['adopted_or_actual'] == 'series_break'
-    if r['basis'] not in BASES:
+    if r['basis'] not in BASES | TABLE_BASES:
         err('budgets line %d: bad basis %r' % (i, r['basis']))
+    if r['basis'] in TABLE_BASES and brk:
+        err('budgets line %d: table-only basis %s cannot have a series_break row' % (i, r['basis']))
     if r['adopted_or_actual'] not in AOA:
         err('budgets line %d: bad adopted_or_actual %r' % (i, r['adopted_or_actual']))
     if brk:
@@ -90,8 +99,8 @@ for i, r in B:
             err('budgets line %d: non-numeric amount %r' % (i, r['amount']))
         elif num(r['amount']) < 0:
             err('budgets line %d: negative amount' % i)
-        if not (r['year'].isdigit() and 2012 <= int(r['year']) <= 2026):
-            err('budgets line %d: year outside 2012-2026: %r' % (i, r['year']))
+        if not (r['year'].isdigit() and 2012 <= int(r['year']) <= MAX_BUDGET_YEAR):
+            err('budgets line %d: year outside 2012-%d: %r' % (i, MAX_BUDGET_YEAR, r['year']))
     if not r['series_id'] or not r['basis']:
         err('budgets line %d: missing series_id/basis' % i)
 common('budgets.csv', [(i, r) for i, r in B], [])
@@ -165,10 +174,12 @@ for k, v in kinds.items():
 TR = load('tax_rates.csv')
 common('tax_rates.csv', TR, ['rate_per_100'])
 for i, r in TR:
-    if num(r['rate_per_100']) is not None and not (0 < num(r['rate_per_100']) < 20):
+    v = num(r['rate_per_100'])
+    zero_ok = r['rate_kind'] in CERTIFIED_RATE_KINDS and 'levy $0' in r['notes']
+    if v is not None and not ((0 < v < 20) or (v == 0 and zero_ok)):
         err('tax_rates line %d: implausible rate %s' % (i, r['rate_per_100']))
-    if r['rate_kind'] not in ('sum_of_fund_net_rates', 'general_fund_net_rate', 'park_fund_net_rate'):
-        err('tax_rates line %d: bad rate_kind' % i)
+    if r['rate_kind'] not in RATE_KINDS | CERTIFIED_RATE_KINDS:
+        err('tax_rates line %d: bad rate_kind %r' % (i, r['rate_kind']))
 seen_t = set()
 for i, r in TR:
     k = (r['unit_id'], r['taxing_district'], r['year'], r['rate_kind'])
@@ -186,8 +197,8 @@ for i, r in CF:
         err('cf_state line %d: non-numeric cash_end' % i)
     if r['party'] not in {'D', 'R', 'L', 'I', 'G', 'NP', 'W', 'O'}:
         err('cf_state line %d: bad party' % i)
-    if not (2016 <= int(r['year']) <= 2026):
-        err('cf_state line %d: year outside 2016-2026' % i)
+    if not (2016 <= int(r['year']) <= datetime.date.today().year):
+        err('cf_state line %d: year outside 2016-%d' % (i, datetime.date.today().year))
 seen_c = set()
 for i, r in CF:
     k = (r['committee'], r['year'])

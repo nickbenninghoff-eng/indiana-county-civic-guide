@@ -1,0 +1,82 @@
+/* Money map on the budgets page (civic/money_map.py): counted spending per resident, one sequential teal ramp
+   (the hue of --cm-city, OKLCH h 182), never a party color. Five shades; a layer with fewer classes uses spread-out
+   shades (civic/money_map.py ramp_positions), so neighbors on the legend stay far apart.
+   Measured 2026-11-08 (OKLab dE x100, WCAG ratio), surfaces of all three looks:
+   light (surface #ffffff in every look): L .766 .666 .565 .467 .364; adjacent-step dE 10.1 / 10.0 / 9.9 / 10.5;
+     lightest step 2.03:1 against the surface; >= 16.2 from --party-d, >= 28.5 from --party-r.
+   dark (surfaces #1b1a17 Ballot, #16161a Line map, #1a1918 Wayfinding): L .421 .520 .621 .729 .840; adjacent dE
+     10.2 / 10.2 / 10.9 / 11.1; darkest step 2.13:1 or more against every dark surface; >= 16.3 from --party-d.
+   In dark mode the ramp runs from near the surface (least) to bright (most): more per resident = farther from the
+   background in both modes. "No data" is a hatch of two neutral tokens, so it reads as texture, not as a step.
+   dataviz validate_palette.js --ordinal passes in both modes (monotone L, adjacent dL >= .06, end clears 2:1). */
+/* TOKENS:BEGIN */
+/* mm:light */
+:root {
+  --cm-mm-1: #76c4b6;
+  --cm-mm-2: #43a798;
+  --cm-mm-3: #1a887a;
+  --cm-mm-4: #00695d;
+  --cm-mm-5: #004940;
+}
+@media (prefers-color-scheme: dark) {
+  /* mm:dark */
+  :root:not([data-theme="light"]) {
+    --cm-mm-1: #20584f;
+    --cm-mm-2: #25786c;
+    --cm-mm-3: #33998a;
+    --cm-mm-4: #60baac;
+    --cm-mm-5: #92dbce;
+  }
+}
+/* mm:dark */
+:root[data-theme="dark"] {
+  --cm-mm-1: #20584f;
+  --cm-mm-2: #25786c;
+  --cm-mm-3: #33998a;
+  --cm-mm-4: #60baac;
+  --cm-mm-5: #92dbce;
+}
+/* TOKENS:END */
+.cmap-mm-1 { fill: var(--cm-mm-1); }
+.cmap-mm-2 { fill: var(--cm-mm-2); }
+.cmap-mm-3 { fill: var(--cm-mm-3); }
+.cmap-mm-4 { fill: var(--cm-mm-4); }
+.cmap-mm-5 { fill: var(--cm-mm-5); }
+.cmap-mm-none { fill: url(#cmap-mhatch); }
+.cmap-mm-back { fill: var(--surface-2); }
+.cmap-mhatch-bg { fill: var(--surface-2); }
+.cmap-mhatch-ln { stroke: var(--line); stroke-width: 2.5; }
+.cmap-mm-dot { stroke: var(--ink); }
+/* legend keys are HTML spans: background, not fill */
+.cmap-key.cmap-mm-1 { background: var(--cm-mm-1); }
+.cmap-key.cmap-mm-2 { background: var(--cm-mm-2); }
+.cmap-key.cmap-mm-3 { background: var(--cm-mm-3); }
+.cmap-key.cmap-mm-4 { background: var(--cm-mm-4); }
+.cmap-key.cmap-mm-5 { background: var(--cm-mm-5); }
+.cmap-key.cmap-mm-back { background: var(--surface-2); }
+.cmap-key.cmap-mm-none { background: repeating-linear-gradient(45deg, var(--line) 0 2px, var(--surface-2) 2px 6px); }
+.cmap-mlegend { display: none; margin-top: 10px; }
+.cmap-mlegend.is-on { display: block; }
+.cmap-mlegend .cmap-legend { margin-top: 4px; }
+.cmap-mlegend-h { margin: 0; font: 600 .66rem/1.2 var(--f-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); max-width: none; }
+.cmap-lg-n { color: var(--ink-3); }
+.cmap-mcounty { margin: 4px 0 0; padding: 10px 12px; border: 1px solid var(--line); border-left: 3px solid var(--accent); background: var(--surface); max-width: none; font-size: .92rem; }
+.cmap-mnote { font-size: .82rem; margin: 12px 0 0; max-width: none; }
+.cmap-mtables { margin-top: 18px; }
+.cmap-mtables h4 { margin: 18px 0 6px; }
+/* panel: ranked share bars (static/js/map.js renders them from the #cmap-data entry) */
+.cmap-bars-h { margin: 12px 0 4px; font: 600 .66rem/1.2 var(--f-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); }
+.cmap-bars { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; font-size: .84rem; }
+.cmap-bar-top { display: flex; justify-content: space-between; gap: 8px; color: var(--ink-2); }
+.cmap-bar-l { min-width: 0; overflow-wrap: anywhere; }
+.cmap-bar-v { flex: none; font-variant-numeric: tabular-nums; color: var(--ink-3); }
+.cmap-bar-t { display: block; height: 6px; margin-top: 2px; background: var(--surface-2); border-radius: 3px; overflow: hidden; }
+.cmap-bar-f { display: block; height: 100%; background: var(--cm-mm-3); border-radius: 3px; }
+.cmap-money .cmap-note { font-size: .8rem; color: var(--ink-3); }
+/* indicator maps (pages/community_history.py, static/js/indicator_map.js): the "Shade by" picker, one legend per
+   indicator and layer (hidden unless picked), and the shaded row marked in the panel */
+.cmap-mlegend[hidden] { display: none; }
+.cmap-ind { display: flex; flex-direction: column; gap: 5px; margin-top: 10px; max-width: 26rem; }
+.cmap-ind[hidden] { display: none; }
+.cmap-facts dt.is-lead { color: var(--ink); }
+.cmap-facts dd.is-lead { color: var(--ink); font-weight: 600; }

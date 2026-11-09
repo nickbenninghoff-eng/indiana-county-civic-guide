@@ -469,11 +469,17 @@
     var r = racesOf(o.key, d).filter(function (x) { return x.year === y; })[0];
     state.level = level; state.office = o.key; state.district = d; state.year = y; state.race = r.id;
   }
+  // the selected race in the address (#race-<id>), so a reload or a shared link opens it again; standalone map only
+  function writeRaceHash() {
+    if (root.closest(".pick") || root.getAttribute("data-hash") === "off" || !state.race) return;
+    try { history.replaceState(null, "", "#race-" + state.race); } catch (e) {}
+  }
   function setRace(level, off, dist, year) {
     pickRace(level, off, dist, year);
     state.sel = null;
     if (state.drill && state.geo === "precinct") drawDrill();
     refresh();
+    writeRaceHash();
   }
 
   function countyLine() {
@@ -547,10 +553,17 @@
         V = data;
         V.races.forEach(function (r) { RACE[r.id] = r; });
         PVIEW = V.pview !== false;
-        var d = RACE[V["default"]] || V.races[0];
+        // a race asked for by the address (#race-<id>, set aside by map.js), else the default race
+        var asked = root.getAttribute("data-want-race");
+        root.removeAttribute("data-want-race");
+        var d = (asked && RACE[asked]) || RACE[V["default"]] || V.races[0];
         pickRace(d.level, d.office, d.district, d.year);
         loading = false;
         if (state.active) refresh();
+        if (asked && RACE[asked] && state.active) {
+          writeRaceHash();
+          try { root.scrollIntoView(); } catch (e) {}
+        }
       })
       .catch(function () { failed = true; loading = false; if (state.active) idle(); });
   }

@@ -17,6 +17,7 @@ from civic.components import (callout, data_table, party_label, scope_badge, sec
 from civic.data import (PARTY_LABELS, SELECTED_BY_LABELS, fmt_date, fmt_int, nth_weekday_after, parse_date,
                         split_ids)
 from civic.html import Markup, h, json_script
+from civic.map import load_shapes, load_votes, race_by_contest
 
 YEARS = list(range(2026, 2031))
 RESULTS_FROM = "2010"
@@ -766,6 +767,12 @@ def build_results(site):
 
     # ---- explorer
     payload_c = [_contest_payload(ed, c) for c in contests]
+    # contests on the map's "How areas voted" layer get a link that opens the map on that race (map/index.html#race-<id>)
+    shapes = load_shapes(ed)
+    on_map = race_by_contest(ed, load_votes(ed)) if shapes and "precinct" in shapes.get("layers", {}) else {}
+    for x in payload_c:
+        if x["id"] in on_map:
+            x["m"] = on_map[x["id"]]
     payload_c.sort(key=lambda x: (x["e"], GROUP_ORDER.get(x["g"], 99), x["p"], x["l"]))
     src_ids = sorted({s for x in payload_c for s in split_ids(x["src"])})
     num = {sid: i for i, sid in enumerate(src_ids)}
@@ -797,7 +804,8 @@ def build_results(site):
         "groups": GROUPS + ["Other"], "places": places, "notes": notes, "contests": payload_c, "parties": PARTY_LABELS,
         "src": [{"id": s, "t": (ed.source(s) or {}).get("title", s)} for s in src_ids],
         "links": {"legislature": page.rel("state/your-legislators/index.html"), "state": page.rel("state/index.html"),
-                  "about": page.rel("about/index.html#badges")},
+                  "about": page.rel("about/index.html#badges"),
+                  "map": page.rel("map/index.html") if on_map else ""},
     }
     latest = els[-1]
     years = sorted({e["date"][:4] for e in els}, reverse=True)

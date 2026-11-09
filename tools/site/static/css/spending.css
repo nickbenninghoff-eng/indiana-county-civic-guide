@@ -1,0 +1,35 @@
+/* Money in and money out per government (civic/spending.py): income chart, the two spending charts side by side,
+   and the separated "passes through or moves between funds" block. Existing tokens only (no new colors). */
+.sp-block { margin: 18px 0 26px; min-width: 0; scroll-margin-top: 72px; }
+.sp-h { margin: 18px 0 4px; }
+.sp-sub { margin: 18px 0 8px; font-size: 1rem; }
+.sp-scope, .sp-note { max-width: var(--measure); font-size: .9rem; color: var(--ink-2); }
+.sp-note { margin: 4px 0 12px; }
+.sp-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; }
+.sp-grid > .chart { margin: 0; min-width: 0; }
+@media (min-width: 760px) {
+  .sp-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+.sp-pass { margin-top: 22px; padding: 4px 14px 14px; border: 1px dashed var(--line); background: var(--surface-2); min-width: 0; }
+.sp-pass .sp-sub { margin-top: 12px; }
+.sp-pass > p { max-width: var(--measure); font-size: .9rem; }
+.sp-pass .chart { margin: 14px 0 0; }
+@media (min-width: 760px) {
+  .sp-pass > .chart { max-width: calc(50% - 7px); }
+}
+/* Phones: charts.hbar draws at a fixed 620px width and scales down; below ~760px that makes its 12px text
+   too small to read, so the chart keeps a 480px minimum and scrolls sideways inside its own box
+   (the .chart-scroll wrapper hbar already provides). The page itself never scrolls sideways. */
+@media (max-width: 759px) {
+  .sp-block .chart-scroll .chart-svg { min-width: 480px; }
+}
+.sp-pass .sp-kind { display: block; }
+.sp-pass .sp-what { display: block; margin-top: 2px; font-size: .84rem; color: var(--ink-2); max-width: 44rem; }
+@media (max-width: 759px) {
+  .sp-pass { padding: 4px 8px 10px; }
+}
+.sp-block .sp-pass table.data thead th { white-space: normal; }  /* beats the base and look rules (nowrap) */
+@media (max-width: 759px) {
+  .sp-block .sp-pass table.data th, .sp-block .sp-pass table.data td { padding-left: 6px; padding-right: 6px; }
+  .sp-pass table td.num { font-size: .82rem; }
+}

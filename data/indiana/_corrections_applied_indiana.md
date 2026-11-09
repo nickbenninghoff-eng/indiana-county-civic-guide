@@ -58,3 +58,37 @@ Office duties for Attorney General, Secretary of State, Treasurer and Lieutenant
 - Whether St. Joseph County opted into the nine-district council / three-district commissioner structure by 2023-09-01: not found; practice is consistent with opting in.
 - April 2026 ruling that district-only commissioner elections violate the "free and equal elections" clause (ABC57, Apr 22, 2026): say "a judge ruled"; court, judge and appeal status unknown; underlying City of South Bend suit was filed in Marion County in February 2023.
 - Straight-ticket totals for the county in 2026 (49,335; D 29,724, R 19,372).
+
+## 2026-11-08: gap-fill A (election rules)
+
+Source: `planning/qa/gapfill-2026-11-08-A-rules.md` and `-edits.csv` (41 rows). Every statute cited was read on Justia (2025 Indiana Code) in a browser on 2026-11-08; changes from the 2026 session were not checked. New sources IND-065 to IND-077. Log: `planning/qa/gapfill-2026-11-08-applied.md`.
+
+### Applied
+- New rule vote_centers (IC 3-11-18.1-3, -5, -13): vote at any vote center in the county; the plan needs a unanimous board vote.
+- early_voting_period detail: at least 7 hours on each of the two Saturdays before Election Day; an optional third Saturday; counties under 20,000 may reduce to 4 hours (IC 3-11-10-26).
+- straight_party_2016_history: confidence low -> medium, citing the IC 3-11-2-10 amendment history (P.L.21-2016) and Ballot Access News (SB 61 signed March 21, 2016).
+- independent_petitions: filing window up to noon June 30 and certification by noon July 15 (IC 3-8-6-10), plus the 2027 window computed from the statute.
+- independent_signature_example: the 2% rule (IC 3-8-6-3); confidence high.
+- New rules local_candidate_registration (IC 3-8-1-1) and local_residency_requirements (IC 3-8-1-20 to -29 and -34; no minimum age is stated).
+- New rule local_candidate_reports (IC 3-9-5-6, -7, -10): 25-day pre-election reports, due at noon 7 days later; annual report on the third Wednesday in January.
+- New rule school_board_filing (IC 3-8-2.5-4; CAN-34 2026 revision): May 19 to noon June 18, 2026; 10 signatures.
+- precinct_committeepersons detail: elected in May 2026, 2030 and every four years (IC 3-10-1-4.5). The county-chair rule stays low confidence.
+- New rule municipal_2027_filing (confidence medium): Jan 6 to noon Feb 5, 2027 for declarations (calendar plus IC 3-8-2-4); petitions to noon June 30, 2027; election Nov 2, 2027.
+- gaps_elections: the early-voting Saturdays row removed. The vote-center, straight-party, 2010/16/18 wording and 2028/2030 rows narrowed.
+- gaps_services: the 2027 filing and campaign-finance rows removed. The eligibility, petition-count, school-board filing and precinct-committee rows narrowed.
+- The South Bend and Mishawaka statutory class, and the 2010 public question label: see the gov and results logs.
+
+### Adapted
+- precinct_committeepersons statute: only IC 3-10-1-4.5 is cited. The proposed IC 3-6-2-1 was not confirmed.
+- straight_party_2016_history: the effective date and the pre-2016 text are left as "not read", rather than asserted.
+- Proposed confidence "medium-high" mapped to medium. One CAN-16 sentence and the IC 3-9-5-20.1 citation were dropped, because they were not verified.
+
+### Notes-only
+- 2026 public question article numbers: PQ1 Art. 1 Sec. 17 and PQ2 Art. 6 Sec. 6, from news leads only, put in the gap row.
+- 2024 Public Question #1 on the county ballot: likely but unverified, put in the gap row.
+
+### Skipped
+- office_types eligibility rows (7). office_types.csv has no eligibility column; the content went into the local_residency_requirements rule instead.
+- office_types precinct_committeeperson term_years. The statute sets the election years, not a term length.
+- elections.csv 2016/2018 question text: no matching results rows.
+- The county election board chair note: optional, and the guide does not describe that body.

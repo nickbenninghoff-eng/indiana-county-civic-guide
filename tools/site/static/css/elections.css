@@ -58,3 +58,5 @@
   .elx-cand { grid-template-columns: minmax(0, 1fr) auto; }
   .elx-track { grid-column: 1 / -1; grid-row: 2; }
 }
+/* link from a contest card to the map's "How areas voted" layer on that race (pages/elections.py, civic/map.py race_by_contest) */
+.elx-maplink { margin: 8px 0 0; font-size: .86rem; }

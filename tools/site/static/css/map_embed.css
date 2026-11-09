@@ -1,0 +1,4 @@
+/* Boundary map embedded in another page (civic/map.py embedded_map): places index, Schools page.
+   A one-layer map hides its tab bar (map.js unhides .cmap-tabs, so this rule must win). */
+.cmap-single .cmap-tabs, .cmap-single .cmap-tabs[hidden] { display: none; }
+.cmap-embed-note { font-size: .84rem; margin: 10px 0 0; max-width: none; }

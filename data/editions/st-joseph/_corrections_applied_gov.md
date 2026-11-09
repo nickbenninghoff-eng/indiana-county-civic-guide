@@ -66,3 +66,82 @@ Source of corrections: `planning/fact-check-report.md` (source id GOV-015 in `so
 - The 2016 transcription labelled the SBCSC at-large race "3 seats" and marked McCullough a winner. Statute (IC 20-23-15-6(c), 2016 text: two at-large members) and ABC57 (Nov 6, 2020, GOV-138: McCullough a "new board member" after 2020, taking Rudy Monterrosa's place) show two seats; winners Robles and Anella.
 - results.csv: vote_for 2 on all 8 rows; McCullough winner N. terms.csv: McCullough term now starts 2021-01-01 (id ...__2021-01); Robles end date marked as scheduled, likely earlier; Monterrosa term added (start unknown, end 2020-12-31). research/results-2015-2019.md corrected so a regeneration keeps the fix. Source: planning/qa/research-2026-11-08-roseland-sbcsc.md.
 - Not yet re-read: the printed "Vote for" line on canvass View/60008 (county site blocks automated fetches).
+
+## 2026-11-08: gap-fill C1 (judges, clerk, mayors), C2 (towns and schools), A (units) and B (services and boards)
+
+Sources: `planning/qa/gapfill-2026-11-08-{C1-people,C2-towns-schools,A-rules,B-services}.md` and their `-edits.csv`. Summary and verification log: `planning/qa/gapfill-2026-11-08-applied.md`. Superior Court seats keep the `superior-court-judge-<surname>` office model; successors are new terms on the same office id.
+
+### C1: applied
+- Chapleau: "David Chapleau", end 2021-07 (retired in July 2021; day not found; GOV-150).
+- Marnocha: "John M. Marnocha", end 2024-01-31 (the planned retirement date; GOV-148, GOV-149).
+- Reagan: end 2021-05-31 (The Indiana Lawyer, GOV-145; single source for the day), status secondary. The old end of 2024-12-31 was wrong.
+- Full names for Steele, Telloyan and Woods, matching the county directory ("Stephanie E. Steele", "Mark P. Telloyan", "Jamie C. Woods"; GOV-144, re-checked 2026-11-08).
+- New office superior-court-judge-hurley (Superior 8; county directory plus Wikipedia), with term __hurley__unk. Start is blank: the 2013 appointment rests on one secondary source.
+- Office notes for chapleau, marnocha and reagan rewritten to describe the succession. The stale sentence "No Superior Court retention appears on the 2026 ballot" was replaced in every Superior office.
+- New sources GOV-144 to GOV-151. The C1 WVPE appeal article went to sources_people.csv as PPL-044.
+- gaps_gov: the Tim Scott/Lee row removed (terms already match). The judges row narrowed to swearing-in dates and Hurley's retention years. The clerk, mayors and Kromkowski rows narrowed.
+
+### C1: adapted
+- Brisco, Fronk and Francisco were proposed as new offices. They are recorded instead as terms on the existing offices: __brisco__2021-06 and __fronk__2024 on superior-court-judge-reagan, and __francisco__2024 on superior-court-judge-marnocha. All three starts are blank, because no swearing-in date was found. Brisco's end is 2024-01-26 (federal commission, FJC).
+- Steele, Telloyan and Woods proposed starts (2021-05-04, 2022-02-11, 2021-11-15): not applied to the 2025-01 retention-term rows. The appointment terms are not encoded, so these dates went into notes instead.
+- Hurley office: next_election left blank, not the proposed 2028, which was inferred.
+
+### C1: notes-only
+- Clerk Jones: the 2023 Tribune lead is in the notes; confidence stays low.
+- Beutter and Rea: "not a Democrat" (from the Kovach obituary) is in the notes. The proposed party R was not applied, since it is inferred.
+- Rea: the resignation lead from the Bethel Beacon. Prickett: "first woman mayor" now quoted from the city timeline (GOV-039). Canfield: the 1963 defeat confirmed.
+- Manuel Fisher (1899) is noted on the mishawaka-mayor office. The proposed term was not added, as no term dates exist.
+- Kromkowski HD7 1982-2006 is noted on state-house-7. Not encoded, because the source is a secondary database.
+
+### C1: skipped
+- Lee start (row says "no change; confirmed"). Hazen swearing-in (row says "keep open").
+
+### C2: applied
+- SBCSC: Robles end 2017-09-25 (died in office; ABC57, GOV-152). Monterrosa start 2017-10-24, selected_by appointment (GOV-153).
+- SBCSC: new term sbcsc-board-d4__ball__2019-09 (2019-09-16 to 2020-12-31; GOV-157). Ball's 2021 term now has first_selected_by appointment.
+- PHM: new terms __turnwald__2021-12 and __mccullough__2021-12 (appointed Dec 1, 2021; GOV-154). Chaffee end 2025-10-08 (GOV-155). Smoker start 2025-11-03, the appointment vote; sworn in Nov 8 (GOV-156).
+- phm-board-penn: seat count 3 confirmed and the "unresolved" note replaced.
+- School City of Mishawaka appointed seat: new term __weber__2022-07 (to 2025-12-31; GOV-158). Office notes describe the hybrid board.
+- Roseland: Williams-Inez end 2024-09-28 and Rulli start 2024-09-29, both from the SBOA Schedule of Officials (78484A).
+- north-liberty-council next_election 2027 -> 2030, "inferred from canvass cycle": every North Liberty council race in results.csv is in an even year (2010, 2014, 2022, 2026).
+- gaps_gov: the PHM and Robles clauses removed; the town-officeholder and Roseland rows narrowed. gaps_elections: the Indian Village/North Liberty cycle row narrowed.
+
+### C2: adapted
+- Woods and Galloway (PHM) proposed end 2021-11-30: recorded as "2021" (year only), because the exact days are not known. Galloway is confidence low.
+- SBCSC Jones D4 proposed end 2019-09-15: recorded as "2019", for the same reason.
+- New term school-city-mishawaka-board-appointed__roberts__unk: start blank, end 2022, from the Tribune line "Weber succeeds Amanda Roberts". The proposed start is a snippet, so it went into notes.
+
+### C2: notes-only
+- Lakeville Kelly and Hathaway, and North Liberty Brown and Lemert: their SBOA "President" years went into notes. Those are the earliest documented service, not start dates.
+- North Liberty Kincaid (president in 2013): noted on the office instead of being added as a term.
+- New Carlisle Pemberton/Doll conflict noted. Rulli 2026 status is still unconfirmed. Weber's 2026-2029 reappointment (a Ballotpedia lead) is in the notes. Roseland council size: data-pattern evidence added to the gap.
+
+### C2: skipped
+- Seat counts marked "no change" (PHM, School City of Mishawaka, John Glenn) and the 2026 school-board party rows marked "confirmed".
+- The Monterrosa term_id rename (ids are not renamed). Carr start ("do not apply"). Rouch and Mudrovich starts ("not found").
+- New Carlisle Rush and Budreau new terms: low confidence, no dates, a missing first name, and minutes not re-read.
+
+### A (units and gaps_gov)
+- Applied: south-bend and mishawaka notes now say "second class city under IC 36-4-1-1" (new GOV-159, Justia). The gaps_gov statutory-class row removed.
+
+### B: applied
+- sjcpl: status official. The appointer split is in both units and appointed_boards (Commissioners 2, Council 2, SBCSC board 2, John Glenn and Union North presidents 1), and the board meets the 4th Monday at 4:15 pm (GOV-160).
+- Transpo: board of 9 (South Bend mayor 3, South Bend council 4, Mishawaka mayor 1, Mishawaka council 1; GOV-161); unit and board status official.
+- Area Plan Commission: 9 seats, appointers and what_it_decides corrected. It covers the unincorporated county and five towns, not South Bend or Mishawaka (GOV-164, GOV-170).
+- Housing Authority of South Bend: unit renamed. New board of 7, appointed by the mayor (SBOA-reviewed audit, GOV-162). The 2023 news count of 6 is recorded as a conflict.
+- New board mishawaka-housing-authority-board: 7, all appointed by the mayor (city 2025 appointing-authority disclosure, GOV-163). Only seat counts and appointers were taken; that PDF also lists home addresses, which were not collected.
+- From the same disclosure: Mishawaka BZA 5 (Mayor 3, Council 1, Plan Commission 1) and Parks 6 (Mayor 4, Library 1, School 1).
+- mphpl-board: the meeting-day conflict (3rd vs 2nd Thursday) recorded, not resolved.
+- Township office contacts added to the units notes for Centre, German, Greene, Harris, Liberty, Olive and Penn, from official township or in.gov pages (GOV-165 to GOV-169).
+- gaps_gov: the housing, Transpo/boards, Mishawaka appointed trustees and meeting-times rows narrowed. Meeting times confirmed on the bodies' own pages are separated from the unverified leads.
+
+### B: adapted
+- Mishawaka plan commission: 9 seats (Mayor 5, BPW&S 1, Council 1), and the city disclosure leaves 2 seats untagged. The proposed Parks Board appointee comes from a fetch summary only, so it was left out.
+- Mishawaka Board of Public Works: appointer set to Mayor. The proposed "three members" is not confirmed, so it is in notes only.
+
+### B: notes-only
+- Mishawaka housing authority legal name (search summary only). Mishawaka and South Bend redevelopment commission appointers and meeting times (leads). Party pages and police contacts (leads in gaps).
+
+### B: skipped
+- The county Animal Care and Control Commission (members and appointers not found) and the Mishawaka Animal Control Commission (not confirmed on a page I read).
+- The bonus judge list (used only as a cross-check for C1).
