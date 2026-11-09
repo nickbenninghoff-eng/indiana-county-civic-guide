@@ -1,0 +1,34 @@
+contest_id,candidate,party,committee,figure,amount,as_reported,covers,status,source_ids,notes
+2007g-south-bend-mayor,Stephen Luecke,D,,raised,253939,,"contributions as of the Oct. 12, 2007 filing deadline",single_source,MON-081,"The same item says $17,200 more came in after Oct. 12."
+2007g-south-bend-mayor,Stephen Luecke,D,,cash on hand,118892,,"Oct. 12, 2007 report",single_source,MON-081,
+2007g-south-bend-mayor,Juan Manigault,R,,raised,152913,,"contributions as of the Oct. 12, 2007 deadline",single_source,MON-081,
+2007g-south-bend-mayor,Juan Manigault,R,,cash on hand,33797,,"Oct. 12, 2007 report",single_source,MON-081,
+2011p-south-bend-mayor-d,Pete Buttigieg,D,,raised,229875.71,,"through April 8, 2011 (pre-primary report)",secondary,MON-082;MON-083,"WNDU rounds to $230,000. The county later destroyed the 2011 reports under its retention schedule (Center for Public Integrity, 2019)."
+2011p-south-bend-mayor-d,Pete Buttigieg,D,,cash on hand,127192,,"April 8, 2011",secondary,MON-082;MON-083,
+2011p-south-bend-mayor-d,Ryan Dvorak,D,,raised,100063.12,,"through April 8, 2011 (pre-primary report)",secondary,MON-082;MON-083,"Howey: ""reported $100,063.12""; WNDU: raised $100,000."
+2011p-south-bend-mayor-d,Ryan Dvorak,D,,cash on hand,69204.79,,"April 8, 2011",secondary,MON-082;MON-083,
+2011p-south-bend-mayor-d,Mike Hamann,D,,raised,56009,,"through April 8, 2011 (pre-primary report)",secondary,MON-082;MON-083,
+2011p-south-bend-mayor-d,Mike Hamann,D,,cash on hand,19382.82,,"April 8, 2011",secondary,MON-082;MON-083,WNDU says Barrett Berry did not file.
+2022g-penn-harris-madison-schools-board-harris-township,Chris Riley,,Committee to Elect Chris Riley for P-H-M,raised,19514,,as of the mid-October 2022 report,single_source,MON-084,"More than $11,000 contributed by the candidate."
+2022g-penn-harris-madison-schools-board-harris-township,Bryan C Jones,,,raised,6560,,as of the mid-October 2022 report,single_source,MON-084,"Includes personal loans of more than $2,000 from the candidate."
+2022g-penn-harris-madison-schools-board-penn-township,Matt Chaffee,,Committee To Elect Matt Chaffee,raised,12463,,as of the mid-October 2022 report,single_source,MON-084,"More than $9,500 of it in loans."
+2022g-penn-harris-madison-schools-board-penn-township,James Turnwald,,Friends of Turnwald,raised,11857,,as of the mid-October 2022 report,single_source,MON-084,
+2022g-penn-harris-madison-schools-board-at-large,Dana Sullivan,,Friends of Dana Sullivan,raised,9641,,as of the mid-October 2022 report,single_source,MON-084,
+2022g-penn-harris-madison-schools-board-at-large,Andy Rutten,,Friends of Andy Rutten,raised,2488,,as of the mid-October 2022 report,single_source,MON-084,"Includes $1,889 in loans. The article says George Bashura (at-large) did not file a report."
+2022g-penn-harris-madison-schools-board-madison-township,Larry A Beehler,,,no report,,,mid-October 2022,single_source,MON-084,"The article says the incumbent, unopposed, did not file a report."
+2019p-south-bend-mayor-d,James Mueller,D,,raised,245000,"nearly $245,000","Jan. 1 to April 12, 2019 (pre-primary report)",single_source,MON-085,
+2019p-south-bend-mayor-d,James Mueller,D,,spent,91000,"$91,000","Jan. 1 to April 12, 2019 (pre-primary report)",single_source,MON-085,
+2019p-south-bend-mayor-d,James Mueller,D,,cash on hand,153000,"about $153,000","April 12, 2019",single_source,MON-085,"The same item says Pete Buttigieg's campaign committee gave Mueller's campaign $54,500."
+2019p-south-bend-mayor-d,Jason Critchlow,D,,raised,139000,,"Jan. 1 to April 12, 2019 (pre-primary report)",single_source,MON-085,
+2019p-south-bend-mayor-d,Jason Critchlow,D,,spent,98000,"about $98,000","Jan. 1 to April 12, 2019 (pre-primary report)",single_source,MON-085,
+2019p-south-bend-mayor-d,Jason Critchlow,D,,cash on hand,40000,,"April 12, 2019",single_source,MON-085,
+2019p-south-bend-mayor-d,Lynn Coleman,D,,raised,19000,"more than $19,000","Jan. 1 to April 12, 2019 (pre-primary report)",single_source,MON-085,"Nearly $11,000 of it a transfer from his 2016 congressional campaign."
+2019p-south-bend-mayor-d,Regina Williams-Preston,D,,raised,16600,"about $16,600","Jan. 1 to April 12, 2019 (pre-primary report)",single_source,MON-085,
+2019p-south-bend-mayor-d,Oliver Davis,D,,raised,15300,"about $15,300","Jan. 1 to April 12, 2019 (pre-primary report)",single_source,MON-085,
+2015p-south-bend-mayor-d,Pete Buttigieg,D,,raised,136605,,"Jan. 1 to April 10, 2015 (pre-primary report)",single_source,MON-086,
+2015p-south-bend-mayor-d,Pete Buttigieg,D,,spent,76631.97,,"Jan. 1 to April 10, 2015 (pre-primary report)",single_source,MON-086,
+2015p-south-bend-mayor-d,Pete Buttigieg,D,,cash on hand,365479.94,,"April 10, 2015",single_source,MON-086,
+2015p-south-bend-mayor-d,Henry Davis Jr.,D,,raised,2292,,"Jan. 1 to April 10, 2015 (pre-primary report)",single_source,MON-086,
+2015p-south-bend-mayor-d,Henry Davis Jr.,D,,spent,2087.26,,"Jan. 1 to April 10, 2015 (pre-primary report)",single_source,MON-086,
+2015p-south-bend-mayor-d,Henry Davis Jr.,D,,cash on hand,204.74,,"April 10, 2015",single_source,MON-086,
+2007p-south-bend-mayor-r,Juan Manigault,R,,raised,30000,"more than $30,000",during the 2007 Republican primary campaign (period not stated),single_source,MON-087,

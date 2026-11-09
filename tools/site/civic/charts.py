@@ -521,3 +521,129 @@ def share_bars(fid: str, title: str, groups: list[dict], series: list[dict], sub
     leg = legend([(mark_of[s["key"]], s["label"]) for s in series]) if len(series) >= 2 else None
     return figure(fid, title, subtitle, body, hdr, trows, note=note, numeric=tuple(range(1, len(hdr))), status=status,
                   page=page, legend=leg, kind="share", scroll=False, cite=cite)
+
+
+# ------------------------------------------------------------------ money report by report (added 2026-11-09)
+
+def _signed_ticks(lo: float, hi: float, n: int = 4) -> list[float]:
+    """Ticks covering lo..hi (lo may be below 0) with one step size, always including 0."""
+    span = max(hi, 0) - min(lo, 0)
+    if span <= 0:
+        return [0, 1]
+    step = nice_ticks(span, n)[1]
+    start = math.floor(min(lo, 0) / step) * step
+    stop = math.ceil(max(hi, 0) / step) * step
+    out, v = [], start
+    while v <= stop + step * 1e-9:
+        out.append(round(v, 10))
+        v += step
+    return out
+
+
+def period_money(fid: str, title: str, points: list[dict], subtitle: str | None = None, note=None, status=None,
+                 page=None, headers: list | None = None, rows: list[list] | None = None, numeric: tuple = (),
+                 cite=None, words: dict | None = None) -> Markup:
+    """One committee's money, report by report, in date order: two columns per report (raised, filled accent; spent,
+    an ink outline, so the pair differs by shape for color-blind readers; both in the report's own period, as written) and cash on hand at the close of each report as a dashed line with ring
+    markers. All three are dollars, so they share one axis. Cash on hand can be below zero (the axis then extends).
+
+    points: ``[{x: first label line, x2: second label line, raised, spent, cash (cents or None each), tip}]``.
+    A None value draws nothing for that mark and says "not on the form" in the tooltip.
+    headers/rows: the table view (defaults to one row per point). Each report is one focusable mark whose tooltip
+    lists all three figures. ``words`` overrides the labels: raised, spent, cash (legend and tooltip) and missing (a
+    None value); the cash line and its legend entry are left out when no point has cash."""
+    w = {"raised": "Raised in the period", "spent": "Spent in the period", "cash": "Cash on hand at close",
+         "missing": "not on the form", "tip_raised": "Raised", "tip_spent": "Spent", "tip_cash": "Cash at close"}
+    w.update(words or {})
+    has_cash = any(p.get("cash") is not None for p in points)
+    def d(c):
+        return None if c is None else c / 100.0
+    vals = [d(p.get(k)) for p in points for k in ("raised", "spent", "cash")]
+    vals = [v for v in vals if v is not None]
+    ticks = _signed_ticks(min(vals, default=0), max(vals, default=1))
+    lo, top = ticks[0], ticks[-1]
+    axis_w = max(text_w(fmt_tick(abs(t), max(abs(lo), top), True), mono=True) + (6 if t < 0 else 0) for t in ticks) + 10
+    n = max(len(points), 1)
+    band_w = 84
+    last_cash = next((p.get("cash") for p in reversed(points) if p.get("cash") is not None), None)
+    lab_w = text_w(("-$" if (last_cash or 0) < 0 else "$") + f"{abs(last_cash or 0) / 100:,.2f}", mono=True)
+    right = max(12, lab_w + 18 + 10 - band_w / 2) if last_cash is not None else 12   # label sits past the columns
+    W = max(320, axis_w + n * band_w + right)
+    plot_l, plot_r, plot_t, plot_b = axis_w, W - right, 18, 196
+    H = plot_b + 36
+    band = (plot_r - plot_l) / n
+    bw = min(18, (band - 18) / 2)
+    Y = lambda v: plot_b - (plot_b - plot_t) * ((v - lo) / ((top - lo) or 1))
+    zero = Y(0)
+
+    def tick_text(t):
+        s = fmt_tick(abs(t), max(abs(lo), top), True)
+        return ("-" + s) if t < 0 else s
+    grid = [h("line", {"x1": plot_l, "x2": plot_r, "y1": f"{Y(t):.1f}", "y2": f"{Y(t):.1f}",
+                       "class": "axis" if t == 0 else "grid"}) for t in ticks]
+    tl = [_txt(plot_l - 6, Y(t) + 4, tick_text(t), "ct ct-axis", "end") for t in ticks]
+
+    def money(c):
+        if c is None:
+            return w["missing"]
+        v = c / 100.0
+        return ("-$" if v < 0 else "$") + f"{abs(v):,.2f}"
+
+    def bar(x0, x1, c, mark):
+        if c is None or c == 0:
+            return None
+        y = Y(d(c))
+        if c > 0:
+            return h("path", {"class": f"bar {mark}", "d": bar_path(x0, min(y, zero - 1), x1, zero, "up")})
+        # spending can't be negative on the form; a negative figure (a refund written as minus) hangs below the axis
+        return h("rect", {"class": f"bar {mark}", "x": f"{x0:.1f}", "y": f"{zero:.1f}", "width": f"{x1 - x0:.1f}",
+                          "height": f"{max(y - zero, 1):.1f}"})
+    marks, cash_pts = [], []
+    for i, p in enumerate(points):
+        cx = plot_l + band * i + band / 2
+        tv = f"{w['tip_raised']} {money(p.get('raised'))} · {w['tip_spent']} {money(p.get('spent'))}" + (
+            f" · {w['tip_cash']} {money(p.get('cash'))}" if has_cash else "")
+        marks.append(h("g", {"class": "mark", "tabindex": "0", "data-tv": tv, "data-tl": p.get("tip") or p["x"]},
+                       h("rect", {"class": "hit", "x": f"{cx - band / 2:.1f}", "y": plot_t,
+                                  "width": f"{band:.1f}", "height": plot_b - plot_t}),
+                       bar(cx - bw - 1, cx - 1, p.get("raised"), "m-accent"),
+                       bar(cx + 1, cx + bw + 1, p.get("spent"), "m-spent"),
+                       _txt(cx, plot_b + 15, p["x"], "ct ct-axis", "middle"),
+                       _txt(cx, plot_b + 28, p.get("x2", ""), "ct ct-axis", "middle") if p.get("x2") else None))
+        if p.get("cash") is not None:
+            cash_pts.append((cx, Y(d(p["cash"])), p["cash"]))
+        else:
+            cash_pts.append(None)
+    lines, segs, cur = [], [], []
+    for c in cash_pts:
+        if c is None:
+            if cur:
+                segs.append(cur)
+            cur = []
+        else:
+            cur.append(c)
+    if cur:
+        segs.append(cur)
+    for seg in segs:
+        if len(seg) > 1:
+            lines.append(h("path", {"class": "line m-cash", "d": "M" + "L".join(f"{x:.1f},{y:.1f}" for x, y, _ in seg)}))
+    for c in cash_pts:
+        if c:
+            lines.append(h("circle", {"class": "dot-ring m-cash", "cx": f"{c[0]:.1f}", "cy": f"{c[1]:.1f}", "r": 4}))
+    last = next((c for c in reversed(cash_pts) if c), None)
+    if last:
+        lab = money(last[2])
+        lines.append(_txt(last[0] + bw + 6, last[1] + 4, lab, "ct ct-val"))
+    svg = _svg(W, H, f"{title}. Columns for {w['raised'].lower()} and {w['spent'].lower()}"
+                     + (f", and a line for {w['cash'].lower()}" if has_cash else "") + "; the figures are in the table "
+                     "view.", grid, tl, marks, lines)
+    leg = h("ul", {"class": "legend"},
+            h("li", None, h("span", {"class": "key key-rect m-accent", "aria-hidden": "true"}), w["raised"]),
+            h("li", None, h("span", {"class": "key key-rect m-spent", "aria-hidden": "true"}), w["spent"]),
+            h("li", None, h("span", {"class": "key key-line m-cash", "aria-hidden": "true"}), w["cash"]) if has_cash else None)
+    hdr = headers or (["Report", w["raised"], w["spent"]] + ([w["cash"]] if has_cash else []))
+    trows = rows if rows is not None else [[f"{p['x']} {p.get('x2', '')}".strip(), money(p.get("raised")),
+                                            money(p.get("spent"))] + ([money(p.get("cash"))] if has_cash else [])
+                                           for p in points]
+    return figure(fid, title, subtitle, svg, hdr, trows, note=note, numeric=numeric or tuple(range(1, len(hdr))),
+                  status=status, page=page, legend=leg, kind="period-money", cite=cite)

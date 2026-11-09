@@ -290,7 +290,49 @@ look at the page in the browser); then ask Nick which map pages to build next an
   filtered year is empty. Agent ab44df71ab1d3eeca running (usage-guard list). After it: final full check, Roadmap +
   handoff, morning summary. Batch 9 verified.
 
-## Morning summary (2026-11-09, ~09:40 ET): overnight redesign COMPLETE, UNCOMMITTED
+## Session 2026-11-09 (afternoon) — campaign money history (state at compaction, ALL UNCOMMITTED)
+Pushed: main = origin = 1a181ed. Everything below is in the working tree; Nick has not said "commit".
+
+Nick's asks, in order: map on money/campaigns/<area>/ pages (done; box = holder + result + money; county Townships
+layer); "campaign finance history of every candidate, race, office, etc in St. Joseph county election history for what
+we can find", seen when drilling into a seat/candidate/race (chose "Both": per-candidate timeline + per-seat history);
+"It's not a huge deal if we can't find everything"; then "We don't need to worry about going past 2010 much. I would
+rather focus on filling in gaps since then".
+
+Built and verified (build PASSED 113 pages, 356 tests OK, check_gov 0 errors, check_money OK, browser light/dark/400px):
+- pages/money_history.py: committee "Money history" folds (211, one home each, links elsewhere), seat "This seat over
+  time" (every race card, results back to 2010+), officeholder links (76 local + legislators), legislator folds
+  (state page "Each candidate over time", 63 people), news figures (cf_reported.csv, 33 rows incl. as_reported
+  wording), same_name_links (15 race cards: candidate filed in another cycle/office). charts.period_money (spent =
+  outlined column for CVD; cash dashed line).
+- tools/build_cf_state_history.py -> cf_state_history.csv (263 rows, 2000-2026, by state file number).
+- Sources MON-079..087 appended to sources_money.csv; 2 gap rows appended to gaps_money.csv.
+- Research: research/cf-news-figures-2000-2022.md, research/cf-gap-audit-2026-11-09.md (Sonnet agents).
+- Wayback: bare "Mozilla/5.0" UA is blocked; descriptive UA + /web/<ts>id_/ works (memory saved).
+- Browser check of the county Candidate Filings page (Claude in Chrome; Cloudflare passes in a real browser): no new
+  finance documents since 2026-11-07 (286 unseen IDs = delegate/precinct filings). Docs 65627/69855/69856 can't be
+  improved by re-reading (degraded scan / cut-off column / blank line on the form): need county copies.
+
+DONE (was mid-stride): state-filed county PACs, now on money/campaigns/other-committees/#state-filed; 360 tests OK. Details: tools/build_cf_state_pacs.py written and run ->
+cf_state_pacs.csv (61 rows, 7 committees 2010-2026: SB Fire Fighters PAC, SB PAC of Educators, St. Joseph Valley
+Plumbing PAC, Chamber of Commerce of SJC PAC, Teachers PAC of St. Joseph Valley, SJC Young Democrats, St Joseph
+Libertarian Party; top payees column). NOT YET DISPLAYED: add a section to money/campaigns/other-committees/
+(pages/campaign_pages.py build_other) with one fold per committee (chart by filing year like legislator_block in
+money_history.py, table, largest payees), then tests in tools/tests/test_money_history.py, Roadmap line, build/tests.
+
+Later (also uncommitted): home page header "By the numbers" (Roadmap Phase 5); saved place on money/campaigns/
+(rows kind: reader's rows first, highlighted) and elections/margins/ (opens the reader's areas + countywide + single
+county district); browser-verified with South Bend and Mishawaka/Penn/PHM, undo and cleared place. Offered, no
+answer: home meta description in civic/sitemap.py still says "the governments that cover one address".
+
+Waiting on Nick: "commit"/"push" for all of the above; records request (not chosen); pre-2010 legislators (dropped
+per "focus since 2010").
+
+## Morning summary (2026-11-09, ~09:40 ET): overnight redesign COMPLETE
+- UPDATE (later 2026-11-09): Nick reviewed it ("looks good") and said "Let's commit": redesign COMMITTED as 1a181ed.
+  Nick then said "push it": main pushed, origin = 1a181ed. After that (uncommitted, see Roadmap Phase 5): campaign
+  money location-page maps; money history (committee and seat histories, officeholder links); state legislators
+  2000-2026 (cf_state_history.csv via tools/build_cf_state_history.py); news-reported figures (cf_reported.csv).
 - Rollback point: commit 240a3e8 (not pushed; main is 1 ahead of origin). Everything after it is in the working tree
   (88 paths). `git diff 240a3e8` to review; `git reset --hard 240a3e8` + `git clean` (careful) to roll back.
 - Final checks: build PASSED 113 pages; 327 tests OK; check_gov 0 errors; check_money OK. Only data change since

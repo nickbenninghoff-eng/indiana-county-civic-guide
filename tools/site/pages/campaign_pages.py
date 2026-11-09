@@ -24,15 +24,21 @@ from functools import partial
 from pathlib import Path
 
 from civic import campaign_money as cm
-from civic.campaign_map import (NO_SHAPES, SET_NOTES, campaign_map, district_sets, load_district_shapes, map_layers,
-                                record_line)
+from civic.campaign_map import (NO_SHAPES, SET_NOTES, _same_page, area_campaign_map, area_layers, campaign_map,
+                                district_sets, load_district_shapes, map_layers, office_tab, record_line,
+                                state_campaign_map)
 from civic.components import (callout, data_table, entity_list, name_with_form_party, name_with_party, party_label, scope_badge,
                               section, status_badge)
 from civic.data import fmt_date, split_ids
+from civic.holder_rows import holder_state
+from civic.related import contest_href
 from civic.html import Markup, h
 from civic.map import load_shapes
+from civic.preselect import here_attrs, here_slot
 
 from . import campaigns as cf
+from . import money_history as mh
+from .elections import candidates as el_candidates, is_writein_total, margin as el_margin
 
 MAP_SOURCES = "MAP-020;MAP-021;MAP-024;MAP-025;MAP-026;MAP-028;MAP-029;MAP-030;MAP-034"
 BALLOT_WORDS = {"general": "General-election ballot", "primary": "Primary ballot only",
@@ -182,11 +188,16 @@ def race_block(ed, page, race: dict) -> Markup:
         cs = cand["committees"]
         if cs:
             reports = [h("span", {"class": "cf-sub cf-sub-strong"}, s["label"]) for s in cs]
-            reports = [[r, h("span", {"class": "cf-sub"}, _on_file_text(s, spec)), _date_subs(s)]
+            reports = [[r, h("span", {"class": "cf-sub"}, _on_file_text(s, spec)), _date_subs(s),
+                        h("span", {"class": "cf-sub"}, mh.link(ed, page, s["key"]))]
                        for r, s in zip(reports, cs)]
         else:
             reports = ["No reports on file" + (f" for this office. Reports under another office ({cand['elsewhere']}) "
                                                "count in that race." if cand["elsewhere"] else ".")]
+            other = mh.same_name_links(ed, page, cand["name"])
+            if other:
+                reports.append(h("span", {"class": "cf-sub"}, "Filed in another cycle or for another office: ",
+                                 [[", " if i else "", x] for i, x in enumerate(other)]))
         if cand.get("spelled"):
             reports.append(h("span", {"class": "cf-sub"}, f"Name on the form: {cand['spelled']}"))
         cash = cm.usd(cand["cash"]) if cand["cash"] is not None else (
@@ -218,6 +229,7 @@ def race_block(ed, page, race: dict) -> Markup:
     details = []
     for i, cand in enumerate(race["candidates"]):
         for j, s in enumerate(cand["committees"]):
+            details.append(mh.render(ed, page, s["key"]))
             details.append(h("details", {"class": "cf-reports"},
                              h("summary", None, f"Reports: {cand['name']}, {s['label']} ({len(s['items'])})"),
                              _reports_table(ed, page, f"{tid}-c{i}-{j}", s, spec), _notes(s)))
@@ -225,7 +237,7 @@ def race_block(ed, page, race: dict) -> Markup:
              h("h3", None, race["office"]),
              h("p", {"class": "cf-race-meta mono"}, " · ".join(meta)),
              h("p", {"class": "cf-race-meta"}, f"Counts every report of {_cycle_words(spec)}."),
-             total, rec, table, details)
+             total, rec, mh.seat_block(ed, page, race), table, details)
 
 
 # --------------------------------------------------------------------------- other filings (no race)
@@ -268,6 +280,7 @@ def committee_cycles(ed, page, rows: list[dict], tid: str, as_items: bool = Fals
                             h("p", {"class": "cf-race-meta"}, line, " ",
                               status_badge("computed", page, "Sum of the reports in the table, by the guide's rules.")),
                             _reports_table(ed, page, f"{tid}-{k}-{n}", s, spec), _notes(s)))
+        blocks.append(mh.render(ed, page, k))
         if as_items:
             mix = Counter(x["transcription_status"] for x in krows)
             mix_text = ", ".join(f"{n} {cf.STATUS_CF.get(st, (st.upper(),))[0]}" for st, n in mix.most_common())
@@ -386,7 +399,9 @@ TYPE_GROUP_NOTE = {
 
 
 def _areas_list(ed, page, areas) -> list:
-    out = [h("p", {"class": "cf-list-tools", "hidden": True, "id": "cf-list-tools"},
+    # saved place (added 2026-11-09): the reader's city or town, township and school rows go first (preselect "rows")
+    out = [here_slot("rows", "areas"),
+           h("p", {"class": "cf-list-tools", "hidden": True, "id": "cf-list-tools"},
              h("span", {"id": "cf-list-state", "aria-live": "polite"}), " ",
              h("button", {"type": "button", "class": "btn btn-small", "id": "cf-list-all"}, "Show every race type"))]
     for typ, label in cm.TYPES.items():
@@ -403,10 +418,11 @@ def _areas_list(ed, page, areas) -> list:
                                                     "different basis from the local races, so they are not added up as "
                                                     "races."), body))
             continue
-        rows = []
+        rows, attrs = [], []
         for a in areas.values():
             if a["type"] != typ:
                 continue
+            attrs.append({**here_attrs(ed, cm.area_unit(a["id"])), "data-here-name": a["name"]})
             latest = a["latest_races"]
             name = a["name"]
             if typ == "county":
@@ -418,7 +434,8 @@ def _areas_list(ed, page, areas) -> list:
                          ("Complete" if a["complete"] else "Incomplete") if latest else ""])
         body = data_table(f"cf-areas-{typ}", ["Area", "Latest election", "Races", "Candidates with reports on file",
                                               "Spent, all candidates (latest election)", "Record"], rows,
-                          caption=f"{label}: latest election by area", numeric=(2, 4), copy=False, min_width="46rem")
+                          caption=f"{label}: latest election by area", numeric=(2, 4), copy=False, min_width="46rem",
+                          row_attrs=attrs)
         out.append(h("div", {"class": "cf-group", "data-cf-type": typ}, h("h3", None, label),
                      h("p", {"class": "muted"}, TYPE_GROUP_NOTE[typ]) if typ in TYPE_GROUP_NOTE else None, body))
     out.append(h("p", None, h("strong", None, "Not tied to one race: "),
@@ -439,6 +456,9 @@ def build_area(aid: str, site):
     a = d["areas"][aid]
     model = d["model"]
     toc = [(f"e-{eid}", _el_title(ed, eid).split(" (")[0]) for eid in a["elections"]]
+    mapped = _area_map(ed, page, d, aid) if a["races"] else None
+    if mapped:
+        toc.insert(0, ("map", "Map"))
     compare = [r for r in model["races"] if _contest_area(r["contest"]) == aid]
     large = [x for x in model["large"] if x["row"] and x["row"]["unit_id"] and cm.area_id(x["row"]["unit_id"]) == aid
              and x["row"]["_group"] not in ("noncand", "none")]
@@ -492,6 +512,9 @@ def build_area(aid: str, site):
                h("nav", {"class": "toc", "aria-label": "On this page"},
                  h("ol", None, [h("li", None, h("a", {"href": f"#{x}"}, t)) for x, t in toc]))))
     n = 0
+    if mapped:
+        n += 1
+        page.add(_area_map_section(ed, page, a, mapped, n))
     if not a["races"]:
         n += 1
         page.add(section("races", n, "Races", h("p", None, f"The guide's 2023 to 2026 election results have no race for "
@@ -522,6 +545,139 @@ def build_area(aid: str, site):
                          scope="county", ed=ed))
     page.finish(gaps=_short_gaps(ed, model))
     return page
+
+
+def _area_map(ed, page, d, aid):
+    """(shapes, layers, types, default, district sets) for an area page's map, or None (no outline or no race)."""
+    shapes = load_shapes(ed)
+    if not shapes:
+        return None
+    dsets = district_sets(ed, d["races"], load_district_shapes(ed, shapes))
+    got = area_layers(ed, page, shapes, dsets, d["areas"], ed.table("cf_state"), aid)
+    if not got:
+        return None
+    layers, types, default = got
+    for L in layers:
+        for sh in L["shapes"]:
+            if sh["href"].startswith("#r-"):
+                _add_seat_facts(ed, page, sh["entry"], sh["href"][3:])
+    if aid == "county":
+        # Nick, 2026-11-09: a Townships layer on the county's page, each township linking to its own page
+        tw = next((L for L in map_layers(ed, page, shapes, [], d["areas"], ed.table("cf_state"))
+                   if L["id"] == "township"), None)
+        if tw:
+            tw["type"] = "townships"
+            for sh in tw["shapes"]:
+                a = next((x for x in d["areas"].values() if f"township:{x['id']}" == sh["uid"]), None)
+                if a:
+                    _add_township_holders(ed, sh["entry"], a)
+            layers.append(tw)
+            types["townships"] = "Townships"
+    return shapes, layers, types, default, dsets
+
+
+def _seat_words(ed, office_id: str) -> tuple[str, str]:
+    """('Name (D), since Jan 1, 2019' or the holders' names, and the incoming line or '') for one office."""
+    office = ed.offices.get(office_id)
+    if not office:
+        return "", ""
+    st = holder_state(ed, office, ed.current_terms(office_id), ed.incoming_terms(office_id))
+    now = st["now"]
+    if st["since"] and len(ed.current_terms(office_id)) == 1:
+        now += f", since {st['since']}"
+    return now, st["incoming"]
+
+
+def _result_words(ed, contest: dict) -> str:
+    """'Won: Scott Ruszkowski (D) 62.6%; margin 25.2 points (19,277 votes) (results unofficial)', or 'Uncontested:
+    ...', from the results (the margin is pages/elections.py margin(): last winner over the next candidate)."""
+    cands = el_candidates(contest)
+    named = [x for x in cands if not is_writein_total(x["row"])]
+    won = sorted([x for x in named if (x["row"].get("winner") or "").upper() == "Y"],
+                 key=lambda x: -(x["votes"] or 0))
+    unoff = any(r.get("status") == "unofficial" for r in contest["rows"])
+    def who(x):
+        pct = f" {x['pct']:.1f}%" if x.get("pct") is not None else ""
+        return f"{x['name']}{' (' + x['party'] + ')' if x.get('party') else ''}{pct}"
+    m = el_margin(contest)
+    if m is None:
+        txt = "Uncontested: " + (", ".join(x["name"] + (f" ({x['party']})" if x.get("party") else "") for x in named)
+                                 or "no named candidate")
+    elif "reason" in m:
+        txt = ("Elected: " + ", ".join(who(x) for x in won) + "; " if won else "") + f"margin not computed ({m['reason']})"
+    else:
+        lead = "Elected: " if m["seats"] > 1 else "Won: "
+        gap = "tie on the votes" if m["tie"] else (
+            f"margin {'for the last seat ' if m['seats'] > 1 else ''}{m['pts']:.1f} points ({m['votes']:,} votes)")
+        txt = (lead + ", ".join(who(x) for x in won) + "; " if won else "") + gap
+    return txt + (" (results unofficial)" if unoff else "")
+
+
+def _add_seat_facts(ed, page, entry: dict, race_id: str) -> None:
+    """Nick, 2026-11-09 (the box shows holder + result + money): after the race's Election line, who holds the seat
+    now (and who comes in), then the race's result with its margin, and a link to it in the results explorer."""
+    contest = ed.contests.get(race_id)
+    if not contest:
+        return
+    add = []
+    now, inc = _seat_words(ed, contest.get("office_id") or "")
+    if now:
+        add.append(["Holds the seat now", now])
+    if inc:
+        add.append(["After the election", inc])
+    add.append(["Result", _result_words(ed, contest)])
+    entry["f"] = entry["f"][:1] + add + entry["f"][1:]
+    href = contest_href(page, race_id)
+    if href:
+        entry["more"] = [["See the result in the results explorer", href]]
+
+
+def _add_township_holders(ed, entry: dict, area: dict) -> None:
+    """A township on the county page's map: who holds its offices now, before the money lines."""
+    add = []
+    for r in area["latest_races"]:
+        contest = ed.contests.get(r["id"])
+        now, _ = _seat_words(ed, (contest or {}).get("office_id") or "")
+        if now:
+            add.append([f"{office_tab(r['office'], (area['name'],))} now", now])
+    entry["f"] = add + entry["f"]
+
+
+def _area_map_section(ed, page, a, mapped, n) -> Markup:
+    """An area page's map (added 2026-11-09, first for the county, then every area): offices one at a time, then the
+    government's district layers, each with the same panel figures as the race cards below. Without JavaScript the
+    default layer shows and every shape links to its race card."""
+    c = page.cites
+    shapes, layers, types, default, dsets = mapped
+    used = {s["id"] for L in layers for s in L.get("sets", [])}
+    set_src = ";".join(dict.fromkeys(sid for s in dsets if s["id"] in used for sid in split_ids(s["source_ids"])))
+    kinds = " or ".join(t.lower() for t in types.values()) if len(types) > 1 else None
+    years = sorted({L["shapes"][0]["year"] for L in layers if L["kind"] == "office" and L["shapes"][0].get("year")}
+                   | {s["year"] for L in layers if L["kind"] == "district" for s in L["shapes"] if s.get("year")},
+                   reverse=True)
+    lead = (f"Choose {kinds}, then an office or a district. " if kinds else
+            ("Choose an office. " if len(layers) > 1 else ""))
+    nodraw = "nodraw" in types
+    shared = any(L["kind"] == "office" for L in layers) and sum(1 for L in layers if L["kind"] == "office") > 1
+    return section(
+        "map", n, "Map",
+        h("p", None, lead + "The box beside the map shows what every candidate in that race reported spending over "
+                     "the whole campaign, by party and by candidate, and whether every expected report is on file. "
+                     "The same figures are in the race cards below.", c.cite("CFM-010"), " ",
+          status_badge("computed", page, "Whole-campaign sums of cf_local.csv rows.")),
+        area_campaign_map(page, ed, shapes, a, layers, types, default),
+        h("p", {"class": "muted cmap-mnote"},
+          "How the shading is figured: each office or district shows its latest election in the guide's results"
+          + (f" ({' or '.join(years)}; the box says which). " if len(years) > 1 else ". ")
+          + ("Offices share one set of steps, so their shades compare offices. " if shared else "")
+          + ("District steps are set for each district layer. " if any(L["kind"] == "district" for L in layers)
+             else "")
+          + ("A district with no official boundary file is shown on the whole outline, and its box says so. "
+             if nodraw else "")
+          + "A figure equal to a break falls in the higher step. Hatched means no reports on file: not $0. Read "
+          "incomplete totals as floors. Boundaries are official files the guide downloaded; no boundary is drawn by "
+          "the guide. ", c.cite_compact(set_src or MAP_SOURCES)),
+        scope="county", ed=ed)
 
 
 def _contest_area(contest) -> str | None:
@@ -572,7 +728,9 @@ def build_state(site):
     blocks = []
     for dist in dists:
         rs = sorted([r for r in st if r["district"] == dist], key=lambda r: (r["candidate"], r["year"]))
-        trs = [[name_with_party(r["candidate"], r["party"]), r["committee"], r["year"],
+        trs = [[h("a", {"href": mh.legislator_href(ed, page, r["candidate"])}, name_with_party(r["candidate"], r["party"]))
+                if mh.legislator_href(ed, page, r["candidate"]) else name_with_party(r["candidate"], r["party"]),
+                r["committee"], r["year"],
                 cm.usd(cm.cents(r["receipts"])), cm.usd(cm.cents(r["expenditures"]), "not in the data"),
                 status_badge(r["status"], page)] for r in rs]
         office = "Indiana House" if dist.startswith("HD") else "Indiana Senate"
@@ -582,13 +740,70 @@ def build_state(site):
                                                                 "Expenditures", "Status"], trs,
                                    caption=f"{office} District {dist[2:]}: committees by filing year", numeric=(2, 3, 4),
                                    min_width="44rem")))
-    page.add(section("districts", 1, "By district", h("p", None, "Each committee's receipts and expenditures by the "
+    mp = _state_map_section(ed, page)
+    if mp:
+        page.add(mp)
+    page.add(section("districts", 2 if mp else 1, "By district", h("p", None, "Each committee's receipts and expenditures by the "
                                                                    "calendar year its reports were filed.", c.cite(src),
                                                       " ", status_badge("computed", page, "Sums of the state's bulk-data "
                                                                                           "rows by filing year.")),
                      blocks, scope="county", ed=ed))
+    ppl = mh.legislators(ed)
+    if ppl:
+        hist = ed.table("cf_state_history")
+        hsrc = ";".join(dict.fromkeys(s for r in hist for s in split_ids(r["source_ids"])))
+        page.add(section("people", (2 if mp else 1) + 1, "Each candidate over time",
+                         h("p", None, f"Every state House and Senate candidate on the guide's ballots (2010 to 2026) "
+                                      f"whose committee files with the state, {len(ppl)} people, with every filing year "
+                                      "in the state's bulk data from 2000. Newest first. ", c.cite(hsrc or src), " ",
+                           status_badge("computed", page, "Sums of the state's bulk-data rows by filing year.")),
+                         h("p", {"class": "muted"}, "A committee whose name doesn't say the office is included only "
+                                                    "when it filed around the candidate's race (its notes say so). "
+                                                    "Legislators who left office before 2010 aren't listed: the guide's "
+                                                    "results start in 2010."),
+                         [mh.legislator_block(ed, page, p) for p in ppl], scope="county", ed=ed))
     page.finish(gaps=ed.gaps(files=["gaps_money"], pattern=r"State campaign finance"))
     return page
+
+
+STATE_TYPES = OrderedDict([("house", "Indiana House districts"), ("senate", "Indiana Senate districts")])
+
+
+def _state_map_section(ed, page) -> Markup | None:
+    """The state-legislature page's map (added 2026-11-09): the House and Senate district layers of the main campaigns
+    map, linked to the district blocks on this page. Not shaded: these are filing-year sums of listed committees, not
+    race totals (the legend says so)."""
+    shapes = load_shapes(ed)
+    if not shapes:
+        return None
+    d = cf.cf_all(ed)
+    dsets = [s for s in district_sets(ed, d["races"], load_district_shapes(ed, shapes)) if s["type"] == "state"]
+    if not dsets:
+        return None
+    layers = []
+    for L in map_layers(ed, page, shapes, dsets, d["areas"], ed.table("cf_state")):
+        if L["kind"] != "district" or L["type"] != "state":
+            continue
+        L["type"] = L["id"].split("-", 1)[1]
+        if L["type"] not in STATE_TYPES:
+            continue
+        for s in L["shapes"]:
+            s["href"] = s["entry"]["href"] = _same_page(s["href"], page)
+        layers.append(L)
+    if not layers:
+        return None
+    c = page.cites
+    src = ";".join(dict.fromkeys(sid for s in dsets for sid in split_ids(s["source_ids"])))
+    return section(
+        "map", 1, "Map",
+        h("p", None, "Choose House or Senate districts. The box beside the map lists each committee's receipts and "
+                     "spending by filing year, the same figures as the tables below. Districts reach past the county "
+                     "line; the map draws only the part inside the county."),
+        state_campaign_map(page, ed, shapes, layers, STATE_TYPES),
+        h("p", {"class": "muted cmap-mnote"}, "Not shaded: filing-year sums of the listed committees aren't race totals, "
+                                              "so districts aren't compared. Boundaries are official files the guide "
+                                              "downloaded; no boundary is drawn by the guide. ", c.cite_compact(src)),
+        scope="county", ed=ed)
 
 
 # --------------------------------------------------------------------------- other committees
@@ -623,7 +838,7 @@ def build_other(site):
         groups[_other_group(r)].append(r)
     large = [x for x in d["model"]["large"] if not x["row"] or x["row"]["_group"] in ("noncand", "none")
              or not x["row"]["unit_id"]]
-    toc = [(g, t) for g, t, _n in OTHER_GROUPS if groups[g]] + ([("large", "Large contributions")] if large else []) + \
+    toc = [(g, t) for g, t, _n in OTHER_GROUPS if groups[g]] +         ([("state-filed", "Committees that file with the state")] if ed.table("cf_state_pacs") else []) +         ([("large", "Large contributions")] if large else []) + \
         [("gaps", "Gaps"), ("sources", "Sources")]
     page.add(h("header", {"class": "page-hero"},
                cf.crumbs(page, ("Party, PAC and other committees", None)),
@@ -648,6 +863,21 @@ def build_other(site):
                                      label=title) if len(items) > 4 else entity_list(f"{g}-list", items, noun="committee",
                                                                                       label=title),
                          scope="county", ed=ed))
+    pacs = mh.state_pacs(ed)
+    if pacs:
+        n += 1
+        psrc = ";".join(dict.fromkeys(s for r in ed.table("cf_state_pacs") for s in split_ids(r["source_ids"])))
+        page.add(section("state-filed", n, "County committees that file with the state",
+                         h("p", None, f"{len(pacs)} political action and party committees whose names place them in the "
+                                      "county file their reports with the Indiana Election Division, not the county, so "
+                                      "they are not in the county's postings above. Receipts and expenditures by the "
+                                      "calendar year the reports were filed, 2010 to 2026, from the state's bulk data. ",
+                           c.cite(psrc), " ", status_badge("computed", page, "Sums of the state's bulk-data rows by "
+                                                                             "filing year.")),
+                         h("p", {"class": "muted"}, "Committees are found by name (South Bend, Mishawaka, St. Joseph), "
+                                                    "so a county group whose name doesn't say where it is isn't listed. "
+                                                    "Largest payees are summed by name as typed on the reports."),
+                         [mh.state_pac_block(ed, page, p) for p in pacs], scope="county", ed=ed))
     if large:
         n += 1
         page.add(section("large", n, "Large contributions (CFA-11 notices)", *_large_rows(ed, page, large),

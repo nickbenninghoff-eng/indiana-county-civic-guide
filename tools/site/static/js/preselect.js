@@ -143,15 +143,30 @@
       try { map = node ? JSON.parse(node.textContent) : null; } catch (e) { map = null; }
       if (!map) return;
       var hit = Object.prototype.hasOwnProperty.call(map.places || {}, m.place) ? map.places[m.place] : null;
-      if (!hit) {
+      /* data-here-also (added 2026-11-09, elections/margins/): also open the reader's city or town, township and
+         school corporation, when they chose them (map.alias: other keys the same area goes by on this page) */
+      var also = (slot.getAttribute("data-here-also") || "").split(" ").filter(Boolean);
+      if (also.length) {
+        var extra = [];
+        if (also.indexOf("muni") >= 0 && m.muni) extra.push(m.muni);
+        if (also.indexOf("township") >= 0 && m.township) extra.push(m.township);
+        if (also.indexOf("school") >= 0 && m.school) extra.push(m.school);
+        var ak = [], an = [];
+        extra.forEach(function (k) {
+          ((map.alias || {})[k] || [k]).forEach(function (x) { if (Object.prototype.hasOwnProperty.call(known, x)) { ak.push(x); an.push(known[x]); } });
+        });
+        hit = { keys: ak.concat(hit ? hit.keys : []), names: an.concat(hit ? hit.names : []) };
+      }
+      if (!hit || !hit.keys.length) {
         note = m.label + " is in more than one commissioner or council district in the guide's precinct results, or the " +
                "guide cannot place all of it, so no district is opened. Find yours on the map.";
       } else {
         hit.keys.forEach(function (k, i) {
           if (Object.prototype.hasOwnProperty.call(known, k)) { keys.push(k); names.push(hit.names[i] || known[k]); }
         });
-        why = " Every precinct the guide's data places in " + m.label + " voted in these districts' races in " +
-              (map.years || "the latest elections") + " (precinct results). Your voter registration names your districts.";
+        why = slot.getAttribute("data-here-why") ||
+              (" Every precinct the guide's data places in " + m.label + " voted in these districts' races in " +
+               (map.years || "the latest elections") + " (precinct results). Your voter registration names your districts.");
       }
     }
     if (note) {
@@ -210,7 +225,43 @@
     start(slot, ctl, apply);
   }
 
-  var KINDS = { filter: filterSlot, first: firstSlot, one: oneSlot, map: mapSlot };
+  /* ---------------------------------------------------------------- rows: the reader's rows first in each table
+     (added 2026-11-09, money/campaigns/ "Every area"): rows carry data-here-layer and data-here-name; only the city or
+     town, township and school corporation the reader certainly has (civicHere sure) move, since the county and the
+     state are everyone's. The button puts every row back where it was. */
+  function rowsSlot(slot, m) {
+    var box = doc.getElementById(slot.getAttribute("data-here-for"));
+    if (!box) return;
+    var rows = Array.prototype.filter.call(box.querySelectorAll("tr[data-here-layer]"), function (r) {
+      var l = r.getAttribute("data-here-layer");
+      return /^(municipality|township|school):/.test(l) && m.sure(l);
+    });
+    if (!rows.length) return;
+    var bodies = [];
+    rows.forEach(function (r) { if (bodies.indexOf(r.parentNode) < 0) bodies.push(r.parentNode); });
+    var usual = bodies.map(function (b) { return { b: b, kids: Array.prototype.slice.call(b.children) }; });
+    var names = rows.map(function (r) { return r.getAttribute("data-here-name") || ""; }).join(DOT);
+    function apply() {
+      rows.slice().reverse().forEach(function (r) { r.parentNode.insertBefore(r, r.parentNode.firstChild); r.classList.add("here-mine"); });
+    }
+    function undo() {
+      usual.forEach(function (u) { u.kids.forEach(function (k) { u.b.appendChild(k); }); });
+      rows.forEach(function (r) { r.classList.remove("here-mine"); });
+    }
+    var ctl = window.civicHere.line(slot, {
+      onLabel: "Showing first",
+      onText: names,
+      onWhy: " Your saved place's areas (kept on this device only), at the top of their tables; every other area follows.",
+      offText: names,
+      applyLabel: "Show these first",
+      undoLabel: "Show in the usual order",
+      apply: apply,
+      undo: undo
+    });
+    start(slot, ctl, apply);
+  }
+
+  var KINDS = { filter: filterSlot, first: firstSlot, one: oneSlot, map: mapSlot, rows: rowsSlot };
   function run() {
     if (!window.civicHere) return;
     var m = window.civicHere.mine();

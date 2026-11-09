@@ -105,3 +105,41 @@ table.cf-table td.cf-status { min-width: 12ch; }
 .cf-comm-list > .cf-list-empty { padding: 8px 0; color: var(--ink-2); }
 .cf-comm .cf-mix { font: 500 .7rem/1.3 var(--f-mono); letter-spacing: .04em; color: var(--ink-3); text-transform: uppercase; }
 .cf-comm-table { margin: 0; }
+
+/* An area page's own map (civic/campaign_map.py area_campaign_map, 2026-11-09) is cut to the government's outline, so
+   the frame is 2-4x closer than the county map: district labels and dots shrink to match. */
+.cf-amap-z2 .cf-dlabel { font-size: 5px; stroke-width: 1.6px; }
+.cf-amap-z3 .cf-dlabel { font-size: 3.6px; stroke-width: 1.1px; }
+.cf-amap-z4 .cf-dlabel { font-size: 2.6px; stroke-width: .8px; }
+.cf-amap-z2 .cmap-dot { r: 2.5px; }
+.cf-amap-z3 .cmap-dot { r: 1.7px; }
+.cf-amap-z4 .cmap-dot { r: 1.2px; }
+/* one office on an area map: not shaded against anything, so the boundary map's neutral town fill marks the outline */
+.cf-amap .cmap-s.cf-plain { fill: var(--cm-town); }
+
+/* Money history (pages/money_history.py, added 2026-11-09): a committee's reports across every cycle, and a seat
+   across every election. The cash-on-hand line is ink and dashed with ring markers, so it differs from the raised
+   (accent) and spent (ink-3) columns by shape as well as tone. */
+.m-cash { --mark: var(--ink); }
+/* spent: an outlined column (raised is filled), because accent and ink-3 are too close for deutan vision */
+.m-spent { --mark: var(--ink-2); }
+.bar.m-spent { fill: var(--surface); stroke: var(--mark); stroke-width: 1.5; }
+.key-rect.m-spent { background: var(--surface); border: 1.5px solid var(--mark); box-sizing: border-box; }
+.line.m-cash { stroke-dasharray: 5 4; }
+.dot-ring { fill: var(--surface); stroke: var(--mark); stroke-width: 2; }
+.key-line.m-cash { background: none; border-top: 2px dashed var(--ink); height: 0; }
+.cf-history, .cf-seat-history { margin: 10px 0; border: 1px solid var(--line); background: var(--surface); }
+.cf-history > summary, .cf-seat-history > summary { cursor: pointer; padding: 8px 12px; font-weight: 600; }
+.cf-history[open] > summary, .cf-seat-history[open] > summary { border-bottom: 1px solid var(--line); }
+.cf-history-body, .cf-seat-history > .table-wrap, .cf-seat-history > p { padding: 0 12px; }
+.cf-history-body { padding-top: 8px; padding-bottom: 4px; }
+.cf-history-cycles { margin: 0 0 12px; padding-left: 1.2em; }
+.cf-history-cycles li { margin: 2px 0; }
+.cf-history .chart { margin-bottom: 10px; }
+.cf-mh-link { font-size: .85rem; }
+.oh-money { margin: 2px 0 0; font-size: .85rem; }
+.cf-reported { margin: 2px 0 6px; padding-left: 1.1em; font-size: .88rem; }
+.cf-reported li { margin: 2px 0; }
+/* the reader's saved-place rows on the campaigns index (preselect "rows", added 2026-11-09) */
+tr.here-mine > * { background: var(--accent-wash); }
+tr.here-mine > :first-child { box-shadow: inset 3px 0 0 var(--accent); }

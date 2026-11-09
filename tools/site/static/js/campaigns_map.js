@@ -19,8 +19,9 @@
   var state = doc.getElementById("cf-list-state");
   var allBtn = doc.getElementById("cf-list-all");
   var lastLayer = {};
-  row.hidden = false;
-  if (head) head.hidden = false;
+  // one race type only (a township's page): no row to choose from, the office tabs are enough
+  row.hidden = typeBtns.length < 2;
+  if (head) head.hidden = typeBtns.length < 2;
 
   function typeOf(layer) {
     for (var i = 0; i < tabBtns.length; i++) {
@@ -58,6 +59,17 @@
     if (!t) return;
     lastLayer[t] = ev.detail;
     showTabs(t);
+    // data-cf-auto-one (the county's own page, added 2026-11-09): a layer with a single shape (one countywide
+    // office) shows its figures in the panel at once, through map.js's cmap-select.
+    if (root.getAttribute("data-cf-auto-one") !== "on") return;
+    var g = null;
+    Array.prototype.forEach.call(root.querySelectorAll(".cmap-layer[data-layer]"), function (x) {
+      if (x.getAttribute("data-layer") === ev.detail) g = x;
+    });
+    var shapes = g ? g.querySelectorAll(".cmap-a[data-uid]") : [];
+    if (shapes.length === 1) {
+      root.dispatchEvent(new CustomEvent("cmap-select", { detail: { uid: shapes[0].getAttribute("data-uid") } }));
+    }
   });
   row.addEventListener("click", function (ev) {
     var b = ev.target.closest && ev.target.closest(".cf-type");

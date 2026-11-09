@@ -214,6 +214,7 @@
     setText('[data-count="vote"]', tot.vote);
     setText('[data-count="appointed"]', tot.appointed);
     setHidden('[data-count="atleast-gov"], [data-count="noplace"]', !!p);
+    setHidden('[data-count="noplace-alt"]', !p);   // "this place" once one is picked (counts moved to the picker, 2026-11-09)
     setHidden('[data-count="atleast"]', !!p && tot.unknown === 0);
     setHidden('[data-count="atleast-appointed"], [data-count="appointed-unknown-note"]', tot.unknownApp === 0);
     setText("[data-here-text]", p ? plainNames(state) : "the governments everyone in the county has (no place picked yet)");

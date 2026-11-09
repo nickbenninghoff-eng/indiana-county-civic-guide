@@ -11,11 +11,15 @@ summary list. Shading is the one neutral teal ramp of civic/shading.py (never pa
 data/editions/<ed>/derived/district_shapes.json (tools/build_district_shapes.py, driven by
 sources/boundaries/districts/manifest.csv); a set with no file, or a race with no set, is listed under its government
 instead, and the legend says so. Boundaries are never drawn by the guide.
+
+The county's own page (money/campaigns/county/) gets county_campaign_map(): county_layers() gives one layer per
+countywide office plus the commissioner and council district layers, linked to the race cards on that page.
 """
 from __future__ import annotations
 
 import json
-from collections import OrderedDict
+import re
+from collections import Counter, OrderedDict
 from pathlib import Path
 
 from .campaign_money import STATE_AREA, TYPES, party_parts, usd, usd_round, ytd_uses
@@ -23,7 +27,7 @@ from .components import party_label
 from .data import fmt_date, split_ids
 from .html import Markup, h, json_script
 from .map import _label_boxes, shade_defs
-from .shading import classify, shade_class, shade_legend
+from .shading import classify, legend_labels, shade_class, shade_legend
 
 AREA_LAYER = {"county": "county", "courts": "courts", "city": "place", "town": "place", "township": "township",
               "school": "school"}
@@ -417,6 +421,16 @@ def _legend(L: dict, ed, on: bool) -> Markup:
 
 
 def campaign_map(page, ed, shapes: dict, layers: list[dict], default_layer: str) -> Markup:
+    return _map_markup(page, ed, shapes, layers, default_layer, TYPES, MAP_ARIA, MAP_HINT)
+
+
+MAP_ARIA = "Every area is a link to its races; the list after the map has every area."
+MAP_HINT = ("Hover, focus or tap an area to see its campaign money here. Select it again, or use the link, to open its "
+            "races and reports.")
+
+
+def _map_markup(page, ed, shapes: dict, layers: list[dict], default_layer: str, types: dict, aria: str, hint: str,
+                root_attrs: dict | None = None) -> Markup:
     vb = shapes["viewBox"]
     data, groups, tabs, legends = {}, [], [], []
     # township background (behind cities, towns and council districts): drawn once in <defs>, reused with <use>
@@ -450,30 +464,31 @@ def campaign_map(page, ed, shapes: dict, layers: list[dict], default_layer: str)
                 labels.append(h("text", {"x": s["label"][0], "y": s["label"][1] + 3, "text-anchor": "middle",
                                          "class": "cmap-label cmap-label-township"}, s["text"]))
         back = h("g", {"class": "cmap-back", "aria-hidden": "true"}, h("use", {"href": "#cf-back"})) \
-            if L["id"] in ("city", "town") or L["id"].startswith("city-") else None
+            if L.get("back") or L["id"] in ("city", "town") or L["id"].startswith("city-") else None
         body = [back, h("g", {"clip-path": "url(#cmap-clip)"}, paths), labels]
         groups.append(h("g", {"class": "cmap-layer" + (" is-on" if on else ""), "data-layer": L["id"], "role": "group",
-                              "aria-label": f"Layer: {TYPES[L['type']]}, {L['label']}"}, body))
+                              "aria-label": f"Layer: {types[L['type']]}, {L['label']}"}, body))
         tabs.append(h("button", {"type": "button", "class": "cmap-tab", "data-layer": L["id"], "data-cf-type": L["type"],
                                  "aria-pressed": "true" if on else "false"}, L["label"]))
-        legends.append(_legend(L, ed, on))
+        legends.append(_shared_legend(L, on) if L.get("shared") else _legend(L, ed, on))
     types_row = h("div", {"class": "cf-types", "role": "group", "aria-label": "Race type", "hidden": True},
                   [h("button", {"type": "button", "class": "cf-type", "data-cf-type": t,
                                 "aria-pressed": "true" if any(L["id"] == default_layer and L["type"] == t for L in layers)
                                 else "false"}, lab)
-                   for t, lab in TYPES.items() if any(L["type"] == t for L in layers)])
+                   for t, lab in types.items() if any(L["type"] == t for L in layers)])
     svg = h("svg", {"class": "cmap-svg", "viewBox": f"{vb[0]} {vb[1]} {vb[2]} {vb[3]}", "role": "group",
-                    "aria-label": f"Campaign money map of {ed.county_label}. Every area is a link to its races; the list "
-                                  "after the map has every area."},
+                    "aria-label": aria if aria.startswith("Campaign money map of") else
+                    f"Campaign money map of {ed.county_label}. {aria}"},
             h("defs", None, h("clipPath", {"id": "cmap-clip"}, h("path", {"d": shapes["county"]["d"]})), shade_defs(),
               back_def),
             groups,
             h("path", {"d": shapes["county"]["d"], "class": "cmap-outline", "aria-hidden": "true"}),
             h("g", {"class": "cmap-hl-g", "aria-hidden": "true", "clip-path": "url(#cmap-clip)"}))
     panel = h("aside", {"class": "cmap-panel", "id": "cmap-panel", "aria-live": "polite", "aria-label": "Selected area"},
-              h("p", {"class": "cmap-hint"}, "Hover, focus or tap an area to see its campaign money here. Select it "
-                                             "again, or use the link, to open its races and reports."))
-    return h("div", {"class": "cmap cmap-money cf-map", "data-default-layer": default_layer, "data-hash": "off"},
+              h("p", {"class": "cmap-hint"}, hint))
+    attrs = {"class": "cmap cmap-money cf-map", "data-default-layer": default_layer, "data-hash": "off"}
+    attrs.update(root_attrs or {})
+    return h("div", attrs,
              h("div", {"class": "cmap-bar cf-bar"},
                h("p", {"class": "cf-filter-h", "id": "cf-filter-h", "hidden": True}, "Show races for"),
                types_row,
@@ -482,3 +497,249 @@ def campaign_map(page, ed, shapes: dict, layers: list[dict], default_layer: str)
                h("div", {"class": "cf-side"}, panel,
                  h("p", {"class": "cf-legend-note"}, SUM_NOTE + " " + SUPPORT_NOTE))),
              json_script("cmap-data", data))
+
+
+# ------------------------------------------------------------------------------------------- one area's own page
+# Added 2026-11-09 (Nick: "a map view ... the user can select and see the same information at a glance", first for
+# money/campaigns/county/, then "all of the location sub pages"). Each area page gets its own map: one single-shape
+# layer per office elected by the whole government (its latest race, drawn as the government's own outline), the
+# official district layers that belong to it (council, commissioner), and, where a government elects by district or
+# ward with no official boundary file, one tab per district on the government's outline, said plainly. Shapes link to
+# the race cards on the same page. Maps other than the county's are cut to the government's outline, townships behind.
+WHOLE_LABEL = {"county": "Countywide offices", "courts": "Courts", "city": "Citywide offices",
+               "town": "Town-wide offices", "township": "Township offices", "school": "Board seats"}
+NODRAW_LABEL = {"town": "Wards", "school": "Board districts", "city": "Districts", "county": "Districts"}
+NODRAW_NOTE = ("This district's own boundary isn't in the guide (no official boundary file), so the map shows the "
+               "whole {gov}; the race is for voters in the district only.")
+# the county page keeps these ids (tests/test_county_campaign_map.py pins them)
+COUNTY_TYPES = OrderedDict([("countywide", "Countywide offices"), ("commissioners", "Commissioner districts"),
+                            ("council", "Council districts")])
+COUNTY_DEFAULT = "county-commissioners"
+AREA_ARIA = "Every office and district is a link to its race further down this page."
+AREA_HINT = ("Pick a kind of race and an office or district above the map. An office elected by every voter shows "
+             "here as soon as you pick it; hover, focus or tap a district to see its figures. Select it again, or use "
+             "the link, to jump to its candidates and reports.")
+
+
+def office_tab(office: str, names: tuple = ()) -> str:
+    """Short tab label for an office on its government's page: the government's and the board's names are dropped
+    ('County Sheriff' -> 'Sheriff', 'Mayor of South Bend' -> 'Mayor', 'Centre Township Trustee' -> 'Trustee',
+    'John Glenn School Board, Liberty Township' -> 'Liberty Township', 'Walkerton Town Council Ward 1' ->
+    'Council Ward 1')."""
+    if office.startswith("Clerk of the Circuit Court"):
+        return "Clerk"
+    if ", " in office:
+        return office.split(", ", 1)[1]
+    out = office
+    for n in sorted({n for n in names if n}, key=len, reverse=True):
+        if out.startswith(n + " "):
+            out = out[len(n) + 1:]
+            break
+        if out.endswith(" of " + n):
+            out = out[: -len(" of " + n)]
+            break
+    for pre, rep in (("County ", ""), ("Common Council ", "Council "), ("Community School Corporation Board ", ""),
+                     ("School Board", "Board"), ("Town Council ", "Council ")):
+        if out.startswith(pre):
+            out = rep + out[len(pre):]
+    return out[:1].upper() + out[1:] if out else office
+
+
+def _same_page(href: str, page) -> str:
+    """A link from map_layers to this very page becomes a bare fragment, so following it never reloads the page."""
+    base, _, frag = href.partition("#")
+    if base and base == page.rel(page.path):
+        return f"#{frag}" if frag else "#map"
+    return href
+
+
+_NUM = re.compile(r"-?\d+(?:\.\d+)?")
+
+
+def _bbox(d: str) -> list[float]:
+    v = [float(x) for x in _NUM.findall(d)]
+    xs, ys = v[0::2], v[1::2]
+    return [min(xs), min(ys), max(xs), max(ys)]
+
+
+def area_frame(shapes: dict, d: str) -> tuple[list, int]:
+    """The map frame cut to one outline (padded, kept inside the county frame), and a zoom step 1-4 for label sizes."""
+    x0, y0, x1, y1 = _bbox(d)
+    pad = 0.08 * max(x1 - x0, y1 - y0)
+    vb = [float(v) for v in shapes["viewBox"]]
+    ax, ay = max(vb[0], x0 - pad), max(vb[1], y0 - pad)
+    w = min(vb[0] + vb[2] - ax, x1 - x0 + 2 * pad)
+    hh = min(vb[1] + vb[3] - ay, y1 - y0 + 2 * pad)
+    zoom = max(1, min(4, round(vb[2] / w)))
+    return [round(ax, 1), round(ay, 1), round(w, 1), round(hh, 1)], zoom
+
+
+def area_outline(shapes: dict, ed, area: dict) -> str | None:
+    """The government's own outline: the county's for county offices and the courts, else its boundary-map shape."""
+    if area["type"] in ("county", "courts"):
+        return shapes["county"]["d"]
+    key = AREA_LAYER.get(area["type"])
+    it = next((x for x in shapes["layers"].get(key, []) if x.get("id") == area["unit"]), None) if key else None
+    return it["d"] if it else None
+
+
+def area_layers(ed, page, shapes: dict, dsets: list[dict], areas: OrderedDict, cf_state: list[dict],
+                aid: str):
+    """(layers, race types, default layer) for one area's page, or None when the area has no race or no outline.
+    Types in order: offices elected by the whole government (one single-shape layer per office, its latest race,
+    shaded on steps shared by the area's single-shape layers), the official district layers of this government (from
+    map_layers, relinked to this page), then districts or wards with no boundary file (one tab each, on the outline)."""
+    area = areas[aid]
+    d = area_outline(shapes, ed, area)
+    if not area["races"] or not d:
+        return None
+    unit = ed.units.get(area["unit"]) or {}
+    short = lambda n: n.replace("City of ", "").replace("Town of ", "")
+    names = (area["name"], unit.get("name", ""), short(area["name"]), short(unit.get("name", "")))
+    gov = {"county": "county", "courts": "county", "city": "city", "town": "town", "township": "township",
+           "school": "school corporation"}[area["type"]]
+    county = aid == "county"
+    # district layers: the official sets whose races are all this area's
+    mine = [s for s in dsets if s["races"] and all(r["area"] == aid for r in s["races"].values())]
+    dl = []
+    if mine:
+        for L in map_layers(ed, page, shapes, mine, areas, cf_state):
+            if L["kind"] != "district":
+                continue
+            for s in L["shapes"]:
+                s["href"] = s["entry"]["href"] = _same_page(s["href"], page)
+            dl.append(L)
+    drawn_offices = {s["entry"]["n"] for L in dl for s in L["shapes"]}
+    latest: OrderedDict = OrderedDict()
+    for r in area["races"]:
+        if r["office"] in drawn_offices:
+            continue  # on a district layer (older races for that district stay in the page's race list)
+        cur = latest.get(r["office"])
+        if cur is None or r["date"] > cur["date"]:
+            latest[r["office"]] = r
+    labels = {r["id"]: office_tab(r["office"], names) for r in latest.values()}
+    seen = Counter(labels.values())
+    for r in latest.values():
+        if seen[labels[r["id"]]] > 1:   # two boards in one area (LaVille and Union-North): "LaVille: North Township"
+            board, _, rest = r["office"].partition(", ")
+            labels[r["id"]] = f"{board.replace(' School Board', '')}: {rest}" if rest else r["office"]
+    vals = {f"office:{r['id']}": (r["spent"] / 100 if r["spent"] is not None else None) for r in latest.values()}
+    cls = classify(vals) if vals else None
+    shared = {"cls": cls, "years": sorted({r["general_eid"][:4] for r in latest.values()}, reverse=True),
+              "n": sum(1 for r in latest.values() if r["spent"] is not None),
+              "inc": sum(1 for r in latest.values() if r["spent"] is not None and not r["complete"]),
+              "count": len(latest)}
+    wkey = "countywide" if county else "whole"
+    types: OrderedDict = OrderedDict()
+    layers = []
+    groups = ((wkey, WHOLE_LABEL[area["type"]], [r for r in latest.values() if not r["district"]]),
+              ("nodraw", NODRAW_LABEL.get(area["type"], "Districts"),
+               sorted([r for r in latest.values() if r["district"]], key=lambda r: _dist_key(r["district"]))))
+    for key, label, group in groups:
+        for r in group:
+            uid = f"office:{r['id']}"
+            lid = f"{key}-{r['id']}"
+            href = f"#r-{r['id']}"
+            year = r["general_eid"][:4]
+            cav = [NODRAW_NOTE.format(gov=gov)] if key == "nodraw" else []
+            item = {"uid": uid, "d": d, "href": href, "entry": race_entry(ed, page, r, href, d, lid, extra_cav=cav),
+                    "value": vals[uid], "complete": r["complete"], "year": year, "shade": cls["shade"][uid],
+                    "aria": _aria(r["office"], r["spent"], year, r["complete"]), "label": None, "label_r": 99,
+                    "text": "", "plain": len(latest) == 1}   # one office: nothing to shade it against
+            layers.append({"id": lid, "type": key, "label": labels[r["id"]], "shapes": [item], "kind": "office",
+                           "sets": [], "classes": cls, "shared": shared, "back": not county})
+            types.setdefault(key, label)
+    for L in dl:
+        key = L["id"].split("-", 1)[1]          # county-commissioners -> commissioners, city-council -> council
+        L["type"] = key
+        L["back"] = not county
+        types.setdefault(key, L["label"])
+        layers.append(L)
+    order = [wkey] + [t for t in types if t not in (wkey, "nodraw")] + ["nodraw"]
+    types = OrderedDict((t, types[t]) for t in order if t in types)
+    rank = list(types)
+    layers.sort(key=lambda L: rank.index(L["type"]))
+    default = next((L["id"] for L in layers if L["kind"] == "district"), layers[0]["id"])
+    return layers, types, default
+
+
+def _dist_key(dist: str):
+    m = re.search(r"\d+", dist)
+    return (int(m.group(0)) if m else 0, dist)
+
+
+def county_layers(ed, page, shapes: dict, dsets: list[dict], areas: OrderedDict, cf_state: list[dict]) -> list[dict]:
+    """The county page's layers (area_layers for "county")."""
+    got = area_layers(ed, page, shapes, dsets, areas, cf_state, "county")
+    return got[0] if got else []
+
+
+def _shared_legend(L: dict, on: bool) -> Markup:
+    """Legend of a single-office layer: the steps shared by the area's single-office layers, counted in offices, with
+    this office's step marked."""
+    sh = L["shared"]
+    cls = sh["cls"]
+    mine = L["shapes"][0].get("shade")
+
+    def n_txt(n):
+        return h("span", {"class": "cmap-lg-n"}, f" ({n} office{'s' if n != 1 else ''})")
+    items = [h("li", {"class": "is-this" if pos == mine else None},
+               h("span", {"class": f"cmap-key {shade_class(pos)}", "aria-hidden": "true"}),
+               h("span", {"class": "cmap-lg-t"}, txt, n_txt(cnt), " · this office" if pos == mine else None))
+             for pos, txt, cnt in zip(cls["shades"], legend_labels(cls["breaks"]), cls["counts"]) if cnt]
+    if cls["none"]:
+        items.append(h("li", {"class": "is-this" if mine is None else None},
+                       h("span", {"class": "cmap-key cmap-mm-none", "aria-hidden": "true"}),
+                       h("span", {"class": "cmap-lg-t"}, "No reports on file", n_txt(cls["none"]),
+                         " · this office" if mine is None else None)))
+    if sh["count"] == 1:
+        # one office on the map: nothing to compare, so no steps; the box has the figure
+        title = "Spent by all candidates, latest election" + (f" ({sh['years'][0]})" if sh["years"] else "")
+        one = ("No reports on file: not the same as $0." if not sh["n"] else
+               "Incomplete record: at least one expected report is not on file, so the figure is a floor. The box "
+               "says which." if sh["inc"] else "Every expected report is on file.")
+        return h("div", {"class": "cmap-mlegend" + (" is-on" if on else ""), "data-layer": L["id"]},
+                 h("p", {"class": "cmap-mlegend-h"}, title),
+                 h("p", {"class": "cf-legend-note"}, "One office on this map, so it isn't shaded against others; "
+                                                     "its figures are in the box. " + one))
+    else:
+        title = "Spent by all candidates, each office's latest election" + (
+            f" ({' or '.join(sh['years'])})" if sh["years"] else "")
+        lead = (f"The steps are shared by the {sh['count']} offices on these tabs, so the shade compares this office "
+                "with the others. ")
+    tail = (f"{sh['inc']} of {sh['n']} with reports have an incomplete record: at least one expected report is not "
+            "on file, so the figure is a floor. The panel says which." if sh["inc"] else
+            ("Every expected report is on file." if sh["n"] else "No reports on file: not the same as $0."))
+    return h("div", {"class": "cmap-mlegend" + (" is-on" if on else ""), "data-layer": L["id"]},
+             h("p", {"class": "cmap-mlegend-h"}, title),
+             h("ul", {"class": "cmap-legend is-on", "aria-label": f"Legend: {title}"}, items),
+             h("p", {"class": "cf-legend-note"}, lead + tail))
+
+
+def area_campaign_map(page, ed, shapes: dict, area: dict, layers: list[dict], types: OrderedDict,
+                      default_layer: str) -> Markup:
+    """One area page's map: the markup of campaign_map with the area's race types and wording, data-cf-auto-one
+    (static/js/campaigns_map.js shows a one-shape layer's figures in the panel as soon as it is picked), and, outside
+    the county's own pages, the frame cut to the government's outline (cf-amap-z<zoom> sizes the labels)."""
+    frame, extra = shapes, {"data-cf-auto-one": "on"}
+    if area["type"] not in ("county", "courts"):
+        vb, zoom = area_frame(shapes, area_outline(shapes, ed, area))
+        frame = dict(shapes, viewBox=vb)
+        extra["class"] = f"cmap cmap-money cf-map cf-amap cf-amap-z{zoom}"
+    return _map_markup(page, ed, frame, layers, default_layer, types,
+                       f"Campaign money map of {area['name']}. {AREA_ARIA}", AREA_HINT, extra)
+
+
+def county_campaign_map(page, ed, shapes: dict, layers: list[dict], default_layer: str = COUNTY_DEFAULT) -> Markup:
+    """The county page's map (kept for callers; area_campaign_map does the same for any area)."""
+    return _map_markup(page, ed, shapes, layers, default_layer, COUNTY_TYPES,
+                       f"Campaign money map of {ed.county_label}. {AREA_ARIA}", AREA_HINT, {"data-cf-auto-one": "on"})
+
+
+def state_campaign_map(page, ed, shapes: dict, layers: list[dict], types: OrderedDict) -> Markup:
+    """The state-legislature page's map: House and Senate district layers (plain, not shaded), first type shown."""
+    return _map_markup(page, ed, shapes, layers, layers[0]["id"], types,
+                       f"Campaign money map of the state legislative districts in {ed.county_label}. Every district is "
+                       "a link to its committees further down this page.",
+                       "Pick House or Senate districts above the map. Hover, focus or tap a district to see its "
+                       "committees' figures here; select it again, or use the link, to jump to its table.")

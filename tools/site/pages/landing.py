@@ -120,27 +120,61 @@ def build(site):
                          h("strong", {"class": "fig"}, fmt_pct(mprim["turnout_pct"])),
                          " did (registered voters in the cities and towns only)", page.cites.cite(mprim["source_ids"]), ". "))
     township_rule = ed.unit_types.get("township", {})
+    # Header (Nick, 2026-11-09: "By the numbers"): the whole county, not one address. The guide is a central reference
+    # for the county's governments, elections and money; the per-address counts live with the picker below.
+    state_units = {u["unit_id"] for u in ed.tables["units"] if u["unit_type"] == "state_chamber"}
+    n_local_gov = sum(1 for u in ed.tables["units"] if u["unit_id"] not in state_units)
+    elected_offices = [o for o in ed.tables["offices"] if o.get("elected") == "yes"]
+    n_local_seats = sum(int(o.get("seats") or 1) for o in elected_offices if o["unit_id"] not in state_units)
+    n_state_seats = sum(int(o.get("seats") or 1) for o in elected_offices if o["unit_id"] in state_units)
+    broad = sorted(e[:4] for e, el in elections.items()
+                   if sum(1 for c in ed.contests.values() if c["election_id"] == e) >= 10)
+    first_all = broad[0] if broad else None
+    first_any = min(e[:4] for e in elections) if elections else None
+
+    def go(path, label):
+        return h("a", {"href": page.rel(path)}, label) if path in site.by_path else None
+    jumps = [x for x in (go("officeholders/index.html", "Who holds every seat"),
+                         go("elections/results/index.html", "Results"),
+                         go("elections/margins/index.html", "Close races"),
+                         go("money/campaigns/index.html", "Campaign money"),
+                         go("elections/calendar/index.html", "What's on the next ballot")) if x]
+    since = (f"Election results from {first_all} on" + (f" (South Bend mayor back to {first_any})"
+                                                        if first_any and first_any < first_all else "")
+             if first_all else "Election results")
     hero = h("section", {"class": "hero", "aria-labelledby": "hero-h"},
              h("h1", {"id": "hero-h", "class": "hero-h"},
-               h("span", {"class": "hl-line"}, "One address."),
-               # No place chosen yet: the counts are the layers everyone has, so they read "at least".
-               h("span", {"class": "hl-line"}, h("span", {"data-count": "atleast-gov", "hidden": None if place is None else True}, "At least "),
-                 h("span", {"data-count": "gov"}, n_gov), " governments."),
-               h("span", {"class": "hl-line"}, h("span", {"data-count": "atleast", "hidden": None if (n_unknown or place is None) else True}, "At least "),
-                 h("span", {"data-count": "elected"}, n_elected), " elected seats.")),
+               h("span", {"class": "hl-line"}, "One county."),
+               h("span", {"class": "hl-line"}, f"{n_local_gov} local governments."),
+               h("span", {"class": "hl-line"}, f"{n_local_seats} elected seats.")),
              h("p", {"class": "hero-dek"},
-               f"Everyone in {ed.county_label} lives under the state, the county, a township", page.cites.cite(township_rule.get("source_ids")),
-               " and a school corporation, and many also live in a city or town. Each has its own officials, and its seats come up "
-               "in different years. ", h("span", {"data-count": "noplace", "hidden": None if place is None else True},
-                 "Pick your place below to count yours. "),
-               "You vote for ", h("strong", {"data-count": "vote"}, n_vote), " of the elected seats shown below; ",
-               h("span", {"data-count": "atleast-appointed", "hidden": None if n_unknown_app else True}, "at least "),
-               h("span", {"data-count": "appointed"}, n_app), " more seats are appointed",
-               h("span", {"data-count": "appointed-unknown-note", "hidden": None if n_unknown_app else True},
-                 " (some appointed boards' seat counts are not in the guide's data)"), "."),
+               f"{since}, who holds every seat now, and the campaign money behind them: one sourced reference for "
+               f"{ed.county_label}'s governments and elections. Voters here also help elect {n_state_seats} state "
+               "legislators. ",
+               status_badge("computed", page, "Counted from the guide's units and offices tables.")),
              h("p", {"class": "hero-turnout"}, turnout, status_badge("official", page)),
-             h("p", {"class": "hero-cta"}, "You don't need to learn all of it. ",
+             h("p", {"class": "hero-cta"}, [[" · " if i else "", x] for i, x in enumerate(jumps)]),
+             h("p", {"class": "hero-cta hero-cta-place"}, "Looking for what covers one address? ",
                h("a", {"href": "#pick"}, "Pick your place"), " or ", h("a", {"href": "#paths"}, "pick where to start"), "."))
+    # the per-address counts (here.js fills data-count): moved from the old header to the picker
+    place_counts = h("div", {"class": "pick-counts"},
+        h("p", {"class": "pick-counts-h"},
+          h("span", {"data-count": "atleast-gov", "hidden": None if place is None else True}, "At least "),
+          h("strong", {"data-count": "gov"}, n_gov), " governments and ",
+          h("span", {"data-count": "atleast", "hidden": None if (n_unknown or place is None) else True}, "at least "),
+          h("strong", {"data-count": "elected"}, n_elected), " elected seats cover ",
+          h("span", {"data-count": "noplace", "hidden": None if place is None else True}, "every address. "),
+          h("span", {"data-count": "noplace-alt", "hidden": True if place is None else None}, "this place. ")),
+        h("p", {"class": "muted"},
+          f"Everyone in {ed.county_label} lives under the state, the county, a township", page.cites.cite(township_rule.get("source_ids")),
+          " and a school corporation, and many also live in a city or town. Each has its own officials, and its seats come up "
+          "in different years. ", h("span", {"data-count": "noplace", "hidden": None if place is None else True},
+            "Pick your place to count yours. "),
+          "You vote for ", h("strong", {"data-count": "vote"}, n_vote), " of the elected seats shown below; ",
+          h("span", {"data-count": "atleast-appointed", "hidden": None if n_unknown_app else True}, "at least "),
+          h("span", {"data-count": "appointed"}, n_app), " more seats are appointed",
+          h("span", {"data-count": "appointed-unknown-note", "hidden": None if n_unknown_app else True},
+            " (some appointed boards' seat counts are not in the guide's data)"), "."))
 
     # ---------------------------------------------------------------- picker: the map is the front door
     shapes = load_shapes(ed)
@@ -148,6 +182,7 @@ def build(site):
     pick = h("section", {"class": "pick", "id": "pick", "aria-labelledby": "pick-h"},
              h("h2", {"id": "pick-h", "class": "section-h pick-title"},
                "Pick your place on the map or below" if cmap else "Pick your place"),
+             place_counts,
              h("div", {"class": "pick-grid" + ("" if cmap else " pick-grid-solo")},
                h("div", {"class": "pick-map"},
                  h("p", {"class": "pick-step mono"}, "On the map"),

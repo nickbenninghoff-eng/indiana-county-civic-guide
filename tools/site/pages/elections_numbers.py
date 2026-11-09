@@ -25,10 +25,10 @@ from civic.components import (STATUS, data_table, filter_empty_note, party_label
                               table_filter)
 from civic.data import PARTY_LABELS, SELECTED_BY_LABELS, fmt_date, fmt_int
 from civic.district_map import district_map, district_set, load_district_shapes
-from civic.html import Markup, h
+from civic.html import Markup, h, json_script
 from civic.map import load_shapes, load_votes, race_by_contest
 from civic.pick_one import one_bar, one_fold
-from civic.preselect import here_attrs, here_slot
+from civic.preselect import county_districts, here_attrs, here_slot
 from civic.related import contest_href
 
 from pages.elections import (BANDS, MUNICIPAL_TYPES, SCHOOLS, TOWNS, TYPE_LABEL, YEARS, _calendar_items, _district_of,
@@ -386,6 +386,7 @@ def build_margins(site):
                                       "canvass files listed under Sources.", cites.cite_compact(src_votes)]),
                      finder, filter_empty_note("mg-find"),
                      one_bar("area", "areas", "Pick an area on the map, or open any area below."),
+                     _here_margin_areas(page, ed),
                      h("div", {"class": "mg-find", "id": "mg-find", "data-tf-deep": True}, levels),
                      scope="county", ed=ed))
 
@@ -524,6 +525,32 @@ def _unc_line(page, rs) -> Markup | None:
         bits.append(h("li", None, h("a", {"href": href}, when) if href else when, f": {who}"))
     return h("div", {"class": "mg-unc"}, h("p", {"class": "mg-unc-h"}, f"Uncontested ({len(rs)})"),
              h("ul", {"class": "mg-unc-list"}, bits))
+
+
+def _here_margin_areas(page, ed) -> list:
+    """Saved place (added 2026-11-09, preselect "one"): open the reader's areas. Every place gets the countywide
+    offices, plus its commissioner and council district folds where the guide's precinct results show a single one
+    (civic/preselect.py county_districts, as on the county page); the page script adds the reader's city or town, and
+    the township and school corporation when the reader chose them (data-here-also). "union-north" is the saved-place id
+    of LaVille's schools, whose races sit under both of its names here."""
+    votes = load_votes(ed)
+    dist = county_districts(ed, votes)
+    places = {}
+    for pid in page.site.here_data.get("places", {}):
+        keys = ["countywide"]
+        for k in dist.get(pid, {}).get("keys", []):
+            if k.startswith("county-commissioner-d"):
+                keys.append("commissioner-" + k.rsplit("-d", 1)[1])
+            elif k.startswith("county-council-"):
+                keys.append("council-" + k.rsplit("-", 1)[1])
+        places[pid] = {"keys": keys, "names": []}
+    return [here_slot("one", "areas", extra={
+                "data-here-keys": "json:here-margin-areas", "data-here-also": "muni township school",
+                "data-here-undo": "Close them", "data-here-apply": "Open them",
+                "data-here-why": " Your saved place's areas (kept on this device only): its city or town, the township "
+                                 "and school corporation if you chose them, the countywide offices, and its county "
+                                 "districts where the guide's precinct results show a single one."}),
+            json_script("here-margin-areas", {"places": places, "alias": {"union-north": ["union-north", "laville-schools"]}})]
 
 
 def _area_body(page, ed, key, rs, on_map, lines_from, g_ix, p_ix):
@@ -801,6 +828,23 @@ def office_card_href(page, ed, o) -> str | None:
     return page.rel(f"{path}#office-{o['office_id']}")
 
 
+def _money_line(page, ed, o, t):
+    """Links to the holder's own campaign committees' money history (added 2026-11-09), when any match by name in the
+    office's government (cf_local.csv); for state legislators, their history on the state legislature campaigns page
+    (cf_state.csv and cf_state_history.csv)."""
+    from pages.money_history import holder_links, legislator_href
+    if o["unit_id"] in ("in-house", "in-senate"):
+        u = legislator_href(ed, page, t["person"])
+        return h("p", {"class": "oh-money"}, h("a", {"href": u}, "Campaign money history (state filings)")) if u else None
+    got = holder_links(ed, page, o["unit_id"], t["person"], o["title"])
+    if not got:
+        return None
+    parts = []
+    for i, (label, u) in enumerate(got):
+        parts += ([", "] if i else []) + [h("a", {"href": u}, label)]
+    return h("p", {"class": "oh-money"}, "Campaign money history: ", parts)
+
+
 def build_officeholders(site):
     ed = site.ed
     page = site.page("officeholders/index.html", banners=True)
@@ -852,7 +896,8 @@ def build_officeholders(site):
                          h("p", {"class": "oh-who"}, h("strong", None, t["person"]), f" · {_plabel(t.get('party'))}",
                            f" · since {since}"),
                          h("p", {"class": "oh-how"}, first_by_text(t)[0].upper() + first_by_text(t)[1:],
-                           f"; current term by {now}. ", badges)))
+                           f"; current term by {now}. ", badges),
+                         _money_line(page, ed, o, t)))
         name = ed.units.get(uid, {}).get("name", uid)
         digest = f"{len(lis)} officeholder{'s' if len(lis) != 1 else ''}" + (f" · {n_c} first by caucus or appointment" if n_c else "")
         folds.append(h("li", {"class": "oh-gov", "data-tf-group": True},

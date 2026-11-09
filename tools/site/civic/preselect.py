@@ -26,7 +26,9 @@ from __future__ import annotations
 from .html import Markup, h
 
 LAYER_TYPES = {"city": "municipality", "town": "municipality", "township": "township", "school_corporation": "school"}
-SLOT_KINDS = ("filter", "first", "one", "map", "explorer", "taxbill")   # the last two: elections.js, money.js
+SLOT_KINDS = ("filter", "first", "one", "map", "explorer", "taxbill", "rows")   # explorer/taxbill: elections.js, money.js
+# "rows" (added 2026-11-09, money/campaigns/): table rows of the reader's city or town, township and school
+# corporation move to the top of their tables and are marked.
 
 
 def here_layer(ed, unit_id: str, _seen: frozenset = frozenset()) -> str:
@@ -56,7 +58,8 @@ def here_attrs(ed, unit_id: str) -> dict:
 def here_slot(kind: str, target: str | None = None, *, extra: dict | None = None) -> Markup:
     """The placeholder for the "Showing: ..." line. ``kind`` names the behaviour (static/js/preselect.js):
     filter (a table_filter list: rows of other governments hidden), first (groups of the reader's areas moved first),
-    one (pick_one items opened), map (an area selected on the map); explorer (the results explorer, elections.js) and
+    one (pick_one items opened), map (an area selected on the map), rows (table rows of the reader's areas moved
+    to the top of their tables); explorer (the results explorer, elections.js) and
     taxbill (the tax-bill district, money.js) are handled by their page scripts. ``target`` is the id of the list, container or map
     it acts on. Ships hidden and empty, so JavaScript off (or no saved place) shows nothing."""
     if kind not in SLOT_KINDS:
