@@ -12,7 +12,7 @@ import re
 from datetime import date, timedelta
 
 from civic.charts import columns, hbar, legend, results_bars
-from civic.components import (callout, data_table, party_label, scope_badge, section, status_badge,
+from civic.components import (callout, data_table, filter_empty_note, table_filter, party_label, scope_badge, section, status_badge,
                               variant_slot)
 from civic.data import (PARTY_LABELS, SELECTED_BY_LABELS, fmt_date, fmt_int, nth_weekday_after, parse_date,
                         split_ids)
@@ -667,10 +667,13 @@ def build_calendar(site):
                      scope="indiana", ed=ed))
 
     # ---- full table
-    trows = []
+    trows, tattrs = [], []
     for y in YEARS:
         for it in items[y]:
             o = it["office"]
+            gov = ed.units.get(o["unit_id"], {}).get("name", "") if o else "Indiana"
+            tattrs.append({"data-tf-year": str(y), "data-tf-level": LEVEL_LABEL.get(it["level"], it["level"]),
+                           "data-tf-government": gov, "data-tf-text": it["label"]})
             trows.append([str(y), LEVEL_LABEL.get(it["level"], it["level"]),
                           ed.units.get(o["unit_id"], {}).get("name", "") if o else "Indiana",
                           it["label"], str(it["seats"]) if it["seats"] else "not in data",
@@ -683,9 +686,23 @@ def build_calendar(site):
         return " ".join(keep or parts[:1]) or "Not stated in the office notes."
     unsched_rows = [[o["title"], ed.units.get(o["unit_id"], {}).get("name", ""), why(o),
                      cites.cite_compact(o["source_ids"])] for o in unscheduled]
+    t_levels = [lab for _, lab in LEVELS if any(a["data-tf-level"] == lab for a in tattrs)]
+    t_govs = {}
+    for a, it in zip(tattrs, [it for y in YEARS for it in items[y]]):
+        o = it["office"]
+        t_govs[a["data-tf-government"]] = _place_order(ed, o) if o else (99, "")
     page.add(section("by-year", 4, "Every seat, by year",
+                     table_filter("calendar-table",
+                                  [{"key": "year", "label": "Year", "all": "All years", "options": _opts([str(y) for y in YEARS])},
+                                   {"key": "level", "label": "Level", "all": "All levels", "options": _opts(t_levels)},
+                                   {"key": "government", "label": "Government", "all": "All governments",
+                                    "options": _opts(sorted(t_govs, key=lambda g: (t_govs[g], g)))}],
+                                  len(trows), noun="seat", search="Words in the office name",
+                                  label="Filter the every-seat table"),
                      data_table("calendar-table", ["Year", "Level", "Government", "Office", "Seats", "Term", "Status"], trows,
-                                caption="Offices on the ballot, 2026 to 2030 (computed)", numeric=(0, 4), min_width="46rem"),
+                                caption="Offices on the ballot, 2026 to 2030 (computed)", numeric=(0, 4), min_width="46rem",
+                                row_attrs=tattrs),
+                     filter_empty_note("calendar-table"),
                      h("h3", None, "Elected offices without a computed year"),
                      h("p", None, "These offices have no next-election year or term length in the guide's data, so they are "
                                   "not placed on the calendar. Superior Court judges face yes-or-no retention votes instead of "
@@ -1061,6 +1078,48 @@ def _turnout_chart(page, ed, kinds, fid, title, cite):
     return Markup(str(fig).replace("</figcaption>", "</figcaption>" + str(leg), 1))
 
 
+_PRIMARY_TAIL = re.compile(r"\s*\([^()]*primary\)\s*$", re.I)
+_DISTRICT = re.compile(r"\bDistrict\s+(\w+)")
+
+
+def _search_text(label: str) -> str:
+    """What a reader's typed words match for a contest: its name without the primary's party label
+    (the page has no party filter, so a search must not act as one)."""
+    return _PRIMARY_TAIL.sub("", label)
+
+
+def _district_of(label: str) -> str:
+    m = _DISTRICT.search(label)
+    return f"District {m.group(1)}" if m else ""
+
+
+def _district_key(d: str):
+    k = d.split(" ", 1)[1]
+    return (0, int(k), "") if k.isdigit() else (1, 0, k)
+
+
+def _opts(values) -> list[tuple[str, str]]:
+    return [(v, v) for v in values]
+
+
+def _unit_attrs(ed, office) -> dict:
+    """Level and government (place or body) of an office, for the table filters."""
+    u = ed.units.get(office["unit_id"], {})
+    return {"data-tf-level": LEVEL_LABEL.get(u.get("unit_type"), u.get("unit_type", "")),
+            "data-tf-government": u.get("name", "")}
+
+
+def _unit_controls(ed, offices) -> list[dict]:
+    attrs = [_unit_attrs(ed, o) for o in offices]
+    levels = sorted({a["data-tf-level"] for a in attrs}, key=lambda x: next((i for i, (_, lab) in enumerate(LEVELS) if lab == x), 99))
+    gov = {}
+    for o, a in zip(offices, attrs):
+        gov[a["data-tf-government"]] = _place_order(ed, o)
+    return [{"key": "level", "label": "Level", "all": "All levels", "options": _opts(levels)},
+            {"key": "government", "label": "Government", "all": "All governments",
+             "options": _opts(sorted(gov, key=lambda g: (gov[g], g)))}]
+
+
 def build_landscape(site):
     ed = site.ed
     page = site.page("elections/landscape/index.html", banners=True)
@@ -1124,14 +1183,17 @@ def build_landscape(site):
         e = ed.elections[c["election_id"]]
         band_n[m["band"]] += 1
         st = contest_status(c["rows"])
-        mrows.append((m["pts"], e["date"], c, m, e, st, g))
+        mrows.append((m["pts"], e["date"], c, m, e, st, g, place))
     mrows.sort(key=lambda x: (x[0], x[1]))
     trs = []
-    for pts, d, c, m, e, st, g in mrows:
+    for pts, d, c, m, e, st, g, place in mrows:
         a, b = m["ahead"], m["next"]
         band_label = next(lab for bid, lab, _, _ in BANDS if bid == m["band"])
         attrs = {"data-year": d[:4], "data-type": "primary" if "primary" in e["type"] else "general",
-                 "data-band": m["band"], "data-margin": f"{pts:.4f}", "data-date": d}
+                 "data-band": m["band"], "data-margin": f"{pts:.4f}", "data-date": d,
+                 "data-tf-year": d[:4], "data-tf-type": "primary" if "primary" in e["type"] else "general",
+                 "data-tf-band": m["band"], "data-tf-office": g, "data-tf-place": place or "(not stated)",
+                 "data-tf-district": _district_of(c["label"]), "data-tf-text": _search_text(c["label"])}
         cells = [
             h("th", {"scope": "row"}, c["label"],
               h("span", {"class": "elx-sub muted"}, f" · {m['seats']} seats") if m["seats"] > 1 else None),
@@ -1156,19 +1218,21 @@ def build_landscape(site):
                                                               "data-copy-table": "margins-table", "id": "margins-table-copy"},
                                                    "Copy CSV")))
     years = sorted({x[1][:4] for x in mrows}, reverse=True)
-    picker = h("div", {"class": "picker", "role": "group", "aria-label": "Filter margins"},
-               h("div", {"class": "field"}, h("label", {"for": "mg-year"}, "Year"),
-                 h("select", {"id": "mg-year"}, h("option", {"value": ""}, "All years"), [h("option", {"value": y}, y) for y in years])),
-               h("div", {"class": "field"}, h("label", {"for": "mg-type"}, "Election"),
-                 h("select", {"id": "mg-type"}, h("option", {"value": ""}, "Primaries and generals"),
-                   h("option", {"value": "general"}, "General elections"), h("option", {"value": "primary"}, "Primaries"))),
-               h("div", {"class": "field"}, h("label", {"for": "mg-band"}, "Band"),
-                 h("select", {"id": "mg-band"}, h("option", {"value": ""}, "All bands"),
-                   [h("option", {"value": bid}, lab) for bid, lab, _, _ in BANDS])),
-               h("div", {"class": "field"}, h("label", {"for": "mg-sort"}, "Sort"),
-                 h("select", {"id": "mg-sort"}, h("option", {"value": "margin"}, "Closest first"),
-                   h("option", {"value": "date"}, "Newest first"))),
-               h("p", {"class": "picker-help", "id": "mg-count", "aria-live": "polite"}, f"{len(mrows)} races shown."))
+    offices_g = sorted({x[6] for x in mrows})
+    places_g = sorted({x[7] or "(not stated)" for x in mrows})
+    districts_g = sorted({_district_of(x[2]["label"]) for x in mrows} - {""}, key=_district_key)
+    picker = table_filter(
+        "margins-table",
+        [{"key": "year", "label": "Year", "all": "All years", "options": _opts(years)},
+         {"key": "type", "label": "Election", "all": "All elections",
+          "options": [("general", "General elections"), ("primary", "Primaries")]},
+         {"key": "band", "label": "Band", "all": "All bands", "options": [(bid, lab) for bid, lab, _, _ in BANDS]},
+         {"key": "office", "label": "Office", "all": "All offices", "options": _opts(offices_g)},
+         {"key": "place", "label": "Place", "all": "All places", "options": _opts(places_g)},
+         {"key": "district", "label": "District", "all": "Any district", "options": _opts(districts_g)}],
+        len(mrows), noun="race", search="Words in the contest name",
+        sort=[("margin", "Closest first", "margin:asc:n"), ("date", "Newest first", "date:desc:s,margin:asc:n")],
+        label="Filter the margins table")
     band_chart = hbar("margin-bands", "Races by margin band", [
         {"label": lab, "value": band_n[bid], "display": f"{band_n[bid]} races"} for bid, lab, _, _ in BANDS],
         subtitle=f"{len(mrows)} contested races, {els[0]['date'][:4]} to {els[-1]['date'][:4]}", page=page,
@@ -1195,13 +1259,13 @@ def build_landscape(site):
                      band_chart, picker,
                      h("p", {"class": "muted"}, "Vote counts in this table come from the county canvass files listed under Sources.",
                        cites.cite_compact(_src(*[r for x in mrows for r in x[2]["rows"][:1]]))),
-                     table,
+                     table, filter_empty_note("margins-table"),
                      h("p", {"class": "muted"}, "Party codes: ", "; ".join(f"{k} = {v}" for k, v in PARTY_LABELS.items()), "."),
                      scope="county", ed=ed))
 
     # ---- up next
     items, _ = _calendar_items(ed)
-    urows = []
+    urows, uattrs, uoffices = [], [], []
     for y in (2027, 2028):
         for it in items[y]:
             o = it["office"]
@@ -1212,9 +1276,13 @@ def build_landscape(site):
             if not holders:
                 urows.append([str(y), o["title"], "No current officeholder in the guide's data", "", "", "",
                               ot.get("term_limit") or "Not in the guide's data", h("span", None, cites.cite(o["source_ids"]))])
+                uattrs.append({**_unit_attrs(ed, o), "data-tf-year": str(y), "data-tf-text": o["title"]})
+                uoffices.append(o)
                 continue
             for t in holders:
                 tl = _term_limit(ed, o, t, y)
+                uattrs.append({**_unit_attrs(ed, o), "data-tf-year": str(y), "data-tf-text": f"{o['title']} {t['person']}"})
+                uoffices.append(o)
                 urows.append([str(y), o["title"], t["person"], _plabel(t.get("party")), fmt_date(t["start"]) or "not in sources",
                               SELECTED_BY_LABELS.get(t.get("first_selected_by", ""), t.get("first_selected_by")),
                               h("span", None, tl[0], " ", status_badge("computed", page, tl[1]) if tl[1] else None),
@@ -1227,9 +1295,14 @@ def build_landscape(site):
                                   "data (", h("a", {"href": page.rel("elections/calendar/index.html")}, "Election calendar"),
                        "). Announced retirements and declared candidates are not collected."),
                      _rule_p(page, ed, "county_row_office_term_limits", detail=True),
+                     table_filter("up-next-table",
+                                  [{"key": "year", "label": "Year", "all": "Both years", "options": [("2027", "2027"), ("2028", "2028")]}]
+                                  + _unit_controls(ed, uoffices),
+                                  len(urows), noun="seat", search="Seat or holder name", label="Filter the up-next table"),
                      data_table("up-next-table", ["Year", "Seat", "Holder now", "Party", "In office since",
                                                   "First took office by", "Term-limit status", "Status"], urows,
-                                caption="Seats on the 2027 and 2028 ballots", min_width="60rem"),
+                                caption="Seats on the 2027 and 2028 ballots", min_width="60rem", row_attrs=uattrs),
+                     filter_empty_note("up-next-table"),
                      h("p", {"class": "muted"}, "Term-limit status is computed only for the six offices on the 8-in-12 list, "
                                                 "from the guide's terms data; service chosen by caucus to fill a vacancy is not "
                                                 "counted, as the rule says. Listed by year and office, never by party."),
@@ -1244,10 +1317,12 @@ def build_landscape(site):
             cur.append((o, t))
     cur.sort(key=lambda x: (_place_order(ed, x[0]), x[0]["office_id"]))
     cnt: dict[str, int] = {}
-    hrows = []
+    hrows, hattrs = [], []
     for o, t in cur:
         k = t.get("first_selected_by") or "unknown"
         cnt[k] = cnt.get(k, 0) + 1
+        hattrs.append({**_unit_attrs(ed, o), "data-tf-how": SELECTED_BY_LABELS.get(k, k),
+                       "data-tf-text": f"{o['title']} {t['person']}"})
         hrows.append([o["title"], t["person"], _plabel(t.get("party")), SELECTED_BY_LABELS.get(k, k),
                       SELECTED_BY_LABELS.get(t.get("selected_by") or "unknown", t.get("selected_by")),
                       fmt_date(t["start"]) or "not in sources",
@@ -1266,9 +1341,17 @@ def build_landscape(site):
                                   "caucus or appointment) and how they got their current term. The same field is shown for "
                                   "everyone."),
                      hb,
-                     data_table("took-office-table", ["Office", "Holder", "Party", "First took office by", "Current term by",
+                     table_filter("took-office-list",
+                                  _unit_controls(ed, [o for o, _ in cur])
+                                  + [{"key": "how", "label": "First took office by", "all": "Any way",
+                                      "options": _opts([SELECTED_BY_LABELS.get(k, k) for k in order if cnt.get(k)])}],
+                                  len(hrows), noun="officeholder", search="Office or holder name",
+                                  label="Filter the officeholders table"),
+                     data_table("took-office-list", ["Office", "Holder", "Party", "First took office by", "Current term by",
                                                       "Since", "Status"], hrows,
-                                caption="Current officeholders and how they took office", min_width="52rem"),
+                                caption="Current officeholders and how they took office", min_width="52rem",
+                                row_attrs=hattrs),
+                     filter_empty_note("took-office-list"),
                      scope="county", ed=ed))
 
     # ---- straight party

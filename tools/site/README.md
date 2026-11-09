@@ -34,6 +34,9 @@ the landing page renders without the host's skeleton.
 | `civic/tax_base.py` | Tax base: certified net assessed value from `assessed_values.csv` (`dlgf_certified` rows only; the Gateway estimates are never charted), the "Tax base:" line on place, school and county pages, map panel facts |
 | `civic/school_stats.py` | School corporation enrollment (IDOE) and spending per student with the state median (DLGF) from `indicator_values.csv`; Schools page and map panel facts |
 | `static/js/indicator_map.js` | "Shade by" picker of the community pages' indicator maps (`pages/community_history.py indicator_map_section`) |
+| `civic/pick_one.py`, `static/js/pick_one.js` | "Show one" navigation: each area's detail is a `<details data-one=KEY>` that ships open (JS off: everything visible); choosing an area (map shape, list link, TOC, old `#id`, back/forward) opens its items and folds the others. Rows marked `data-one` are hidden while another area is chosen. Used by your-legislators, county, budgets and schools |
+| `civic/district_map.py` | Clickable election-district map (state House/Senate, county commissioner/council) from `derived/district_shapes.json`; same `.cmap` contract as the boundary map, so `map.js` gives the panel. Fills only separate neighbors (`static/css/district_map.css`), never party |
+| `civic/holder_rows.py` | Compact officeholder rows (office, holder with party, since, next election) that open to the card's fields; keep the card ids `office-<id>` |
 | `civic/sitemap.py` | Every page (`entries()`), the Reference menu groups and the learning `PATHS` |
 | `civic/glyph.py` | Indiana glyph (masthead) and the 92-county map |
 | `civic/neutrality.py` | Banned-term list used by the checker |

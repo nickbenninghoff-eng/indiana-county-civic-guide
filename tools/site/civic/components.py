@@ -329,6 +329,24 @@ def bodies_block(ed, offices: list[dict], boards: list[dict] | None = None, appo
     return h("div", {"class": "body-breakdowns"}, out)
 
 
+# -------------------------------------------------------------------- folds
+
+def fold_section(kind: str, sid: str, heading: str, count: int, intro, body) -> Markup:
+    """A page-end section (Gaps, Sources) that starts collapsed.
+
+    The <details> is written ``open`` so that with JavaScript off every row is on the page and every
+    citation link works. static/js/folds.js closes it on load (unless the URL points inside it), reopens it
+    when a link or the address bar targets something inside, and opens it for printing. The summary holds
+    the h2 and the count, so the closed state still says what is inside.
+    ``kind`` is the CSS class ("gaps" or "sources"); ``sid`` is the section id (h2 id is ``<sid>-h``)."""
+    return h("section", {"class": f"{kind} fold", "id": sid, "aria-labelledby": f"{sid}-h"},
+             h("details", {"class": "fold-details", "open": True, "data-fold": kind},
+               h("summary", {"class": "fold-summary"},
+                 h("h2", {"id": f"{sid}-h"}, f"{heading} ", h("span", {"class": "fold-count"}, f"({count})")),
+                 h("span", {"class": "fold-toggle", "aria-hidden": "true"})),
+               h("div", {"class": "fold-body"}, intro, body)))
+
+
 # -------------------------------------------------------------------- citations
 
 class Citations:
@@ -338,6 +356,9 @@ class Citations:
         self.ed = ed
         self.order: list[str] = []
         self.unknown: set[str] = set()
+        # Where the entries live when they are not in this page's own Sources list: a relative page
+        # URL (e.g. "sources/index.html") that citation links point into. "" = this page.
+        self.href_base = ""
 
     def cite(self, ids, label: str | None = None) -> Markup:
         ids = split_ids(ids) if isinstance(ids, str) else [i for i in ids if i]
@@ -351,7 +372,7 @@ class Citations:
                 self.unknown.add(sid)
             n = self.order.index(sid) + 1
             src = self.ed.sources.get(sid, {})
-            links.append(h("a", {"href": f"#src-{sid}", "title": src.get("title", sid),
+            links.append(h("a", {"href": f"{self.href_base}#src-{sid}", "title": src.get("title", sid),
                                  "aria-label": f"Source {n}: {src.get('title', sid)}"}, n))
         return h("sup", {"class": "cite"}, join(links, ","))
 
@@ -369,7 +390,7 @@ class Citations:
         nums = [self.order.index(s) + 1 for s in ids]
         label = "Sources " + ", ".join(str(n) for n in nums)
         return h("sup", {"class": "cite cite-compact"},
-                 h("a", {"href": f"#src-{ids[0]}", "title": label, "aria-label": label}, f"{nums[0]} +{len(nums) - 1}"))
+                 h("a", {"href": f"{self.href_base}#src-{ids[0]}", "title": label, "aria-label": label}, f"{nums[0]} +{len(nums) - 1}"))
 
     def render(self, heading: str = "Sources on this page") -> Markup:
         items = []
@@ -393,9 +414,8 @@ class Citations:
                            h("span", {"class": "src-id mono"}, f"{sid} · {s.get('kind', '')}")))
         if not items:
             return Markup("")
-        return h("section", {"class": "sources", "id": "sources", "aria-labelledby": "sources-h"},
-                 h("h2", {"id": "sources-h"}, heading),
-                 h("ol", {"class": "source-list"}, items))
+        return fold_section("sources", "sources", heading, len(items), None,
+                            h("ol", {"class": "source-list"}, items))
 
 
 # ---------------------------------------------------------------------- gaps
@@ -412,8 +432,7 @@ def gaps_section(rows: list[dict], page=None, intro: str | None = None) -> Marku
               h("span", {"class": "gap-why"}, f"Why missing: {g.get('why_missing', '')}") if g.get("why_missing") else None,
               h("span", {"class": "gap-how"}, f"How to fill: {g.get('how_to_fill', '')}") if g.get("how_to_fill") else None)
             for g in rows])
-    return h("section", {"class": "gaps", "id": "gaps", "aria-labelledby": "gaps-h"},
-             h("h2", {"id": "gaps-h"}, "Gaps on this page"), h("p", {"class": "muted"}, lead), body)
+    return fold_section("gaps", "gaps", "Gaps on this page", len(rows), h("p", {"class": "muted"}, lead), body)
 
 
 # ---------------------------------------------------------------------- variants
@@ -450,18 +469,20 @@ def variant_slot(ed, key: str, generic: Markup, exceptions: dict, page,
 
 def data_table(table_id: str, headers: list, rows: list[list], caption: str | None = None,
                numeric: tuple[int, ...] = (), copy: bool = True, label: str | None = None,
-               min_width: str | None = None) -> Markup:
+               min_width: str | None = None, row_attrs: list[dict] | None = None) -> Markup:
     """A scrollable table with an optional Copy CSV button (app.js builds the CSV).
-    ``min_width`` (e.g. '44rem') keeps wide tables readable on phones; the wrapper scrolls."""
+    ``min_width`` (e.g. '44rem') keeps wide tables readable on phones; the wrapper scrolls.
+    ``row_attrs`` (one dict per row, e.g. ``{"data-tf-year": "2027"}``) puts attributes on each <tr>;
+    ``table_filter`` uses them."""
     thead = h("thead", None, h("tr", None, [h("th", {"scope": "col", "class": "num" if i in numeric else None}, c)
                                             for i, c in enumerate(headers)]))
     body = []
-    for r in rows:
+    for n, r in enumerate(rows):
         cells = []
         for i, c in enumerate(r):
             tag = "th" if i == 0 else "td"
             cells.append(h(tag, {"scope": "row" if i == 0 else None, "class": "num" if i in numeric else None}, c))
-        body.append(h("tr", None, cells))
+        body.append(h("tr", row_attrs[n] if row_attrs else None, cells))
     table = h("table", {"id": table_id, "class": "data", "style": f"min-width: {min_width}" if min_width else None},
               h("caption", None, caption) if caption else None, thead, h("tbody", None, body))
     tools = h("div", {"class": "table-tools"},
@@ -470,6 +491,57 @@ def data_table(table_id: str, headers: list, rows: list[list], caption: str | No
     return h("div", {"class": "table-block"},
              h("div", {"class": "table-wrap", "role": "region", "tabindex": "0",
                        "aria-label": label or caption or "Data table"}, table), tools)
+
+
+# ---------------------------------------------------------------------- table filters
+
+def table_filter(table_id: str, controls: list[dict], total: int, noun: str = "row",
+                 search: str | None = None, sort: list[tuple[str, str, str]] | None = None,
+                 label: str | None = None) -> Markup:
+    """One row of labelled controls above a table (static/js/tablefilter.js wires it).
+
+    Rows opt in with ``data-tf-<key>="<value>"`` attributes (see ``data_table(row_attrs=...)``).
+    controls: ``[{"key": "year", "label": "Year", "all": "All years", "options": [(value, text), ...]}]``;
+    a row shows when, for every select, its ``data-tf-<key>`` equals the chosen value.
+    search: label of a text box that matches the words typed against the row's text (``None`` = no box).
+    sort: ``[(value, text, spec)]`` where spec is ``"attr:dir:kind[,attr:dir:kind]"`` (kind ``n`` = number,
+    ``s`` = string; attr is a ``data-`` attribute of the row); the first option is the default order.
+    The bar is ``hidden`` until the script runs, so with JavaScript off the table is simply whole.
+    Filtering only hides rows; the count line says how many of the total are shown."""
+    fields = []
+    for c in controls:
+        cid = f"tf-{table_id}-{c['key']}"
+        fields.append(h("div", {"class": "field"},
+                        h("label", {"for": cid}, c["label"]),
+                        h("select", {"id": cid, "data-tf-key": c["key"]},
+                          h("option", {"value": ""}, c.get("all", "All")),
+                          [h("option", {"value": v}, t) for v, t in c["options"]])))
+    if search:
+        sid = f"tf-{table_id}-q"
+        fields.append(h("div", {"class": "field field-search"},
+                        h("label", {"for": sid}, search),
+                        h("input", {"id": sid, "type": "search", "data-tf-q": True, "autocomplete": "off",
+                                    "spellcheck": "false"})))
+    if sort:
+        sid = f"tf-{table_id}-sort"
+        fields.append(h("div", {"class": "field"},
+                        h("label", {"for": sid}, "Sort"),
+                        h("select", {"id": sid, "data-tf-sort": True},
+                          [h("option", {"value": v, "data-spec": spec}, t) for v, t, spec in sort])))
+    plural = noun + ("s" if not noun.endswith("s") else "")
+    return h("div", {"class": "picker tf", "role": "group", "aria-label": label or "Filter the table below",
+                     "data-tf-table": table_id, "data-tf-total": total, "data-tf-noun": noun,
+                     "data-tf-plural": plural, "hidden": True},
+             fields,
+             h("button", {"type": "button", "class": "btn btn-small tf-reset", "data-tf-reset": True}, "Reset filters"),
+             h("p", {"class": "picker-help tf-count", "data-tf-count": True, "aria-live": "polite"},
+               f"{total} of {total} {plural} shown."))
+
+
+def filter_empty_note(table_id: str) -> Markup:
+    """The message shown when no row matches (hidden until then)."""
+    return h("p", {"class": "tf-empty muted", "data-tf-empty": table_id, "hidden": True, "role": "status"},
+             "No rows match these filters. Use Reset filters to see them all.")
 
 
 # ---------------------------------------------------------------------- layout bits

@@ -152,9 +152,21 @@
     sync();
   });
 
+  /* A table whose rows a filter has hidden (tablefilter.js, pick_one.js) is marked data-rows-filtered; Copy CSV then
+     copies the header and the rows shown, and its button says how many. Unfiltered tables copy every row. */
+  function bodyRows(table) {
+    var out = [];
+    Array.prototype.forEach.call(table.tBodies, function (tb) {
+      Array.prototype.forEach.call(tb.rows, function (tr) { out.push(tr); });
+    });
+    return out;
+  }
+
   function tableCSV(table) {
     var rows = [];
+    var filtered = table.hasAttribute("data-rows-filtered");
     Array.prototype.forEach.call(table.querySelectorAll("tr"), function (tr) {
+      if (filtered && tr.hidden && tr.parentNode && tr.parentNode.tagName === "TBODY") return;
       var cells = [];
       Array.prototype.forEach.call(tr.children, function (c) {
         var t = (c.textContent || "").replace(/\s+/g, " ").trim();
@@ -164,6 +176,24 @@
     });
     return rows.join("\n");
   }
+
+  doc.addEventListener("rows-filtered", function (ev) {
+    var table = ev.target;
+    if (!table || table.tagName !== "TABLE" || !table.id) return;
+    var rows = bodyRows(table);
+    var shown = rows.filter(function (tr) { return !tr.hidden; }).length;
+    var btn = doc.getElementById(table.id + "-copy");
+    if (shown < rows.length) table.setAttribute("data-rows-filtered", String(shown));
+    else table.removeAttribute("data-rows-filtered");
+    if (!btn) return;
+    if (!btn.hasAttribute("data-copy-label")) btn.setAttribute("data-copy-label", btn.textContent);
+    if (shown === rows.length) btn.textContent = btn.getAttribute("data-copy-label");
+    else if (shown === 0) btn.textContent = "No rows shown to copy";
+    else btn.textContent = "Copy " + shown + " shown row" + (shown === 1 ? "" : "s");
+    btn.disabled = shown === 0;
+    var status = btn.parentNode.querySelector(".copy-status");
+    if (status) status.textContent = "";
+  });
 
   doc.addEventListener("click", function (ev) {
     var btn = ev.target.closest ? ev.target.closest("[data-copy-table]") : null;

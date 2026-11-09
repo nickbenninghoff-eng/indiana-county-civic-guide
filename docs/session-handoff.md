@@ -140,9 +140,80 @@ built to be reusable for other Indiana counties. Python stdlib generator; data i
   with reports-on-file vs expected and an 'incomplete' flag; (3) SPLIT into area pages (index = map + filter + short
   list; Campaigns > <area> pages: races > candidates > filings; full table moves to an 'All filings' page + CSV);
   (4) INCLUDE state legislative districts (cf_state = sitting legislators by filing year, label the different basis).
-  Status: plan + token estimate given to Nick; waiting on his go before launching agents.
+  Nick: "commit and push first, then go ahead" -> committed+pushed b6d5d28 (all prior work). Launched 2026-11-09:
+  Sonnet research agent (district maps -> sources/boundaries/districts/*.geojson + manifest.csv, MAP-020..059,
+  report planning/qa/district-maps-2026-11-09.md) and Opus build agent (campaigns index map + area pages + All filings
+  + how-it-works; sources CFM-010..029; report planning/qa/campaigns-map-2026-11-09.md). When research lands, send the
+  build agent a follow-up to wire districts if it has not. Then verify (build, tests, check_gov, browser) and ask Nick to commit.
+- 2026-11-09: Nick asked why the 11-08 map audit missed campaigns and to redo it. Cause: it only considered existing
+  boundaries, silently skipped pages, and I did not check its coverage (memory: feedback-page-audits-cover-every-page).
+  Redo: page inventory planning/qa/page-inventory-2026-11-09.tsv (60 pages, by size/rows); Sonnet survey agent (read-only,
+  one row per page) -> planning/qa/page-navigation-survey-2026-11-09.md. I then judge and give Nick a ranked list.
+  DONE: survey has all 60 pages (I checked against the inventory). Ranked list given to Nick; waiting on his picks.
+  New map work should wait for the campaigns agent (it is editing the map code).
+- Nick picked all of items 1-9 with models "Sonnet, then Opus". Sonnet agent running NOW on the fixes that are not
+  maps (5 data split, 6 about sources page, 7 landscape filters, 8 calendar filter, 9 collapse Gaps/Sources; report
+  planning/qa/page-navigation-fixes-2026-11-09.md). Opus map batch (1 legislators, 2 county, 3 budgets per unit,
+  4 schools) starts AFTER the campaigns agent finishes. Not approved: tax-bill picker; "click your spot" all-districts.
+- District research DONE (planning/qa/district-maps-2026-11-09.md; 9 searches): GeoJSON for commissioner 1-3,
+  council A-I, SB council 1-6 (Ord. 10906-22), Mishawaka 1-6 (medium confidence), House HD5,6,7,8,21, Senate SD8-11;
+  MAP-020..039. SBCSC = image-only PDF (raw/sbcsc-board), Walkerton = street descriptions only. Sent to campaigns agent.
+- Non-map fixes DONE per agent (planning/qa/page-navigation-fixes-2026-11-09.md; 87 tests): /data/ split into 13 pages,
+  /about/sources/ with search, table_filter helper (landscape, calendar), Gaps/Sources folds, anchor forwarding (moved.js).
+  NOT yet verified by me. Build has 2 broken links from in-progress campaigns pages; about->campaigns#method is in
+  meta.py, which the campaigns agent was told not to touch: I fix that link myself after it finishes. Nick questions:
+  Copy CSV copies all rows when filtered; landscape still 69 screens (paging or split?).
 
 ## Next step
 (Superseded by the UPDATEs above.) Finish decision (1) (source + relabel the New Carlisle TIF reimbursements), then (2) the SBCSC 2025 receipts check,
 then answer (4) with a concrete proposal; review the budgets-map agent's report when it lands (rerun build + tests,
 look at the page in the browser); then ask Nick which map pages to build next and whether to commit.
+
+## Session 2026-11-09 — running agents (state for compaction)
+- Campaigns rebuild DONE (planning/qa/campaigns-map-2026-11-09.md): index map, 30 area pages, how-it-works,
+  all-filings, district shapes (tools/build_district_shapes.py → derived/district_shapes.json). I verified: build
+  PASSED (109 pages), 114 tests, check_gov 0, check_money 0, browser panel. I FOUND A BUG: the nested-period rule
+  dropped Eli Wax's real 2023 annual (cfl-60837, $30,287.82 spent) because cfl-66082 (probably misdated 2024) is
+  dated all of 2023 → panel showed "Republican (R) $61.63". Sent back to the campaigns agent: fix by cash chain,
+  audit every dropped report, and make party sums say "N of M candidates with reports". AWAITING its fix.
+- Campaigns decisions for Nick (from the agent): (1) the opening view is the whole county; (2) layers mix election years;
+  (3) 2023 uses the filers' YTD (the county never posted 2023 pre-primary/pre-election reports); (4) adjusted expected
+  reports; (5) split the 490 KB county campaigns page?
+  Nick answered: (2) mixed years OK; (3) 2023 YTD yes; (4) adjusted expected reports OK; (5) wait for the UX review.
+  (1) after explanation: KEEP the whole-county opening view (no change).
+- Nick (2026-11-09): "this is way too much information... thoroughly investigate each page... We shouldn't have
+  gigantic tables... more intuitive journey... keeping all of the information." His setup: ONE investigating agent,
+  other agents on other tasks; map-click pages are "fine as is".
+  RUNNING: Opus read-only UX reviewer (Chrome, own tab) → planning/qa/site-ux-review-2026-11-09.md (journey, shared
+  patterns, every page with a verdict, build plan, questions). The landscape split is folded into it.
+  RUNNING: Opus map batch (Playwright): legislators district map, county district map, budgets per-unit view, schools
+  one-corp view, Copy CSV copies only the shown rows (Nick: "That's fine") → planning/qa/map-navigation-batch-2026-11-09.md.
+- Everything since b6d5d28 is UNCOMMITTED (data split, about/sources, filters, folds, campaigns rebuild, districts).
+- NEXT: verify the campaigns fix, then the map batch, then synthesize the UX review into a plan for Nick to approve.
+- AUTHORIZATION (Nick, 2026-11-09, before sleeping): "Do a commit after the site-wide review is complete and the plan is
+  established. After the commit, run the plan as you recommend. ... we can use the commit to return back if we have to."
+  => COMMIT is authorized ONCE: after the UX review lands and I write the plan (planning/site-redesign-plan-2026-11-09.md),
+  commit the working tree (campaigns, map batch, nav fixes, plan). NO push (not mentioned). NO deploy. Then execute the
+  plan's batches without waiting for approval (subagents: implementation on Opus, mechanical on Sonnet). The commit is
+  the rollback point. Usage guard: hook ~/.claude/hooks/usage-pause.sh (95% of 5h) needs Nick to register it in
+  settings.json (guarded file; snippet given 2026-11-09).
+- USAGE GUARD (Nick: pause all at 90% of 5h (was 95%), auto-resume after reset; no settings.json): background shell bi0ghe7fm (Nick: check every 15 min)
+  running `USAGE_POLL_SEC=900 bash /c/Users/nickb/Indicators/trade-journal/tools/usage-guard.sh watch 90 99`.
+  On "LIMIT REACHED": TaskStop every running agent (list below), start `usage-guard.sh wait 90 99` in the background,
+  and do no other work. On "CLEAR TO RESUME": SendMessage each stopped agent "resume where you stopped; re-run your
+  checks", then restart the watch. If the watch exits 2 (usage unreadable), treat it as over the limit and pause too.
+  Running agents (2026-11-09 ~01:15 ET): UX reviewer a1adaadb3a52766f1 (opus), map batch aae2a5a09669d79ef (opus),
+  campaigns fix a3470c306bf9fd68d (opus). Keep this list current as agents start and finish.
+- 01:40 ET: campaigns Wax fix DONE and checked against raw filings (D5 $39,642.20; Wax $30,287.82; 66082 moved to
+  2024; Verash, Dieter and Young Republicans recovered; 127 tests). I found Bolden-Simpson cfl-60884 using period
+  $9,354.38 instead of YTD $24,607.97 (other blank-start 2023 annuals use YTD). Sent back (Part 4): fix the rule, audit
+  all 22 2023 reports where YTD > period, and label YTD-based figures. Campaigns agent a3470c306bf9fd68d is running again.
+- ~02:00 ET: UX review DONE (planning/qa/site-ux-review-2026-11-09.md, 109 pages, verdicts and a 9-batch build plan).
+  PLAN WRITTEN: planning/site-redesign-plan-2026-11-09.md (open questions decided; B4 dropped per Nick's "Keep whole
+  county"; waves A to E with models and file ownership). COMMIT waits until the map batch (aae2a5a09669d79ef) and campaigns
+  Part 4 (a3470c306bf9fd68d) land and pass, so the rollback point builds clean. Then: commit (no push) → Wave A.
+  Running agents now: map batch, campaigns Part 4.
+- Campaigns Part 4 DONE and spot-checked (Mishawaka clerk $97,133.91 = 43,687.16 + 53,446.75; SB D5 $54,895.79): 2023
+  uses the filer's YTD even when the form doesn't reconcile (flag ytd-unreconciled, visible note); other years keep the
+  reconciliation gate; guard against cumulative YTD; 153 tests. Only the map batch (aae2a5a09669d79ef) is still running;
+  when it lands and verifies → COMMIT (no push) → Wave A.

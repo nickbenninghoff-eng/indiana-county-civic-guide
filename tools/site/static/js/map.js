@@ -49,7 +49,8 @@
         var li = el("li");
         var top = el("span", "cmap-bar-top");
         top.appendChild(el("span", "cmap-bar-l", b[0]));
-        top.appendChild(el("span", "cmap-bar-v", b[1] + " \u00b7 " + b[3]));
+        // b[3] (the amount) may be empty, e.g. a candidate with no reports on file (civic/campaign_map.py)
+        top.appendChild(el("span", "cmap-bar-v", b[3] ? b[1] + " \u00b7 " + b[3] : b[1]));
         li.appendChild(top);
         var track = el("span", "cmap-bar-t");
         track.setAttribute("aria-hidden", "true");
@@ -66,13 +67,28 @@
     var link = el("a", "btn cmap-open", u.open || "Open page");
     link.setAttribute("href", u.href);
     panel.appendChild(link);
+    // optional further links, [[label, href], ...] (the budgets map: the unit's own page after "Show it below")
+    if (u.more) u.more.forEach(function (m) {
+      var p = el("p", "cmap-more");
+      var a = el("a", null, m[0]);
+      a.setAttribute("href", m[1]);
+      p.appendChild(a);
+      panel.appendChild(p);
+    });
   }
 
   function highlight(uid, focus) {
     while (hlg.firstChild) hlg.removeChild(hlg.firstChild);
     if (!uid || !data[uid]) return;
     var p = doc.createElementNS(NS, "path");
-    p.setAttribute("d", data[uid].d);
+    // an entry may leave out its path (the campaign-money map does, to keep the page small): use the shape's own
+    var d = data[uid].d;
+    if (!d) {
+      var shp = svg.querySelector('.cmap-a[data-uid="' + uid + '"] path');
+      d = shp ? shp.getAttribute("d") : "";
+    }
+    if (!d) return;
+    p.setAttribute("d", d);
     p.setAttribute("class", "cmap-hl" + (focus ? " is-focus" : ""));
     hlg.appendChild(p);
   }

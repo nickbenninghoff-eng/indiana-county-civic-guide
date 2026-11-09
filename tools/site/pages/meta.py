@@ -184,6 +184,7 @@ def build_about(site):
     cfg = ed.config
     page = site.page("about/index.html")
     c = page.cites
+    c.href_base = page.rel("about/sources/index.html")   # citations open the entry on the sources page
     toc = [("author", "Who made this"), ("methods", "How it was made"), ("neutrality", "Neutrality policy"),
            ("badges", "Badges"), ("counting", "Seat counting"), ("corrections", "Corrections"),
            ("changelog", "Changelog"), ("looks", "Choose a look"), ("gaps", "Gaps"), ("sources", "Sources index")]
@@ -279,7 +280,7 @@ def build_about(site):
                                   "reviewer looking at the page image. Forms outside the sample rest on one reading plus the "
                                   "arithmetic check, and a random spot check of them against their images. The Campaign "
                                   "finance page gives the counts and marks every filing with its check status. ",
-                       h("a", {"href": page.rel("money/campaigns/index.html#method")}, "Campaign finance")),
+                       h("a", {"href": page.rel("money/campaigns/how-it-works/index.html#method")}, "Campaign finance")),
                      h("h3", None, "5. What the guide leaves out"),
                      h("ul", None,
                        h("li", None, "Private people's addresses, phone numbers and e-mail addresses."),
@@ -472,10 +473,32 @@ def build_about(site):
     if not ed.table("cf_local"):
         gaps.append(_cf_local_gap(ed))
     unpublished = _unpublished_sources(ed)
-    page.add(callout(h("p", None, "Superscript numbers on this page link to the matching entry in the index below."), kind="note"))
-    # No page.finish(): the sources index below is this page's Sources list (citations link into it).
+    idx = _source_index(ed)
+    page.add(callout(h("p", None, "Superscript numbers on this page link to the matching entry in the ",
+                       h("a", {"href": page.rel("about/sources/index.html")}, "sources index"),
+                       "."), kind="note"))
+    # No page.finish(): the sources index (its own page, about/sources/) is this page's Sources list;
+    # citations here link into it (c.href_base).
     page.add(gaps_section(gaps, page))
-    groups = []
+    for sid in c.order:  # every citation on this page must land in the index
+        if sid not in ed.sources or sid in unpublished:
+            ed.warnings.append(f"about: cited source {sid} is not in the sources index")
+    page.add(h("section", {"class": "block", "id": "sources", "aria-labelledby": "sources-h"},
+               h("header", {"class": "block-head"}, h("h2", {"id": "sources-h"}, "Sources index")),
+               h("p", None, f"Every source behind the guide, {idx['total']} entries, has its own page with a search box: ",
+                 h("a", {"href": page.rel("about/sources/index.html")}, "Sources index"),
+                 ". Superscript numbers on this page open the matching entry there."),
+               h("ul", {"class": "src-jump-list"},
+                 [h("li", None, h("a", {"href": page.rel(f"about/sources/index.html#sources-{k}")}, lbl),
+                   h("span", {"class": "muted mono"}, f" ({len(ids)})"))
+                  for k, lbl, _, ids in idx["groups"]])))
+    return page
+
+
+def _source_index(ed) -> dict:
+    """The published sources grouped by kind: ``groups`` = [(kind, label, blurb, [ids])], ``aliases`` (id ->
+    other ids for the same document), ``total``, ``unpublished`` and the source ``files``."""
+    unpublished = _unpublished_sources(ed)
     by_kind: dict[str, list[str]] = {}
     # The source files were written per research area, so one document can carry several IDs (a canvass
     # cited by the results, government and community files). List each web address once, with its other
@@ -504,22 +527,53 @@ def build_about(site):
     for k in sorted(by_kind):
         if k not in known:
             kind_groups.append((k, k.title(), ""))
-    total = 0
+    groups = []
     for kind, label, blurb in kind_groups:
         ids = sorted(by_kind.get(kind, []), key=sort_key)
-        if not ids:
-            continue
-        total += len(ids)
-        gid = f"sources-{kind}"
-        groups.append(h("section", {"class": "src-group", "id": gid, "aria-labelledby": f"{gid}-h"},
-                        h("h3", {"id": f"{gid}-h"}, label, " ", h("span", {"class": "muted mono"}, f"({len(ids)})")),
-                        h("p", {"class": "muted"}, blurb) if blurb else None,
-                        h("ul", {"class": "source-list source-index"},
-                          [_source_item(ed, i, aliases=aliases.get(i)) for i in ids])))
-    for sid in c.order:  # every citation on this page must land in the index
-        if sid not in ed.sources or sid in unpublished:
-            ed.warnings.append(f"about: cited source {sid} is not in the sources index")
+        if ids:
+            groups.append((kind, label, blurb, ids))
     files = sorted({s.get("_file", "") for s in ed.sources.values()})
+    return {"groups": groups, "aliases": aliases, "total": sum(len(g[3]) for g in groups),
+            "unpublished": unpublished, "files": files}
+
+
+def build_sources_index(site):
+    """about/sources/index.html: the whole sources index (moved off About), with a search box.
+    The full list is in the HTML; static/js/sourcesearch.js only hides entries."""
+    ed = site.ed
+    page = site.page("about/sources/index.html")
+    idx = _source_index(ed)
+    aliases, unpublished, total, files = idx["aliases"], idx["unpublished"], idx["total"], idx["files"]
+    _hero(page, "About", "Sources index",
+          "Every source the guide uses, grouped by kind. Search by title, publisher or source ID.",
+          [scope_badge("indiana", ed), scope_badge("county", ed)], [("sources", "Sources index")])
+    groups = []
+    for kind, label, blurb, ids in idx["groups"]:
+        gid = f"sources-{kind}"
+        groups.append(h("section", {"class": "src-group fold", "id": gid, "aria-labelledby": f"{gid}-h", "data-kind": kind},
+                        h("details", {"class": "fold-details", "open": True, "data-fold": "group"},
+                          h("summary", {"class": "fold-summary"},
+                            h("h3", {"id": f"{gid}-h"}, label, " ",
+                              h("span", {"class": "muted mono fold-count", "data-src-group-count": len(ids)}, f"({len(ids)})")),
+                            h("span", {"class": "fold-toggle", "aria-hidden": "true"})),
+                          h("div", {"class": "fold-body"},
+                            h("p", {"class": "muted"}, blurb) if blurb else None,
+                            h("ul", {"class": "source-list source-index"},
+                              [_source_item(ed, i, aliases=aliases.get(i)) for i in ids])))))
+    search = h("div", {"class": "picker tf srcq", "role": "search", "aria-label": "Search the sources index",
+                       "data-src-search": True, "data-total": total, "hidden": True},
+               h("div", {"class": "field field-search"},
+                 h("label", {"for": "src-q"}, "Search sources"),
+                 h("input", {"id": "src-q", "type": "search", "autocomplete": "off", "spellcheck": "false",
+                             "data-src-q": True})),
+               h("div", {"class": "field"},
+                 h("label", {"for": "src-kind"}, "Kind"),
+                 h("select", {"id": "src-kind", "data-src-kind": True},
+                   h("option", {"value": ""}, "All kinds"),
+                   [h("option", {"value": k}, lbl) for k, lbl, _, _ in idx["groups"]])),
+               h("button", {"type": "button", "class": "btn btn-small tf-reset", "data-src-reset": True}, "Reset"),
+               h("p", {"class": "picker-help tf-count", "data-src-count": True, "aria-live": "polite"},
+                 f"{total} of {total} sources shown."))
     page.add(h("section", {"class": "sources", "id": "sources", "aria-labelledby": "sources-h"},
                h("h2", {"id": "sources-h"}, "Sources index"),
                h("p", None, f"Every source behind the guide: {total} entries from {len(files)} source files "
@@ -531,9 +585,14 @@ def build_about(site):
                                           "does not publish, is not listed." if len(unpublished) == 1 else
                  f"{len(unpublished)} sources used only for internal research notes, which the guide does not publish, are not listed.")
                if unpublished else None,
+               h("p", None, "Pages cite sources by number; each citation opens the entry here. Without JavaScript the "
+                            "whole list is shown and the search box is not."),
                h("nav", {"class": "src-jump", "aria-label": "Source kinds"},
                  h("ul", None, [h("li", None, h("a", {"href": f"#sources-{k}"}, lbl))
-                                for k, lbl, _ in kind_groups if by_kind.get(k)])),
+                                for k, lbl, _, _ in idx["groups"]])),
+               search,
+               h("p", {"class": "tf-empty muted", "data-src-empty": True, "hidden": True, "role": "status"},
+                 "No sources match. Use Reset to see the whole list."),
                groups))
     return page
 
@@ -718,115 +777,91 @@ def _fill(text: str, ed) -> str:
 URL_RE = re.compile(r"https?://[^\s\"']+")
 
 
+def _dataset_stats(ed):
+    """{key: (rows, cols, folder, source ids, rows)} for every dataset, as published."""
+    out = {}
+    for key, anchor, title, scope, desc, pcols in DATASETS:
+        cols, rows, _ = _publish_rows(ed, key)
+        folder = "data/indiana" if key in ("indicators",) else f"data/editions/{ed.edition_id}"
+        out[key] = (len(rows), len(cols), folder, _union(rows), rows)
+    return out
+
+
+DATA_GROUPS = [
+    ("elections", "Elections and who won", ["results", "elections", "terms"]),
+    ("government", "Governments, offices and people", ["offices", "units", "people"]),
+    ("money", "Budgets, taxes and debt", ["budgets", "tax_rates", "debt"]),
+    ("campaign-finance", "Campaign finance", ["cf_state", "cf_local", "cf_large_contributions"]),
+    ("community", "Community indicators", ["indicator_values"]),
+]
+
+
+def dataset_slug(spec) -> str:
+    return spec[1][len("ds-"):]
+
+
 def build_data(site):
+    """data/index.html: a short index. One card per dataset (what it is, size, link); the tables, previews and
+    Copy CSV buttons are on the dataset pages (pages/data_sets.py)."""
+    from pages.data_sets import moved_anchor_map
     ed = site.ed
-    cfg = ed.config
     page = site.page("data/index.html")
-    c = page.cites
-    toc = [("datasets", "Datasets")] + [(s[1], s[2]) for s in DATASETS] + \
-          [("pull", "Pull it yourself"), ("gaps", "Gaps"), ("sources", "Where the data comes from")]
+    toc = [("datasets", "How to use these tables"), ("tables", "The tables"), ("pull", "Pull it yourself"),
+           ("gaps", "Gaps"), ("sources", "Where the data comes from")]
     _hero(page, "Reference · Context", "Data and sources",
-          "Every main table behind the guide. Each one has a preview and a Copy CSV button that copies the whole "
-          "table, so you can paste it into a spreadsheet.",
+          "Every main table behind the guide, one page per table. Each page has a preview and a Copy CSV button that "
+          "copies the whole table, so you can paste it into a spreadsheet.",
           [scope_badge("county", ed), scope_badge("indiana", ed)], toc)
+    stats = _dataset_stats(ed)
+    specs = {s[0]: s for s in DATASETS}
 
     page.add(section("datasets", None, "How to use these tables",
                      h("ul", None,
-                       h("li", None, "This viewer can't download files, so each dataset has a Copy CSV button. Paste the "
+                       h("li", None, "This viewer can't download files, so each dataset page has a Copy CSV button. Paste the "
                                      "result into a spreadsheet or a text file."),
-                       h("li", None, f"Large tables show only their first {PREVIEW_ROWS} rows here, in file order. "
+                       h("li", None, f"Large tables show only their first {PREVIEW_ROWS} rows on the dataset page, in file order. "
                                      "Copy CSV always copies every row."),
                        h("li", None, "Every row has a status (what kind of source it rests on) and source IDs. The IDs match "
                                      "the source lists on each page and the ",
-                         h("a", {"href": page.rel("about/index.html#sources")}, "sources index"), "."),
+                         h("a", {"href": page.rel("about/sources/index.html")}, "sources index"), "."),
                        h("li", None, "Rows marked LOW CONFIDENCE are kept for completeness. Check them before relying on them.")),
                      ed=ed))
-    for i, spec in enumerate(DATASETS, start=1):
-        page.add(_dataset_block(ed, page, i, spec))
 
-    # ------------------------------------------------------------------ pull it yourself
-    n = len(DATASETS) + 1
-    res_arch = ed.source("RES-030") or {}
-    gw = ed.source("MON-001") or {}
-    filings = ed.source("SVC-019") or {}
-    cf_page = ed.source("MON-020") or {}
-    cf_contrib = ed.source("MON-021") or {}
-    cf_exp = ed.source("MON-022") or {}
+    blocks = []
+    for gid, glabel, keys in DATA_GROUPS:
+        cards = []
+        for key in keys:
+            spec = specs[key]
+            _, anchor, title, scope, desc, pcols = spec
+            nrows, ncols, folder, src_ids, _rows = stats[key]
+            href = page.rel(f"data/{dataset_slug(spec)}/index.html")
+            cards.append(h("article", {"class": "card ds-card", "id": anchor, "aria-labelledby": f"{anchor}-h"},
+                           h("h4", {"class": "card-title", "id": f"{anchor}-h"}, h("a", {"href": href}, title)),
+                           h("p", None, desc),
+                           h("p", {"class": "ds-meta mono"},
+                             f"{fmt_int(nrows)} rows · {ncols} columns · {folder}/{key}.csv") if nrows else
+                           h("p", {"class": "ds-meta mono"}, "No rows yet"),
+                           h("p", {"class": "ds-links"},
+                             h("a", {"href": href}, "Preview and Copy CSV"), " · ",
+                             h("a", {"href": page.rel(f"data/{dataset_slug(spec)}/index.html#sources")},
+                               f"{fmt_int(len(src_ids))} sources"))))
+        blocks.append(h("div", {"class": "ds-group", "id": f"group-{gid}"}, h("h3", None, glabel),
+                        h("div", {"class": "card-grid"}, cards)))
+    page.add(section("tables", 1, f"The tables ({len(DATASETS)})",
+                     h("p", None, "Pick a table to open its page. Each page shows the first rows, what the columns mean, the "
+                                  "sources behind its rows and a button that copies the whole table."),
+                     blocks, ed=ed))
 
-    def year_pattern(u: str) -> str:
-        return re.sub(r"/(\d{4})_", "/{YEAR}_", u)
+    page.add(section("pull", 2, "How to pull it yourself",
+                     h("p", None, "The guide's figures come from public sources you can open yourself. ",
+                       h("a", {"href": page.rel("data/pull/index.html")}, "How to pull it yourself"),
+                       " lists where each one lives and the query patterns used: the county election archive, candidate "
+                       "filings, Indiana Gateway, state campaign finance, the Census and the Bureau of Labor Statistics."),
+                     ed=ed, scope="indiana"))
 
-    def ext(url: str, label: str | None = None):
-        return h("a", {"href": url, "target": "_blank", "rel": "noopener"}, label or url)
-
-    inds = ed.table("indicators")
-    by_id = {r["indicator_id"]: r for r in inds}
-    pop = by_id.get("pop_total", {})
-    laus = by_id.get("unemployment_rate", {})
-    qcew = by_id.get("qcew_jobs_all_ownerships", {})
-    acs_urls = [_fill(u.rstrip(";"), ed) for u in URL_RE.findall(pop.get("source_dataset", ""))]
-    places = sorted({(r["geo_name"], r["geo_id"]) for r in ed.table("indicator_values") if r["geo_type"] == "place"})
-    place_codes = [(name, gid.split("US", 1)[-1][len(cfg.get("state_fips", "")):]) for name, gid in places if "US" in gid]
-    ind_rows = [[r["indicator_id"], r["label"], r["universe"], h("code", None, _fill(r["table_variable"], ed)), r["moe_rule"]]
-                for r in inds]
-    com_src = "COM-001;COM-002;COM-003;COM-004"
-
-    pull = section("pull", n, "How to pull it yourself",
-                   h("p", {"class": "lead"}, "The guide's figures come from public sources you can open yourself. Here is "
-                                             "where each one lives and how it was pulled."),
-                   h("h3", {"id": "pull-results"}, "County election results archive"),
-                   h("p", None, "The county election board posts a PDF report for each election on one page: ",
-                     ext(res_arch.get("url", "")), c.cite("RES-030"),
-                     " Check each report's header: an election-night report says Unofficial; the final canvass says Official. "
-                     "Reports from 2010 to 2019 and the 2024 general election are scanned images, so their text has to be "
-                     "read by text recognition.", c.cite("RES-001;RES-027")) if res_arch.get("url") else None,
-                   h("h3", {"id": "pull-filings"}, "County candidate filings"),
-                   h("p", None, "Local candidates' campaign-finance reports, large-contribution notices and candidacy "
-                                "filings are posted as scanned documents on the county's Candidate Filings page: ",
-                     ext(filings.get("url", "")), c.cite("SVC-019"),
-                     " Each document opens as its own PDF; the guide's local campaign-finance rows cite each one by its "
-                     "document number.") if filings.get("url") else
-                   h("p", None, "The guide's source files do not include the address of the county's candidate-filings page "
-                                "yet, so it is not listed here. It is recorded under Gaps below."),
-                   h("h3", {"id": "pull-gateway"}, "Indiana Gateway (budgets, tax rates, debt)"),
-                   h("p", None, "Budgets, tax rates and debt come from the bulk download page of Indiana Gateway: ",
-                     ext(gw.get("url", "")), c.cite("MON-001;MON-002;MON-004")),
-                   h("ol", None,
-                     h("li", None, "Choose the data set (Budget Data for budgets and tax rates; Annual Financial Report "
-                                   "for spending, receipts and debt)."),
-                     h("li", None, f"Filter to county code {cfg.get('gateway_county_code', '')} ({ed.county_label})."),
-                     h("li", None, "Remove repeated rows before adding anything up. The download the guide used repeated "
-                                   "every row five times.", c.cite("MON-001"))),
-                   h("h3", {"id": "pull-cf"}, "State campaign finance (bulk files)"),
-                   h("p", None, "The Indiana Election Division lists its bulk files here: ", ext(cf_page.get("url", "")),
-                     c.cite("MON-020"), " Each year has a contribution file and an expenditure file at a fixed address:"),
-                   h("pre", {"class": "code-block"},
-                     h("code", None, year_pattern(cf_contrib.get("url", "")) + "\n" + year_pattern(cf_exp.get("url", "")))),
-                   h("p", None, "Replace {YEAR} with a four-digit year. Files are grouped by the year a report was filed, "
-                                "not by election cycle, and they have no district or cash-on-hand field.",
-                     c.cite("MON-020;MON-021;MON-022")),
-                   h("h3", {"id": "pull-census"}, "Census and Bureau of Labor Statistics queries"),
-                   h("p", None, f"These are the query patterns the guide used, with {ed.county_label}'s codes filled in "
-                                f"(state {cfg.get('state_fips', '')}, county {cfg.get('county_fips', '')}). "
-                                "The official Census API needs a free key; put it where the query says {KEY}.",
-                     c.cite(com_src)),
-                   h("p", None, h("strong", None, "Census, American Community Survey (5-year):")),
-                   h("pre", {"class": "code-block"}, h("code", None, "\n".join(acs_urls))) if acs_urls else None,
-                   h("p", None, "City codes (PLACE_FIPS) used by the guide: ",
-                     "; ".join(f"{nm} = {code}" for nm, code in place_codes), ".") if place_codes else None,
-                   h("p", None, h("strong", None, "BLS, local unemployment (LAUS):")),
-                   h("pre", {"class": "code-block"}, h("code", None, _fill(laus.get("table_variable", ""), ed))) if laus else None,
-                   h("p", None, h("strong", None, "BLS, jobs located in the county (QCEW):")),
-                   h("pre", {"class": "code-block"}, h("code", None, _fill(qcew.get("table_variable", ""), ed))) if qcew else None,
-                   h("p", None, "Every indicator, with its table and variable codes:"),
-                   data_table("indicator-defs", ["Indicator", "Label", "Universe", "Table and variables", "Margin of error"],
-                              ind_rows, caption=f"Indicator definitions ({len(inds)}), data/indiana/indicators.csv",
-                              min_width="56rem"),
-                   scope="indiana", ed=ed)
-    page.add(pull)
-
-    # ------------------------------------------------------------------ gaps + sources ("Where the data comes from")
+    # ------------------------------------------------------------------ gaps + where the data comes from
     gaps = []
+    filings = ed.source("SVC-019") or {}
     if not filings.get("url"):
         gaps.append({"item": "Address of the county's candidate-filings page", "why_missing": "Not in the guide's source files.",
                      "how_to_fill": "Find the page on the county election board's site and add it to the sources files."})
@@ -836,12 +871,20 @@ def build_data(site):
     gaps += ed.gaps(files=["gaps_money"], pattern=r"cash on hand")
     gaps += ed.gaps(files=["gaps_community_people"], pattern=r"Decennial population rows|Precinct datasets identified")
     page.add(gaps_section(gaps, page))
-    page.add(h("section", {"class": "sources", "id": "sources", "aria-labelledby": "sources-h"},
-               h("h2", {"id": "sources-h"}, "Where the data comes from"),
-               h("p", None, f"The {len(c.order)} sources cited on this page, numbered as in the superscripts. The ",
-                 h("a", {"href": page.rel("about/index.html#sources")}, "sources index"),
-                 " on About lists every source the guide uses, grouped by kind."),
-               h("ol", {"class": "source-list"}, [_source_item(ed, sid) for sid in c.order])))
+    page.add(section("sources", 3, "Where the data comes from",
+                     h("p", None, "Each dataset page ends with the list of sources its rows cite, with the source ID that "
+                                  "data rows carry. The ",
+                       h("a", {"href": page.rel("about/sources/index.html")}, "sources index"),
+                       " on About lists every source the guide uses, grouped by kind, with a search box."),
+                     h("ul", {"class": "ds-sources-list"},
+                       [h("li", None, h("a", {"href": page.rel(f"data/{dataset_slug(s)}/index.html#sources")}, s[2]),
+                          h("span", {"class": "muted mono"}, f" ({fmt_int(len(stats[s[0]][3]))} sources)"))
+                        for s in DATASETS]),
+                     h("p", None, h("a", {"href": page.rel("data/pull/index.html#sources")},
+                                    "Sources for the pull-it-yourself page")),
+                     ed=ed))
+    # Ids that used to be on this page now live on the dataset pages; static/js/moved.js forwards old links.
+    page.add(json_script("moved-anchors", moved_anchor_map(ed)))
     return page
 
 
@@ -1072,6 +1115,7 @@ def build_teach(site):
 
 PAGES = {
     "about/index.html": build_about,
+    "about/sources/index.html": build_sources_index,
     "data/index.html": build_data,
     "teach/index.html": build_teach,
 }

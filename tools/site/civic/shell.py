@@ -293,7 +293,7 @@ class Page:
                    h("ul", {"class": "footer-links"},
                      h("li", None, h("a", {"href": self.rel("about/index.html#methods")}, "How we choose what to include")),
                      h("li", None, h("a", {"href": self.rel("about/index.html#corrections")}, "Corrections log")),
-                     h("li", None, h("a", {"href": self.rel("about/index.html#sources")}, "Sources index")),
+                     h("li", None, h("a", {"href": self.rel("about/sources/index.html")}, "Sources index")),
                      h("li", None, h("a", {"href": self.rel("about/index.html#badges")}, "What the badges mean")),
                      h("li", None, h("a", {"href": self.rel("about/index.html#changelog")}, "Changelog"))),
                    h("p", {"class": "byline"}, f"Built from public records by {cfg.get('author', '')}. ", disclosure_m)),

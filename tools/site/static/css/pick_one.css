@@ -1,0 +1,52 @@
+/* pick_one.css: "show one" items (civic/pick_one.py, static/js/pick_one.js). Each area's detail is a <details>
+   whose summary line stays visible when it is collapsed. Existing tokens only. */
+.one-fold { margin: 0; }
+.one-fold > .one-summary { flex-wrap: wrap; align-items: baseline; gap: 2px 14px; padding: 8px 0; }
+.one-fold > .one-summary > .fold-toggle { align-self: center; }
+.one-h { margin: 0; flex: 0 1 auto; min-width: 0; }
+h3.one-h, h4.one-h { font-size: 1.02rem; }
+.one-digest { flex: 1 1 16rem; min-width: 0; font-size: .86rem; color: var(--ink-2); }
+.one-summary:hover .one-h { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px; }
+.one-body { padding: 4px 0 14px; }
+.one-body > :first-child { margin-top: 0; }
+/* a list of area items: one rule between them, so the collapsed list reads as a list */
+.one-list { margin: 10px 0 0; border-top: 1px solid var(--line); }
+.one-list > .one-fold, .one-list > * > .one-fold { border-bottom: 1px solid var(--line); }
+.one-list .one-summary { min-height: 44px; }
+/* a whole page section that is one area (schools): its summary is the section head */
+.one-section > .one-fold > .one-summary.block-head { padding: 10px 0 6px; margin-bottom: 0; }
+.one-headrow { display: inline-flex; align-items: baseline; gap: 6px 14px; flex-wrap: wrap; min-width: 0; }
+.one-section > .one-fold > .one-body { padding-top: 10px; }
+.one-section:has(> .one-fold:not([open])) { margin-block: 18px; }
+.one-scope-badge { margin: 0 0 10px; }
+/* the state line with Show all / Collapse all (JavaScript only) */
+.one-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; margin: 14px 0 6px; padding: 8px 12px;
+  border: 1px solid var(--line); border-left: 3px solid var(--accent); background: var(--surface); }
+.one-bar[hidden] { display: none; }
+.one-state { margin: 0; flex: 1 1 18rem; min-width: 0; font-size: .9rem; color: var(--ink-2); max-width: none !important; }
+.one-btns { display: inline-flex; flex-wrap: wrap; gap: 6px; }
+.one-btns [hidden] { display: none; }
+.one-empty { margin: 8px 0; padding: 10px 12px; border: 1px dashed var(--ink-3); }
+.one-empty[hidden] { display: none; }
+/* the panel's further links (static/js/map.js u.more) */
+.cmap-more { margin: 8px 0 0; font-size: .86rem; }
+@media print { .one-bar { display: none !important; } }
+/* compact officeholder rows (civic/holder_rows.py): office | holder (party) | since, next election */
+.holder-row > .one-summary { display: grid; grid-template-columns: minmax(0, 14rem) minmax(0, 1fr) minmax(0, 1.25fr) 14px;
+  gap: 2px 16px; align-items: baseline; }
+.holder-row > .one-summary > .fold-toggle { align-self: center; }
+.hr-office { font-size: .95rem; }
+.hr-who { font-weight: 600; min-width: 0; }
+.hr-vacant { font-weight: 400; color: var(--ink-3); }
+.hr-meta { font-size: .84rem; color: var(--ink-2); min-width: 0; }
+.hr-inc { display: block; }
+.hr-card { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr)); gap: 10px 28px; }
+.hr-card > .holder + .holder { margin-top: 0; padding-top: 0; border-top: 0; }
+.hr-card > .hr-term, .hr-card > .card-note { grid-column: 1 / -1; margin: 0; }
+.leg-jump { columns: 2 16rem; }
+@media (max-width: 760px) {
+  .holder-row > .one-summary { grid-template-columns: minmax(0, 1fr) 14px; }
+  .holder-row > .one-summary > .hr-office, .holder-row > .one-summary > .hr-who,
+  .holder-row > .one-summary > .hr-meta { grid-column: 1; }
+  .holder-row > .one-summary > .fold-toggle { grid-column: 2; grid-row: 1; }
+}

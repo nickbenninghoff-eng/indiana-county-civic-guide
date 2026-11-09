@@ -289,15 +289,25 @@ def legend_title(layer: dict) -> str:
     return f"Counted spending per resident, {yr}"
 
 
-def money_map(page, ed, shapes: dict, mm: dict, default_layer: str = "cities") -> Markup:
+def money_map(page, ed, shapes: dict, mm: dict, default_layer: str = "cities", in_page=None) -> Markup:
+    """in_page (optional): uid -> '#anchor' of the area's own block on the host page, or None. When given, a click
+    shows that block (static/js/pick_one.js on the budgets page) and the panel adds a second link to the area's
+    full breakdown on its own page; without it every area links to its full breakdown."""
     by_uid = {a["uid"]: a for L in mm["layers"].values() for a in L["areas"] if a["uid"]}
 
     def area(key, tab, n, it, uid, unit):
         a = by_uid[uid]
         href = page.rel(a["target"])
         cls = _shade_cls(a)
-        return (f"cmap-s cmap-mm {cls}", href, _aria(a, unit), panel_entry(a, unit, tab, it["d"], href),
-                f"cmap-dot cmap-mm-dot {cls}")
+        entry = panel_entry(a, unit, tab, it["d"], href)
+        aria = _aria(a, unit)
+        here = in_page(uid) if in_page else None
+        if here:
+            entry["more"] = [["Full breakdown on its own page" if a["summary"] else "Its own page", href]]
+            entry["href"], entry["open"] = here, "Show its budgets on this page"
+            href = here
+            aria = aria.replace("Open its money in and money out section.", "Show its budgets on this page.")                        .replace("Open its section.", "Show its budgets on this page.")
+        return (f"cmap-s cmap-mm {cls}", href, aria, entry, f"cmap-dot cmap-mm-dot {cls}")
 
     legends = []
     for key, tab, label, _heading in LAYERS:
@@ -312,8 +322,10 @@ def money_map(page, ed, shapes: dict, mm: dict, default_layer: str = "cities") -
     return embedded_map(page, ed, shapes, ("cities", "townships", "schools"), default_layer, area=area,
                         label=f"Money map of {ed.county_label}: counted spending per resident. Every area is a link; "
                               "tables with every figure follow the map.",
-                        hint="Hover, focus or tap an area to see its money here. Select it again, or use the link, to "
-                             "open its full breakdown.",
+                        hint=("Hover, focus or tap an area to see its money here. Select it again, or use the link, to "
+                              "show its budgets below." if in_page else
+                              "Hover, focus or tap an area to see its money here. Select it again, or use the link, to "
+                              "open its full breakdown."),
                         legend=legends, defs=shade_defs(), extra_cls="cmap-money", back_cls="cmap-s cmap-mm-back")
 
 

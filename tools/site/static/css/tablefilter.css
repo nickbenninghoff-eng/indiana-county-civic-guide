@@ -1,0 +1,20 @@
+/* tablefilter.css: the filter bar above a table (civic/components.py table_filter). Existing tokens only.
+   Text boxes in .field copy the select rules of style.css and of each look in looks.css. */
+.tf { margin: 14px 0 8px; align-items: flex-end; }
+.tf .field { flex: 1 1 160px; max-width: 240px; }
+.tf .field-search { flex-basis: 220px; max-width: 320px; }
+.tf .tf-reset { align-self: flex-end; min-height: 40px; }
+.tf-count { margin-top: 4px; color: var(--ink-2); }
+.tf-empty { margin: 8px 0; padding: 10px 12px; border: 1px dashed var(--ink-3); }
+.field input[type="search"] {
+  font: 500 .95rem/1.2 var(--f-sans); color: var(--ink); background: var(--surface);
+  border: 1px solid var(--ink-3); border-radius: 2px; padding: 8px 10px; width: 100%; min-width: 0;
+  -webkit-appearance: none; appearance: none; box-sizing: border-box;
+}
+.field input[type="search"]:focus-visible { outline: 3px solid var(--focus); outline-offset: 1px; }
+:root .field input[type="search"] { border-radius: var(--r); min-height: 44px; }
+:root .field input[type="search"] { border: 2px solid var(--ink); font-family: var(--f-sans); font-size: 1rem; background: var(--surface); }
+:root[data-look="line"] .field input[type="search"] { border: 1px solid var(--ctl-line); background: var(--surface); padding: 9px 12px; }
+:root[data-look="wayfinding"] .field input[type="search"] { border: 2px solid var(--ink); font-weight: 700; border-radius: 6px; }
+@media (max-width: 480px) { .tf .field, .tf .field-search { max-width: none; flex-basis: 100%; } }
+@media print { .tf { display: none !important; } }

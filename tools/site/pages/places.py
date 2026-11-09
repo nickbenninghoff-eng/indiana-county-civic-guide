@@ -23,6 +23,7 @@ from civic.spending import money_id_for, money_in_out
 from civic.tax_base import money_id as tax_base_id, tax_base_line
 from civic import school_stats
 from civic.map import embedded_map, load_shapes
+from civic.pick_one import one_bar, one_section
 
 from .county import CONTROL_METHOD, _contest_figure, ballot_order_note, control_by_year
 
@@ -925,7 +926,10 @@ def build_schools(site):
     page.add(section("overview", 2, "Corporations at a glance",
                      smap,
                      data_table("schools-overview", ["Corporation", "Board seats stated", "Seat groups", "Current members in data", "Next elections"], rows,
-                                caption="School corporations", numeric=(1, 3), min_width="42rem"), scope="county", ed=ed))
+                                caption="School corporations", numeric=(1, 3), min_width="42rem"),
+                     one_bar("corporation", "corporations", "Pick a corporation on the map or in the table to show its board, "
+                                                            "budget and results. Each corporation is listed below; open any of them."),
+                     scope="county", ed=ed))
 
     for i, u in enumerate(corps, 3):
         uid = u["unit_id"]
@@ -990,13 +994,31 @@ def build_schools(site):
             parts += [h("h3", None, "Referenda and public questions"), h("div", {"class": "chart-grid"}, [_contest_figure(ed, page, cc, question=True) for cc in refs])]
         else:
             parts.append(h("p", {"class": "muted"}, "No referendum or public-question results for this corporation are in results.csv."))
-        page.add(section(uid, i, u["name"], *parts, scope="county", ed=ed))
-        if False:
-            pass
+        page.add(one_section(uid, i, u["name"], uid, _school_digest(ed, uid), *parts, scope_badge=scope_badge("county", ed)))
 
     gaps = ed.gaps(files=["gaps_gov", "gaps_money"], pattern=r"School|SBCSC|LaVille|Union-North|New Prairie|PHM|enrollment|school")
     page.finish(gaps=[_gap("Superintendents of every school corporation", "No superintendent data is in the guide.", "Add from each district's website or IDOE.")] + gaps)
     return page
+
+
+def _school_digest(ed, uid) -> str:
+    """The one-line summary under a corporation's collapsed heading: board seats, next election, enrollment."""
+    offs = ed.offices_for(uid)
+    bits = []
+    if offs:
+        seats = [o["seats"] for o in offs]
+        total = sum(int(x) for x in seats if x.isdigit())
+        bits.append(f"{total}{'' if all(x.isdigit() for x in seats) else '+'} board seats")
+        nxt = sorted({o["next_election"] for o in offs if o["next_election"]})
+        if nxt:
+            bits.append("next election " + ", ".join(nxt))
+    else:
+        bits.append("board seats not in the guide's data")
+    series = school_stats.enrollment(ed, uid)
+    if series:
+        y, v, _r = series[-1]
+        bits.append(f"{fmt_int(v)} students enrolled ({y})")
+    return " · ".join(bits)
 
 
 def _sch_budget(ed, page, uid):

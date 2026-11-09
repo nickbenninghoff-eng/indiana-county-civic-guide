@@ -1,0 +1,20 @@
+/* sections_fold.css: collapsible Gaps / Sources sections (civic/components.py fold_section). Existing tokens only. */
+.fold-summary {
+  display: flex; align-items: center; gap: 12px; cursor: pointer; list-style: none;
+  padding: 4px 0; min-height: 44px;
+}
+.fold-summary::-webkit-details-marker { display: none; }
+.fold-summary > h2, .fold-summary > h3 { margin: 0; flex: 0 1 auto; min-width: 0; }
+:where(.gaps, .sources) .fold-summary > h2 {
+  font-family: var(--h2-font); text-transform: var(--h2-case); font-size: var(--h2-size);
+  letter-spacing: var(--h2-track); font-weight: 700;
+}
+.fold-count { font-weight: 400; color: var(--ink-3); white-space: nowrap; }
+.fold-toggle { flex: none; width: 9px; height: 9px; margin-left: auto; border-right: 2px solid var(--ink-3);
+  border-bottom: 2px solid var(--ink-3); transform: translateY(-2px) rotate(45deg); }
+.fold-details[open] > .fold-summary .fold-toggle { transform: translateY(2px) rotate(-135deg); }
+.fold-summary:hover .fold-toggle { border-color: var(--ink); }
+.fold-summary:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+.fold-body { padding-top: 6px; }
+.fold-body > .muted:first-child { margin-top: 0; }
+@media print { .fold-toggle { display: none; } .fold-summary { cursor: auto; } }

@@ -28,10 +28,11 @@ from datetime import date, timedelta
 
 from civic.components import (RECORDS_MARK, callout, data_table, name_with_form_party, party_label, scope_badge, section,
                               status_badge, term_party)
+from civic.campaign_money import ALL_PAGE, HOW_PAGE, INDEX_PAGE, cycle_of, given as _given, surname as _surname
 from civic.data import fmt_date, parse_date, split_ids
 from civic.html import Markup, h, join, json_script
 
-PAGE = "money/campaigns/index.html"
+PAGE = HOW_PAGE
 TITLE = "Campaign money in local races"
 
 # Method sources (data/editions/<ed>/sources_cf_method.csv) and other ids used in prose.
@@ -81,12 +82,6 @@ STATUS_CF = OrderedDict([
     ("unreadable", ("UNREADABLE", "The scan is too degraded to read. No figures are shown.")),
 ])
 
-SUFFIXES = {"jr", "sr", "ii", "iii", "iv"}
-NICKNAMES = {"abigail": "abby", "matthew": "matt", "michael": "mike", "william": "bill", "james": "jamie",
-             "janice": "jan", "robert": "bob", "joshua": "josh", "anthony": "tony", "kenneth": "ken",
-             "patric": "pat", "eliyahu": "eli", "marcellus": "marcel", "daniel": "dan", "andrew": "andy"}
-
-
 # --------------------------------------------------------------------------- helpers
 
 def _num(v: str):
@@ -109,23 +104,6 @@ def money(v) -> str:
 def _natural(s: str) -> tuple:
     s = (s or "").replace(" (", " ~(")  # "(district not stated)" sorts after the numbered districts
     return tuple(int(t) if t.isdigit() else t.casefold() for t in re.split(r"(\d+)", s) if t)
-
-
-def cycle_of(row: dict) -> str:
-    """Same rule as tools/build_cf_local.py: the cycle comes from period_to as written."""
-    pt = row["period_to"]
-    if re.fullmatch(r"\d{4}", pt or ""):
-        pt = pt + "-12-31"
-    if not re.fullmatch(r"\d{4}-\d{2}-\d{2}", pt or ""):
-        return "period unknown"
-    y, m = int(pt[:4]), int(pt[5:7])
-    if m <= 3 and any(t in row["report_type"] for t in ("Annual", "Final", "Outgoing")) or (m <= 3 and not row["report_type"]):
-        y -= 1
-    if y <= 2023:
-        return "2023 municipal"
-    if y == 2024:
-        return "2024"
-    return "2026"
 
 
 def _types(row: dict) -> set[str]:
@@ -155,31 +133,19 @@ def cf_badge(status: str, page=None) -> Markup:
     inner = h("span", {"class": f"badge badge-cf badge-cf-{status or 'none'}", "title": definition}, label)
     if page is None:
         return inner
-    return h("a", {"class": "badge-link", "href": "#method", "aria-label": f"{label}: {definition}"}, inner)
-
-
-def _surname(name: str) -> str:
-    s = re.sub(r'"[^"]*"|\([^)]*\)', " ", name or "")
-    toks = [t for t in re.split(r"[\s,]+", s) if t and t.strip(".").lower() not in SUFFIXES]
-    toks = [t for t in toks if not re.fullmatch(r"[A-Za-z]\.?", t)]
-    return re.sub(r"[^a-z\-']", "", toks[-1].lower()) if toks else ""
-
-
-def _given(name: str) -> set[str]:
-    """Given name and any nickname in quotes or parentheses, lower-case, nicknames normalised."""
-    out = set()
-    for m in re.findall(r'"([^"]+)"|\(([^)]+)\)', name or ""):
-        for part in m:
-            if part:
-                out.add(part.split()[0].lower().strip("."))
-    s = re.sub(r'"[^"]*"|\([^)]*\)', " ", name or "")
-    toks = [t for t in re.split(r"[\s,]+", s) if t]
-    if toks:
-        out.add(toks[0].lower().strip("."))
-    return {NICKNAMES.get(t, t) for t in out}
+    return h("a", {"class": "badge-link", "href": page.rel(HOW_PAGE + "#method"), "aria-label": f"{label}: {definition}"},
+             inner)
 
 
 # --------------------------------------------------------------------------- model
+
+def cf_badge_short(status: str, page) -> Markup:
+    """cf_badge for long tables (area pages): the badge text links to the definitions on How it works, without
+    repeating each definition in every row."""
+    label = STATUS_CF.get(status, (status.upper() or "NOT RECORDED", ""))[0]
+    return h("a", {"class": "badge-link", "href": page.rel(HOW_PAGE + "#method")},
+             h("span", {"class": f"badge badge-cf badge-cf-{status or 'none'}"}, label))
+
 
 def _group_of(row: dict, ed) -> str:
     off, uid = row["office_normalized"], row["unit_id"]
@@ -613,11 +579,11 @@ def _delinquent_block(ed, page, c) -> list:
     ]
 
 
-def build(site):
+def build_how(site):
     ed = site.ed
-    page = site.page(PAGE, title=TITLE, banners=False)
+    page = site.page(HOW_PAGE, banners=False)
     c = page.cites
-    model = build_model(ed)
+    model = cf_all(ed)["model"]
     rows = model["rows"]
     st = Counter(r["transcription_status"] for r in rows)
     de = Counter(r["double_entry"] for r in rows)
@@ -625,18 +591,19 @@ def build(site):
     computed = lambda note: status_badge("computed", page, note)
 
     toc = [("obligations", "How reporting works"), ("public", "What's public"), ("method", "How the guide read the forms"),
-           ("coverage", "How complete the record is"), ("explorer", "Every filing"), ("races", "Race by race"),
-           ("large", "Large contributions"), ("delinquent", "Delinquent filers"), ("gaps", "Gaps"), ("sources", "Sources")]
+           ("adding", "How the guide adds up a campaign"), ("coverage", "How complete the record is"),
+           ("delinquent", "Delinquent filers"), ("gaps", "Gaps"), ("sources", "Sources")]
     page.add(h("header", {"class": "page-hero"},
-               h("p", {"class": "eyebrow mono"}, "Reference · Money"),
-               h("h1", None, TITLE),
+               crumbs(page),
+               h("p", {"class": "eyebrow mono"}, "Reference · Money · Campaign finance"),
+               h("h1", None, page.title),
                h("p", {"class": "dek"},
-                 "What local candidates' committees and party committees reported raising, spending and holding, "
-                 "read from the scanned forms the county posts.", c.cite(SRC_FILINGS_PAGE)),
+                 "How local campaign committees report what they raise and spend, what the county posts, how the guide "
+                 "read the scanned forms, and how it adds up a whole campaign.", c.cite(SRC_FILINGS_PAGE)),
                callout(h("p", None, h("strong", None, "Money is not a measure of support. "),
                          "These reports show what committees said they raised and spent. They don't show how many people "
                          "back a candidate, and the guide doesn't use them to predict results. The page never ranks "
-                         "committees by money; you can sort the explorer yourself."), kind="note"),
+                         "committees by money."), kind="note"),
                h("p", {"class": "hero-badges"}, scope_badge("county", ed), " ", scope_badge("indiana", ed),
                  h("span", {"class": "muted"}, " marks the parts that apply in every county."), " ",
                  status_badge("from_scan", page), h("span", {"class": "muted"}, " every figure was read from a scanned form.")),
@@ -743,31 +710,25 @@ def build(site):
                                    "nothing about why, and the guide doesn't guess."),
         scope="county", ed=ed))
 
-    # ------------------------------------------------------------------ 4 coverage
-    page.add(section("coverage", 4, "How complete the record is", *_coverage_block(ed, page, model), scope="county", ed=ed,
+    # ------------------------------------------------------------------ 4 adding up
+    page.add(section("adding", 4, "How the guide adds up a campaign", *_adding_block(ed, page, model), scope="county",
+                     ed=ed, lead="The map and the area pages show what each candidate spent over a whole campaign. "
+                                 "This is how those figures are put together."))
+
+    # ------------------------------------------------------------------ 5 coverage
+    page.add(section("coverage", 5, "How complete the record is", *_coverage_block(ed, page, model), scope="county", ed=ed,
                      lead="Before any figures: which reports the county has posted for each office, and which it hasn't."))
-
-    # ------------------------------------------------------------------ 5 explorer
-    page.add(section("explorer", 5, "Every filing, by office and committee", *_explorer_block(ed, page, model),
-                     scope="county", ed=ed))
-
-    # ------------------------------------------------------------------ 6 races
-    page.add(section("races", 6, "Race by race: the same report, the same period", *_races_block(ed, page, model),
-                     scope="county", ed=ed))
-
-    # ------------------------------------------------------------------ 7 large
-    page.add(section("large", 7, "Large contributions (CFA-11 notices)", *_large_block(ed, page, model),
-                     scope="county", ed=ed))
 
     # ------------------------------------------------------------------ 8 delinquent
     page.add(section(
-        "delinquent", 8, "Delinquent filers",
+        "delinquent", 6, "Delinquent filers",
         *_delinquent_block(ed, page, c),
         scope="county", ed=ed))
 
     # ------------------------------------------------------------------ related
     page.add(h("p", {"class": "cf-related"}, "Related: ",
-               h("a", {"href": page.rel("money/what-is-a-budget/index.html")}, "What counts as a budget"), " · ",
+               h("a", {"href": page.rel(INDEX_PAGE)}, "Campaign money by place"), " · ",
+               h("a", {"href": page.rel(ALL_PAGE)}, "Every filing"), " · ",
                h("a", {"href": page.rel("money/budgets/index.html")}, "Budgets by unit"), " · ",
                h("a", {"href": page.rel("state/your-legislators/index.html#money")}, "State legislators' campaign money"), " · ",
                h("a", {"href": page.rel("run/index.html")}, "Run for office")))
@@ -946,8 +907,10 @@ def _explorer_block(ed, page, model) -> list:
           status_badge("from_scan", page), " The Form column links to the county's scan of each report."),
         h("p", None, "Party is shown as written on each form, as text. Party labels never set the order. " + FORM_PARTY_NOTE),
         controls,
-        h("noscript", None, callout(h("p", None, "The filing explorer needs JavaScript. The coverage matrix above, the race "
-                                                 "tables and the large-contribution table below work without it."))),
+        h("noscript", None, callout(h("p", None, "The filing explorer needs JavaScript. Without it, every filing is "
+                                                 "listed on the page of its government: start from the ",
+                                      h("a", {"href": page.rel(INDEX_PAGE + "#areas")}, "list of areas"),
+                                      ". The large-contribution table below works without it."))),
         table,
         json_script("cf-data", payload),
     ]
@@ -957,9 +920,9 @@ def _cell_money(v):
     return money(v)
 
 
-def _races_block(ed, page, model) -> list:
+def _races_block(ed, page, model, races=None) -> list:
     c = page.cites
-    races = model["races"]
+    races = model["races"] if races is None else races
     complete = [r for r in races if r["complete"]]
     partial = [r for r in races if not r["complete"] and r["any_filing"]]
     empty = [r for r in races if not r["any_filing"]]
@@ -1001,7 +964,7 @@ def _races_block(ed, page, model) -> list:
                                     trs, caption=f"{_race_title(r['contest'])}: pre-election reports",
                                     numeric=(2, 3, 4), copy=False, min_width="46rem"),
                          h("p", {"class": "muted cf-race-note"},
-                           "At least one report's own numbers don't add up; it is shown as filed. Open the explorer for the note.")
+                           "At least one report's own numbers don't add up; it is shown as filed. The note is with the race.")
                          if note else None))
     if partial:
         prow = []
@@ -1013,7 +976,7 @@ def _races_block(ed, page, model) -> list:
         out += [h("h3", None, "Races without a like-for-like set"),
                 h("p", None, "In these races at least one candidate's pre-election report is not posted, can't be read, or "
                              "covers a different period, so the figures are not set side by side. Each candidate's "
-                             "posted reports are in the explorer above."),
+                             "posted reports are listed with the race."),
                 data_table("cf-races-partial", ["Race", "Candidate (ballot order)", "Pre-election report for this race"], prow,
                            caption="Contested races with an incomplete set of pre-election reports", copy=False,
                            min_width="40rem")]
@@ -1109,9 +1072,18 @@ def _gaps(ed, page, model) -> list[dict]:
          "how_to_fill": "Ask the committees or the county election office."},
         {"item": "Report periods that look miswritten (shown as written)",
          "why_missing": "Doc 66082 (Eli Wax) gives 2023 as its period, but its opening cash matches his 2023 closing cash and it was posted "
-                        "with the 2024 reports, so it is probably the 2024 report. Doc 68014 gives a 2026 period in the 2025 batch; "
+                        "with the 2024 reports, so it is probably the 2024 report; the campaign totals follow that note and count it "
+                        "in the 2024 cycle, not in his 2023 race. Doc 72875 (Michelle M. Shaw) writes 2024 for 2026 in its start "
+                        "date; the totals read 2026. Doc 68014 gives a 2026 period in the 2025 batch (kept as written, flagged); "
                         "CFA-11 docs 72951 and 71873 write 2016 for 2026.",
          "how_to_fill": "Confirm with the filers or the county."},
+        {"item": "Reports whose dates disagree with their figures (both counted, flagged)",
+         "why_missing": "Doc 66176 (Kris Verash, 2024 final) is dated the whole of 2024 but reports $0 spent, so it can't include "
+                        "his pre-primary report's $4,945.21 (doc 62629). Doc 65671 (Ryan McCullough, 2024 annual) starts on the "
+                        "same day as his pre-election report (doc 64472) and repeats its $2,260.86 spent; with no cash on either "
+                        "report the guide can't tell whether it is cumulative. Doc 65634 (Derek D. Dieter, 2024 annual) gives a "
+                        "year-to-date figure equal to its own period, below his pre-election report's; the guide adds the reports.",
+         "how_to_fill": "Read the forms again, or ask the committees which period each report covers."},
         {"item": "Date of the 2024 delinquent-filer list (doc 66024), and whether each person later filed",
          "why_missing": "The posted list has no date. The guide checked only the county's posted filings it read for a later "
                         "report covering 2024; a report filed but not posted would not be found.",
@@ -1127,4 +1099,129 @@ def _gaps(ed, page, model) -> list[dict]:
     return gaps
 
 
-PAGES = {PAGE: build}
+# --------------------------------------------------------------------------- shared by the campaign pages
+
+def cf_all(ed) -> dict:
+    """The filings model, the races and the areas, built once per edition (every campaign page shares them)."""
+    got = ed.__dict__.get("_cf_all")
+    if got is None:
+        from civic import campaign_money as cm
+        model = build_model(ed)
+        races = cm.build_races(ed, model["rows"])
+        areas, other = cm.build_areas(ed, model["rows"], races)
+        got = {"model": model, "races": races, "areas": areas, "other": other}
+        ed.__dict__["_cf_all"] = got
+    return got
+
+
+def crumbs(page, *trail) -> Markup:
+    """'Campaign finance › <trail>' breadcrumb back to the campaigns index."""
+    items = [h("a", {"href": page.rel(INDEX_PAGE)}, "Campaign finance")]
+    for label, href in trail:
+        items += [" › ", h("a", {"href": page.rel(href)}, label) if href else h("span", {"aria-current": "page"}, label)]
+    if not trail:
+        items += [" › ", h("span", {"aria-current": "page"}, page.title)]
+    return h("nav", {"class": "cf-crumbs mono", "aria-label": "Breadcrumb"}, items)
+
+
+def doc_link(ed, r: dict) -> Markup:
+    url = _doc_url(ed, r)
+    label = "doc " + r["doc_ids"].replace(";", ", ")
+    return h("a", {"href": url}, label) if url else h("span", None, label)
+
+
+def _adding_block(ed, page, model) -> list:
+    c = page.cites
+    m = "CFM-010"
+    return [
+        h("p", None, "For each race, the guide adds up what every candidate's committee reported over the whole campaign: "
+                     "every report on file for the race's election cycle, not just one report.", c.cite(m), " ",
+          status_badge("computed", page, "Sums of reports from cf_local.csv by the rules below.")),
+        h("ul", None,
+          h("li", None, h("strong", None, "Cycle. "), "A report belongs to the cycle of the period written on it. Annual "
+                        "or final reports that close January to March count toward the year before, and the 2025 annual "
+                        "reports count in the 2026 cycle.", c.cite(SRC_COVERAGE), " When a transcription note names the "
+                        "right date for a miswritten one (doc 66082: “the year is probably miswritten for 2024”), the "
+                        "guide follows the note and says so next to the candidate; when a note only doubts a date, the "
+                        "date is kept as written and flagged. City and town offices were last on "
+                        "the ballot in 2023; most county and township offices in 2026; some county offices and school "
+                        "boards in 2024. Each race uses the cycle of its own latest election."),
+          h("li", None, h("strong", None, "Which report is which. "), "Each report is placed by the dates it covers, "
+                        "compared with the primary and general election dates: the year-before annual (2026 cycle "
+                        "only), pre-primary, pre-election and year-end annual. When the box marked on the form disagrees "
+                        "with the dates, the dates decide and the report's note says so.", c.cite(m)),
+          h("li", None, h("strong", None, "Amendments. "), "An amended report replaces the report it amends. The two are "
+                        "never both added.", c.cite(m)),
+          h("li", None, h("strong", None, "No double counting, and no real report dropped. "), "A report is left out "
+                        "only when it is truly covered by another: the same report filed twice, or a report whose period "
+                        "lies wholly inside another report's period when that report's figures include its money. When "
+                        "one report opens with the cash another closed with, the two are separate periods and both are "
+                        "added, whatever their written dates say; if the dates overlap or nest, both are still added and "
+                        "the conflict is noted next to the candidate. A report with no start date written is never "
+                        "treated as inside another. When two reports overlap in a way that can't be untangled, the "
+                        "committee gets no total and its reports are listed one by one.", c.cite(m)),
+          h("li", None, h("strong", None, "One year at a time. "), "When the reports on file cover a calendar year from "
+                        "January 1 with no gap, the guide adds their “this period” columns. When they don't (most often "
+                        "because an earlier report isn't on file: the county posted no 2023 pre-primary or pre-election "
+                        "reports), it uses the year-to-date column of the year's latest report, as the filer wrote it, "
+                        "and the candidate's line says so. That holds even when the form's own arithmetic doesn't add "
+                        "up (marked next to the candidate), because the reports on file are then known to fall short. "
+                        "It doesn't when that figure is less than the reports on file add up to, or the dates of two of "
+                        "the year's reports conflict: then the guide adds the reports. Either way the other figure is "
+                        "checked, and any difference is noted next to the candidate.", c.cite(f"{m};{SRC_COVERAGE}")),
+          h("li", None, h("strong", None, "Expected reports. "), "The reports expected for each office and cycle are the "
+                        "ones in the guide's coverage file (2023: the annual report; 2024: pre-primary, pre-election and "
+                        "annual; 2026: the 2025 annual, pre-primary and pre-election).", c.cite(SRC_COVERAGE),
+            " A candidate nominated without a primary isn't expected to file a pre-primary report, one who was in the "
+            "primary only isn't expected to file a pre-election report, a committee with no line on the ballot is "
+            "expected to file only its annual report, and nothing is expected after a final report.", c.cite(m)),
+          h("li", None, h("strong", None, "Incomplete. "), "A race is marked incomplete whenever any expected report of "
+                        "any of its candidates is not on the county's page, a report can't be read or leaves a line "
+                        "blank, or a candidate has no reports on file at all. Its total then covers only what is on "
+                        "file: a floor, not a final figure. “Not on file” means only that the county's page has no such "
+                        "report. The guide doesn't know whether each committee had to file it, and doesn't call any "
+                        "report late.", c.cite(m)),
+          h("li", None, h("strong", None, "Cash on hand "), "is the closing cash of the candidate's latest report, shown "
+                        "only when that report's own arithmetic holds (VERIFIED or DERIVED).", c.cite(m)),
+          h("li", None, h("strong", None, "Matching candidates to committees. "), "A ballot candidate is matched to "
+                        "committees that filed for the same office in the same cycle by surname and first name or "
+                        "nickname (a surname one letter off, or written surname first, also matches when it is the "
+                        "only candidate). A filing that names no district or seat joins a race only on a full name "
+                        "match. Each committee's reports count in one race only. A committee for the office that matches "
+                        "no ballot candidate is listed in the race as “not on the ballot in the guide's results”.",
+            c.cite(m))),
+        h("p", None, "By-party sums use the party on the ballot, or, for a committee with no ballot line, the party "
+                     "written on its form. Each party's sum says how many of that party's candidates it covers (for "
+                     "example “1 of 4 candidates with reports”), so a party total never reads as complete when "
+                     "candidates have no reports on file. Party labels never set the order: candidates are listed in "
+                     "ballot order, then committees with no ballot line by name."),
+    ]
+
+
+def build_all(site):
+    ed = site.ed
+    page = site.page(ALL_PAGE, banners=False)
+    c = page.cites
+    cf = cf_all(ed)
+    model = cf["model"]
+    toc = [("explorer", "Every filing"), ("large", "Large contributions"), ("gaps", "Gaps"), ("sources", "Sources")]
+    page.add(h("header", {"class": "page-hero"},
+               crumbs(page),
+               h("p", {"class": "eyebrow mono"}, "Reference · Money · Campaign finance"),
+               h("h1", None, page.title),
+               h("p", {"class": "dek"}, f"All {len(model['rows'])} local campaign-finance reports the guide read from the "
+                                        "county's scans, and every large-contribution notice.", c.cite(SRC_FILINGS_PAGE)),
+               h("p", None, "Looking for one place or race? Start from the ",
+                 h("a", {"href": page.rel(INDEX_PAGE)}, "map and list by place"), ". How the forms were read: ",
+                 h("a", {"href": page.rel(HOW_PAGE + "#method")}, "How campaign finance reporting works"), "."),
+               h("nav", {"class": "toc", "aria-label": "On this page"},
+                 h("ol", None, [h("li", None, h("a", {"href": f"#{a}"}, t)) for a, t in toc]))))
+    page.add(section("explorer", 1, "Every filing, by office and committee", *_explorer_block(ed, page, model),
+                     scope="county", ed=ed))
+    page.add(section("large", 2, "Large contributions (CFA-11 notices)", *_large_block(ed, page, model),
+                     scope="county", ed=ed))
+    page.finish(gaps=_gaps(ed, page, model))
+    return page
+
+
+PAGES = {HOW_PAGE: build_how, ALL_PAGE: build_all}

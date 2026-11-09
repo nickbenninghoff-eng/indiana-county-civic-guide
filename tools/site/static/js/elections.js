@@ -1,4 +1,4 @@
-/* Elections pages: results explorer (elections/results) and margins filters (elections/landscape).
+/* Elections pages: results explorer (elections/results).
    Data is inserted with textContent only. ASCII only. */
 (function () {
   "use strict";
@@ -186,38 +186,8 @@
     update();
   }
 
-  /* ------------------------------------------------------------ margins table */
-  function margins() {
-    var table = doc.getElementById("margins-table");
-    if (!table) return;
-    var tbody = table.tBodies[0];
-    var rows = Array.prototype.slice.call(tbody.rows);
-    var sy = doc.getElementById("mg-year"), st = doc.getElementById("mg-type"),
-        sb = doc.getElementById("mg-band"), ss = doc.getElementById("mg-sort"), out = doc.getElementById("mg-count");
-    function apply() {
-      var y = sy.value, t = st.value, b = sb.value, n = 0;
-      var sorted = rows.slice();
-      if (ss.value === "date") {
-        sorted.sort(function (a, c) {
-          var da = a.getAttribute("data-date"), dc = c.getAttribute("data-date");
-          if (da !== dc) return da < dc ? 1 : -1;
-          return parseFloat(a.getAttribute("data-margin")) - parseFloat(c.getAttribute("data-margin"));
-        });
-      } else {
-        sorted.sort(function (a, c) { return parseFloat(a.getAttribute("data-margin")) - parseFloat(c.getAttribute("data-margin")); });
-      }
-      sorted.forEach(function (r) {
-        var ok = (!y || r.getAttribute("data-year") === y) && (!t || r.getAttribute("data-type") === t) &&
-                 (!b || r.getAttribute("data-band") === b);
-        r.hidden = !ok;
-        if (ok) n++;
-        tbody.appendChild(r);
-      });
-      out.textContent = n + " race" + (n === 1 ? "" : "s") + " shown.";
-    }
-    [sy, st, sb, ss].forEach(function (s) { s.addEventListener("change", apply); });
-  }
+  /* The margins table's filters (year, election, band, office, place, words, sort) are the shared
+     table filter, static/js/tablefilter.js (civic/components.py table_filter). */
 
   explorer();
-  margins();
 })();

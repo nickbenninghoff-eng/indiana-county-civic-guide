@@ -25,6 +25,25 @@ def _e(path, title, nav, description, scope="county", group="", sections=None):
     return Entry(path, title, nav, description, scope, group, list(sections or []))
 
 
+# The data page is an index; each dataset has its own page at data/<slug>/index.html.
+# (slug, page title, one line). The slug is the dataset's anchor without "ds-" (pages/meta.py DATASETS).
+DATA_PAGES = [
+    ("results", "Data: election results", "Every contest and candidate from 1963 to 2026, with a preview and Copy CSV."),
+    ("elections", "Data: elections", "One row per election: date, type, registered voters, ballots cast and turnout."),
+    ("terms", "Data: terms of office", "Who held each seat and when, with how they were chosen."),
+    ("offices", "Data: offices", "Every elected office in the county: government, district, seats and term length."),
+    ("units", "Data: units of government", "The county, cities, towns, townships, school corporations and special districts."),
+    ("budgets", "Data: budgets", "Budget totals by unit and year, with reporting basis and series."),
+    ("tax-rates", "Data: property tax rates", "Tax rates per $100 of assessed value, by unit, taxing district and year."),
+    ("debt", "Data: debt", "Year-end principal owed by each unit, by type of debt."),
+    ("cf-state", "Data: state campaign finance", "Receipts and spending of the committees of legislators whose districts include part of the county."),
+    ("cf-local", "Data: local campaign finance", "One row per campaign-finance report filed with the county, as written on the form."),
+    ("cf-large", "Data: local large contributions", "Contributions of $1,000 or more reported on the county's large-contribution forms."),
+    ("indicators", "Data: community indicators", "Census and Bureau of Labor Statistics figures with margins of error."),
+    ("people", "Data: people who shaped local government", "People chosen by the published rules, with offices and documented findings."),
+]
+
+
 def entries(ed) -> list[Entry]:
     county = ed.county_label
     out = [
@@ -106,7 +125,7 @@ def entries(ed) -> list[Entry]:
            "Budgets 2012 to 2026 for every unit, one basis per chart, with series breaks marked.",
            "county", "Money", [("over-time", "Budgets over time"), ("tax-base", "How the tax base shapes budgets")]),
         _e("money/campaigns/index.html", "Campaign finance", "Campaign finance",
-           "How campaign finance reporting works, what is public, and coverage of local reports.",
+           "Campaign money in local races by place: a map, then each government's races, candidates and reports.",
            "mixed", "Money", [("obligations", "Campaign-finance obligations"), ("public", "What's public and what isn't")]),
         _e("community/index.html", "The community", "Community",
            "Social and economic context: the same fixed indicators for every unit, with sources and margins of error.",
@@ -132,8 +151,14 @@ def entries(ed) -> list[Entry]:
            "People selected by published rules (tenure, firsts, higher office, families), with the rules shown.",
            "county", "", [("people", "People who shaped local government")]),
         _e("data/index.html", "Data and sources", "Data & sources",
-           "Every table behind the guide with copy-to-clipboard CSV, the source inventory and how to pull it yourself.",
+           "Every table behind the guide, one page each with a preview and copy-to-clipboard CSV, and where the data comes from.",
            "mixed", "Context", [("sources", "Where the data comes from")]),
+        *[_e(f"data/{slug}/index.html", title, title.replace("Data: ", ""), desc, "county", "",
+             [("sources", "Sources")])
+          for slug, title, desc in DATA_PAGES],
+        _e("data/pull/index.html", "Data: how to pull it yourself", "How to pull the data yourself",
+           "Where each public source lives and the query patterns the guide used, with this county's codes filled in.",
+           "mixed", "", [("pull", "How to pull it yourself")]),
         _e("teach/index.html", "For teachers and groups", "For teachers",
            "Lesson kits built on the learning paths, with objectives, prompts and handouts.", "mixed"),
         _e("about/index.html", "About and methods", "About & methods",
@@ -143,6 +168,9 @@ def entries(ed) -> list[Entry]:
             ("neutrality", "Neutrality policy"), ("counting", "How the layer diagram counts seats"),
             ("author", "Who made this"), ("corrections", "Corrections"), ("changelog", "Changelog"),
             ("sources", "Sources index")]),
+        _e("about/sources/index.html", "Sources index", "Sources index",
+           "Every source behind the guide, grouped by kind, with a search box.", "mixed", "",
+           [("sources", "Sources index")]),
         _e("indiana/index.html", "Indiana's 92 counties", "Not your county?",
            "Choose a county edition. Editions not built yet still share the Indiana-wide chapters.", "indiana"),
     ]
@@ -153,6 +181,9 @@ def entries(ed) -> list[Entry]:
             out.append(_e(f"places/{u['unit_id']}/index.html", u["name"], u["name"],
                           f"{kind} page: structure, offices and terms, results and budget links for {u['name']}.",
                           "county", ""))
+    # campaign money: how reporting works, every filing, and one page per government (civic/campaign_money.py)
+    from .campaign_money import campaign_entries
+    out += [_e(*args) for args in campaign_entries(ed.tables["units"])]
     # attach path anchors to the pages they land on, so stubs carry the anchors
     by_path = {e.path: e for e in out}
     for p in PATHS:
@@ -201,7 +232,7 @@ PATHS = [
          "lead": "How seats are filled between elections."},
         {"page": "run/precinct-committeeperson/index.html", "anchor": "role", "title": "Precinct committeeperson",
          "lead": "The party office that takes part in caucuses."},
-        {"page": "money/campaigns/index.html", "anchor": "obligations", "title": "Campaign-finance obligations",
+        {"page": "money/campaigns/how-it-works/index.html", "anchor": "obligations", "title": "Campaign-finance obligations",
          "lead": "What a candidate must report, and when."},
         {"page": "run/index.html", "anchor": "contacts", "title": "Contacts", "lead": "Where to file and whom to ask."}]},
     {"id": "follow-the-money", "title": "Follow the money", "blurb": "Budgets, your tax bill and campaign money.",
@@ -214,7 +245,7 @@ PATHS = [
          "lead": "Each unit's budget on a single reporting basis."},
         {"page": "state/how-the-state-shapes-local/index.html", "anchor": "caps", "title": "How the state limits local revenue",
          "lead": "State law sets caps and limits on local taxes."},
-        {"page": "money/campaigns/index.html", "anchor": "public", "title": "Campaign money: what's public",
+        {"page": "money/campaigns/how-it-works/index.html", "anchor": "public", "title": "Campaign money: what's public",
          "lead": "What campaign reports show and what they leave out."}]},
     {"id": "how-we-got-here", "title": "How we got here", "blurb": "Seats, mayors and turning points over time.",
      "minutes": 35, "primary": True, "stops": [

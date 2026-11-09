@@ -5,7 +5,7 @@ import re
 from datetime import date
 
 from civic.charts import party_timeline, results_bars
-from civic.components import (as_of_note, body_state, body_with_breakdown, bodies_block, callout, data_table, officeholder_card, party_label, scope_badge,
+from civic.components import (as_of_note, body_state, body_with_breakdown, bodies_block, callout, data_table, party_label, scope_badge,
                               section, status_badge, variant_slot)
 from civic.data import fmt_date, parse_date, split_ids
 from civic.answers import answer_box
@@ -13,6 +13,10 @@ from civic.html import Markup, h, join
 from civic.layers import county_scope_boards
 from civic.spending import has_money_in_out, money_in_out
 from civic.tax_base import tax_base_line
+from civic.district_map import district_map, district_set, load_district_shapes
+from civic.holder_rows import holder_row, holder_state
+from civic.map import load_shapes
+from civic.pick_one import one_bar
 
 ROW_TYPES = ("county_auditor", "county_treasurer", "county_recorder", "county_clerk", "county_sheriff",
              "county_coroner", "county_surveyor", "county_assessor", "county_prosecutor")
@@ -268,7 +272,8 @@ def build(site):
                           "Each rule below is shown with its county exception where one applies."))
 
     # ------------------------------------------------------------------ 2 officeholders
-    def cards(offs):
+    def rows(offs):
+        """One compact row per office (civic/holder_rows.py); each opens to the card's fields."""
         out = []
         for o in offs:
             note = None
@@ -276,19 +281,33 @@ def build(site):
                 note = ("Merit-selection seat; the canvass identifies the seat by the judge's surname. The start date shown is "
                         "inferred from a retention vote in the guide's results (the January after the vote); the judge was already "
                         "serving before that vote. The date of first appointment is not in the guide's data.")
-            out.append(officeholder_card(ed, page, o, ed.current_terms(o["office_id"]), ed.incoming_terms(o["office_id"]), note))
-        return h("div", {"class": "card-grid"}, out)
+            # "Judge of the Superior Court (seat identified by incumbent surname: Manier)" -> "Superior Court, Manier seat"
+            m = re.search(r"Superior Court \(seat identified by incumbent surname: ([^)]+)\)", o["title"])
+            title = f"Superior Court judge, {m.group(1)} seat" if m else None
+            out.append(holder_row(ed, page, o, ed.current_terms(o["office_id"]), ed.incoming_terms(o["office_id"]), note,
+                                  title=title))
+        return h("div", {"class": "one-list holder-rows"}, out)
     n_incoming = sum(len(ed.incoming_terms(o["office_id"])) for o in offices + court_offices)
+    dmap = _district_map(ed, page, comm, council)
     page.add(section("officeholders", 2, "Who holds county offices now",
                      h("p", None, f"From the guide's terms data, as of {fmt_date(ed.as_of, long=True)}. Officeholders are listed "
                                   "by office and district, never by party. ",
                        f"{n_incoming} people elected on Nov 3, 2026 are shown as incoming; they take office Jan 1, 2027, "
                        "and those results are unofficial until the county certifies them." if n_incoming else ""),
-                     h("h3", None, body_with_breakdown("Board of Commissioners", *body_state(ed, comm))), cards(comm),
-                     h("h3", None, body_with_breakdown("County Council", *body_state(ed, council))), cards(council),
+                     h("p", None, "Commissioners and council members are each elected by one district. Find yours on the "
+                                  "map; every office is also listed below, one line each. Open a line for how the holder "
+                                  "was first chosen and the sources.") if dmap else
+                     h("p", None, "Every office is listed below, one line each. Open a line for how the holder was first "
+                                  "chosen and the sources."),
+                     dmap,
+                     one_bar("office", "offices", "Pick a district on the map, or open any office below."),
+                     h("h3", None, body_with_breakdown("Board of Commissioners", *body_state(ed, comm))), rows(comm),
+                     h("h3", None, body_with_breakdown("County Council", *body_state(ed, council))), rows(council),
                      as_of_note(ed),
-                     h("h3", None, "Row officers and prosecutor"), cards(row),
-                     h("h3", None, "Judges"), cards(other_courts + superior),
+                     h("h3", None, "Countywide officers: row officers and prosecutor"),
+                     h("p", {"class": "muted"}, "Elected by the whole county, so they are not on the district map."),
+                     rows(row),
+                     h("h3", None, "Judges"), rows(other_courts + superior),
                      h("h3", None, "State legislators for the county"),
                      h("p", None, "These districts include part of the county, so the county's delegation is the set of legislators "
                                   "whose districts reach it. Listed by chamber and district number."),
@@ -420,6 +439,76 @@ def build(site):
     gaps = ed.gaps(files=["gaps_gov", "gaps_results"], pattern=GAP_PATTERN)
     page.finish(gaps=gaps)
     return page
+
+
+COUNTY_SETS = (("commissioners", "county-commissioner-2022", "Commissioner districts", "county_commissioner"),
+               ("council", "county-council-2022", "Council districts", "county_council_member"))
+COUNTY_SET_NOTE = ("Districts adopted March 1, 2022, when the commissioners and the council passed amended maps to settle "
+                   "the redistricting lawsuit; in use for the 2022, 2024 and 2026 elections. The county's map layer matches "
+                   "the 2024 results precinct by precinct; it was not separately checked against the 2022 results.")
+COUNCIL_LAYER_NOTE = ("The county's council layer is named for 2025 (created February 2025) but matches the 2024 results; "
+                      "whether it changed any 2022 line was not established.")
+LAWSUIT_NOTE = ("A lawsuit filed in 2023 challenges the state laws that give the county district-only elections; see How "
+                "county government is organized.")
+
+
+def _district_map(ed, page, comm: list[dict], council: list[dict]):
+    """Commissioner and council district map (civic/district_map.py): the panel names who represents the district and
+    the next election; a click opens that office's row. None when the district shapes are missing."""
+    shapes = load_shapes(ed)
+    dshapes = load_district_shapes(ed, shapes) if shapes else None
+    c = page.cites
+    layers = []
+    by_type = {"county_commissioner": comm, "county_council_member": council}
+    for tab, set_id, label, otype in COUNTY_SETS:
+        rec = district_set(dshapes, set_id)
+        if not rec:
+            continue
+        offs = {o["district"]: o for o in by_type[otype]}
+        items, seen = [], set()
+        for it in rec["items"]:
+            o = offs.get(it["district"])
+            if not o:
+                ed.warnings.append(f"county map: {set_id} district {it['district']} has no office in offices.csv; left off")
+                continue
+            seen.add(o["office_id"])
+            cur, inc = ed.current_terms(o["office_id"]), ed.incoming_terms(o["office_id"])
+            st = holder_state(ed, o, cur, inc)
+            facts = [["Represented by", st["now"]]]
+            if st["since"]:
+                facts.append(["In office since", st["since"]])
+            if st["how"]:
+                facts.append(["First chosen by", st["how"]])
+            if st["incoming"]:
+                facts.append(["Nov 3, 2026 election", st["incoming"]])
+            nxt = o.get("next_election") or "not in the guide's data"
+            facts.append(["Next election", f"{nxt} ({o['term_years']}-year term)" if o.get("term_years") else nxt])
+            cav = [COUNTY_SET_NOTE] + ([COUNCIL_LAYER_NOTE] if tab == "council" else [])
+            if it.get("county_share") is not None:
+                cav.append(f"About {it['county_share'] * 100:.0f}% of the county's land area is in this district "
+                           "(computed from the official boundary).")
+            cav.append(LAWSUIT_NOTE)
+            href = f"#office-{o['office_id']}"
+            entry = {"n": o["title"], "t": "County district", "f": facts, "cav": cav, "note": "", "href": href,
+                     "open": "Show this seat's details"}
+            items.append({"uid": o["office_id"], "district": it["district"], "d": it["d"], "href": href,
+                          "aria": f"{o['title']}: {st['now']}. Next election {nxt}. Show this seat's details.",
+                          "entry": entry, "text": it["district"], "label": it["label"], "label_r": it["label_r"]})
+        missing = [o["title"] for o in by_type[otype] if o["office_id"] not in seen]
+        legend = [h("p", None, COUNTY_SET_NOTE, c.cite_compact(rec.get("source_ids", ""))),
+                  h("p", None, COUNCIL_LAYER_NOTE) if tab == "council" else None,
+                  h("p", None, "Not on the map (no boundary in the guide's data): " + ", ".join(missing) + ".") if missing else None]
+        layers.append({"tab": tab, "label": label, "items": items, "legend": legend})
+    if not layers:
+        return None
+    return district_map(page, ed, shapes, layers, layers[0]["tab"],
+                        label=f"Map of the county commissioner and county council districts of {ed.county_label}. Every "
+                              "district is a link to its office below.",
+                        hint="Hover, focus or tap a district to see who represents it and the next election. Select it "
+                             "again, or use the link, to open its line below.",
+                        notes=h("div", {"class": "dmap-notes"},
+                                h("p", None, "Party labels are shown as the guide's sources print them. The map is not "
+                                             "shaded by party.")))
 
 
 def _delegation(ed) -> dict:

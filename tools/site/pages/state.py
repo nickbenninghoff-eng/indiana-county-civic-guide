@@ -6,8 +6,11 @@ import re
 from collections import defaultdict
 
 from civic.charts import columns, results_bars
-from civic.components import (bodies_block, name_with_party, callout, data_table, officeholder_card, party_label, scope_badge, section,
-                              status_badge)
+from civic.components import (bodies_block, name_party_text, name_with_party, callout, data_table, officeholder_card,
+                              party_label, scope_badge, section, status_badge)
+from civic.district_map import district_map, district_set, load_district_shapes
+from civic.map import load_shapes
+from civic.pick_one import one_bar, one_fold, one_summary
 from civic.data import PARTY_LABELS, fmt_date, parse_date, split_ids
 from civic.html import h, join
 from civic.seat_split import seat_split
@@ -305,6 +308,99 @@ def _result_text(r: dict, scope: str) -> str:
     return {"Y": "Elected", "N": "Not elected"}.get(w, "Not recorded")
 
 
+CF_BASIS = ("Campaign money is by filing year: totals of the items on reports FILED in each calendar year, not "
+            "election-cycle totals. One campaign spans two or more years, and the latest year is partial.")
+CF_DOWNLOAD = "2026-11-07"
+LEG_SETS = (("house", "in-house-2021", "Indiana House"), ("senate", "in-senate-2021", "Indiana Senate"))
+
+
+def _same_person(a: str, b: str) -> bool:
+    """Committee candidate names and terms names can differ ('Timothy Wesco', 'Tim Wesco'): same last name and
+    same first initial."""
+    pa = re.sub(r"[^a-z ]", "", (a or "").lower()).split()
+    pb = re.sub(r"[^a-z ]", "", (b or "").lower()).split()
+    if not pa or not pb:
+        return False
+    return pa[-1] == pb[-1] and pa[0][0] == pb[0][0]
+
+
+def leg_state(ed, o: dict) -> dict:
+    """Who holds a legislative seat now, who leads the unofficial 2026 count, and the words used for both.
+    A seat with no settled holder is reported as having no current member (never guessed)."""
+    terms = ed.terms_on(o["office_id"], ed.as_of)
+    current = [t for t in terms if t["status"] != "unofficial"]
+    incoming = [t for t in ed.terms_for(o["office_id"]) if t["status"] == "unofficial"]
+    now = ", ".join(name_party_text(t["person"], t.get("party")) for t in current) or \
+        "No current member in the guide's data"
+    inc_txt = ""
+    if incoming:
+        same = {t["person"] for t in current} == {t["person"] for t in incoming}
+        names = ", ".join(name_party_text(t["person"], t.get("party")) for t in incoming)
+        inc_txt = ("Re-elected Nov 3, 2026 (unofficial)" if same else
+                   f"{names} leads the unofficial Nov 3, 2026 count")
+    since = ", ".join(fmt_date(t["start"]) or "start date not in sources" for t in current)
+    return {"current": current, "incoming": incoming, "now": now, "incoming_text": inc_txt, "since": since}
+
+
+def _committee_role(row: dict, st: dict, past: list[dict]) -> str:
+    if any(_same_person(row["candidate"], t["person"]) for t in st["current"]):
+        return "member"
+    if any(_same_person(row["candidate"], t["person"]) for t in st["incoming"]):
+        return "unofficial 2026 leader"
+    if any(_same_person(row["candidate"], t["person"]) for t in past):
+        return "former member"
+    return "candidate"
+
+
+ROLE_ORDER = {"member": 0, "unofficial 2026 leader": 1, "candidate": 2, "former member": 3}
+
+
+def committees_for(ed, o: dict, st: dict, rows: list[dict]) -> list[tuple[str, str, list[dict]]]:
+    """[(committee, role, rows by year)] for one district: the member first, then the 2026 leader, then the rest."""
+    past = ed.terms_for(o["office_id"])
+    by = {}
+    for r in rows:
+        by.setdefault(r["committee"], []).append(r)
+    out = [(com, _committee_role(rs[0], st, past), sorted(rs, key=lambda r: int(r["year"]))) for com, rs in by.items()]
+    return sorted(out, key=lambda t: (ROLE_ORDER[t[1]], t[0]))
+
+
+def cf_years_text(rs: list[dict], last_year: int) -> str:
+    """The committee's latest two filing years, e.g. '2025 filings: raised $1, spent $2; 2026 filings (partial, ...)'."""
+    parts = []
+    for r in rs[-2:]:
+        y = int(r["year"])
+        part = f" (partial, to {fmt_date(CF_DOWNLOAD)})" if y == last_year else ""
+        parts.append(f"{y} filings{part}: raised {_money(float(r['receipts'] or 0))}, "
+                     f"spent {_money(float(r['expenditures'] or 0))}")
+    return "; ".join(parts)
+
+
+def leg_entry(o: dict, st: dict, coms, cover: str, share, href: str, last_year: int) -> dict:
+    """The map panel record for one district (static/js/map.js reads n, t, f, cav, href, open)."""
+    facts = [["Member now", st["now"]]]
+    if st["since"]:
+        facts.append(["In office since", st["since"]])
+    if st["incoming_text"]:
+        facts.append(["Nov 3, 2026 election", st["incoming_text"]])
+    nxt = o.get("next_election") or "not in the guide's data"
+    facts.append(["Next election", f"{nxt} ({o['term_years']}-year term)" if o.get("term_years") else nxt])
+    if coms:
+        for com, role, rs in coms:
+            r0 = rs[-1]
+            facts.append([f"Campaign money: {name_party_text(r0['candidate'], r0['party'])}, {role}",
+                          cf_years_text(rs, last_year)])
+    else:
+        facts.append(["Campaign money", "No committee for this district in the guide's state campaign-finance data"])
+    cav = [CF_BASIS] if coms else []
+    cav.append(cover)
+    if share is not None:
+        cav.append(f"About {share * 100:.0f}% of the county's land area is in this district (computed from the official "
+                   "boundary). Only the part inside the county is drawn.")
+    return {"n": o["title"], "t": "State legislature", "f": facts, "cav": cav, "note": "", "href": href,
+            "open": "Show this district's details"}
+
+
 def build_legislators(site):
     ed = site.ed
     page = site.page("state/your-legislators/index.html", banners=True)
@@ -312,7 +408,7 @@ def build_legislators(site):
     county = ed.county_label
     hos = [o for o in ed.offices_for("in-house")]
     sos = [o for o in ed.offices_for("in-senate")]
-    toc = [("districts", "Districts"), ("members", "Who holds them"), ("results", "Results, 2012 to 2026"),
+    toc = [("districts", "Find your district"), ("members", "Each district"), ("results", "Results, 2012 to 2026"),
            ("money", "Campaign money"), ("gaps", "Gaps"), ("sources", "Sources")]
     _hero(page, "Reference · State", "Your legislators",
           f"{len(hos)} Indiana House districts and {len(sos)} Indiana Senate districts include part of {county}. "
@@ -337,19 +433,78 @@ def build_legislators(site):
     keys = sorted({(("house" if o["office_type"] == "state_house" else "senate"), o["district"]) for o in hos + sos},
                   key=_district_sort)
 
-    # ---------------------------------------------------------------- 1 districts
+    def did(key):
+        return f"district-{key[0]}-{key[1]}"
+
+    def cover_text(key):
+        yrs = sorted(whole_years.get(key, []))
+        if yrs:
+            return ("The county's totals equal the district totals for " +
+                    ", ".join(str(y) for y in yrs) + ". In the other years shown, the guide has only the county's tally.")
+        return "Only the county portion of the district's results is known in every year shown."
+
+    cf = ed.table("cf_state")
+    cf_years = sorted({int(r["year"]) for r in cf})
+    last_cf = cf_years[-1] if cf_years else 0
+    states = {key: leg_state(ed, office_for(key)) for key in keys}
+
+    def cf_rows_for(key):
+        code = ("HD" if key[0] == "house" else "SD") + key[1]
+        return [r for r in cf if r["district"] == code]
+
+    # ---------------------------------------------------------------- 1 find your district: map + table
+    shapes = load_shapes(ed)
+    dshapes = load_district_shapes(ed, shapes) if shapes else None
+    layers, mapped = [], set()
+    for chamber, set_id, label in LEG_SETS:
+        rec = district_set(dshapes, set_id)
+        if not rec:
+            continue
+        items = []
+        for it in rec["items"]:
+            num = re.sub(r"\D", "", it["district"])
+            key = (chamber, num)
+            o = office_for(key)
+            if not o or key not in keys:
+                ed.warnings.append(f"legislators map: {set_id} district {it['district']} has no office in offices.csv; left off")
+                continue
+            mapped.add(key)
+            entry = leg_entry(o, states[key], committees_for(ed, o, states[key], cf_rows_for(key)), cover_text(key),
+                              it.get("county_share"), f"#{did(key)}", last_cf)
+            items.append({"uid": f"{chamber}-{num}", "district": it["district"], "d": it["d"], "href": f"#{did(key)}",
+                          "aria": f"{o['title']}: {states[key]['now']}. Show this district's details.",
+                          "entry": entry, "text": num, "label": it["label"], "label_r": it["label_r"]})
+        missing = [office_for(k)["title"] for k in keys if k[0] == chamber and k not in mapped]
+        chamber_word = "House" if chamber == "house" else "Senate"
+        legend = [h("p", None, f"Indiana {chamber_word} districts from the 2021 redistricting, used for the 2022 to 2030 "
+                               "elections. They reach past the county line; only the part inside the county is drawn.",
+                    c.cite_compact(rec.get("source_ids", ""))),
+                  h("p", None, "Not on the map (no boundary in the guide's data): " + ", ".join(missing) + ".")
+                  if missing else None]
+        layers.append({"tab": chamber, "label": label, "items": items, "legend": legend})
+    dmap = None
+    if layers:
+        dmap = district_map(page, ed, shapes, layers, layers[0]["tab"],
+                            label=f"Map of the Indiana House and Senate districts that include part of {county}. Every "
+                                  "district is a link to its details; the table below lists the same districts.",
+                            hint="Hover, focus or tap a district to see its member, the next election and their campaign "
+                                 "money here. Select it again, or use the link, to show its details below.",
+                            notes=h("div", {"class": "dmap-notes"},
+                                    h("p", None, CF_BASIS, c.cite_compact("MON-020;MON-021;MON-022")),
+                                    h("p", None, "Party labels are shown as the guide's sources print them. The map is "
+                                                 "not shaded by party or by money.")))
     drows = []
     for key in keys:
         o = office_for(key)
-        yrs = sorted(whole_years.get(key, []))
-        if yrs:
-            cover = ("The county's totals equal the district totals for " +
-                     ", ".join(str(y) for y in yrs) + ". In the other years shown, the guide has only the county's tally.")
-        else:
-            cover = "Only the county portion of the district's results is known in every year shown."
-        drows.append([o["title"], f"{o['term_years']} years", o.get("next_election", ""),
-                      h("span", None, cover, c.cite(o["source_ids"]))])
-    page.add(section("districts", 1, f"Districts that include part of {county}",
+        drows.append([h("a", {"href": f"#{did(key)}"}, o["title"]), states[key]["now"],
+                      f"{o['term_years']} years", o.get("next_election", ""),
+                      h("span", None, cover_text(key), c.cite(o["source_ids"]))])
+    page.add(section("districts", 1, "Find your district",
+                     h("p", None, f"{len(keys)} districts include part of {county}. "
+                                  + ("Pick one on the map or in the table to see who holds it, its results and its "
+                                     "campaign money; the other districts fold away." if dmap else
+                                     "Pick one in the table to see who holds it, its results and its campaign money.")),
+                     dmap,
                      callout(h("p", None, h("strong", None, "Districts cross county lines. "),
                                "Indiana's House and Senate districts are not drawn along county borders. A district can "
                                "include part of one county and part of another. Results below are the county portion only "
@@ -360,31 +515,17 @@ def build_legislators(site):
                                   "county and the county tally is the district result. In other years the guide has only "
                                   "the county's tally.",
                        c.cite("GOV-044;GOV-045")),
-                     data_table("districts-table", ["District", "Term", "Next election", "What is known about the district's extent"],
-                                drows, caption="Legislative districts that include part of the county", min_width="44rem"),
+                     data_table("districts-table", ["District", "Member now", "Term", "Next election",
+                                                    "What is known about the district's extent"],
+                                drows, caption="Legislative districts that include part of the county", min_width="52rem"),
                      scope="county", ed=ed))
 
-    # ---------------------------------------------------------------- 2 members
-    cards = []
-    for key in keys:
-        o = office_for(key)
-        terms = ed.terms_on(o["office_id"], ed.as_of)
-        current = [t for t in terms if t["status"] != "unofficial"]
-        incoming = [t for t in ed.terms_for(o["office_id"]) if t["status"] == "unofficial"]
-        note = None
-        if incoming:
-            same = {t["person"] for t in current} == {t["person"] for t in incoming}
-            note = ("Re-elected Nov 3, 2026 (unofficial)." if same else
-                    "A different person leads the unofficial Nov 3, 2026 count.") + \
-                   (" A legislator's term begins the day after the general election (Ballotpedia lists the 2026 "
-                    "winners as taking office Nov 4, 2026); results are unofficial until certified.")
-        cards.append(officeholder_card(ed, page, o, current, incoming, note))
-    # One rule for every 2026 race in a district that crosses the county line: the county tally, then the
-    # district-wide count where the terms notes record one.
+    # ---------------------------------------------------------------- 2 each district (one fold per district)
     xrows = []
     for key in keys:
         ct = ed.contests.get(f"2026g-state-{key[0]}-{key[1]}")
-        if not ct or _result_scope(ct["rows"][0]).startswith("Whole district") or                 any(y >= 2022 for y in whole_years.get(key, ())):
+        if not ct or _result_scope(ct["rows"][0]).startswith("Whole district") or \
+                any(y >= 2022 for y in whole_years.get(key, ())):
             continue  # wholly inside the county on the 2021 map (used from 2022)
         o = office_for(key)
         inc = [t for t in ed.terms_for(o["office_id"]) if t["status"] == "unofficial"]
@@ -393,31 +534,44 @@ def build_legislators(site):
             m = re.search(r"district-wide[^;]*?\(([\d,]+) to ([\d,]+)\)", t.get("notes", ""))
             if m:
                 wide = (t, m)
-        county = h("span", None, join([h("span", None, name_with_party(r["candidate"], r["party"]), f" {int(float(r['votes'])):,}")
-                                       for r in ct["rows"]], "; "))
-        xrows.append([o["title"], county,
+        tally = h("span", None, join([h("span", None, name_with_party(r["candidate"], r["party"]),
+                                        f" {int(float(r['votes'])):,}") for r in ct["rows"]], "; "))
+        xrows.append([h("a", {"href": f"#{did(key)}"}, o["title"]), tally,
                       (f"{wide[1].group(1)} to {wide[1].group(2)}, led by {wide[0]['person']} (Ballotpedia)"
                        if wide else "Not in the guide's data"),
-                      h("span", None, status_badge("unofficial", page), c.cite(ct["rows"][0]["source_ids"] + ";GOV-044;GOV-045"))])
+                      h("span", None, status_badge("unofficial", page),
+                        c.cite(ct["rows"][0]["source_ids"] + ";GOV-044;GOV-045"))])
     hd7_note = h("div", None,
+                 h("h3", None, "2026 races in districts that extend outside the county"),
                  h("p", None, "For districts that cross the county line, the county tally does not decide the race. The same "
                               "fields are shown for each of them:"),
                  data_table("cross-county-2026", ["District", "County tally (unofficial)", "District-wide count (unofficial)",
                                                   "Status"], xrows,
-                            caption="2026 races in districts that extend outside the county", min_width="44rem")) if xrows else None
-    page.add(section("members", 2, "Who holds these seats",
-                     h("p", None, f"From the guide's terms data, as of {fmt_date(ed.as_of, long=True)}. Seats are listed by "
-                                  "chamber and district number, not by party. Members elected on Nov 3, 2026 are unofficial "
-                                  "until results are certified."),
-                     h("h3", None, "The county's delegation by party"),
-                     bodies_block(ed, [], extra_bodies={"State House members": hos, "State Senate members": sos}),
-                     h("div", {"class": "card-grid"}, cards), hd7_note,
-                     scope="county", ed=ed))
+                            caption="2026 races in districts that extend outside the county", min_width="44rem")) \
+        if xrows else None
 
-    # ---------------------------------------------------------------- 3 results
-    blocks = []
+    folds = []
     for key in keys:
         o = office_for(key)
+        st = states[key]
+        note = None
+        if st["incoming"]:
+            same = {t["person"] for t in st["current"]} == {t["person"] for t in st["incoming"]}
+            note = ("Re-elected Nov 3, 2026 (unofficial)." if same else
+                    "A different person leads the unofficial Nov 3, 2026 count.") + \
+                   (" A legislator's term begins the day after the general election (Ballotpedia lists the 2026 "
+                    "winners as taking office Nov 4, 2026); results are unofficial until certified.")
+        card = officeholder_card(ed, page, o, st["current"], st["incoming"], note)
+        fig = None
+        ct = ed.contests.get(f"2026g-state-{key[0]}-{key[1]}")
+        if ct:
+            cands = [{"name": r["candidate"], "party": r["party"], "votes": int(float(r["votes"])),
+                      "pct": float(r["pct"]), "winner": ""} for r in ct["rows"]]
+            fig = results_bars(f"res26-{key[0]}-{key[1]}", f"{o['title']}, county portion", cands,
+                               subtitle="Nov 3, 2026", status="unofficial",
+                               note="County portion only unless the table below says the totals match the district. "
+                                    "No winner is marked: the figures are unofficial.",
+                               page=page, cite=c.cite(ct["rows"][0]["source_ids"]))
         trs = []
         for year in sorted(contests[key]):
             for r in contests[key][year]:
@@ -430,25 +584,53 @@ def build_legislators(site):
                             f"{float(r['pct']):.2f}%" if r.get("pct") else "",
                             _result_text(r, scope), scope,
                             h("span", None, status_badge(r["status"], page), c.cite(r["source_ids"]))])
-        blocks.append(h("div", {"class": "results-district"},
-                        h("h3", {"id": f"results-{key[0]}-{key[1]}"}, o["title"]),
-                        data_table(f"results-{key[0]}-{key[1]}-table",
-                                   ["Election", "Candidate", "Party", "Votes", "Share", "Result as recorded", "What the votes cover", "Status"],
-                                   trs, caption=f"{o['title']}: general election results, 2012 to 2026",
-                                   numeric=(3, 4), min_width="60rem")))
-    figs = []
-    for key in keys:
-        ct = ed.contests.get(f"2026g-state-{key[0]}-{key[1]}")
-        if not ct:
-            continue
-        cands = []
-        for r in ct["rows"]:
-            cands.append({"name": r["candidate"], "party": r["party"], "votes": int(float(r["votes"])),
-                          "pct": float(r["pct"]), "winner": ""})
-        figs.append(results_bars(f"res26-{key[0]}-{key[1]}", f"{office_for(key)['title']}, county portion",
-                                 cands, subtitle="Nov 3, 2026", status="unofficial",
-                                 note="County portion only unless the table below says the totals match the district.",
-                                 page=page, cite=c.cite(ct["rows"][0]["source_ids"])))
+        results = [h("h4", {"id": f"results-{key[0]}-{key[1]}"}, f"{o['title']}: results, 2012 to 2026"),
+                   data_table(f"results-{key[0]}-{key[1]}-table",
+                              ["Election", "Candidate", "Party", "Votes", "Share", "Result as recorded",
+                               "What the votes cover", "Status"],
+                              trs, caption=f"{o['title']}: general election results, 2012 to 2026",
+                              numeric=(3, 4), min_width="60rem") if trs else
+                   h("p", {"class": "muted"}, "No general election results for this district in the guide's data.")]
+        crow = []
+        for com, role, rs in committees_for(ed, o, st, cf_rows_for(key)):
+            for r in rs:
+                crow.append([r["committee"], role, r["year"] + (" (partial)" if int(r["year"]) == last_cf else ""),
+                             _money(float(r["receipts"] or 0)), _money(float(r["expenditures"] or 0)),
+                             h("span", None, status_badge(r["status"], page), c.cite(r["source_ids"]))])
+        if crow:
+            money_block = [h("h4", None, "Campaign money, by filing year"),
+                           h("p", {"class": "muted"}, CF_BASIS + " Only the committees of members and 2026 candidates in "
+                                                      "the guide's data are included. ",
+                             h("a", {"href": "#money"}, "Every district's committees")),
+                           data_table(f"cf-{key[0]}-{key[1]}", ["Committee", "Whose", "Filing year", "Receipts",
+                                                                "Expenditures", "Status"],
+                                      crow, caption=f"{o['title']}: campaign committees by filing year (not election cycles)",
+                                      numeric=(3, 4), min_width="44rem")]
+        else:
+            money_block = [h("p", {"class": "muted"}, "No campaign committee for this district is in the guide's state "
+                                                      "campaign-finance data.")]
+        digest = [f"Member now: {st['now']}",
+                  f" · {st['incoming_text']}" if st["incoming_text"] else "",
+                  f" · Next election {o['next_election']}" if o.get("next_election") else ""]
+        body = [h("p", {"class": "muted"}, cover_text(key), c.cite(o["source_ids"])),
+                h("div", {"class": "card-grid leg-grid"}, card, fig),
+                results, money_block]
+        folds.append(one_fold(f"{key[0]}-{key[1]}", o["title"], one_summary("h3", o["title"], digest), body,
+                              item_id=did(key)))
+    page.add(section("members", 2, "Each district: who holds it, results and campaign money",
+                     h("p", None, f"From the guide's terms data, as of {fmt_date(ed.as_of, long=True)}. Seats are listed by "
+                                  "chamber and district number, not by party. Members elected on Nov 3, 2026 are unofficial "
+                                  "until results are certified. Open a district to see its member, every general election "
+                                  "since 2012 and its campaign committees."),
+                     h("h3", None, "The county's delegation by party"),
+                     bodies_block(ed, [], extra_bodies={"State House members": hos, "State Senate members": sos}),
+                     one_bar("district", "districts", "Pick a district on the map or in the table above. Every district "
+                                                      "is listed below; open any of them."),
+                     h("div", {"class": "one-list"}, folds),
+                     hd7_note,
+                     scope="county", ed=ed))
+
+    # ---------------------------------------------------------------- 3 results: how to read them
     page.add(section("results", 3, "Results, 2012 to 2026",
                      h("p", None, "These are the county's own canvass tallies for each general election, in the order the "
                                   "canvass lists the candidates. Indiana law orders the parties on the ballot by their vote "
@@ -458,17 +640,17 @@ def build_legislators(site):
                                   "\"What the votes cover\" column says otherwise. Only one row, the 2018 House District 8 "
                                   "result, is a district-wide total, taken from Ballotpedia because the county line could not "
                                   "be read from the scan; it is labeled district-wide and is not the county tally."),
-                     h("h3", None, "2026, county portion (unofficial)"),
-                     h("div", {"class": "chart-grid"}, figs),
                      h("p", {"class": "muted"}, "The 2026 charts mark no winner: the figures are unofficial, and for most "
                                                 "districts the county portion is not the district result."),
-                     h("h3", None, "Every general election in the data, by district"), blocks,
+                     h("h3", None, "Every general election in the data, by district"),
+                     h("p", None, "Each district's results table is in its section above:"),
+                     h("ul", {"class": "leg-jump"},
+                       [h("li", None, h("a", {"href": f"#results-{k[0]}-{k[1]}"}, office_for(k)["title"])) for k in keys]),
                      scope="county", ed=ed))
 
-    # ---------------------------------------------------------------- 4 money
-    cf = ed.table("cf_state")
+    # ---------------------------------------------------------------- 4 money: every district, compared
     cf_src = ";".join(dict.fromkeys(s for r in cf for s in split_ids(r["source_ids"])))
-    years = sorted({int(r["year"]) for r in cf})
+    years = cf_years
     totals, counts = {}, {}
     for y in years:
         ys = [r for r in cf if int(r["year"]) == y]
@@ -480,7 +662,8 @@ def build_legislators(site):
     chart = columns("cf-state-receipts", "Receipts reported by the listed committees, by filing year", pts,
                     subtitle=f"{years[0]} to {years[-1]}. All committees in the guide's data added together.",
                     money=True, value_fmt=_money,
-                    breaks=[{"after": last_full, "label": "Partial", "tip": f"{years[-1]} includes only filings up to the data download (2026-11-07)"}],
+                    breaks=[{"after": last_full, "label": "Partial",
+                             "tip": f"{years[-1]} includes only filings up to the data download ({CF_DOWNLOAD})"}],
                     note="Filing-year basis: each bar adds up the items on reports filed in that calendar year, not an election "
                          "cycle. The number of committees changes by year (some began later), so a rise or fall can reflect "
                          "which committees are in the data.",
@@ -490,7 +673,8 @@ def build_legislators(site):
     def ck(r):
         d = r["district"]
         return (0 if d.startswith("HD") else 1, int(re.sub(r"\D", "", d)), r["committee"])
-    committees = sorted({(r["committee"], r["candidate"], r["district"]) for r in cf}, key=lambda t: ck({"district": t[2], "committee": t[0]}))
+    committees = sorted({(r["committee"], r["candidate"], r["district"]) for r in cf},
+                        key=lambda t: ck({"district": t[2], "committee": t[0]}))
     matrix = []
     for com, cand, dist in committees:
         by = {int(r["year"]): r for r in cf if r["committee"] == com}
@@ -505,7 +689,7 @@ def build_legislators(site):
     page.add(section("money", 4, "Campaign money, by filing year",
                      h("p", None, "Legislators and candidates file campaign-finance reports with the Indiana Election Division. "
                                   "The guide totals the state's bulk data for the committees of members and 2026 candidates "
-                                  "in these districts."),
+                                  "in these districts. Each district's own committees are also in its section above."),
                      callout(h("p", None, h("strong", None, "Read these totals carefully. "),
                                "(1) They are by calendar year filed, not by election cycle, so one campaign spans two or more "
                                "rows. (2) Contributors were typed in by name and spellings vary, so name-level totals would "
@@ -536,6 +720,12 @@ def build_legislators(site):
                  "why_missing": "District-wide 2026 counts come from Ballotpedia's unofficial figures, recorded in the terms "
                                 "notes; the Indiana Election Division has not certified them.",
                  "how_to_fill": "Replace with the Election Division's certified results."})
+    if layers:
+        gaps.append({"item": "Legislative district map: the 2022 vintage was not compared",
+                     "why_missing": "The map uses the Census TIGERweb 2026-vintage House and Senate layers for the 2021 "
+                                    "redistricting plan. They should be the shapes used since 2022, but the 2022 vintage "
+                                    "was not compared.",
+                     "how_to_fill": "Compare against the Census TIGER 2022 state legislative district files."})
     page.finish(gaps=_dedupe(gaps))
     return page
 
