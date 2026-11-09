@@ -21,8 +21,6 @@ from .html import Markup, h
 
 CERTIFIED = "dlgf_certified"
 PART_RE = re.compile(r"County part only", re.I)
-# money-file ids with a units.csv row that derived/unit_id_aliases.csv doesn't map yet (pages/money.py uses it too)
-EXTRA_UNIT_IDS = {"school-new-prairie": "new-prairie"}
 
 
 def _f(v):
@@ -52,7 +50,7 @@ def certified(ed, mid: str | None) -> dict:
 def money_id(ed, unit_id: str) -> str | None:
     """The assessed_values.csv id for a units.csv id ('south-bend' -> 'city-south-bend'), or None."""
     for mid in _index(ed):
-        if ed.unit_alias(mid) == unit_id or EXTRA_UNIT_IDS.get(mid) == unit_id:
+        if ed.unit_alias(mid) == unit_id:
             return mid
     return None
 

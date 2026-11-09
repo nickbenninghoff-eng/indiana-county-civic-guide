@@ -1,11 +1,11 @@
 /* Places and schools pages */
-.cov-strip { list-style: none; display: flex; flex-wrap: wrap; gap: 8px 16px; padding: 0; margin: 14px 0 0; }
-.cov-strip li { display: flex; align-items: center; gap: 6px; font-size: .85rem; }
-.cov-name { color: var(--ink-2); }
-.cov { display: inline-block; font: 600 .68rem/1 var(--f-mono); letter-spacing: .06em; text-transform: uppercase; padding: 3px 6px; border: 1px solid currentColor; }
-.cov-covered { color: var(--accent); }
-.cov-partial { color: var(--unofficial); background: var(--unofficial-wash); border-color: var(--unofficial-line); }
-.cov-none { color: var(--ink-3); border-style: dashed; }
+.pcov-strip { list-style: none; display: flex; flex-wrap: wrap; gap: 8px 16px; padding: 0; margin: 14px 0 0; }
+.pcov-strip li { display: flex; align-items: center; gap: 6px; font-size: .85rem; }
+.pcov-name { color: var(--ink-2); }
+.pcov { display: inline-block; font: 600 .68rem/1 var(--f-mono); letter-spacing: .06em; text-transform: uppercase; padding: 3px 6px; border: 1px solid currentColor; }
+.pcov-covered { color: var(--accent); }
+.pcov-partial { color: var(--unofficial); background: var(--unofficial-wash); border-color: var(--unofficial-line); }
+.pcov-none { color: var(--ink-3); border-style: dashed; }
 .callout-conflict { border-left-color: var(--unofficial-line); background: var(--unofficial-wash); }
 .card-conflict { border-top-color: var(--unofficial-line); }
 .place-dl { margin: 0; font-size: .88rem; }
@@ -15,3 +15,22 @@ ul.plain { list-style: none; padding: 0; margin: 0; }
 .ctx-card { overflow-x: auto; }
 details.more > summary { cursor: pointer; margin-bottom: 12px; }
 .results-year { margin-top: 20px; }
+/* Place page template (Wave B batch 3, 2026-11-09): sub-blocks that kept their old section ids, the officeholder
+   lines' seat links, the results summary table, and the city council district map zoomed to the city. Existing
+   tokens only; the district fills come from district_map.css and never stand for party. */
+.sub-block { margin-top: 24px; }
+.sub-block > h3:first-child { margin-top: 0; }
+.body-seats { font-weight: 400; font-size: .85rem; color: var(--ink-2); }
+.place-holders + h3 { margin-top: 22px; }
+.seat-links { display: block; font-size: .88rem; }
+.seat-links-h { font: 600 .66rem/1.2 var(--f-mono); letter-spacing: .07em; text-transform: uppercase; color: var(--ink-3); margin-right: 4px; }
+.res-cand { display: inline; }
+.res-won { color: var(--ink-2); font-size: .86em; }
+/* the district map is cut to the city, so the labels (sized in map units) shrink by the zoom step; every district
+   is large at that zoom, so the small-label size is not used */
+.place-dmap-z2 .dmap-label, .place-dmap-z2 .dmap-label-sm { font-size: 9px; stroke-width: 1.6px; }
+.place-dmap-z2 .dmap-city { font-size: 5.5px; stroke-width: 1.4px; }
+.place-dmap-z3 .dmap-label, .place-dmap-z3 .dmap-label-sm { font-size: 6.5px; stroke-width: 1.1px; }
+.place-dmap-z3 .dmap-city { font-size: 4px; stroke-width: 1px; }
+.place-dmap-z4 .dmap-label, .place-dmap-z4 .dmap-label-sm { font-size: 5px; stroke-width: .9px; }
+.place-dmap-z4 .dmap-city { font-size: 3.2px; stroke-width: .8px; }

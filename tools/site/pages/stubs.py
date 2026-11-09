@@ -13,7 +13,7 @@ def build_stub(site, entry):
     scope = {"indiana": [scope_badge("indiana", ed)], "county": [scope_badge("county", ed)],
              "mixed": [scope_badge("indiana", ed), " ", scope_badge("county", ed)]}.get(entry.scope, [])
     page.add(h("header", {"class": "page-hero"},
-               h("p", {"class": "eyebrow mono"}, "Reference" if entry.group else "Guide"),
+               h("p", {"class": "eyebrow mono"}, "Topics" if entry.group else "Guide"),
                h("h1", None, entry.title),
                h("p", {"class": "dek"}, entry.description),
                h("p", None, scope)),

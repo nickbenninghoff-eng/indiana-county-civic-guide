@@ -50,3 +50,31 @@ h3.one-h, h4.one-h { font-size: 1.02rem; }
   .holder-row > .one-summary > .hr-meta { grid-column: 1; }
   .holder-row > .one-summary > .fold-toggle { grid-column: 2; grid-row: 1; }
 }
+/* board seat rows (civic/holder_rows.py seat_row): seat | who votes | holder (party) | term end, next election.
+   Added 2026-11-09 (Wave C batch 7) */
+.seat-row > .one-summary { grid-template-columns: minmax(0, 11rem) minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr) 14px; }
+.hr-votes { font-size: .84rem; color: var(--ink-2); min-width: 0; }
+@media (max-width: 760px) {
+  .seat-row > .one-summary { grid-template-columns: minmax(0, 1fr) 14px; }
+  .seat-row > .one-summary > .hr-votes { grid-column: 1; }
+}
+/* chips that choose an area the map cannot draw (civic/pick_one.py one_chips). Added 2026-11-09 (Wave C batch 7) */
+.one-chips { margin: 12px 0 8px; min-width: 0; }
+.one-chips-h { margin: 0 0 6px; font: 600 .7rem/1.2 var(--f-mono); letter-spacing: .08em; text-transform: uppercase;
+  color: var(--ink-3); }
+.one-chips-list { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+.one-chips-list > li { margin: 0; min-width: 0; max-width: none; }
+.one-chip { display: inline-flex; align-items: center; min-height: 36px; padding: 4px 12px; border: 1px solid var(--line);
+  border-radius: 999px; background: var(--surface); color: var(--ink); font-size: .86rem; line-height: 1.25;
+  text-decoration: none; }
+.one-chip:hover { border-color: var(--accent); text-decoration: underline; text-decoration-color: var(--accent);
+  text-underline-offset: 3px; }
+.one-chip:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+.one-chips-note { margin: 6px 0 0; font-size: .82rem; }
+@media print { .one-chips-list { display: block; } }
+/* county results by district, school seat notes (Wave C batch 7) */
+.results-turnout { margin: 6px 0 4px; font-size: .9rem; }
+.res-seat + .res-seat { margin-top: 14px; }
+.res-seat-links { margin: 4px 0 0; font-size: .86rem; }
+.seat-basis { font-size: .92rem; }
+.litigation-ref { font-size: .92rem; }

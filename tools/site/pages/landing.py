@@ -176,6 +176,9 @@ def build(site):
                 h("p", {"class": "layers-foot"}, status_badge("computed", page),
                   " Counts computed from the guide's office, unit and board data. ",
                   h("a", {"href": page.rel("about/index.html#counting")}, "How we count")),
+                h("p", {"class": "layers-more"},
+                  h("a", {"href": page.rel(sitemap.YOUR_PLACE)}, "Your place"),
+                  ": what each of these governments' offices decide, who holds the seats and how to reach them."),
                 as_of_note(ed))
 
     # ---------------------------------------------------------------- next on your ballot

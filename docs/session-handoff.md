@@ -217,3 +217,92 @@ look at the page in the browser); then ask Nick which map pages to build next an
   uses the filer's YTD even when the form doesn't reconcile (flag ytd-unreconciled, visible note); other years keep the
   reconciliation gate; guard against cumulative YTD; 153 tests. Only the map batch (aae2a5a09669d79ef) is still running;
   when it lands and verifies → COMMIT (no push) → Wave A.
+- ~02:40 ET: map batch DONE and verified (build PASSED 109 pages, 153 tests, check_gov 0, check_money OK, browser:
+  legislators and county panels, schools collapsed). COMMITTED 240a3e8 = ROLLBACK POINT (not pushed; main ahead 1).
+  Authorized by Nick's "Do a commit after the site-wide review is complete and the plan is established".
+  WAVE A RUNNING: batch 0 bugs (Sonnet, Chrome) a41b089539960b172 → planning/qa/wave-a-batch0-2026-11-09.md;
+  batch 1 shared patterns (Opus, Playwright) a9a5b11d6e16cb6f8 → planning/qa/wave-a-batch1-2026-11-09.md.
+  Usage-guard agent list = these two. Next: verify Wave A → Wave B (batches 2 Opus, 3 Opus, 4 Sonnet; ≤3 at once).
+  Map-batch data notes for Nick: four Superior Court seats with no current holder in terms.csv; school-new-prairie
+  missing from derived/unit_id_aliases.csv; check the PHM seats wording (voted corporation-wide); cf_state name matching.
+  Map-batch questions for Nick: fold county results by district? open the saved place by default? keep budgets "Show
+  all units"? keep the legislators committee matrix? (Waves 7/8 will propose defaults.)
+- Batch 0 DONE per agent (158 tests): .cov → .pcov on place pages; how-it-works ~20 screens (97-row grid); duplicate-CSS
+  check in check.py; here-tag token pair; seat-diagram summary line. MY TODO in the Wave A check: B3 on index.html at
+  400 px; B1/B3 in light mode and the other looks. Batch 1 is still running.
+- ~03:30 ET: WAVE A VERIFIED (build PASSED, all tests OK, check_gov 0; browser: coverage grid 8,246 px in light;
+  #contest deep link shows one contest + "Show every contest"; SB rail 7 real links). Not verified: the B3 seat
+  diagram in light mode (it only shows once a place is chosen; recheck in Wave D). Batch 1 notes: results page 0.92 MB
+  (batch 2 asked to slim); county rail map link → Treasurer 2024 looks arbitrary → batch 7 should drop or choose another.
+  WAVE B RUNNING: batch 2 elections (Opus, Playwright) afdc5136dc7574827; batch 3 place template (Opus, Chrome)
+  ae0573b497e66c905; batch 4 lists (Sonnet, Chrome) acb28aeb8aeddde1c. Reports planning/qa/wave-b-batch{2,3,4}-*.md.
+  Usage-guard agent list = these three.
+- Batch 4 DONE per agent (wave-b-batch4-2026-11-09.md; build PASSED 112 pages; 4 unit failures all on batch 2's
+  in-progress pages). MY TODO at the Wave B check: JS-off + keyboard on history/people, all-filings, run pages;
+  fix the entity_list helper (components.py): status_badge() escapes a Markup status → isinstance check (one line,
+  after batches 2/3 finish); tbl-run-pick-copy anchor is gone (a copy button, acceptable).
+- Batch 3 DONE per agent (wave-b-batch3-2026-11-09.md; 219 tests; places ~30% shorter; SB/Mishawaka council
+  district maps; Walkerton wards listed, not drawn). Decisions taken: Party control before Budget (neutrality rule F6
+  keeps Context away from the party-control chart) → accept; budget charts folded → accept for now, flag to Nick.
+  Data note: the 2023 Walkerton judge race maps to office walkerton-judge vs offices.csv walkerton-town-judge → fix
+  after Wave B. Only batch 2 (afdc5136dc7574827) is still running.
+- ~05:00 ET: WAVE B VERIFIED (build PASSED 112 pages, 246 tests, check_gov 0, check_money OK; margins page 10 screens,
+  landscape 3.5; old #margins forwards; the 599→608 write-in correction CONFIRMED: 9 races from 2012 had one named
+  candidate plus an unnamed write-in line). Found: all-filings is JS-built (38 rows with JS off) → fix-up.
+  RUNNING: fix-ups (Sonnet, Chrome) a1f726aeec8f5a194 [all-filings JS-off render, entity_list Markup, Walkerton
+  judge contest→office alias + audit]; Wave C batch 5 judges (Sonnet, Chrome) a00d438ec0a12f2a8; batch 7 map-page
+  follow-ups (Opus, Playwright) ad689fd287ee9bc5e. Usage-guard agent list = these three.
+  For Nick's morning list: 599→608; party control before budget; folded budget charts on place pages; margins page
+  0.83 MB; older races drawn on today's district lines (labelled); path 6 starts at turnout.
+- Batch 5 judges DONE per agent (wave-c-batch5-2026-11-09.md; 252 tests; 14.3→7.5 screens). MY TODO: Playwright
+  check at 1280/400, keyboard, JS-off (the agent only had a 597 px Chrome window).
+  WAVE D batch 6 (nav and hubs, Opus, Chrome) a5332812644152724 started early: batches 2 and 4 are done and its files
+  don't overlap the running agents. It includes the B3 seat-diagram light-mode check.
+  Running now: fix-ups a1f726aeec8f5a194, batch 7 ad689fd287ee9bc5e, batch 6 a5332812644152724 (usage-guard list).
+- ~06:00 ET: fix-ups DONE and VERIFIED (all-filings has 614 rows with JS off; entity_list Markup; CONTEST_OFFICE_ALIASES
+  in civic/data.py: 59 aliases, all reviewed by me (school-board and at-large council spelling variants plus the
+  Walkerton judge); unmatched contests 268→109; ambiguous ones left: Osceola wards 2011/2019, 2019g-osceola-unknown-office,
+  2026g-new-prairie-schools-board-at-large-district-2). Batch 5 VERIFIED (400 px no overflow, 1280 = 6.1 screens,
+  keyboard opens a row, JS-off fine). Running: batch 7 ad689fd287ee9bc5e, batch 6 a5332812644152724. Next: Wave E
+  (batch 8 preselect, Opus; then batch 9 sticky nav, Sonnet) once batch 6 lands.
+- ~06:40 ET: WAVE C VERIFIED (batch 7: build PASSED 113 pages, 277 tests, check_gov 0, check_money OK; only data change
+  = derived/unit_id_aliases.csv +school-new-prairie (hand-maintained file, approved in the brief)). Seat wording "All
+  voters in the corporation; member must live in X Township" CONFIRMED by me: PHM Madison seat 11,269 votes (2026) vs
+  township pop 1,891. For Nick: someone could read the IC 20-23-4 board plans to confirm (Gaps row added). Running:
+  batch 6 only. Next: Wave E.
+- ~07:30 ET: WAVE D VERIFIED (build PASSED 113 pages, 298 tests, check_gov 0; browser: nav fits one row at 400 px
+  dark; breadcrumbs from the sitemap; elections/index#vacancies forwards to how-it-works; hub 2.3 screens; Your place
+  shows 45 place links with JS off). B3 seat-diagram second half fixed (.cite line-height). Note: the agent cleared
+  civic-place in Chrome's localStorage (Nick's own saved place in that browser profile, if any, must be set again).
+  Batch 6 questions, decided by me: keep "Your governments" heading → your-governments/; keep the legal page title
+  "Judges and public questions"; dropping hand-written eyebrows = later cleanup; holder names on cards = later.
+  WAVE E RUNNING: batch 8 preselect (Opus, Playwright) ab44df71ab1d3eeca; batch 9 sticky nav + anchor landing + phone
+  masthead (Sonnet, Chrome) a69ab885790a97ba2. Usage-guard list = these two. After Wave E: final full check, update
+  Roadmap + handoff, morning summary for Nick. NO second commit (only one was authorized).
+- ~08:20 ET: batch 9 DONE and VERIFIED by me (anchors land at 111 px on fresh loads, incl. inside folds and forwarded
+  ids; margins "find a race" map/filters still work after margins.js was deleted, because its only job was the landing
+  fix). Phone masthead 256→184 px. Sticky bar on 19 pages (≥9.5 screens; Nick can narrow it to the 6 over 12).
+  NOTE for Nick: money/campaigns/county is now the longest page (32.9 screens); he said "Wait" on splitting it until
+  the review; the review/plan did not split it → propose it in the morning summary. Running: batch 8 only.
+- ~09:00 ET: batch 8 DONE (324 tests) but I sent it back (Part 2): the tax bill picked 023 for Mishawaka from the
+  here.js DEFAULT school (part of Mishawaka is in PHM, district 022) = a guess. Fix: store explicit vs default
+  choices; picks only from explicit values; audit other pages for default-based specific claims; calendar note where a
+  filtered year is empty. Agent ab44df71ab1d3eeca running (usage-guard list). After it: final full check, Roadmap +
+  handoff, morning summary. Batch 9 verified.
+
+## Morning summary (2026-11-09, ~09:40 ET): overnight redesign COMPLETE, UNCOMMITTED
+- Rollback point: commit 240a3e8 (not pushed; main is 1 ahead of origin). Everything after it is in the working tree
+  (88 paths). `git diff 240a3e8` to review; `git reset --hard 240a3e8` + `git clean` (careful) to roll back.
+- Final checks: build PASSED 113 pages; 327 tests OK; check_gov 0 errors; check_money OK. Only data change since
+  240a3e8 = derived/unit_id_aliases.csv +school-new-prairie.
+- All waves A-E verified by me (build, tests and browser spot checks per wave; see the entries above). Things I sent
+  back and were fixed: Wax report dropped ($61.63 R total); Bolden-Simpson period-vs-YTD; all-filings JS-only;
+  tax bill guessing from a default school.
+- Decisions taken overnight (Nick can overrule): review Q1-Q10 per plan; B4 kept whole-county default (Nick); party
+  control before budget; folded budget charts on place pages; county rail map link dropped; seat wording "all voters
+  in the corporation; member must live in X" (verified: PHM Madison 11,269 votes vs 1,891 residents); 599→608
+  uncontested (write-in total lines; 9 races from 2012 verified); sticky bar on 19 pages ≥9.5 screens.
+- Waiting on Nick: commit/push of the redesign; split money/campaigns/county (32.9 screens, now the longest page);
+  read IC 20-23-4 board plans; older races on today's district lines OK?; path 6 stop order; Copy-all vs shown on
+  dataset pages; earlier open items (license, commit email, Acrobat PDFs, deploy) unchanged.
+- Usage guard: stopped at ~09:40 after all work finished (never hit 90%).

@@ -25,6 +25,7 @@ table.data tr.cf-office-row > th { font-weight: 700; padding-top: 14px; border-b
 .cf-picker { margin-bottom: 12px; }
 .cf-count { font: 500 .82rem/1.4 var(--f-mono); color: var(--ink-2); margin: 0 0 8px; }
 .cf-committee { font-weight: 600; }
+table.cf-grouped .cf-office-sub { display: none; }
 table.cf-table tbody th { min-width: 16ch; }
 table.cf-table td.cf-status { min-width: 12ch; }
 .cf-note-details { margin-top: 6px; font-size: .8rem; }
@@ -96,3 +97,11 @@ table.cf-table td.cf-status { min-width: 12ch; }
 .cf-side { min-width: 0; }
 .cf-map .cf-side { align-self: stretch; }
 .cf-date-note { color: var(--ink-2); }
+
+/* all-filings: one row per committee (built by static/js/campaigns.js) */
+.cf-comm-list { margin: 6px 0 0; }
+.cf-comm-list > .cf-list-group { margin: 18px 0 0; padding: 6px 10px; background: var(--surface-2); font: 600 .72rem/1.2 var(--f-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--ink-2); }
+.cf-comm-list > .cf-list-office { margin: 10px 0 0; padding: 4px 0 2px; font-weight: 700; border-bottom: 1px solid var(--line); }
+.cf-comm-list > .cf-list-empty { padding: 8px 0; color: var(--ink-2); }
+.cf-comm .cf-mix { font: 500 .7rem/1.3 var(--f-mono); letter-spacing: .04em; color: var(--ink-3); text-transform: uppercase; }
+.cf-comm-table { margin: 0; }

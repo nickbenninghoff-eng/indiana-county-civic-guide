@@ -89,8 +89,10 @@
 .here-tag {
   display: inline-block; align-self: flex-start; margin: 0 0 6px; padding: 2px 8px;
   font: 700 .72rem/1.4 var(--f-label); letter-spacing: .06em; text-transform: uppercase;
-  background: var(--ink); color: var(--surface); border-radius: var(--r-sm);
+  background: var(--here-tag-bg, var(--ink)); color: var(--here-tag-ink, var(--surface)); border-radius: var(--r-sm);
 }
+/* inside the highlighter callouts --ink is the dark callout ink but --surface stays page-colored (dark in dark mode): use the callout's own pair */
+.next-strip, .elx-next-card, .hl-callout { --here-tag-bg: var(--hl-ink); --here-tag-ink: var(--hl); }
 .answers.is-here .answer-grid { box-shadow: 0 0 0 3px var(--accent); }
 .elx-next-card.is-here { box-shadow: 0 0 0 4px var(--accent); }
 [data-here-uninc].is-here { border-left: 6px solid var(--accent); padding-left: 12px; }

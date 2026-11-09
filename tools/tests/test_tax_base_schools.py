@@ -103,7 +103,7 @@ class TaxBaseData(unittest.TestCase):
     def test_money_id(self):
         e = ed()
         self.assertEqual(tb.money_id(e, "south-bend"), "city-south-bend")
-        self.assertEqual(tb.money_id(e, "new-prairie"), "school-new-prairie")   # not in unit_id_aliases.csv
+        self.assertEqual(tb.money_id(e, "new-prairie"), "school-new-prairie")   # alias row added 2026-11-09 (Wave C batch 7)
         self.assertIsNone(tb.money_id(e, "no-such-unit"))
 
 

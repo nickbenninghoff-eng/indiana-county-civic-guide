@@ -5,6 +5,7 @@ page's ``Citations`` object (``page.cites``) so the per-page Sources list stays 
 """
 from __future__ import annotations
 
+import html as _html
 import re
 
 from .data import PARTY_LABELS, SELECTED_BY_LABELS, fmt_date, split_ids
@@ -593,3 +594,126 @@ def _holder(ed, page, t: dict, kind: str) -> Markup:
              h("p", {"class": "holder-how"}, f"How first chosen: {first}"),
              h("p", {"class": "holder-badges"}, status_badge(t.get("status"), page),
                status_badge("low", page) if low else None))
+
+
+
+# ---------------------------------------------------------------------- "See all rows" fold (P3)
+# Added 2026-11-09 (Wave A, batch 1). When a chart or list above already summarizes a table, the full table moves
+# into a fold under it: "See all 163 rows" with the table's filters and Copy CSV inside. Same progressive-enhancement
+# contract as fold_section: the <details> ships open (JavaScript off: every row is on the page), static/js/folds.js
+# closes it on load unless the address points inside it (a row id), reopens it when a link targets something inside,
+# and opens it for printing. Filters are the shared table_filter (static/js/tablefilter.js); Copy CSV copies only
+# the rows the filters leave shown (static/app.js, "rows-filtered").
+
+def _plural(noun: str, n: int, plural: str | None = None) -> str:
+    if n == 1:
+        return noun
+    return plural or (noun if noun.endswith("s") else noun + "s")
+
+
+def see_all_fold(fold_id: str, count: int, body, noun: str = "row", plural: str | None = None,
+                 hint: str | None = "Copy CSV", label: str | None = None, cls: str = "") -> Markup:
+    """A closed-by-default fold holding a full table (or any long list) that a chart or list above summarizes.
+
+    Markup: ``<details class="fold-details see-all" id=fold_id data-fold="see-all" open>`` whose summary reads
+    "See all 163 rows" (``label`` replaces that text) and a muted ``hint`` ("Filters · Copy CSV"); ``body`` is the
+    content. Every id inside stays reachable: a link or address pointing at a row opens the fold first."""
+    text = label or f"See all {count:,} {_plural(noun, count, plural)}"
+    return h("details", {"class": "fold-details see-all" + (f" {cls}" if cls else ""), "id": fold_id, "open": True,
+                         "data-fold": "see-all"},
+             h("summary", {"class": "fold-summary see-all-summary"},
+               h("span", {"class": "see-all-label"}, text),
+               h("span", {"class": "see-all-hint"}, hint) if hint else None,
+               h("span", {"class": "fold-toggle", "aria-hidden": "true"})),
+             h("div", {"class": "fold-body see-all-body"}, body))
+
+
+def see_all_table(table_id: str, headers: list, rows: list[list], *, noun: str = "row", plural: str | None = None,
+                  caption: str | None = None, numeric: tuple[int, ...] = (), label: str | None = None,
+                  min_width: str | None = None, row_attrs: list[dict] | None = None,
+                  controls: list[dict] | None = None, search: str | None = None,
+                  sort: list[tuple[str, str, str]] | None = None, filter_label: str | None = None,
+                  intro=None, fold_id: str | None = None, summary: str | None = None) -> Markup:
+    """``data_table`` (with Copy CSV) inside ``see_all_fold``, with the same ``table_filter`` bar the table would have
+    outside a fold. ``controls``/``search``/``sort`` are table_filter's arguments (rows opt in through ``row_attrs``,
+    e.g. ``{"data-tf-year": "2024"}``); with none of them there is no filter bar. ``fold_id`` defaults to
+    ``<table_id>-all``; ``summary`` replaces "See all N rows". The table keeps ``table_id`` and its Copy button
+    ``<table_id>-copy``."""
+    n = len(rows)
+    filters = bool(controls or search or sort)
+    body = [intro,
+            table_filter(table_id, controls or [], n, noun=noun, search=search, sort=sort, label=filter_label)
+            if filters else None,
+            filter_empty_note(table_id) if filters else None,
+            data_table(table_id, headers, rows, caption=caption, numeric=numeric,
+                       label=label or caption or f"All {_plural(noun, 2, plural)}",
+                       min_width=min_width, row_attrs=row_attrs)]
+    return see_all_fold(fold_id or f"{table_id}-all", n, body, noun=noun, plural=plural,
+                        hint="Filters · Copy CSV" if filters else "Copy CSV", label=summary)
+
+
+# ---------------------------------------------------------------------- entity list (P5)
+# Added 2026-11-09 (Wave A, batch 1). One row per entity (a person, a committee, a ballot question, an office): name,
+# two or three key facts and a status badge on the always-visible line; the full card or table inside. Each row is
+# civic/pick_one.py's one_fold (<details data-one=KEY data-fold="one" open>), so the pick_one contract applies:
+# JavaScript off, every row ships open; folds.js closes them on load unless the address points inside one; a link
+# or #anchor to anything inside a row opens that row (and, through pick_one.js, folds the others). An optional words
+# box is table_filter's search, pointed at the list instead of a table (tablefilter.js accepts any container whose
+# direct children carry data-tf-row).
+
+_TAGS = re.compile(r"<[^>]+>")
+
+
+def entity_list(list_id: str, items: list[dict], *, noun: str = "item", plural: str | None = None,
+                search: str | None = None, controls: list[dict] | None = None,
+                sort: list[tuple[str, str, str]] | None = None, filter_label: str | None = None,
+                heading_tag: str = "h3", label: str | None = None) -> Markup:
+    """A compact list of entities, each row a <details> holding its full detail.
+
+    items: ``[{key, name, facts?: [str|Markup, ...] (2-3), status?: status_badge key (str) or Markup, body,
+    item_id?: id of the <details>, heading_id?: id of the row's heading, search?: extra words a reader may type,
+    attrs?: {"data-tf-<key>": value, ...} for filters and sort}]``, in the order given (callers sort; people by office
+    and district, never by party or vote share).
+    ``search`` is the words box's label (None = no box); ``controls``/``sort`` are table_filter's. The status badge on
+    the summary line is a plain span (a link inside <summary> would hijack the toggle); put the linked badge in
+    ``body`` when the definitions link matters. Words typed match the row's name, facts and ``search`` text."""
+    rows = []
+    for it in items:
+        facts = [f for f in (it.get("facts") or []) if f not in (None, "")]
+        st = it.get("status")
+        # Markup is a str subclass: test it first so a ready-made badge is passed through, not escaped again
+        badge = st if isinstance(st, Markup) else (status_badge(st) if isinstance(st, str) and st else st)
+        sep = h("span", {"class": "ent-sep", "aria-hidden": "true"}, " · ")
+        summary = [h(heading_tag, {"class": "one-h ent-name", "id": it.get("heading_id")}, it["name"]),
+                   h("span", {"class": "one-digest ent-facts"},
+                     join([h("span", {"class": "ent-fact"}, f) for f in facts], sep)) if facts else None,
+                   h("span", {"class": "ent-status"}, badge) if badge else None]
+        words = " ".join([_plain(it["name"]), *[_plain(f) for f in facts], _plain(it.get("search") or "")])
+        li_attrs = {"class": "ent-row", "data-tf-row": True,
+                    "data-tf-text": re.sub(r"\s+", " ", words).strip() if _filters_on(search, controls, sort) else None}
+        li_attrs.update(it.get("attrs") or {})
+        rows.append(h("li", li_attrs, _one_fold()(it["key"], str(it["name"]), summary, it.get("body"),
+                                                  item_id=it.get("item_id"), cls="ent-item")))
+    filters = _filters_on(search, controls, sort)
+    return h("div", {"class": "ent-block"},
+             table_filter(list_id, controls or [], len(items), noun=noun, search=search, sort=sort,
+                          label=filter_label or f"Find a {noun}") if filters else None,
+             h("p", {"class": "tf-empty muted", "data-tf-empty": list_id, "hidden": True, "role": "status"},
+               f"No {_plural(noun, 2, plural)} match. Use Reset filters to see them all.") if filters else None,
+             h("ul", {"class": "one-list ent-list", "id": list_id, "aria-label": label}, rows))
+
+
+def _filters_on(search, controls, sort) -> bool:
+    return bool(search or controls or sort)
+
+
+def _plain(v) -> str:
+    """Text of a value for the words box: Markup loses its tags and entities, plain text stays as it is."""
+    if isinstance(v, Markup):
+        return _html.unescape(_TAGS.sub(" ", str(v)))
+    return str(v)
+
+
+def _one_fold():
+    from .pick_one import one_fold   # pick_one imports only .html; imported here so components stays first to load
+    return one_fold

@@ -1,13 +1,16 @@
-"""Participation pages: Run for office (+ six office pages), Who handles this?, Find your governments."""
+"""Participation pages: Run for office (+ six office pages), Who handles this?, Your place (your-governments/)."""
 from __future__ import annotations
 
 import re
 
-from civic.components import as_of_note, bodies_block, callout, data_table, scope_badge, section, status_badge
+from civic.components import (APPOINTED_NOTE, as_of_note, bodies_block, callout, data_table, entity_list, scope_badge,
+                              section, see_all_table, status_badge)
 from civic.data import fmt_date, split_ids
-from civic.html import h, json_script
+from civic.html import h, join, json_script
 from civic.layers import build_layers, election_dates
-from civic.picker import layer_rows, picker_state, place_picker
+from civic.picker import picker_state, place_page
+from civic.related import related_items
+from pages.elections import moved_anchors
 
 CONFIRM = "Confirm with the county election office."
 EB_PAGE = "https://www.sjcindiana.gov/2387/Election-BoardCandidate-Information"
@@ -112,7 +115,7 @@ def _contacts(page, ed):
              h("p", None, "The election board takes candidate filings for county and city offices and publishes candidate information: ",
                h("a", {"href": EB_PAGE, "target": "_blank", "rel": "noopener"}, "county Election Board page"), c.cite("SVC-007"), ". "
                "State forms and rules are on the ",
-               h("a", {"href": page.rel("elections/index.html#candidate-info")}, "candidate information section"), " of the elections page."))
+               h("a", {"href": page.rel("elections/how-it-works/index.html#candidate-info")}, "candidate information section"), " of How Indiana elections work."))
 
 
 PARTY_ORGS = {"D": "St. Joseph County Democratic Party", "L": "Libertarian Party of St. Joseph County",
@@ -213,6 +216,21 @@ def _office_table(page, ed, slug, tid):
 
 # ---------------------------------------------------------------- run/<office>/
 
+# Citation ids the six office pages carried before they were trimmed: those facts now live once on run/index, so the
+# office page ships a moved-anchors map (static/js/moved.js) that sends an old #src-... link there.
+RUN_SHARED_SOURCES = ("ELX-007", "GOV-027", "IND-026", "IND-038", "IND-041", "MON-020", "SVC-007", "SVC-017", "SVC-018",
+                      "SVC-019", "SVC-020")
+
+
+def moved_to_run_index():
+    return json_script("moved-anchors", {"a": {f"src-{s}": "../index.html" for s in RUN_SHARED_SOURCES}})
+
+
+def run_index_link(page, anchor, text="Run for office"):
+    """Link to a shared step on run/index. The six office pages keep only their own facts and point here."""
+    return h("a", {"href": page.rel(f"run/index.html#{anchor}")}, text)
+
+
 def build_office(slug):
     spec = OFFICES.get(slug)
 
@@ -253,11 +271,30 @@ def build_office(slug):
         elig.append(h("p", None, "Filing window and deadline:"))
         elig.append(h("ul", None, [h("li", None, b) for b in _filing_note(page, years)]))
         page.add(section("eligibility", 2, "Eligibility and filing", elig, scope="mixed" if False else "indiana", ed=ed))
-        page.add(section("ballot-access", 3, "How you get on the ballot", _ballot_access(page, ed), scope="indiana", ed=ed))
-        page.add(section("money", 4, "Campaign-finance duties", _finance(page, ed), scope="county", ed=ed))
-        page.add(section("vacancies", 5, "Vacancies and caucuses", _vacancies(page, ed), scope="indiana", ed=ed))
-        page.add(section("contacts", 6, "Where to file locally", _contacts(page, ed), _parties(page), scope="county", ed=ed))
+        r = ed.rules
+        shared = run_index_link(page, "ballot-access")
+        ballot = [h("p", None, "Candidates reach the ballot through a party primary or by petition",
+                    c.cite(r["candidate_forms"]["source_ids"] + ";" + r["independent_petitions"]["source_ids"]),
+                    ". The forms, deadlines and party-label rules are the same for every office: ", shared, ".")]
+        if slug == "school-board":
+            ballot.append(h("p", None, r["partisan_school_board"]["plain_language"],
+                            c.cite(r["partisan_school_board"]["source_ids"]), " ",
+                            "A candidate's last two primary votes must match any party they list. ",
+                            status_badge(r["partisan_school_board"]["status"], page)))
+        page.add(section("ballot-access", 3, "How you get on the ballot", ballot, scope="indiana", ed=ed))
+        page.add(section("money", 4, "Campaign-finance duties",
+                         h("p", None, "Candidates for this office report campaign money to the county, not to the state "
+                                      "database", c.cite("SVC-021"), ". Reports and due dates: ", run_index_link(page, "money"), "."),
+                         scope="county", ed=ed))
+        page.add(section("vacancies", 5, "Vacancies and caucuses",
+                         h("p", None, "A local vacancy is filled by the party caucus rule, which is the same for every office",
+                           c.cite(r["local_vacancy_caucus"]["source_ids"]), ": ", run_index_link(page, "vacancies"), "."),
+                         scope="indiana", ed=ed))
+        page.add(section("contacts", 6, "Where to file locally",
+                         h("p", None, "The County Election Board's address, phone, email and the party organizations are on ",
+                           run_index_link(page, "contacts"), "."), scope="county", ed=ed))
         page.add(h("p", None, h("a", {"href": page.rel("run/index.html")}, "Back to Run for office")))
+        page.add(moved_to_run_index())
         page.finish(gaps=ed.gaps(files=["gaps_services"], areas=["run"]))
         return page
     return build
@@ -280,11 +317,17 @@ def _build_pcp(site, page):
         h("p", None, "Filing window and deadline: ", CONFIRM),
     ]
     page.add(section("role", 1, "What the office does", role, scope="indiana", ed=ed))
-    page.add(section("vacancies", 2, "Why it matters: caucuses", _vacancies(page, ed),
+    page.add(section("vacancies", 2, "Why it matters: caucuses",
+                     h("p", None, "A party caucus fills a local vacancy, and the precinct committeepersons are the voters at it",
+                       c.cite(ed.rules["local_vacancy_caucus"]["source_ids"]), ". The rule and an example are on ",
+                       run_index_link(page, "vacancies"), "."),
                      h("p", None, "A legislative vacancy is filled by a caucus of the departing member's party precinct committeepersons from "
                        "that district", c.cite(ed.rules["legislative_vacancy_caucus"]["source_ids"]), "."), scope="indiana", ed=ed))
-    page.add(section("contacts", 3, "Where to file locally", _contacts(page, ed), _parties(page), scope="county", ed=ed))
+    page.add(section("contacts", 3, "Where to file locally",
+                     h("p", None, "The County Election Board's address, phone, email and the party organizations are on ",
+                       run_index_link(page, "contacts"), "."), scope="county", ed=ed))
     page.add(h("p", None, h("a", {"href": page.rel("run/index.html")}, "Back to Run for office")))
+    page.add(moved_to_run_index())
     page.finish(gaps=ed.gaps(files=["gaps_services"], areas=["run"]))
     return page
 
@@ -298,23 +341,31 @@ def build_run(site):
     page.add(_hero(page, ed, "Run for office · Elections & running", page.title,
                    "Six offices you could seek, with the rules that apply across Indiana and the places to file in St. Joseph County.",
                    ("indiana", "county")))
-    # pick
-    rows = []
+    # pick: one card per office (the six office pages keep only the facts specific to their office)
+    cards = []
     for slug in ORDER:
-        link = h("a", {"href": page.rel(f"run/{slug}/index.html")}, LABELS[slug])
+        href = page.rel(f"run/{slug}/index.html")
         if slug == "precinct-committeeperson":
-            ot = ed.office_types[slug.replace("-", "_")]
-            rows.append([link, "Not in data", "Local party office", "Confirm with the county election office"])
-            continue
-        spec = OFFICES[slug]
-        ot = ed.office_types[spec["ot"]]
-        rs = _rows(ed, slug)
-        total = sum(_seats(s.split(" ")[0]) or 0 for _, _, s, _ in rs)
-        ys = _years(ed, slug)
-        rows.append([link, f"{total}+ across {len(rs)} government{'s' if len(rs) != 1 else ''}", f"{ot['term_years']} years", ", ".join(ys)])
-    page.add(section("pick", 1, "Pick an office", h("p", None, "Seat counts and years come from the guide's office data", c.cite("GOV-001"), "."),
-                     data_table("tbl-run-pick", ["Office", "Seats in the county", "Term", "Next regular election year(s)"], rows,
-                                caption="Offices you could run for", numeric=(), min_width="36rem"), scope="county", ed=ed))
+            facts = [("Seats", "Not in data"), ("Term", "Local party office"),
+                     ("Next", "Confirm with the county election office")]
+        else:
+            spec = OFFICES[slug]
+            ot = ed.office_types[spec["ot"]]
+            rs = _rows(ed, slug)
+            total = sum(_seats(s.split(" ")[0]) or 0 for _, _, s, _ in rs)
+            ys = _years(ed, slug)
+            facts = [("Seats", f"{total}+ across {len(rs)} government{'s' if len(rs) != 1 else ''}"),
+                     ("Term", f"{ot['term_years']} years"),
+                     ("Next", ", ".join(ys) or "Not in the guide's data")]
+        cards.append(h("li", {"class": "card run-card"},
+                       h("h3", {"class": "card-title"}, h("a", {"href": href}, LABELS[slug])),
+                       h("dl", {"class": "run-facts"}, [[h("dt", None, k), h("dd", None, v)] for k, v in facts]),
+                       h("p", {"class": "run-more"}, h("a", {"href": href, "aria-label": f"{LABELS[slug]}: seats and rules"}, "Seats and rules"))))
+    page.add(section("pick", 1, "Pick an office", h("p", None, "Seat counts and years come from the guide's office data", c.cite("GOV-001"),
+                                                  ". The steps below are the same for every office; each office page "
+                                                  "keeps only what is specific to it."),
+                     h("ul", {"class": "card-grid run-cards", "id": "tbl-run-pick", "aria-label": "Offices you could run for"}, cards),
+                     scope="county", ed=ed))
     # eligibility
     all_years = sorted({y for s in OFFICES for y in _years(ed, s)})
     el = [h("p", None, "Age, residence and registration rules differ by office: ", CONFIRM,
@@ -366,6 +417,15 @@ def build_who(site):
             return h("span", {"class": "muted"}, "Not in the guide's data")
         return h("ul", {"class": "plain-list"}, [h("li", None, fn(i)) for i in items])
 
+    def unit_names(r):
+        out = []
+        for uid in split_ids(r["responsible_unit_ids"]):
+            out.append(SPECIAL_UNITS.get(uid) or (ed.units[uid]["name"] if uid in ed.units else uid))
+        return out
+
+    def office_titles(r):
+        return [ed.offices[o]["title"] if o in ed.offices else o for o in split_ids(r["accountable_office_ids"])]
+
     rows = []
     for r in ed.table("services"):
         rows.append([
@@ -376,13 +436,36 @@ def build_who(site):
              " " if r["confidence"] != "low" else "", status_badge("low", page) if r["confidence"] == "low" else None],
             r["contact"] or h("span", {"class": "muted"}, "Not in the guide's data"),
         ])
-    tbl = data_table("tbl-services", ["Service", "Responsible government(s)", "Accountable elected official(s)",
-                                      "How it depends", "Contact"], rows,
-                     caption="Services and who handles them (sourced rows only)", min_width="60rem")
+    srows = list(ed.table("services"))
+    tbl = see_all_table("tbl-services", ["Service", "Responsible government(s)", "Accountable elected official(s)",
+                                         "How it depends", "Contact"], rows, noun="service",
+                        caption="Services and who handles them (sourced rows only)", min_width="60rem",
+                        intro=h("p", {"class": "muted"}, "The same rows as the list above, one table, ready to copy."))
+    items = []
+    for i, r in enumerate(srows):
+        units, offs = unit_names(r), office_titles(r)
+        none = "not in the guide's data"
+        items.append({"key": f"svc-{i}", "name": r["service"], "item_id": f"service-{i + 1}",
+                      "facts": [", ".join(units) if units else "Government: " + none,
+                                ("Official: " + "; ".join(offs)) if offs else "Official: " + none],
+                      "status": r["status"],
+                      "search": r["how_it_depends"] + " " + (r["contact"] or ""),
+                      "body": h("dl", {"class": "svc-fields"},
+                                h("dt", None, "Responsible government(s)"),
+                                h("dd", None, listing(split_ids(r["responsible_unit_ids"]), unit_cell)),
+                                h("dt", None, "Accountable elected official(s)"),
+                                h("dd", None, listing(split_ids(r["accountable_office_ids"]), office_cell)),
+                                h("dt", None, "How it depends"),
+                                h("dd", None, r["how_it_depends"], c.cite(r["source_ids"]), " ", status_badge(r["status"], page),
+                                  " ", status_badge("low", page) if r["confidence"] == "low" else None),
+                                h("dt", None, "Contact"),
+                                h("dd", None, r["contact"] or h("span", {"class": "muted"}, "Not in the guide's data")))})
+    svc_list = entity_list("services-list", items, noun="service", search="Find a service, government or official",
+                           label="Services and who handles them")
     roads = callout(h("p", None, h("strong", None, "Roads are a three-way split. "),
                       "The owner of the road decides who fixes it: the county for county roads, the city for city streets, "
                       "and INDOT for state routes, even inside a city", c.cite("SVC-001;SVC-002"), "."))
-    page.add(section("services", 1, "Services and who handles them", roads, tbl,
+    page.add(section("services", 1, "Services and who handles them", roads, svc_list, tbl,
                      h("p", {"class": "muted"}, "Services the guide could not source are listed under Gaps rather than guessed. "
                        "Accountable officials come from the guide's office data; where the sources do not say which official or board "
                        "supervises a department, the cell says so."), scope="county", ed=ed))
@@ -417,63 +500,129 @@ def _layer_unit(L):
 
 
 def build_governments(site):
+    """Your place (Wave D batch 6, review 3.1; was "Find your governments"). The result for the reader's saved place:
+    one card per government that covers it, in layer order. The place picker and the seat diagram are the home page's
+    (index.html#pick); this page no longer repeats them. With no saved place, an inline list of places (Q9): links to
+    each place's page, which static/js/your_place.js turns into buttons that save the place and show its cards here.
+    With JavaScript off every card is on the page. The path-stop ids #find, #offices and #meetings stay; the old
+    picker and diagram ids are forwarded (YP_MOVED)."""
     ed = site.ed
     page = site.page("your-governments/index.html", banners=True)
     c = page.cites
     data = build_layers(ed)
     layers = data["layers"]
-    # No place preselected; static/js/here.js restores a returning reader's saved place.
+    # No place preselected (the reader's saved place is restored by static/js/your_place.js and here.js)
     place, sel_town, sel_school, visible = picker_state(data, None)
     vis = [L for L in layers.values() if L.layer_id in visible]
     n_gov = sum(1 for L in vis if L.government)
     n_el = sum(L.elected for L in vis)
+    n_vote = sum(L.vote for L in vis)
     n_ap = sum(L.appointed for L in vis)
     from pages.landing import _unknown_split  # same rule as the landing hero: only elected unknowns make "at least"
     n_unknown = sum(_unknown_split(ed, L)[0] for L in vis)
-    page.add(h("header", {"class": "page-hero"}, h("p", {"class": "eyebrow mono"}, "Reference · Your governments"),
+    n_unknown_ap = sum(_unknown_split(ed, L)[1] for L in vis)
+    pick = page.rel("index.html#pick")
+    page.add(h("header", {"class": "page-hero"}, h("p", {"class": "eyebrow mono"}, "Your governments"),
                h("h1", None, page.title),
-               h("p", {"class": "dek"}, "For the place you pick: ",
-                 h("span", {"data-count": "atleast-gov", "hidden": None if place is None else True}, "at least "),
-                 h("strong", {"data-count": "gov"}, n_gov),
-                 " governments, ", h("span", {"data-count": "atleast", "hidden": None if (n_unknown or place is None) else True}, "at least "),
-                 h("strong", {"data-count": "elected"}, n_el), " elected seats and ", h("strong", {"data-count": "appointed"}, n_ap),
-                 " appointed seats. ", status_badge("computed", page, "Counts computed from the guide's office, unit and board data."),
+               h("p", {"class": "yp-showing", "id": "yp-showing", "tabindex": "-1", "data-js-only": True, "hidden": True},
+                 h("span", {"class": "yp-showing-label mono"}, "Showing"), " ",
+                 h("span", {"id": "yp-names"}, "no place picked yet"), " ",
+                 h("a", {"class": "yp-change", "href": pick}, "Change place",
+                   h("span", {"class": "visually-hidden"}, " on the home page picker"))),
+               h("p", {"class": "dek", "id": "yp-dek"},
+                 h("span", {"data-yp": "lead-none"}, "Everyone in the county lives under "),
+                 h("span", {"data-yp": "lead-place", "hidden": True}, "Your place has "),
+                 h("span", {"data-yp": "atleast-gov"}, "at least "),
+                 h("strong", {"data-yp": "gov"}, n_gov), " governments, with ",
+                 h("span", {"data-yp": "atleast", "hidden": None if (n_unknown or place is None) else True}, "at least "),
+                 h("strong", {"data-yp": "elected"}, n_el), " elected seats (you vote for ",
+                 h("strong", {"data-yp": "vote"}, n_vote), ") and ",
+                 h("span", {"data-yp": "atleast-appointed", "hidden": None if n_unknown_ap else True}, "at least "),
+                 h("strong", {"data-yp": "appointed"}, n_ap), " appointed seats. ",
+                 status_badge("computed", page, "Counts computed from the guide's office, unit and board data."),
                  " ", h("a", {"href": page.rel("about/index.html#counting")}, "How we count")),
                h("p", {"class": "hero-badges"}, scope_badge("county", ed))))
-    # ---- find
+
+    # ---- 1. your governments: the place list (no saved place), then one card per government
+    munis = [p for p in data["places"] if p["muni"]]
+    cities = [p for p in munis if p["kind"] == "city"] + [p for p in munis if p["kind"] != "city"]
+    uninc = [p for p in data["places"] if not p["muni"]]
+
+    def choice(p, label):
+        return h("li", None, h("a", {"class": "yp-choice", "href": page.rel(place_page(p)), "data-yp-place": p["id"]},
+                               label))
+
+    choose = h("div", {"class": "yp-choose", "id": "place-picker", "data-yp-choose": True},
+               h("p", {"class": "yp-choose-lead"},
+                 h("span", {"class": "yp-nojs"},
+                   "Each name opens that place's page. With JavaScript on, choosing a name here shows that place's "
+                   "governments on this page and remembers it on this device."),
+                 h("span", {"class": "yp-js", "hidden": True},
+                   "No place is saved on this device yet. Choose yours to see the governments that cover it.")),
+               h("div", {"class": "yp-pick-group", "id": "pick-places", "role": "group", "aria-labelledby": "pick-places-h"},
+                 h("h3", {"class": "pick-h", "id": "pick-places-h"}, "Cities and towns"),
+                 h("ul", {"class": "yp-choices"}, [choice(p, _short_place(p["label"])) for p in cities])),
+               h("div", {"class": "yp-pick-group", "id": "pick-uninc", "role": "group", "aria-labelledby": "pick-uninc-h"},
+                 h("h3", {"class": "pick-h", "id": "pick-uninc-h"}, "Outside a city or town? Your township"),
+                 h("ul", {"class": "yp-choices"},
+                   [choice(p, _short_place(p["label"].replace("Unincorporated ", ""))) for p in uninc])),
+               h("p", {"class": "muted yp-choose-more"},
+                 "To pick your township inside a city, or your school corporation, use the ",
+                 h("a", {"href": pick}, "map and lists on the home page"), "."))
+    from pages.elections_numbers import _current_holders   # officeholders/ has one fold (gov-<unit id>) per unit
+    holder_units = {o["unit_id"] for o, _ in _current_holders(ed)}
+    groups = [("everyone", "Every address in the county", ["state", "county", "library"]),
+              ("townships", "Townships", ["township"]),
+              ("munis", "Cities and towns", ["municipality"]),
+              ("schools", "School corporations", ["school"])]
+    blocks = []
+    for gid, title, keys in groups:
+        cards = [_gov_card(page, ed, L, holder_units) for k in keys for L in _ordered(layers) if L.key == k]
+        blocks.append(h("div", {"class": "yp-group", "id": f"yp-{gid}", "data-yp-group": True},
+                        h("h3", {"class": "yp-group-h", "id": f"yp-{gid}-h"}, title),
+                        h("ul", {"class": "gov-list yp-cards", "aria-labelledby": f"yp-{gid}-h"}, cards)))
     page.add(section(
-        "find", 1, "Find your governments",
-        h("section", {"class": "layers-block", "id": "layers", "aria-label": "Governments and seats for the chosen place"},
-          place_picker(page, data, heading_level="h4"),
-          h("div", {"class": "layers", "id": "layer-list"}, layer_rows(page, layers, visible)),
-          as_of_note(ed)),
-        h("h3", None, "Links to each government and its seats"),
-        h("p", {"class": "muted"}, "The list follows your choices above."),
-        h("ul", {"class": "gov-list"}, [_gov_item(page, ed, L, L.layer_id in visible) for L in _ordered(layers)]),
+        "find", 1, "Your governments",
+        choose,
+        h("p", {"class": "yp-again", "data-js-only": True, "hidden": True},
+          h("button", {"type": "button", "class": "btn btn-small", "id": "yp-again", "aria-controls": "place-picker",
+                       "aria-expanded": "false"}, "Choose a different place here")),
+        h("p", {"class": "muted yp-nojs"},
+          "Without JavaScript this page lists every government in the county, grouped by kind. Each card names its "
+          "seats, what its offices decide and where to read more."),
+        h("p", {"class": "muted yp-js yp-none-note", "hidden": True},
+          "Shown: the governments every address has, and the seats every township has. Choose your place above to "
+          "add your township, city or town, and school corporation."),
+        h("div", {"class": "yp-layers", "id": "layers"},
+          h("div", {"id": "layer-list"}, blocks)),
+        as_of_note(ed),
         callout(h("p", None, "For your exact districts, check the ",
                   h("a", {"href": "https://indianavoters.in.gov/", "target": "_blank", "rel": "noopener"}, "Indiana Voter Portal"),
                   ". The guide does not match addresses to districts."), kind="note"),
+        h("p", {"class": "yp-browse"}, "Every government in the county: ",
+          join([h("a", {"href": page.rel(p)}, t) for p, t in YP_BROWSE], h("span", {"aria-hidden": "true"}, " · ")), "."),
         scope="county", ed=ed))
-    # ---- offices
-    seen, rows = set(), []
-    order = {k: i for i, k in enumerate(["county", "city", "town", "township", "school_corporation", "library"])}
-    for o in sorted(ed.tables["offices"], key=lambda o: (order.get(ed.units[o["unit_id"]]["unit_type"], 9), o["title"])):
-        row = ed.office_type_row(o)
-        if not row or row["office_type"] in seen or row["unit_type"] in ("state",):
-            continue
-        seen.add(row["office_type"])
-        label = row["label"]
+
+    # ---- 2. offices: the full table (each card above lists its own offices)
+    rows = []
+    for o, row in _office_types(ed):
         slug = RUN_FOR.get(row["office_type"])
-        cell = h("a", {"href": page.rel(f"run/{slug}/index.html")}, label) if slug else label
+        cell = h("a", {"href": page.rel(f"run/{slug}/index.html")}, row["label"]) if slug else row["label"]
         ut = ed.unit_types.get(row["unit_type"], {}).get("label", row["unit_type"])
-        rows.append([cell, ut, [row["what_it_does"], c.cite(row["source_ids"])], f"{row['term_years']} years" if row["term_years"] else "Not in data"])
-    page.add(section("offices", 2, "What each office controls", data_table(
-        "tbl-office-types", ["Office", "Level", "What it does", "Term"], rows,
-        caption="Office types in the guide's data (offices with a Run for office page are linked)", min_width="44rem"),
-        scope="indiana", ed=ed))
-    # ---- meetings
+        rows.append([cell, ut, [row["what_it_does"], c.cite(row["source_ids"])],
+                     f"{row['term_years']} years" if row["term_years"] else "Not in data"])
+    page.add(section("offices", 2, "What each office controls",
+                     h("p", None, "Each card above says what its own offices decide. Here is every office type in the "
+                                  "guide's data in one table; offices with a Run for office page are linked."),
+                     see_all_table("tbl-office-types", ["Office", "Level", "What it does", "Term"], rows,
+                                   caption="Office types in the guide's data (offices with a Run for office page are linked)",
+                                   noun="office type", min_width="44rem"),
+                     scope="indiana", ed=ed))
+    # ---- 3. meetings (static/js/here.js shows the saved place's governments; without JavaScript, all of them)
     items = []
     for L in _ordered(layers):
+        if L.placeholder:
+            continue
         uid = _layer_unit(L)
         u = ed.units.get(uid)
         site_url = (u or {}).get("website")
@@ -483,40 +632,142 @@ def build_governments(site):
             body = h("a", {"href": site_url, "target": "_blank", "rel": "noopener"}, site_url)
         else:
             body = h("span", {"class": "muted"}, "No website in the guide's data")
-        items.append(h("li", {"class": "gov-site", "data-layer": L.layer_id, "hidden": None if L.layer_id in visible else True},
-                       h("strong", None, L.title), ": ", body))
+        items.append(h("li", {"class": "gov-site", "data-layer": L.layer_id}, h("strong", None, L.title), ": ", body))
     page.add(section("meetings", 3, "How to contact or attend a meeting",
                      h("p", None, "Start with the government's own website. Meeting times and places change, so the guide does not list them (see Gaps)."),
                      h("ul", {"class": "gov-sites"}, items), scope="county", ed=ed))
-    dates = election_dates(ed, sorted({y for L in layers.values() for y in L.next}))
-    payload = {"places": data["places"],
-               "dates": {y: {"primary": fmt_date(d["primary"]), "general": fmt_date(d["general"])} for y, d in dates.items()}}
-    page.add(json_script("layer-data", payload))
+    page.add(moved_anchors(page, _yp_moved(layers)))
     page.finish(gaps=ed.gaps(files=["gaps_services"], areas=["governments"]))
     return page
+
+
+# Links under the cards: every government page in the county, so this page is the hub of "Your governments"
+YP_BROWSE = [("places/index.html", "Places"), ("county/index.html", "County"), ("schools/index.html", "Schools"),
+             ("state/index.html", "State"), ("state/your-legislators/index.html", "Your legislators"),
+             ("officeholders/index.html", "Who holds office now"), ("who-handles-this/index.html", "Who handles this?"),
+             ("map/index.html", "Map")]
+
+# officeholders/ fold ids per layer kind (pages/elections_numbers.py build_officeholders: gov-<unit id>)
+_HOLDER_FOLDS = {"county": ["county", "sjc-courts"], "state": ["in-house", "in-senate"]}
+
+
+def _office_types(ed):
+    """(first office, office_types row) per office type, local governments only, in level then title order."""
+    seen, out = set(), []
+    order = {k: i for i, k in enumerate(["county", "city", "town", "township", "school_corporation", "library"])}
+    for o in sorted(ed.tables["offices"], key=lambda o: (order.get(ed.units[o["unit_id"]]["unit_type"], 9), o["title"])):
+        row = ed.office_type_row(o)
+        if not row or row["office_type"] in seen or row["unit_type"] in ("state",):
+            continue
+        seen.add(row["office_type"])
+        out.append((o, row))
+    return out
+
+
+def _yp_moved(layers) -> dict:
+    """Ids the page had before Wave D batch 6 that are gone: the picker's township/school/status parts (on the home
+    page's picker now), the diagram's per-layer toggle buttons (the card has the layer's id) and the layer payload."""
+    moved = {i: f"index.html#{i}" for i in (
+        "pick-township", "pick-township-h", "pick-township-note", "pick-school", "pick-school-h", "pick-school-note",
+        "pick-status", "pick-status-text", "pick-clear", "layer-data")}
+    for L in layers.values():
+        rid = L.layer_id.replace(":", "-")
+        moved[f"toggle-{rid}"] = f"your-governments/index.html#layer-{rid}"
+    return moved
+
+
+def _gov_card(page, ed, L, holder_units: set):
+    """One government as a card: its seats, party breakdowns of its elected bodies, what its offices decide (a fold
+    that ships open), and links to its page, its officeholders and the same unit on other topics. The card carries the
+    layer's seat counts for your_place.js (the hero sums the cards shown)."""
+    rid = L.layer_id.replace(":", "-")
+    href = page.rel("index.html#pick") if L.placeholder else _layer_href(page, ed, L)
+    title = {"township:any": "Your township (not picked yet)",
+             "school:any": "Your school corporation (not picked yet)"}.get(L.layer_id, L.title)
+    srcs = [x for g in L.groups for x in g.sources]
+    counts = []
+    if L.elected:
+        counts.append(f"{L.elected} elected")
+    if L.vote:
+        counts.append(f"you vote for {L.vote}")
+    if L.appointed:
+        counts.append(f"{L.appointed} appointed")
+    if L.unknown:
+        counts.append("some seat counts not in data")
+    seats = []
+    for g in L.groups:
+        if not g.kinds:
+            continue
+        titles = [t for t in g.titles if t]
+        notes = [n for n in g.notes if n]
+        line = [h("strong", None, g.label), f": {g.summary()}",
+                h("span", {"class": "muted"}, f" ({'; '.join(notes)})") if notes else None]
+        if len(titles) > 1:
+            line.append(h("details", {"class": "gov-seats", "data-fold": "seats", "open": True},
+                          h("summary", None, f"The {len(titles)} offices"),
+                          h("ul", None, [h("li", None, t) for t in titles])))
+        elif titles and titles[0] != g.label:
+            line.append(h("span", {"class": "muted"}, f" ({titles[0]})"))
+        seats.append(h("li", None, line))
+    decide = []
+    seen = set()
+    for o in L.offices:
+        row = ed.office_type_row(o)
+        if not row or row["office_type"] in seen:
+            continue
+        seen.add(row["office_type"])
+        slug = RUN_FOR.get(row["office_type"])
+        decide.append(h("li", None, h("strong", None, row["label"]),
+                        f" ({row['term_years']}-year term)" if row.get("term_years") else None, ": ",
+                        row["what_it_does"], page.cites.cite(row["source_ids"]),
+                        [" ", h("a", {"href": page.rel(f"run/{slug}/index.html")}, f"Run for {row['label'].lower()}")]
+                        if slug else None))
+    more = []   # the card's heading already links to the government's own page
+    kind, _, uid = L.layer_id.partition(":")
+    folds = _HOLDER_FOLDS.get(kind) or ([uid] if uid and uid != "any" else [])
+    holders = [f for f in folds if f in holder_units]
+    if holders:
+        more.append((page.rel(f"officeholders/index.html#gov-{holders[0]}"), "Who holds these seats now"))
+    unit = _layer_unit(L)
+    if unit and unit in ed.units and not L.placeholder:
+        for item in related_items(page, unit_id=unit):
+            if item.key in ("results", "campaigns", "budget", "calendar"):
+                more.append((item.href, f"{item.topic}: {item.text}"))
+    if L.layer_id == "state":
+        more.append((page.rel("state/your-legislators/index.html"), "Your legislators"))
+    return h("li", {"class": "gov-item yp-card" + (" yp-placeholder" if L.placeholder else ""), "id": f"layer-{rid}",
+                    "data-layer": L.layer_id, "data-gov": 1 if L.government else 0, "data-elected": L.elected,
+                    "data-vote": L.vote, "data-appointed": L.appointed, "data-unknown": _unknown_split(ed, L)[0],
+                    "data-unknown-appointed": _unknown_split(ed, L)[1]},
+             h("h4", {"class": "gov-name yp-name"}, h("a", {"href": href}, title) if href else title,
+               page.cites.cite_compact(srcs) if srcs else None),
+             h("p", {"class": "yp-count mono"}, " · ".join(counts) if counts else "no seats in the guide's data yet"),
+             h("div", {"class": "yp-body", "id": f"seats-{rid}"},
+             h("ul", {"class": "yp-seats"}, seats) if seats else None,
+             bodies_block(ed, L.offices, note=False) if L.offices else None,
+             h("p", {"class": "party-asof muted"}, APPOINTED_NOTE) if L.appointed and not L.placeholder else None,
+             h("p", {"class": "muted"}, L.note) if L.note else None,
+             h("details", {"class": "yp-decide", "data-fold": "decide", "open": True},
+               h("summary", None, f"What these offices decide ({len(decide)})"),
+               h("ul", None, decide)) if decide else None,
+             h("p", {"class": "yp-more"},
+               join([h("a", {"href": u}, t) for u, t in more], h("span", {"class": "yp-sep", "aria-hidden": "true"}, " · ")))
+             if more else None))
+
+
+def _unknown_split(ed, L):
+    from pages.landing import _unknown_split as split
+    return split(ed, L)
+
+
+def _short_place(name: str) -> str:
+    return re.sub(r"^(City|Town) of |\s+Township$", "", name)
+
 
 
 def _ordered(layers):
     order = ["state", "county", "township", "municipality", "school", "library"]
     return [L for k in order for L in layers.values() if L.key == k]
-
-
-def _gov_item(page, ed, L, is_visible):
-    href = _layer_href(page, ed, L)
-    name = h("a", {"href": href}, L.title) if href else L.title
-    groups = []
-    for g in L.groups:
-        if not g.kinds:
-            continue
-        titles = [t for t in g.titles if t]
-        body = h("details", {"class": "gov-seats"}, h("summary", None, f"{g.label}: {g.summary()}"),
-                 h("ul", None, [h("li", None, t) for t in titles])) if titles and len(titles) > 1 else \
-            h("p", {"class": "gov-seat"}, f"{g.label}: {g.summary()}" + (f" ({titles[0]})" if titles else ""))
-        groups.append(body)
-    return h("li", {"class": "gov-item", "data-layer": L.layer_id, "hidden": None if is_visible else True},
-             h("h4", {"class": "gov-name"}, name), groups,
-             bodies_block(ed, L.offices, note=False) if L.offices else None,
-             h("p", {"class": "muted"}, L.note) if L.note else None)
 
 
 PAGES = {"run/index.html": build_run,

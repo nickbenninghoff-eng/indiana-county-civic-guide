@@ -15,8 +15,8 @@ Neutrality rules specific to this page (ux-review 6, page brief):
 * sums of several reports are the guide's arithmetic and carry the COMPUTED badge;
 * contributor names only (as filed): never addresses, phones or e-mails.
 
-The explorer rows are embedded as compact JSON and rendered by static/js/campaigns.js.
-Without JavaScript the page still shows the method, the coverage matrix, the race tables and
+The all-filings table is rendered here, once per filing; static/js/campaigns.js filters and sorts its rows and
+derives the per-committee list from them. Without JavaScript the page still shows the method, the coverage matrix, the race tables and
 the large-contribution table (all rendered here).
 """
 from __future__ import annotations
@@ -26,7 +26,7 @@ import re
 from collections import Counter, OrderedDict, defaultdict
 from datetime import date, timedelta
 
-from civic.components import (RECORDS_MARK, callout, data_table, name_with_form_party, party_label, scope_badge, section,
+from civic.components import (RECORDS_MARK, callout, data_table, see_all_fold, name_with_form_party, party_label, scope_badge, section,
                               status_badge, term_party)
 from civic.campaign_money import ALL_PAGE, HOW_PAGE, INDEX_PAGE, cycle_of, given as _given, surname as _surname
 from civic.data import fmt_date, parse_date, split_ids
@@ -822,14 +822,42 @@ def _coverage_block(ed, page, model) -> list:
     ]
 
 
+def _filing_row(ed, page, r, ci, oi, gi, url_prefix) -> Markup:
+    """One filing as a table row, rendered once in the HTML. campaigns.js reads its data-* attributes to filter and
+    sort, and clones the row into the per-committee view; it never creates filings."""
+    unread = r["transcription_status"] == "unreadable"
+    attrs = {"data-ci": str(ci), "data-oi": str(oi), "data-gi": str(gi),
+             "data-cy": str([x for x, _ in CYCLES].index(r["_cycle"])), "data-pt": r["period_to"] or None,
+             "data-st": r["transcription_status"] or "none"}
+    for k, f in (("rec", "_receipts_period"), ("exp", "_expenditures_period"), ("cash", "_cash_end_period")):
+        attrs["data-" + k] = None if r[f] is None else f"{r[f]:.2f}"
+    who = [x for x in (r["candidate"], party_label(r["party"]) if r["party"] else "No party written on the form") if x]
+    note = _clean_note(r["notes"])
+    url = _doc_url(ed, r)
+    doc = f"doc {r['doc_ids'].replace(';', ', ')}"
+    return h("tr", attrs,
+             h("th", {"scope": "row"},
+               h("span", {"class": "cf-committee"}, r["committee"] or "Committee name not written"),
+               h("span", {"class": "cf-sub"}, " · ".join(who)),
+               h("span", {"class": "cf-sub cf-office-sub"}, r["_office"])),
+             h("td", None, (r["report_type"] or "No report type marked") + (" (amended)" if r["amended"] == "yes" else "")),
+             h("td", None, period_text(r)),
+             [h("td", {"class": "num"}, "not readable" if unread else money(r[f]))
+              for f in ("_receipts_period", "_expenditures_period", "_cash_end_period")],
+             h("td", {"class": "cf-status"}, cf_badge_short(r["transcription_status"], page),
+               h("details", {"class": "cf-note-details"}, h("summary", None, "Note"), h("p", {"class": "cf-note"}, note))
+               if note else None),
+             h("td", None, h("a", {"href": url, "target": "_blank", "rel": "noopener"}, doc) if url else doc))
+
+
 def _explorer_block(ed, page, model) -> list:
     c = page.cites
     rows = model["rows"]
     labels = model["labels"]
     offices, office_ix = [], {}
     comms, comm_ix = [], {}
-    out_rows = []
-    vocab: dict[str, list] = {"party": [], "type": [], "why": []}
+    trs = []
+    vocab: dict[str, list] = {"why": []}
 
     def ix(kind, value):
         lst = vocab[kind]
@@ -837,6 +865,7 @@ def _explorer_block(ed, page, model) -> list:
             lst.append(value)
         return lst.index(value)
     url_prefix = "https://www.sjcindiana.gov/DocumentCenter/View/"
+    last = None
     for r in rows:
         if r["_office"] not in office_ix:
             office_ix[r["_office"]] = len(offices)
@@ -848,14 +877,16 @@ def _explorer_block(ed, page, model) -> list:
             comms.append({"n": labels[r["_key"]], "c": cand,
                           "p": _form_party_text(ed, pcode[0][0] if pcode else "", cand, r["_cycle"]) if cand else ""})
         ci = comm_ix[r["_key"]]
-        out_rows.append([
-            ci, office_ix[r["_office"]], GROUP_INDEX[r["_group"]], [x for x, _ in CYCLES].index(r["_cycle"]),
-            r["committee"], r["candidate"], ix("party", party_label(r["party"]) if r["party"] else "No party written on the form"),
-            ix("type", r["report_type"] or "No report type marked"), 1 if r["amended"] == "yes" else 0,
-            period_text(r), r["period_to"] or "",
-            r["_receipts_period"], r["_expenditures_period"], r["_cash_end_period"],
-            r["transcription_status"], r["doc_ids"].replace(";", ", "),
-            _doc_url(ed, r).removeprefix(url_prefix), _clean_note(r["notes"])])
+        gi = GROUP_INDEX[r["_group"]]
+        oi = office_ix[r["_office"]]
+        if (gi, oi) != last:
+            if gi != (last or (None,))[0]:
+                trs.append(h("tr", {"class": "cf-group-row", "data-hk": f"g{gi}"},
+                             h("th", {"scope": "colgroup", "colspan": "8"}, GROUPS[gi][1])))
+            trs.append(h("tr", {"class": "cf-office-row", "data-hk": f"o{gi}-{oi}"},
+                         h("th", {"scope": "colgroup", "colspan": "8"}, r["_office"])))
+            last = (gi, oi)
+        trs.append(_filing_row(ed, page, r, ci, oi, gi, url_prefix))
     totals = {}
     for (k, cyc), t in model["totals"].items():
         ci = comm_ix[k]
@@ -866,8 +897,7 @@ def _explorer_block(ed, page, model) -> list:
             rec.update({"p": f"{fmt_date(t['from'])} to {fmt_date(t['to'])}", "r": t["r"], "e": t["e"], "cash": t["cash"]})
         totals.setdefault(str(ci), {})[str([x for x, _ in CYCLES].index(cyc))] = rec
     payload = {"groups": [g for _, g in GROUPS], "cycles": [CYCLE_LONG[x] for x, _ in CYCLES], "offices": offices,
-               "committees": comms, "rows": out_rows, "totals": totals, "url": url_prefix,
-               "parties": vocab["party"], "types": vocab["type"], "whys": vocab["why"],
+               "committees": comms, "totals": totals, "whys": vocab["why"],
                "status": {k: [v[0], v[1]] for k, v in STATUS_CF.items()}}
 
     def field(fid, label, options):
@@ -891,12 +921,10 @@ def _explorer_block(ed, page, model) -> list:
     thead = h("thead", None, h("tr", None, [h("th", {"scope": "col", "class": "num" if i in (3, 4, 5) else None}, x) for i, x in enumerate(
         ["Committee", "Report", "Period", "Receipts this period", "Expenditures this period", "Cash on hand at close",
          "Status", "Form"])]))
-    table = h("div", {"class": "table-block cf-explorer", "id": "cf-explorer-block", "hidden": True},
-              h("p", {"class": "cf-count", "id": "cf-count", "aria-live": "polite"}),
-              h("div", {"id": "cf-totals", "class": "cf-totals", "hidden": True}),
+    table = h("div", {"class": "table-block cf-explorer", "id": "cf-explorer-block"},
               h("div", {"class": "table-wrap", "role": "region", "tabindex": "0", "aria-label": "Filings explorer"},
-                h("table", {"class": "data cf-table", "id": "cf-table", "style": "min-width: 60rem"},
-                  h("caption", None, "Local campaign-finance filings"), thead, h("tbody", {"id": "cf-tbody"}))),
+                h("table", {"class": "data cf-table cf-grouped", "id": "cf-table", "style": "min-width: 60rem"},
+                  h("caption", None, "Local campaign-finance filings"), thead, h("tbody", {"id": "cf-tbody"}, trs))),
               h("div", {"class": "table-tools"},
                 h("button", {"type": "button", "class": "btn btn-small", "data-copy-table": "cf-table", "id": "cf-table-copy"},
                   "Copy CSV of the rows shown")))
@@ -907,11 +935,14 @@ def _explorer_block(ed, page, model) -> list:
           status_badge("from_scan", page), " The Form column links to the county's scan of each report."),
         h("p", None, "Party is shown as written on each form, as text. Party labels never set the order. " + FORM_PARTY_NOTE),
         controls,
-        h("noscript", None, callout(h("p", None, "The filing explorer needs JavaScript. Without it, every filing is "
-                                                 "listed on the page of its government: start from the ",
-                                      h("a", {"href": page.rel(INDEX_PAGE + "#areas")}, "list of areas"),
-                                      ". The large-contribution table below works without it."))),
-        table,
+        h("div", {"id": "cf-list-block", "hidden": True},
+          h("p", {"class": "cf-count", "id": "cf-count", "aria-live": "polite"}),
+          h("div", {"id": "cf-totals", "class": "cf-totals", "hidden": True}),
+          h("p", {"class": "cf-sub"}, "One row per committee, in the order the filters and Order box give. Each row opens "
+                                      "to that committee's reports."),
+          h("div", {"id": "cf-list", "class": "cf-list"})),
+        see_all_fold("cf-all-fold", len(rows), table, noun="filing", hint="Copy CSV",
+                     label=f"See all {len(rows)} filings as one table"),
         json_script("cf-data", payload),
     ]
 

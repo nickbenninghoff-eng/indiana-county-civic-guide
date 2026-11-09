@@ -1,0 +1,23 @@
+/* Saved-place preselect line (civic/preselect.py here_slot, static/js/preselect.js; Wave E batch 8, 2026-11-09):
+   "Showing: ... [Show all]" above a list, map or picker the page opened on the reader's saved place. Ships hidden;
+   only script shows it. Tokens only (here.css colors), no new tokens. */
+.here-pre {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; margin: 12px 0; padding: 8px 12px;
+  background: var(--surface-2); border-left: 4px solid var(--rule); border-radius: var(--r);
+  color: var(--ink); font-size: .92rem; max-width: 100%; overflow-wrap: anywhere;
+}
+.here-pre.is-on { border-left-color: var(--accent); }
+.here-pre-label { font-weight: 700; }
+.here-pre-text { min-width: 0; flex: 0 1 auto; }
+.here-pre-btn { flex: none; min-height: 40px; }
+.here-pre-why { flex: 1 1 100%; color: var(--ink-2); font-size: .86rem; }
+.here-pre-choices { display: flex; flex-wrap: wrap; gap: 6px 8px; margin: 2px 0; padding: 0; list-style: none; flex: 1 1 100%; }
+.here-pre-choices > li { margin: 0; }
+
+:root[data-look="line"] .here-pre { background: var(--accent-wash); border-left-width: 2px; }
+:root[data-look="wayfinding"] .here-pre { background: var(--surface); border: 2px solid var(--rule); border-left-width: 6px; }
+:root[data-look="wayfinding"] .here-pre.is-on { border-left-color: var(--accent); }
+:root[data-look="wayfinding"] .here-pre-label { text-transform: uppercase; letter-spacing: .08em; font-size: .8rem; }
+
+/* part 2: a calendar year the filters empty keeps its place (tablefilter.js data-tf-keep) with this note */
+.cal-year-empty { margin: 6px 0 12px; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; }

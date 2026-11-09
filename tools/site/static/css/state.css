@@ -4,3 +4,6 @@
 .rule-meta { font-size: .78rem; margin: 0; }
 .state-details { margin: 14px 0; }
 .results-district { margin: 18px 0; }
+/* a district's committees, one line each (Wave C batch 7) */
+.leg-cf { margin: 6px 0 4px; padding-left: 1.1rem; font-size: .9rem; }
+.leg-cf > li { margin: 2px 0; }

@@ -192,7 +192,9 @@ class Built(unittest.TestCase):
         rows = re.findall(r"<tr\b[^>]*>", table.split("<tbody>", 1)[1])
         self.assertTrue(rows)
         self.assertTrue(all("data-one=" in r for r in rows))
-        self.assertRegex(html, r'<details[^>]*data-one-wrap[^>]*>\s*<summary[^>]*>\s*<h3[^>]*>Debt by class and unit')
+        # Wave C batch 7: the wrapper is now a "See all N rows" fold (pick_one.one_wrap_see_all)
+        self.assertRegex(html, r'<details[^>]*data-one-wrap[^>]*>\s*<summary[^>]*>\s*<span class="see-all-label">'
+                               r'See all \d+ rows: debt by class and unit')
 
     def test_all_unit_comparison_charts_kept(self):
         html = self.html[BUDGETS]

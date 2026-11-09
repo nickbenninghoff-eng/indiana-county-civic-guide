@@ -12,6 +12,10 @@ Checks:
      exempt but listed as NOTE lines)
   6. contract extras: no <a download>, no window.print/alert/confirm/prompt, external scripts/styles only from
      allowed hosts, reserved hash names unused
+  7. no two area stylesheets (static/css/*.css) may define the same bare class selector (`.cov { ... }`),
+     because the build joins them into one stylesheet and the rules leak across areas
+     (places.css `.cov` once broke the campaigns coverage grid). Scope the rule or rename it;
+     a genuine, harmless overlap goes in CSS_DUP_ALLOWLIST with a comment.
 Exit code 0 = all passed.
 """
 from __future__ import annotations
@@ -29,6 +33,27 @@ from civic.neutrality import find_banned  # noqa: E402
 ALLOWED_STYLE_HOSTS = {"fonts.googleapis.com"}
 ALLOWED_SCRIPT_HOSTS = {"cdnjs.cloudflare.com", "cdn.jsdelivr.net", "unpkg.com", "cdn.tailwindcss.com", "code.jquery.com"}
 RESERVED_HASHES = {"settings", "sidebar", "customize", "upgrade", "downloads"}
+# Bare class selectors that two area stylesheets may both define (class -> why it is harmless).
+CSS_DUP_ALLOWLIST: dict[str, str] = {}
+CSS_DIR = HERE / "static" / "css"
+
+
+def css_duplicate_bare_classes(css_dir: Path = CSS_DIR, allowlist: dict[str, str] | None = None) -> list[tuple[str, list[str]]]:
+    """(class, [files]) for every bare class selector (a selector that is exactly `.name`, alone or in a
+    comma list) defined in two or more area stylesheets. Comments and the TOKENS block are ignored."""
+    allow = CSS_DUP_ALLOWLIST if allowlist is None else allowlist
+    seen: dict[str, set[str]] = {}
+    for css in sorted(Path(css_dir).glob("*.css")):
+        text = re.sub(r"/\*.*?\*/", "", css.read_text(encoding="utf-8"), flags=re.S)
+        # selector text = everything before a "{" that follows start / "}" / "{" / ";"
+        for m in re.finditer(r"(?:^|[};{])\s*([^{};@]+?)\s*\{", text):
+            for sel in m.group(1).split(","):
+                b = re.fullmatch(r"\.([A-Za-z_][\w-]*)", sel.strip())
+                if b:
+                    seen.setdefault(b.group(1), set()).add(css.name)
+    return [(c, sorted(f)) for c, f in sorted(seen.items()) if len(f) > 1 and c not in allow]
+
+
 COLOR_RE = re.compile(r"#[0-9a-fA-F]{3,8}\b|\brgba?\(|\bhsla?\(")
 
 
@@ -222,6 +247,10 @@ def run(site_dir) -> int:
         for bad in ("window.print(", "alert(", "confirm(", "prompt(", "innerHTML"):
             if bad in text:
                 problems.append(f"{js.relative_to(site_dir).as_posix()}: uses {bad}")
+
+    # 7 duplicate bare class selectors across area stylesheets
+    for cls, files in css_duplicate_bare_classes():
+        problems.append(f"static/css: bare class selector .{cls} is defined in {', '.join(files)} (rules leak across areas; scope or rename one)")
 
     for n in sorted(set(notes)):
         print(f"NOTE {n}")

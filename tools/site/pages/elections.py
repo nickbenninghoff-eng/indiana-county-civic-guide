@@ -1,5 +1,6 @@
-"""Elections section: how elections work, calendar, results explorer, judges and
-public questions, and the elections-by-the-numbers landscape.
+"""Elections section: the elections hub (elections/index.html), how elections work (elections/how-it-works/), calendar,
+results explorer, judges and public questions. The elections-by-the-numbers pages (landscape overview, margins, turnout, officeholders) are
+pages/elections_numbers.py; it shares the helpers here (classify, margin, the turnout chart).
 
 Every figure comes from data/indiana/election_rules.csv, data/editions/<ed>/elections.csv,
 results.csv, offices.csv, terms.csv and the source files. Computed values (margins, turnout
@@ -12,14 +13,17 @@ import re
 from datetime import date, timedelta
 
 from civic.charts import columns, hbar, legend, results_bars
-from civic.components import (callout, data_table, filter_empty_note, table_filter, party_label, scope_badge, section, status_badge,
+from civic.components import (STATUS, callout, data_table, entity_list, filter_empty_note, see_all_table, table_filter, party_label, scope_badge, section, status_badge,
                               variant_slot)
 from civic.data import (PARTY_LABELS, SELECTED_BY_LABELS, fmt_date, fmt_int, nth_weekday_after, parse_date,
                         split_ids)
 from civic.html import Markup, h, json_script
+from civic.related import contest_anchor, contest_href
 from civic.map import load_shapes, load_votes, race_by_contest
+from civic.preselect import here_layer, here_slot
 
 YEARS = list(range(2026, 2031))
+UP_NEXT_YEARS = (2027, 2028)   # calendar rows that show the holder now and the term-limit status
 RESULTS_FROM = "2010"
 TYPE_LABEL = {"general": "general election", "primary": "primary election",
               "municipal_general": "municipal general election", "municipal_primary": "municipal primary",
@@ -114,6 +118,15 @@ def _election_name(e) -> str:
     return f"{when} {TYPE_LABEL.get(e['type'], e['type'])}"
 
 
+SHORT_TYPE = {"general": "general", "primary": "primary", "municipal_general": "municipal general",
+              "municipal_primary": "municipal primary", "special": "special"}
+
+
+def _election_short(e) -> str:
+    """'Nov 3, 2026 general': the election's date and kind in a few words (tables with many rows)."""
+    return f"{fmt_date(e['date'])} {SHORT_TYPE.get(e['type'], e['type'])}"
+
+
 def _num(v):
     try:
         return float(v) if v not in (None, "") else None
@@ -171,6 +184,36 @@ def classify(c) -> tuple[str, str, bool]:
     return "Other", place or "", False
 
 
+SCHOOL_UNITS = {"south-bend-schools": "sbcsc", "mishawaka-schools": "school-city-mishawaka",
+                "penn-harris-madison-schools": "phm", "john-glenn-schools": "john-glenn",
+                "union-north-schools": "union-north", "new-prairie-schools": "new-prairie"}
+
+
+def contest_layer(ed, c) -> str:
+    """The saved-place layer (civic/preselect.py here_layer) of the voters who decide a contest: "state" for statewide,
+    appellate and legislative contests, "county" for county-wide ones, else the city, town, township or school
+    corporation from the contest id. "" when none fits (LaVille schools: no unit in the guide's data), and then the
+    preselect never hides the contest. Added 2026-11-09 (Wave E batch 8)."""
+    group, place, _ = classify(c)
+    if place.startswith(("Statewide", "Legislative district")):
+        return "state"
+    rest = _rest(c)
+    for prefix, uid in SCHOOL_UNITS.items():
+        if rest.startswith(prefix):
+            return here_layer(ed, uid)
+    if rest.startswith(SCHOOLS):
+        return ""
+    if place == "St. Joseph County" or rest.startswith("county-"):
+        return "county"
+    m = re.match(r"([a-z]+)-township-", rest)
+    if m and f"{m.group(1)}-township" in ed.units:
+        return here_layer(ed, f"{m.group(1)}-township")
+    for uid in ("south-bend", "mishawaka") + TOWNS:
+        if rest.startswith(uid + "-"):
+            return here_layer(ed, uid)
+    return ""
+
+
 def contest_status(rows) -> str:
     st = {r["status"] for r in rows}
     for s in ("unofficial", "from_scan", "secondary", "single_source"):
@@ -201,26 +244,44 @@ def is_question(c) -> bool:
     return all(r["candidate"] in ("YES", "NO") for r in c["rows"])
 
 
+_WRITEIN_TOTAL = re.compile(r"write[- ]?ins?(?: votes?| total)?", re.I)
+
+
+def is_writein_total(row) -> bool:
+    """An unnamed "Write-in" line: the canvass's total of every write-in vote, not one candidate. A named write-in
+    candidate ("Michael Schalk (write-in)") is a candidate like any other."""
+    return bool(_WRITEIN_TOTAL.fullmatch((row.get("candidate") or "").strip()))
+
+
 def margin(c) -> dict | None:
-    """Margin in points between the last seat won and the next candidate, by votes.
-    Returns None when not computable (single candidate, missing votes, unknown seat count)."""
+    """Margin in points between the last candidate inside the seats and the next candidate, by votes.
+
+    None = uncontested: no more candidates than seats. An unnamed "Write-in" total is not a candidate, so a race with
+    one named candidate for one seat is uncontested whatever the write-in total; its votes still count in the total
+    of votes cast. Otherwise a dict: {"reason"} when the margin can't be computed (seat count not in the data, a
+    candidate's votes missing, no votes recorded), else the margin with its band. ``tie`` is True when the two
+    candidates compared have the same votes (who is "inside" is then the ballot order, not a result)."""
     cands = candidates(c)
-    if any(x["votes"] is None for x in cands):
-        return {"reason": "votes missing"} if len(cands) > 1 else None
+    named = [x for x in cands if not is_writein_total(x["row"])]
     n = int(c["vote_for"]) if (c.get("vote_for") or "").isdigit() else None
-    if n is None:
-        return {"reason": "seat count not in data"} if len(cands) > 1 else None
-    if len(cands) <= n:
+    if n is not None and len(named) <= n:
         return None  # uncontested
-    total = sum(x["votes"] for x in cands)
+    if len(named) <= 1:
+        return None  # one candidate (seat count not in the data): nobody ran against them
+    if n is None:
+        return {"reason": "seat count not in data"}
+    if any(x["votes"] is None for x in named):
+        return {"reason": "votes missing"}
+    total = sum(x["votes"] for x in cands if x["votes"] is not None)
     if not total:
-        return None
-    ranked = sorted(cands, key=lambda x: -x["votes"])
+        return {"reason": "no votes recorded"}
+    ranked = sorted(named, key=lambda x: -x["votes"])
     a, b = ranked[n - 1], ranked[n]
     pts = 100.0 * (a["votes"] - b["votes"]) / total
     band = next(bid for bid, _, lo, hi in BANDS if lo <= pts < hi)
     return {"pts": pts, "votes": a["votes"] - b["votes"], "ahead": a, "next": b, "band": band, "seats": n,
-            "low": any(x["low"] for x in cands)}
+            "low": any(x["low"] for x in cands), "tie": a["votes"] == b["votes"], "total": total,
+            "writein": len(named) < len(cands)}
 
 
 def _place_order(ed, office):
@@ -241,6 +302,20 @@ def _seats(office):
     return int(s) if s.isdigit() else None
 
 
+def plain_badge(status: str, low: bool = False) -> Markup:
+    """A status label as text, without the link and tooltip of status_badge (long lists and tables: hundreds of badge
+    links would double a page). Each section that uses it links once to the definitions (badge_key)."""
+    label = STATUS.get(status, ((status or "").upper() or "STATUS UNKNOWN",))[0]
+    b = h("span", {"class": f"badge badge-{status or 'none'}"}, label)
+    return h("span", None, b, " ", h("span", {"class": "badge badge-low"}, STATUS["low"][0])) if low else b
+
+
+def badge_key(page, extra=None) -> Markup:
+    return h("p", {"class": "muted badge-key"}, "Status labels (OFFICIAL, UNOFFICIAL, FROM SCAN, SECONDARY, LOW "
+             "CONFIDENCE and the others) are defined in ", h("a", {"href": page.rel("about/index.html#badges")},
+                                                              "About: status badges"), ".", extra)
+
+
 def _plabel(code):
     return party_label(code) if code else "Party not recorded"
 
@@ -257,6 +332,18 @@ def _holders_now(ed, office_id):
     return settled or terms
 
 
+def moved_anchors(page, moved: dict[str, str], prefixes: dict[str, str] | None = None) -> Markup:
+    """The page's #moved-anchors map for static/js/moved.js: an old id that is no longer on this page -> where it lives
+    now, given as a site-root path with the new #id ("elections/turnout/index.html#turnout-denominators"). The script
+    reads the paths relative to this page, so they are written with page.rel.
+    ``prefixes`` (added 2026-11-09, Wave D batch 6): {id prefix: site-root path}, for families of ids such as the
+    "src-<source id>" citations, forwarded with the same id when the page no longer has them."""
+    out = {"a": {k: page.rel(v) for k, v in sorted(moved.items())}}
+    if prefixes:
+        out["p"] = {k: page.rel(v) for k, v in sorted(prefixes.items())}
+    return json_script("moved-anchors", out)
+
+
 def _gaps(ed, area, extra_files=(), pattern=None):
     rows = ed.gaps(areas=[area]) if area else []
     if extra_files:
@@ -269,11 +356,150 @@ def _row_office_name(ed, c):
     return o["title"] if o else c["label"]
 
 
+# =========================================================================== 0. the elections hub
+# Wave D batch 6 (review 3.4, P8): elections/index.html is the hub of the Elections topic. The explainer that used to be
+# this page moved verbatim to elections/how-it-works/; every id it had is forwarded by static/js/moved.js (the hub's
+# #moved-anchors map: the ids below, plus every src-<id> citation by prefix). tools/tests/test_wave_d_nav.py pins the
+# list to the ids the page had before (tools/tests/fixtures/anchors_before_wave_d6.json).
+
+HOW_IT_WORKS = "elections/how-it-works/index.html"
+HOW_IT_WORKS_IDS = (
+    "offices", "offices-h", "office-cycles", "office-cycles-copy",
+    "primaries", "primaries-h", "primaries-low", "primaries-low-copy",
+    "general", "general-h", "straight-party-rules", "straight-party-rules-copy",
+    "voting", "voting-h", "county", "county-h", "election-contacts", "election-contacts-copy",
+    "vacancies", "vacancies-h", "vacancies-low", "vacancies-low-copy", "caucus-incumbents", "caucus-incumbents-copy",
+    "school-boards", "school-boards-h", "questions", "questions-h", "candidate-info", "candidate-info-h",
+    "gaps", "gaps-h",
+)
+
+# The hub's cards, in the review's order (3.4): (page, one line about what is there)
+HUB_CARDS = [
+    ("elections/calendar/index.html", "What is on the ballot each year from 2026 to 2030, the deadlines, and every seat by year."),
+    ("elections/results/index.html", "Every race by office and year, each marked official, unofficial or from scan."),
+    ("elections/landscape/index.html", "Four measures for every race and every party, looking back: turnout, how close "
+                                       "races were, the seats up next and how officeholders first took office."),
+    ("elections/margins/index.html", "How many races had no contest, and how close the others were, by level of "
+                                     "government and on a map."),
+    ("elections/turnout/index.html", "Turnout in every election with its denominator, odd and even years, and "
+                                     "straight-party ballots."),
+    ("elections/judges-and-questions/index.html", "Judicial retention votes and the public questions on the county's "
+                                                  "ballots, with their wording and results."),
+    (HOW_IT_WORKS, "Offices and cycles, primaries and getting on the ballot, how to vote and ID, vacancies and "
+                   "caucuses, school-board labels."),
+    ("run/index.html", "Eligibility, filing, petitions, caucuses and campaign-finance duties, with a page for each of "
+                       "six local offices."),
+]
+
+
+def _hub_next(page, ed):
+    """(year, line) for the next election in the county: the earliest next_election year of any office (civic/layers.py
+    rules), with the dates computed from the state calendar rule."""
+    from civic.layers import build_layers, election_dates
+    layers = [L for L in build_layers(ed)["layers"].values() if not L.placeholder]
+    years = sorted({y for L in layers for y in L.next})
+    if not years:
+        return None, None
+    y = years[0]
+    d = election_dates(ed, [y])[y]
+    govs = [L.title for L in layers if y in L.next]
+    offs = [o for L in layers if y in L.next for o in L.offices if o.get("next_election") == y]
+    rp, rg = ed.rules.get("primary_date", {}), ed.rules.get("general_election_date", {})
+    line = h("p", {"class": "ehub-next-body"},
+             h("strong", {"class": "fig"}, y), " ",
+             f"Primary {fmt_date(d['primary'])} · General {fmt_date(d['general'])}",
+             page.cites.cite(_src(rp, rg)), " ",
+             status_badge("computed", page, "Dates computed from the state calendar rule (first Tuesday after the first "
+                                            "Monday)."))
+    who = h("p", {"class": "ehub-next-who"}, "Governments with seats on that ballot: ", ", ".join(govs), ".",
+            page.cites.cite_compact(_src(*offs)) if offs else None)
+    return y, [line, who]
+
+
+def build_hub(site):
+    from pages.elections_numbers import _contested, _counts, margin_races   # elections_numbers imports this module
+    ed = site.ed
+    page = site.page("elections/index.html", banners=True)
+    cites = page.cites
+    els = _elections(ed)
+    span = f"{els[0]['date'][:4]} to {els[-1]['date'][:4]}"
+    computed = lambda why: status_badge("computed", page, why)
+
+    # one live fact per card, each with its source
+    facts: dict[str, Markup] = {}
+    ny, next_lines = _hub_next(page, ed)
+    if ny:
+        facts["elections/calendar/index.html"] = h("span", None, f"Next election: {ny}. ", "The seats are listed by year.")
+    latest = els[-1]
+    in_explorer = [c for c in ed.contests.values() if c["election_id"] in {e["election_id"] for e in els}]
+    facts["elections/results/index.html"] = h(
+        "span", None, f"{len(in_explorer):,} contests, {span}. Latest: {_election_name(latest)}",
+        cites.cite(latest.get("source_ids")), " ", status_badge(latest["status"], page))
+    races = margin_races(ed)
+    cnt = _counts(races)
+    facts["elections/margins/index.html"] = h(
+        "span", None, f"{cnt['unc']:,} of {len(races):,} local races had no contest; {_contested(cnt):,} were contested, "
+                      f"{cnt['under-5']:,} of them by under 5 points. ",
+        computed("Counted from results.csv vote counts and seat counts."),
+        cites.cite_compact(_src(*[r["c"]["rows"][0] for r in races])))
+    gen = [e for e in els if e["type"] == "general" and e.get("turnout_pct") and e["status"] == "official"]
+    if gen:
+        g = gen[-1]
+        facts["elections/turnout/index.html"] = h(
+            "span", None, f"{_election_name(g)}: ", h("strong", {"class": "fig"}, f"{float(g['turnout_pct']):.1f}%"),
+            " of registered voters cast a ballot", cites.cite(g.get("source_ids")), " ", status_badge(g["status"], page))
+    qs = [c for c in in_explorer if classify(c)[0] == "Public questions"]
+    ret = [c for c in in_explorer if classify(c)[0] in ("Superior Court retention", "State court retention")]
+    if qs or ret:
+        facts["elections/judges-and-questions/index.html"] = h(
+            "span", None, f"{len(qs)} public questions and {len(ret)} retention votes on the county's ballots, {span}. ",
+            computed("Counted from results.csv."), cites.cite_compact(_src(*[c["rows"][0] for c in qs + ret])))
+    run_pages = [e for e in site.entries if e.path.startswith("run/") and e.path != "run/index.html"]
+    facts["run/index.html"] = h("span", None, f"Office pages: {', '.join(e.nav.lower() for e in run_pages)}.")
+
+    page.add(_hero(page, "Elections",
+                   "Start here for elections in the county. The calendar says what is on each ballot; the results and "
+                   "the numbers look back at every race since 2010; how elections work and run for office explain the "
+                   "rules. Every page is sourced, and the results say which counts are official.",
+                   ["county", "indiana"], [("next", "Next election"), ("pages", "Election pages"),
+                                           ("sources", "Sources")]))
+    if next_lines:
+        page.add(h("section", {"class": "next-strip ehub-next", "id": "next", "aria-labelledby": "next-h"},
+                   h("h2", {"id": "next-h", "class": "next-h mono"}, "Next election in the county"),
+                   next_lines,
+                   h("p", {"class": "next-link"},
+                     h("a", {"href": page.rel("elections/calendar/index.html#next")}, "What's on your next ballot"))))
+    cards = []
+    for path, what in HUB_CARDS:
+        e = site.by_path[path]
+        cards.append(h("article", {"class": "card ehub-card", "id": "card-" + path.split("/")[-2]},
+                       h("h3", {"class": "card-title"}, h("a", {"href": page.rel(path)}, e.nav)),
+                       h("p", None, what),
+                       h("p", {"class": "ehub-fact"}, facts[path]) if path in facts else None))
+    page.add(section("pages", None, "Election pages", h("div", {"class": "card-grid ehub-grid"}, cards),
+                     h("p", None, "Learning path: ",
+                       h("a", {"href": page.rel(PATHS_FIRST["vote-smarter"])}, "Vote smarter"), ". ",
+                       "Another path, ", h("a", {"href": page.rel(PATHS_FIRST["elections-by-the-numbers"])},
+                                           "Elections by the numbers"), ", goes through the measures one at a time.")))
+    page.add(moved_anchors(page, {i: f"{HOW_IT_WORKS}#{i}" for i in HOW_IT_WORKS_IDS}, prefixes={"src-": HOW_IT_WORKS}))
+    page.finish()
+    return page
+
+
+def _paths_first() -> dict:
+    from civic.sitemap import PATHS
+    return {p["id"]: f"{p['stops'][0]['page']}#path-{p['id']}-1" for p in PATHS}
+
+
+PATHS_FIRST = _paths_first()
+
+
 # =========================================================================== 1. how elections work
 
-def build_index(site):
+def build_how_it_works(site):
+    """The explainer (moved verbatim from elections/index.html in Wave D batch 6; same section ids)."""
     ed = site.ed
-    page = site.page("elections/index.html", banners=False)
+    page = site.page(HOW_IT_WORKS, banners=False)
     cites = page.cites
     R = ed.rules
     toc = [("offices", "Which offices, which years"), ("primaries", "Primaries and the ballot"),
@@ -281,7 +507,7 @@ def build_index(site):
            ("county", "Voting in the county"), ("vacancies", "Vacancies and caucuses"),
            ("school-boards", "School-board party labels"), ("questions", "No citizen initiative"),
            ("candidate-info", "Where to find candidate information"), ("gaps", "Gaps"), ("sources", "Sources")]
-    page.add(_hero(page, "Reference · Elections",
+    page.add(_hero(page, "Elections",
                    "The rules on this page come from Indiana law and apply in every county. The St. Joseph County "
                    "section adds the county's own offices and contacts.", ["indiana", "county"], toc))
 
@@ -339,7 +565,7 @@ def build_index(site):
                                 st_rows, caption="Straight-party rule by period", min_width="40rem"),
                      h("p", {"class": "muted"}, "The low-confidence row is kept for completeness; it is why the guide shows "
                                                 "straight-party shares only for years whose rule is sourced (",
-                       h("a", {"href": page.rel("elections/landscape/index.html#straight-party")}, "Elections by the numbers"), ")."),
+                       h("a", {"href": page.rel("elections/turnout/index.html#straight-party")}, "Turnout and how ballots were cast"), ")."),
                      scope="indiana", ed=ed))
 
     # ---- voting
@@ -413,7 +639,7 @@ def build_index(site):
                                   f"Of the {n_all} current holders of elected offices in the guide's data on "
                                   f"{fmt_date(ed.as_of, long=True)}, {n_cau} first took that office through a party caucus and "
                                   f"{n_app} by appointment. ", status_badge("computed", page, "Counted from terms.csv first_selected_by."),
-                       " ", h("a", {"href": page.rel("elections/landscape/index.html#how-took-office")}, "How every incumbent took office")),
+                       " ", h("a", {"href": page.rel("officeholders/index.html#every")}, "How every incumbent took office")),
                      data_table("caucus-incumbents", ["Office", "Holder", "Party", "First took office by", "Since",
                                                       "Current term by", "Status"], vac_rows,
                                 caption="Current officeholders who first took office by caucus or appointment",
@@ -597,7 +823,8 @@ def build_calendar(site):
                        h("h3", {"class": "elx-yr"}, str(y)),
                        h("ul", {"class": "elx-when"}, when, cites.cite(src) if src else None, " ", badge) if when else None,
                        note,
-                       h("ul", {"class": "elx-lvls"}, lines) if lines else None))
+                       h("ul", {"class": "elx-lvls"}, lines) if lines else None,
+                       h("p", {"class": "elx-yr-note"}, h("a", {"href": f"#year-{y}"}, f"Every seat in {y}")) if items[y] else None))
     page.add(section("strip", 1, "Year by year, 2026 to 2030",
                      h("div", {"class": "elx-strip"}, cards),
                      h("p", None, "Seat counts are ", status_badge("computed", page, "From offices.csv next_election and term_years."),
@@ -634,7 +861,7 @@ def build_calendar(site):
                                   f"Everyone in the county votes then, including on {len(county_28)} county offices.",
                        " ", status_badge("computed", page, "Dates from the statutory rule."), cites.cite(src28)),
                      h("p", {"class": "muted"}, "Which district seats you vote for depends on your address. ",
-                       h("a", {"href": page.rel("your-governments/index.html")}, "Find your governments")),
+                       h("a", {"href": page.rel("your-governments/index.html")}, "Your place")),
                      scope="county", ed=ed))
 
     # ---- deadlines
@@ -678,7 +905,7 @@ def build_calendar(site):
                           ed.units.get(o["unit_id"], {}).get("name", "") if o else "Indiana",
                           it["label"], str(it["seats"]) if it["seats"] else "not in data",
                           f"{o['term_years']} years" if o and o.get("term_years") else "",
-                          h("span", None, status_badge(it["status"], page), cites.cite_compact(it["src"]))])
+                          h("span", None, plain_badge(it["status"]), cites.cite_compact(it["src"]))])
     check = _check_2026(ed, items)
     def why(o):
         parts = re.split(r"(?<=[.;])\s+", o.get("notes", ""))
@@ -691,18 +918,38 @@ def build_calendar(site):
     for a, it in zip(tattrs, [it for y in YEARS for it in items[y]]):
         o = it["office"]
         t_govs[a["data-tf-government"]] = _place_order(ed, o) if o else (99, "")
+    controls = lambda: [{"key": "year", "label": "Year", "all": "All years", "options": _opts([str(y) for y in YEARS])},
+                        {"key": "level", "label": "Level", "all": "All levels", "options": _opts(t_levels)},
+                        {"key": "government", "label": "Government", "all": "All governments",
+                         "options": _opts(sorted(t_govs, key=lambda g: (t_govs[g], g)))}]
+    years_list, n_seat_rows = _year_lists(page, ed, items, tattrs)
+    urows, uattrs, uoffices = _up_next_rows(page, ed, items)
     page.add(section("by-year", 4, "Every seat, by year",
-                     table_filter("calendar-table",
-                                  [{"key": "year", "label": "Year", "all": "All years", "options": _opts([str(y) for y in YEARS])},
-                                   {"key": "level", "label": "Level", "all": "All levels", "options": _opts(t_levels)},
-                                   {"key": "government", "label": "Government", "all": "All governments",
-                                    "options": _opts(sorted(t_govs, key=lambda g: (t_govs[g], g)))}],
-                                  len(trows), noun="seat", search="Words in the office name",
-                                  label="Filter the every-seat table"),
-                     data_table("calendar-table", ["Year", "Level", "Government", "Office", "Seats", "Term", "Status"], trows,
-                                caption="Offices on the ballot, 2026 to 2030 (computed)", numeric=(0, 4), min_width="46rem",
-                                row_attrs=tattrs),
-                     filter_empty_note("calendar-table"),
+                     h("p", None, "Each year lists its seats by government. Open a government to see its seats. For the next "
+                                  "two regular ballots, 2027 and 2028, each seat also shows the person holding it now, how "
+                                  "they first took the office, and the term-limit rule for the office (see How this is "
+                                  "computed). Announced retirements and declared candidates are not collected."),
+                     h("nav", {"class": "cal-jump", "aria-label": "Jump to a year"},
+                       h("ul", None, [h("li", None, h("a", {"href": f"#year-{y}"}, str(y))) for y in YEARS])),
+                     badge_key(page),
+                     table_filter("cal-years", controls(), n_seat_rows, noun="seat",
+                                  search="Words in the office or a holder's name", label="Filter the seats in every year"),
+                     here_slot("filter", "cal-years", extra={"data-here-noun": "seats"}),
+                     filter_empty_note("cal-years"),
+                     years_list,
+                     see_all_table("up-next-table", ["Year", "Seat", "Holder now", "Party", "In office since",
+                                                     "First took office by", "Term-limit status", "Status"], urows,
+                                   noun="seat", caption="Seats on the 2027 and 2028 ballots", min_width="60rem",
+                                   row_attrs=uattrs,
+                                   controls=[{"key": "year", "label": "Year", "all": "Both years",
+                                              "options": [("2027", "2027"), ("2028", "2028")]}] + _unit_controls(ed, uoffices),
+                                   search="Seat or holder name", filter_label="Filter the up-next table",
+                                   summary=f"Up next: the {len(urows)} seats on the 2027 and 2028 ballots, with who holds them, as a table"),
+                     see_all_table("calendar-table", ["Year", "Level", "Government", "Office", "Seats", "Term", "Status"], trows,
+                                   noun="seat", caption="Offices on the ballot, 2026 to 2030 (computed)", numeric=(0, 4),
+                                   min_width="46rem", row_attrs=tattrs, controls=controls(),
+                                   search="Words in the office name", filter_label="Filter the every-seat table",
+                                   summary=f"Every year: all {len(trows)} seats, 2026 to 2030, as a table"),
                      h("h3", None, "Elected offices without a computed year"),
                      h("p", None, "These offices have no next-election year or term length in the guide's data, so they are "
                                   "not placed on the calendar. Superior Court judges face yes-or-no retention votes instead of "
@@ -715,9 +962,152 @@ def build_calendar(site):
                      h("p", None, "An office is placed in a year when the year is its recorded next election, or differs from it "
                                   "by a whole number of terms. Example: an office with a next election of 2030 and a four-year "
                                   "term was also on the 2026 ballot."),
-                     h("p", None, check, " ", status_badge("computed", page))))
-    page.finish(gaps=_gaps(ed, "elections-calendar"))
+                     h("p", None, check, " ", status_badge("computed", page)),
+                     h("h3", {"id": "term-limits"}, "Holders and term limits for 2027 and 2028"),
+                     h("p", None, "The holder shown for a seat is the person holding it on the guide's as-of date, "
+                                  f"{fmt_date(ed.as_of, long=True)}, from the terms data."),
+                     _rule_p(page, ed, "county_row_office_term_limits", detail=True),
+                     h("p", {"class": "muted"}, "Term-limit status is computed only for the six offices on the 8-in-12 list, "
+                                                "from the guide's terms data; service chosen by caucus to fill a vacancy is not "
+                                                "counted, as the rule says. Listed by year and office, never by party.")))
+    page.finish(gaps=_gaps(ed, "elections-calendar")
+                + [g for g in _gaps(ed, "elections-landscape") if re.search(r"retirement|declared", g.get("item", ""), re.I)])
     return page
+
+
+def _seat_holder_rows(page, ed, o, y) -> list[dict]:
+    """The holders of office ``o`` now, with the term-limit status for the seat's election in year ``y``
+    (the former Up next table on elections/landscape/). [] when the guide's data has no current holder."""
+    out = []
+    for t in _holders_now(ed, o["office_id"]):
+        tl = _term_limit(ed, o, t, y)
+        out.append({"t": t, "limit": tl[0], "limit_note": tl[1]})
+    return out
+
+
+def _holder_badges(page, t):
+    return h("span", None, plain_badge(t["status"], t.get("confidence") == "low"), page.cites.cite_compact(t["source_ids"]))
+
+
+def first_by_text(t) -> str:
+    k = t.get("first_selected_by") or ""
+    if k in ("election", "caucus", "appointment"):
+        return f"first took office by {SELECTED_BY_LABELS[k]}"
+    return "how they first took office is not stated in sources"
+
+
+def _up_next_rows(page, ed, items):
+    """Rows of the up-next table (moved from elections/landscape/ #up-next-table, every column kept)."""
+    cites = page.cites
+    urows, uattrs, uoffices = [], [], []
+    for y in UP_NEXT_YEARS:
+        for it in items[y]:
+            o = it["office"]
+            if not o:
+                continue
+            holders = _seat_holder_rows(page, ed, o, y)
+            ot = ed.office_type_row(o) or {}
+            if not holders:
+                urows.append([str(y), o["title"], "No current officeholder in the guide's data", "", "", "",
+                              ot.get("term_limit") or "Not in the guide's data", h("span", None, cites.cite(o["source_ids"]))])
+                uattrs.append({**_unit_attrs(ed, o), "data-tf-year": str(y), "data-tf-text": o["title"]})
+                uoffices.append(o)
+                continue
+            for x in holders:
+                t = x["t"]
+                uattrs.append({**_unit_attrs(ed, o), "data-tf-year": str(y), "data-tf-text": f"{o['title']} {t['person']}"})
+                uoffices.append(o)
+                urows.append([str(y), o["title"], t["person"], _plabel(t.get("party")), fmt_date(t["start"]) or "not in sources",
+                              SELECTED_BY_LABELS.get(t.get("first_selected_by", ""), t.get("first_selected_by")),
+                              h("span", None, x["limit"], " ",
+                                status_badge("computed", None, x["limit_note"]) if x["limit_note"] else None),
+                              _holder_badges(page, t)])
+    return urows, uattrs, uoffices
+
+
+def _year_lists(page, ed, items, tattrs):
+    """§4 of the calendar: one section per year (#year-<y>), seats grouped by government in folds that ship open
+    (static/js/folds.js closes them), each seat one row; 2027 and 2028 rows add the holder now. The filter bar
+    (table_filter "cal-years", tablefilter.js deep mode) filters the seat rows across every year and government."""
+    cites = page.cites
+    attrs_by = iter(tattrs)
+    secs, n_rows = [], 0
+    for y in YEARS:
+        p, g, how, src = _dates(ed, y)
+        groups: dict[str, dict] = {}
+        known = 0
+        for it in items[y]:
+            a = next(attrs_by)
+            o = it["office"]
+            gov = a["data-tf-government"]
+            grp = groups.setdefault(gov, {"order": _place_order(ed, o) if o else (99, ""), "rows": [], "seats": 0})
+            seats = it["seats"]
+            if o:
+                known += seats or 0   # local seats; the statewide and federal lines are listed under Indiana
+            grp["seats"] += seats or 0
+            meta = [f"{seats} seats" if seats and seats > 1 else ("1 seat" if seats else "seat count not in data")]
+            if o and o.get("term_years"):
+                meta.append(f"{o['term_years']}-year term")
+            holder_ul, words = None, [it["label"]]
+            if o and y in UP_NEXT_YEARS:
+                hs = _seat_holder_rows(page, ed, o, y)
+                lis = []
+                for x in hs:
+                    t = x["t"]
+                    words.append(t["person"])
+                    lis.append(h("li", None, h("span", {"class": "cal-now"}, "Now: "), t["person"],
+                                 f" · {_plabel(t.get('party'))}",
+                                 f" · since {fmt_date(t['start'])}" if t.get("start") else " · start not in sources",
+                                 f" · {first_by_text(t)}",
+                                 h("span", {"class": "cal-limit"}, " · Term limit: ", x["limit"], " ",
+                                   status_badge("computed", None, x["limit_note"]) if x["limit_note"] else None),
+                                 " ", _holder_badges(page, t)))
+                if not hs:
+                    lis.append(h("li", {"class": "muted"}, "No current officeholder in the guide's data."))
+                holder_ul = h("ul", {"class": "cal-holders"}, lis)
+            row_attrs = {k: v for k, v in a.items() if k != "data-tf-text"}
+            row_attrs.update({"class": "cal-seat", "data-tf-row": True, "data-tf-text": " ".join(words),
+                              # saved-place preselect (static/js/preselect.js): statewide and federal lines are "state"
+                              "data-here-layer": here_layer(ed, o["unit_id"]) if o else "state"})
+            grp["rows"].append(h("li", row_attrs,
+                                 h("p", {"class": "cal-seat-h"}, h("span", {"class": "cal-office"}, it["label"]),
+                                   h("span", {"class": "cal-meta"}, " · " + " · ".join(meta)), " ",
+                                   plain_badge(it["status"]), cites.cite_compact(it["src"])),
+                                 holder_ul))
+            n_rows += 1
+        folds = []
+        for gov in sorted(groups, key=lambda k: (groups[k]["order"], k)):
+            grp = groups[gov]
+            n = len(grp["rows"])
+            digest = f"{grp['seats']} seat{'s' if grp['seats'] != 1 else ''}" if grp["seats"] else f"{n} office{'s' if n != 1 else ''}"
+            folds.append(h("details", {"class": "fold-details cal-gov", "data-fold": "cal", "data-tf-group": True, "open": True},
+                           h("summary", {"class": "fold-summary cal-gov-sum"},
+                             h("h4", {"class": "cal-gov-h"}, gov), h("span", {"class": "cal-gov-n"}, digest),
+                             h("span", {"class": "fold-toggle", "aria-hidden": "true"})),
+                           h("ul", {"class": "cal-seats"}, grp["rows"])))
+        when = []
+        if p:
+            pre = "Municipal primary" if y % 2 else "Primary"
+            when = [f"{pre} {fmt_date(p)}", f"General {fmt_date(g)}"]
+        head = " · ".join([str(y)] + when + [f"{known} local seats" if known else "no local seats in the guide's data"])
+        note = None
+        if y == 2026:
+            note = h("p", {"class": "muted"}, "Held on Nov 3, 2026. Results are unofficial until certified. ",
+                     h("a", {"href": page.rel("elections/results/index.html")}, "Results"))
+        elif y % 2:
+            note = h("p", {"class": "muted"}, "City and town offices only." if items[y] else
+                     "No regular election for any office in the guide's data.")
+        # kept on the page while filtered (a #year-<y> link target): its note says why it is empty; the saved-place
+        # preselect (static/js/preselect.js) swaps in data-here-empty and a Show all button (Wave E batch 8 part 2)
+        why = " (that ballot has city and town offices only)" if y % 2 and items[y] else ""
+        empty = h("p", {"class": "cal-year-empty muted", "data-tf-group-empty": True, "hidden": True,
+                        "data-here-empty": f"{y}: no seats for your saved place's governments{why}."},
+                  f"{y}: no seats match the filters.")
+        secs.append(h("section", {"class": "cal-year", "id": f"year-{y}", "aria-labelledby": f"year-{y}-h",
+                                  "data-tf-group": True, "data-tf-keep": True},
+                      h("h3", {"class": "cal-year-h", "id": f"year-{y}-h"}, head),
+                      note, empty, folds or h("p", {"class": "muted"}, "No seats.")))
+    return h("div", {"class": "cal-years", "id": "cal-years", "data-tf-deep": True}, secs), n_rows
 
 
 def _check_2026(ed, items):
@@ -743,12 +1133,53 @@ def _contest_payload(ed, c):
     if any(x["computed"] for x in cands) or any("pct computed" in (r.get("notes") or "") for r in c["rows"]):
         flags.append("pctc")
     notes = "; ".join(dict.fromkeys(r["notes"] for r in c["rows"] if r.get("notes")))[:300]
+    q = is_question(c)
     return {"id": c["contest_id"], "e": c["election_id"], "l": c["label"], "g": group, "p": place,
             "o": c["office_id"], "vf": c["vote_for"], "pp": c["party_primary"], "s": st, "x": 1 if cross else 0,
-            "q": 1 if is_question(c) else 0, "f": flags, "n": notes,
+            "q": 1 if q else 0, "u": 1 if not q and margin(c) is None else 0, "f": flags, "n": notes,
             "c": [[x["name"], x["party"], x["votes"], round(x["pct"], 2) if x["pct"] is not None else None,
                    x["winner"], 1 if x["low"] else 0] for x in cands],
             "src": _src(*c["rows"])}
+
+
+def _every_contest_table(page, ed, payload_c):
+    """Every explorer contest as one table in a closed "See all" fold (components.see_all_table), each row's first cell
+    carrying id="contest-<id>" (civic/related.py contest_anchor). Links from other pages land here: with JavaScript
+    static/js/elections.js shows that one contest in the explorer instead; without it this row is the result."""
+    els = {e["election_id"]: e for e in _elections(ed)}
+    places = sorted({x["p"] for x in payload_c})
+    p_ix = {p: str(i) for i, p in enumerate(places)}
+    rows, attrs = [], []
+    for x in payload_c:
+        e = els[x["e"]]
+        c = ed.contests[x["id"]]
+        bits = []
+        for k in candidates(c):
+            party = "" if x["q"] else f" ({k['party'] or 'no party listed'})"
+            val = "votes not recorded" if k["pct"] is None else (
+                f"{k['votes']:,} · {k['pct']:.1f}%" if k["votes"] is not None else f"{k['pct']:.1f}%")
+            # "(unofficial)" is not repeated after "Elected": the Status cell of the same row says UNOFFICIAL
+            won = (" · " + ("Majority" if x["q"] else "Elected")) if k["winner"] == "Y" and not x["x"] else ""
+            bits.append(f"{k['name']}{party} {val}{won}")
+        # size (2026-11-09, Wave B batch 2): the short election name ("Nov 3, 2026 general") and the place filter by
+        # index keep 1,225 rows smaller; the full election name is in the explorer and on the Data pages
+        rows.append([h("span", {"id": contest_anchor(x["id"])}, x["l"]), _election_short(e), x["g"], x["p"],
+                     "; ".join(bits) + (" (county portion only)" if x["x"] else ""),
+                     STATUS.get(x["s"], (x["s"].upper(),))[0]])   # plain label: 1,200 badge tooltips would double the table
+        attrs.append({"data-tf-year": e["date"][:4], "data-tf-group": str(GROUP_ORDER.get(x["g"], len(GROUPS))),
+                      "data-tf-place": p_ix[x["p"]]})
+    years = sorted({a["data-tf-year"] for a in attrs}, reverse=True)
+    groups = [(str(i), g) for i, g in enumerate(GROUPS + ["Other"]) if any(a["data-tf-group"] == str(i) for a in attrs)]
+    return see_all_table(
+        "every-contest", ["Contest", "Election", "Office group", "Place", "Candidates in ballot order: votes, share", "Status"],
+        rows, noun="contest", caption="Every contest in the explorer", min_width="60rem", row_attrs=attrs,
+        controls=[{"key": "year", "label": "Year", "all": "All years", "options": [(y, y) for y in years]},
+                  {"key": "group", "label": "Office group", "all": "All offices", "options": groups},
+                  {"key": "place", "label": "Place", "all": "All places", "options": [(p_ix[p], p) for p in places]}],
+        search="Words in the contest or a name", filter_label="Filter every contest",
+        intro=h("p", None, "The same contests as the explorer, as one table, by year and election, then office group; "
+                           "candidates in ballot order. Status labels are defined under How to read the results. Links from other pages to one contest land "
+                           "on its row here when JavaScript is off."))
 
 
 def build_results(site):
@@ -765,21 +1196,20 @@ def build_results(site):
                    f"{len(els)} elections and {len(contests)} contests from the county's canvass files.",
                    ["county"], toc))
 
-    # ---- turnout
-    trows = []
-    for e in reversed(els):
-        trows.append([_election_name(e), e["scope"], fmt_int(e["registered"]) or "not printed",
-                      fmt_int(e["ballots_cast"]) or "not printed",
-                      f"{float(e['turnout_pct']):.2f}%" if e.get("turnout_pct") else "not printed",
-                      h("span", None, status_badge(e["status"], page), cites.cite(e["source_ids"]))])
+    # ---- turnout: one chart and a link; every election's turnout with its denominator is on elections/turnout/
+    # (the table that was here, #turnout-table, moved there as #turnout-denominators; static/js/moved.js forwards it)
+    g_chart = _turnout_chart(page, ed, ("general", "municipal_general"), "turnout-general",
+                             "Turnout in general elections", cites.cite_compact(_src(*[e for e in els if "general" in e["type"]])))
     page.add(section("turnout", 1, "Turnout first",
                      h("p", None, "How many registered voters cast a ballot in each election. Municipal elections count only "
                                   "voters in the cities and towns that held them, so their turnout is not on the same base as "
                                   "countywide elections."),
-                     data_table("turnout-table", ["Election", "Who could vote", "Registered", "Ballots cast", "Turnout", "Status"],
-                                trows, caption="Turnout by election", numeric=(2, 3, 4), min_width="46rem"),
-                     h("p", None, h("a", {"href": page.rel("elections/landscape/index.html#turnout")},
-                                    "Turnout chart: odd-year municipal vs even-year elections")),
+                     g_chart,
+                     h("p", None, h("a", {"href": page.rel("elections/turnout/index.html#turnout-denominators-all")},
+                                    "Every election's turnout with its denominator, and primaries and special elections"),
+                       ", on ", h("a", {"href": page.rel("elections/turnout/index.html")}, "Turnout and how ballots were cast"), "."),
+                     moved_anchors(page, {"turnout-table": "elections/turnout/index.html#turnout-denominators",
+                                          "turnout-table-copy": "elections/turnout/index.html#turnout-denominators-copy"}),
                      scope="county", ed=ed))
 
     # ---- explorer
@@ -791,25 +1221,41 @@ def build_results(site):
         if x["id"] in on_map:
             x["m"] = on_map[x["id"]]
     payload_c.sort(key=lambda x: (x["e"], GROUP_ORDER.get(x["g"], 99), x["p"], x["l"]))
+    every = _every_contest_table(page, ed, payload_c)   # #contest-<id> rows (P10 deep links; the no-JavaScript view)
     src_ids = sorted({s for x in payload_c for s in split_ids(x["src"])})
     num = {sid: i for i, sid in enumerate(src_ids)}
     # compact: repeated strings (notes, groups, places) become indexes into lookup lists
     notes = sorted({x["n"] for x in payload_c if x["n"]})
     places = sorted({x["p"] for x in payload_c})
+    # saved-place preselect (static/js/elections.js): the layer of each place, "" when its contests mix layers
+    p_layers: dict[str, set] = {}
+    for x in payload_c:
+        p_layers.setdefault(x["p"], set()).add(contest_layer(ed, ed.contests[x["id"]]))
+    place_layers = [next(iter(p_layers[p])) if len(p_layers[p]) == 1 else "" for p in places]
     n_ix, p_ix = {n: i for i, n in enumerate(notes)}, {p: i for i, p in enumerate(places)}
     for x in payload_c:
         x["src"] = [num[s] for s in split_ids(x["src"])]
         x["g"] = GROUP_ORDER.get(x["g"], len(GROUPS))
         x["p"] = p_ix[x["p"]]
-        for k in ("id", "o"):
-            del x[k]
+        del x["o"]
+        # the contest id is "<election id>-<rest>": only the rest ("i") is shipped, elections.js rebuilds the id
+        # (static/js/elections.js opens the explorer on #contest-<id>)
+        cid = x.pop("id")
+        x["i"] = cid[len(x["e"]) + 1:] if cid.startswith(x["e"] + "-") else cid
+        if x["i"] == cid:
+            x["fi"] = 1   # full id shipped (does not start with its election id)
+        # the most common values are left out; elections.js fills them in ("official", vote for 1)
+        if x["s"] == "official":
+            del x["s"]
+        if x["vf"] == "1":
+            del x["vf"]
         if x["n"]:
             x["n"] = n_ix[x["n"]]
         else:
             del x["n"]
         if not x["f"]:
             del x["f"]
-        for k in ("pp", "x", "q"):
+        for k in ("pp", "x", "q", "u"):
             if not x[k]:
                 del x[k]
     # register every source so the per-page list carries them; the explorer links to these anchors
@@ -818,7 +1264,7 @@ def build_results(site):
         "elections": [{"id": e["election_id"], "name": _election_name(e), "y": e["date"][:4], "t": e["type"],
                        "s": e["status"], "reg": e["registered"], "bal": e["ballots_cast"], "to": e["turnout_pct"]}
                       for e in els],
-        "groups": GROUPS + ["Other"], "places": places, "notes": notes, "contests": payload_c, "parties": PARTY_LABELS,
+        "groups": GROUPS + ["Other"], "places": places, "pl": place_layers, "notes": notes, "contests": payload_c, "parties": PARTY_LABELS,
         "src": [{"id": s, "t": (ed.source(s) or {}).get("title", s)} for s in src_ids],
         "links": {"legislature": page.rel("state/your-legislators/index.html"), "state": page.rel("state/index.html"),
                   "about": page.rel("about/index.html#badges"),
@@ -838,13 +1284,16 @@ def build_results(site):
                      h("p", None, "Pick a year, an election, a group of offices or a place. Candidates appear in ballot order. "
                                   "Every bar uses the same 0 to 100% scale."),
                      picker,
+                     here_slot("explorer", "elx-place"),
                      h("div", {"id": "elx-results", "class": "elx-results", "data-root": page.rel("index.html")},
-                       h("noscript", None, h("p", None, "The explorer needs JavaScript. The county canvass files it is built from are "
+                       h("noscript", None, h("p", None, "The explorer needs JavaScript. Every contest is also in the table "
+                                                        "below. The county canvass files it is built from are "
                                                         "listed under Sources below, and the guide's tables are on ",
                                                         h("a", {"href": page.rel("data/index.html")}, "Data and sources"), "."))),
                      h("p", {"class": "elx-more-wrap"}, h("button", {"type": "button", "class": "btn", "id": "elx-more", "hidden": True},
                                                           "Show more contests")),
                      json_script("elx-data", payload),
+                     every,
                      scope="county", ed=ed))
 
     # ---- how to read
@@ -879,13 +1328,61 @@ def build_results(site):
 
 # =========================================================================== 4. judges and questions
 
+def _retention_row(page, ed, c, y, n, who):
+    """One retention vote as table cells: year, who, yes, no, yes share, status, link to the full result."""
+    tot = y["votes"] + n["votes"]
+    share = 100.0 * y["votes"] / tot
+    st = contest_status(c["rows"])
+    low = y["low"] or n["low"]
+    href = contest_href(page, c["contest_id"])
+    return share, low, st, [ed.elections[c["election_id"]]["date"][:4], who, fmt_int(y["votes"]), fmt_int(n["votes"]),
+                            f"{share:.1f}%",
+                            h("span", None, status_badge(st, page), (" ", status_badge("low", page)) if low else None,
+                              page.cites.cite(_src(*c["rows"]))),
+                            h("a", {"href": href}, "Full result") if href else h("span", {"class": "muted"}, "Not in explorer")]
+
+
+# short titles for questions whose label does not say what was asked; each comes from the wording quoted on the page
+QUESTION_TITLES = {
+    "2026g-county-public-question-1": "Bail for offenses other than murder or treason",
+    "2026g-county-public-question-2": "Where a city or town court judge may live",
+    "2024g-county-public-question-1": "State superintendent and the governor's line of succession",
+}
+_Q_PLACE = re.compile(r"^(?:Mishawaka|New Prairie schools|South Bend Community Schools|School City of Mishawaka): ")
+_Q_NUM = re.compile(r"^Public [Qq]uestion #\d+: ")
+_Q_NOTE = re.compile(r"\s*[(](?:wording|text|header) [^)]*[)]\s*$")
+
+
+def _question_title(c):
+    if c["contest_id"] in QUESTION_TITLES:
+        return QUESTION_TITLES[c["contest_id"]]
+    t = _Q_NOTE.sub("", _Q_NUM.sub("", _Q_PLACE.sub("", c["label"]))).strip()
+    return t[:1].upper() + t[1:]
+
+
+def _question_outcome(cands, cross, unoff):
+    """Outcome in words from the printed result: a local question passed or failed; a statewide one shows how the county voted."""
+    y = next((x for x in cands if x["name"].upper() == "YES"), None)
+    n = next((x for x in cands if x["name"].upper() == "NO"), None)
+    if not (y and n and y["votes"] is not None and n["votes"] is not None):
+        return "Result not in the data"
+    if y["votes"] == n["votes"]:
+        return "Tied in the county"
+    lead = "yes" if y["votes"] > n["votes"] else "no"
+    if cross:
+        return f"County voted {lead}" + (" (unofficial)" if unoff else "")
+    if unoff:
+        return f"Unofficial: {lead} ahead"
+    return "Passed" if lead == "yes" else "Failed"
+
+
 def build_judges(site):
     ed = site.ed
     page = site.page("elections/judges-and-questions/index.html", banners=True)
     cites = page.cites
-    toc = [("retention", "Judicial retention votes"), ("state-retention", "State court retention"),
-           ("questions", "Public questions"), ("school-labels", "School-board party labels"), ("gaps", "Gaps"),
-           ("sources", "Sources")]
+    toc = [("how", "How retention and questions work"), ("retention", "Judicial retention votes"),
+           ("state-retention", "State court retention"), ("questions", "Public questions"),
+           ("school-labels", "School-board party labels"), ("gaps", "Gaps"), ("sources", "Sources")]
     page.add(_hero(page, "Reference · Elections · Judges and questions",
                    "The yes-or-no lines at the end of the ballot: whether judges keep their seats, and public questions.",
                    ["indiana", "exception", "county"], toc))
@@ -905,6 +1402,15 @@ def build_judges(site):
                               h("p", None, "How a seat is filled: ", sup_type.get("vacancy_rule", ""),
                                 cites.cite(sup_type.get("source_ids"))) if sup_type.get("vacancy_rule") else None)},
         page, merit.get("source_ids"))
+    page.add(section("how", 1, "How retention and questions work",
+                     h("h3", None, "How Superior Court judges are chosen and kept"), supv,
+                     h("h3", None, "How questions get on the ballot"),
+                     _rule_p(page, ed, "no_citizen_initiative", detail=True),
+                     _rule_p(page, ed, "school_and_local_referendums", detail=True),
+                     h("p", {"class": "muted"}, "The petition and threshold rules for local questions were not collected "
+                                                "(see Gaps). A judge's retention vote and a public question are both a plain "
+                                                "yes or no, and neither has a party."),
+                     scope="indiana", ed=ed))
 
     sup = [c for c in ed.contests.values() if classify(c)[0] == "Superior Court retention"]
     sup.sort(key=lambda c: (ed.elections[c["election_id"]]["date"], c["label"]))
@@ -914,35 +1420,29 @@ def build_judges(site):
         y, n = cands.get("YES"), cands.get("NO")
         if not (y and n and y["votes"] is not None and n["votes"] is not None):
             continue
-        tot = y["votes"] + n["votes"]
-        share = 100.0 * y["votes"] / tot
-        st = contest_status(c["rows"])
-        low = y["low"] or n["low"]
         yr = ed.elections[c["election_id"]]["date"][:4]
         who = c["label"].replace("Superior Court retention", "").strip(" :") or "judge not named"
         who = re.sub(r"^\(|\)$", "", who)
         if "names not captured" in who:
             who = "judge names not captured"
+        share, low, st, row = _retention_row(page, ed, c, y, n, who)
         if not low:
             bar_rows.append({"label": f"{yr} · {who[:34]}", "value": share, "display": f"{share:.1f}% yes",
                              "tip": f"{yr} {who}: {y['votes']:,} yes, {n['votes']:,} no ({st})"})
-        trows.append([yr, who, fmt_int(y["votes"]), fmt_int(n["votes"]), f"{share:.1f}%",
-                      h("span", None, status_badge(st, page), (" ", status_badge("low", page)) if low else None,
-                        cites.cite(_src(*c["rows"])))])
+        trows.append(row)
     fig = hbar("retention-yes", "Yes share in Superior Court retention votes", bar_rows,
                subtitle=f"Every retention vote in the guide's data, {trows[0][0]} to {trows[-1][0]}" if trows else None,
                note="Yes votes as a share of yes plus no votes. 2012 figures are labelled unofficial in the source; the 2012 "
                     "Manier line is from a scan. Low-confidence lines are left out of the chart and kept in the table.",
                page=page, headers=["Vote", "Yes share"], status="computed") if bar_rows else None
-    page.add(section("retention", 1, "Judicial retention votes",
-                     h("h3", None, "How Superior Court judges are chosen and kept"), supv,
-                     h("h3", None, "Superior Court retention results"),
+    page.add(section("retention", 2, "Judicial retention votes",
                      h("p", None, f"{len(trows)} Superior Court retention votes appear on the county's ballots in the guide's "
                                   f"data. In every one, a majority voted yes.", " ",
                        status_badge("computed", page, "Counted from results.csv.")) if trows and all(float(r[4][:-1]) > 50 for r in trows) else None,
                      fig,
-                     data_table("retention-table", ["Year", "Judge", "Yes", "No", "Yes share", "Status"], trows,
-                                caption="Superior Court retention votes", numeric=(2, 3, 4), min_width="36rem"),
+                     see_all_table("retention-table", ["Year", "Judge", "Yes", "No", "Yes share", "Status", "Result"], trows,
+                                   noun="vote", caption="Superior Court retention votes", numeric=(2, 3, 4), min_width="40rem",
+                                   summary=f"See all {len(trows)} retention votes"),
                      scope="county", ed=ed))
 
     # ---- state retention
@@ -953,20 +1453,24 @@ def build_judges(site):
         cands = {x["name"].upper(): x for x in candidates(c)}
         y, n = cands.get("YES"), cands.get("NO")
         share = (100.0 * y["votes"] / (y["votes"] + n["votes"])) if y and n and y["votes"] and n["votes"] is not None else None
+        href = contest_href(page, c["contest_id"])
         srows.append([ed.elections[c["election_id"]]["date"][:4], c["label"].replace("Retention: ", ""),
                       fmt_int(y["votes"]) if y else "", fmt_int(n["votes"]) if n else "",
                       f"{share:.1f}%" if share is not None else "",
-                      h("span", None, status_badge(contest_status(c["rows"]), page), cites.cite(_src(*c["rows"])))])
+                      h("span", None, status_badge(contest_status(c["rows"]), page), cites.cite(_src(*c["rows"]))),
+                      h("a", {"href": href}, "Full result") if href else h("span", {"class": "muted"}, "Not in explorer")])
     rl = ed.rules.get("retain_justice_labels", {})
-    page.add(section("state-retention", 2, "Retention votes for state courts (county portion only)",
+    page.add(section("state-retention", 3, "Retention votes for state courts (county portion only)",
                      h("p", None, rl.get("plain_language", ""), " ", rl.get("detail", ""), cites.cite(rl.get("source_ids")), " ",
                        status_badge(rl.get("status", ""), page)),
                      h("p", None, "These votes are decided statewide or across an appellate district, so the county tally below "
                                   "does not show who was retained. Names and courts are as printed on the canvass. ",
                        h("a", {"href": page.rel("state/index.html")}, "State government")),
-                     data_table("state-retention-table", ["Year", "Ballot line", "Yes", "No", "Yes share (county)", "Status"],
-                                srows, caption="State court retention, St. Joseph County tally", numeric=(2, 3, 4),
-                                min_width="40rem"),
+                     see_all_table("state-retention-table",
+                                   ["Year", "Ballot line", "Yes", "No", "Yes share (county)", "Status", "Result"],
+                                   srows, noun="vote", caption="State court retention, St. Joseph County tally",
+                                   numeric=(2, 3, 4), min_width="44rem",
+                                   summary=f"See all {len(srows)} state court retention votes"),
                      scope="indiana", ed=ed))
 
     # ---- public questions
@@ -997,41 +1501,79 @@ def build_judges(site):
     }
     qs = [c for c in ed.contests.values() if classify(c)[0] == "Public questions"]
     qs.sort(key=lambda c: (ed.elections[c["election_id"]]["date"], c["label"]), reverse=True)
-    qblocks = []
+    groups: dict[str, list] = {}
     for c in qs:
-        e = ed.elections[c["election_id"]]
-        cross = classify(c)[2]
-        w = wording.get(c["contest_id"])
-        st = contest_status(c["rows"])
-        fig = _question_fig(page, c)
-        if w:
-            words = h("blockquote", {"class": "elx-wording"}, h("p", None, w[0]),
-                      h("footer", None, status_badge(w[3], page), " ", w[2], cites.cite(w[1])))
-        else:
-            words = h("p", {"class": "elx-gapline"}, h("span", {"class": "mono"}, "GAP · "),
-                      "The wording of this question is not in the guide's data.")
-        qblocks.append(h("article", {"class": "elx-question", "id": f"q-{c['contest_id']}"},
-                         h("h3", None, f"{_election_name(e)}: "
-                                       f"{re.sub(r' *[(](wording|text) not [^)]*[)]', '', c['label']) if w else c['label']}"),
-                         h("p", {"class": "elx-tags"}, status_badge(st, page), " ",
+        groups.setdefault(classify(c)[1], []).append(c)
+    blocks = []
+    for gi, jur in enumerate(sorted(groups, key=lambda g: (g != "Statewide", g.lower()))):
+        items = []
+        for c in groups[jur]:
+            e = ed.elections[c["election_id"]]
+            cross = classify(c)[2]
+            w = wording.get(c["contest_id"])
+            st = contest_status(c["rows"])
+            unoff = st == "unofficial"
+            cands = candidates(c)
+            yes = next((x for x in cands if x["name"].upper() == "YES"), None)
+            no = next((x for x in cands if x["name"].upper() == "NO"), None)
+            key_num = (f"Yes {yes['pct']:.1f}% · No {no['pct']:.1f}%" if yes and no and yes["pct"] is not None
+                       and no["pct"] is not None else None)
+            if w:
+                words = h("blockquote", {"class": "elx-wording"}, h("p", None, w[0]),
+                          h("footer", None, status_badge(w[3], page), " ", w[2], cites.cite(w[1])))
+            else:
+                words = h("p", {"class": "elx-gapline"}, h("span", {"class": "mono"}, "GAP · "),
+                          "The wording of this question is not in the guide's data.")
+            href = contest_href(page, c["contest_id"])
+            title = _question_title(c)
+            items.append({
+                "key": c["contest_id"], "name": title, "item_id": f"q-{c['contest_id']}",
+                "facts": [e["date"][:4], _question_outcome(cands, cross, unoff), key_num], "status": st,
+                "search": f"{jur} {c['label']} {_election_name(e)}",
+                "body": [h("p", {"class": "elx-tags"}, status_badge(st, page), " ",
                            h("span", {"class": "elx-xc mono"}, "STATEWIDE · COUNTY PORTION ONLY") if cross else
-                           h("span", {"class": "elx-xc mono"}, classify(c)[1].upper())),
-                         words, fig))
-    page.add(section("questions", 3, "Public questions",
-                     h("p", None, f"Every public question on ballots in the county in the guide's data, {len(qs)} in all, newest "
-                                  "first. Statewide questions show the county tally only; the statewide result is decided by "
-                                  "all counties."),
-                     qblocks, scope="county", ed=ed))
+                           h("span", {"class": "elx-xc mono"}, jur.upper()), " ",
+                           h("span", None, _election_name(e))),
+                         h("p", {"class": "elx-label muted"}, "Ballot line: ", c["label"]),
+                         words, _question_fig(page, c),
+                         h("p", None, h("a", {"href": href}, "Full result in the results explorer")) if href else None]})
+        n = len(items)
+        # saved-place preselect (static/js/preselect.js "first"): the group's layer when all its questions share one,
+        # and the unit for here.js's "Your place" marker
+        lays = {contest_layer(ed, c) for c in groups[jur]}
+        lay = next(iter(lays)) if len(lays) == 1 else ""
+        # only a city or town: here.js's marker would call a default school corporation "Your school corporation"
+        unit = lay.split(":", 1)[1] if lay.startswith("municipality:") else None
+        blocks.append(h("div", {"class": "elx-qgroup", "id": f"q-group-{_slug(jur)}", "data-here-layer": lay or None,
+                                "data-here-name": jur if lay else None, "data-here-unit": unit},
+                        h("h3", {"class": "elx-qgroup-h"}, jur, h("span", {"class": "elx-qgroup-n muted"},
+                                                                  f" · {n} question{'s' if n != 1 else ''}")),
+                        h("p", {"class": "muted elx-qgroup-note"},
+                          "The county tally only; the statewide result is decided by all counties."
+                          if jur == "Statewide" else "Decided by voters in this area."),
+                        entity_list(f"q-list-{_slug(jur)}", items, noun="question", heading_tag="h4",
+                                    label=f"{jur} questions, newest first")))
+    page.add(section("questions", 4, "Public questions",
+                     h("p", None, f"Every public question on ballots in the county in the guide's data, {len(qs)} in all, "
+                                  "grouped by who voted on it and newest first. Each row shows the year, the outcome and the "
+                                  "yes and no shares, and opens to the question's wording and result. Statewide questions "
+                                  "show the county tally only."),
+                     here_slot("first", "q-groups"),
+                     h("div", {"class": "elx-qgroups", "id": "q-groups"}, blocks), scope="county", ed=ed))
 
     # ---- school labels
-    page.add(section("school-labels", 4, "School-board party labels",
+    page.add(section("school-labels", 5, "School-board party labels",
                      _rule_p(page, ed, "partisan_school_board"),
                      h("p", {"class": "muted"}, "Labels used on this county's 2026 ballot are not counted yet: the guide's "
                                                 "results data and research notes disagree (see Gaps)."),
-                     h("p", None, h("a", {"href": page.rel("elections/index.html#school-boards")}, "More on the 2025 change")),
+                     h("p", None, h("a", {"href": page.rel("elections/how-it-works/index.html#school-boards")}, "More on the 2025 change")),
                      scope="indiana", ed=ed))
     page.finish(gaps=_gaps(ed, "elections-judges") + _gaps(ed, "elections-schools") + _gaps(ed, None, ["gaps_results", "gaps_indiana"], r"question|retention|RETAIN|IC 33-33"))
     return page
+
+
+def _slug(s):
+    return re.sub(r"[^a-z0-9]+", "-", s.lower()).strip("-")
 
 
 def _question_fig(page, c):
@@ -1053,7 +1595,7 @@ def _question_fig(page, c):
                         cite=page.cites.cite(_src(*c["rows"])))
 
 
-# =========================================================================== 5. landscape
+# =========================================================================== 5. shared with pages/elections_numbers.py (turnout chart, margin filters)
 
 def _turnout_chart(page, ed, kinds, fid, title, cite):
     els = [e for e in _elections(ed) if e["type"] in kinds]
@@ -1120,289 +1662,6 @@ def _unit_controls(ed, offices) -> list[dict]:
              "options": _opts(sorted(gov, key=lambda g: (gov[g], g)))}]
 
 
-def build_landscape(site):
-    ed = site.ed
-    page = site.page("elections/landscape/index.html", banners=True)
-    cites = page.cites
-    els = _elections(ed)
-    toc = [("turnout", "Turnout: odd vs even years"), ("margins", "Margins in every race"),
-           ("up-next", "Up next"), ("how-took-office", "How incumbents took office"),
-           ("straight-party", "Straight-party share"), ("rules", "What this page does not do"), ("gaps", "Gaps"),
-           ("sources", "Sources")]
-    page.add(_hero(page, "Reference · Elections · By the numbers",
-                   "The same measures for every race and every party, looking back only: turnout with its base, margins, "
-                   "the seats on the next ballots and how each incumbent took office.", ["county"], toc))
-
-    # ---- turnout
-    src_all = _src(*els)
-    g_chart = _turnout_chart(page, ed, ("general", "municipal_general"), "turnout-general",
-                             "Turnout in general elections", cites.cite_compact(_src(*[e for e in els if "general" in e["type"]])))
-    p_chart = _turnout_chart(page, ed, ("primary", "municipal_primary", "special"), "turnout-primary",
-                             "Turnout in primaries and special elections",
-                             cites.cite_compact(_src(*[e for e in els if "general" not in e["type"]])))
-    den_rows = []
-    for e in els:
-        den_rows.append([_election_name(e), "Special (one area)" if e["type"] == "special" else
-                         "Odd-year municipal" if e["type"] in MUNICIPAL_TYPES else "Countywide",
-                         e["scope"], fmt_int(e["registered"]) or "not printed", fmt_int(e["ballots_cast"]) or "not printed",
-                         f"{float(e['turnout_pct']):.2f}%" if e.get("turnout_pct") else "not printed",
-                         h("span", None, status_badge(e["status"], page), cites.cite(e["source_ids"]))])
-    ev = [e for e in els if e["type"] == "general"]
-    mu = [e for e in els if e["type"] == "municipal_general"]
-    page.add(section("turnout", 1, "Turnout: odd vs even years",
-                     h("p", None, "Turnout is ballots cast divided by registered voters. In odd years only city and town "
-                                  "residents vote, so the base is smaller: about "
-                                  f"{fmt_int(min(int(e['registered']) for e in mu if e['registered']))} to "
-                                  f"{fmt_int(max(int(e['registered']) for e in mu if e['registered']))} registered voters in the "
-                                  "municipal generals, compared with about "
-                                  f"{fmt_int(min(int(e['registered']) for e in ev if e['registered']))} to "
-                                  f"{fmt_int(max(int(e['registered']) for e in ev if e['registered']))} countywide.",
-                       cites.cite_compact(_src(*(ev + mu))), " ", status_badge("computed", page, "Ranges from elections.csv.")),
-                     h("div", {"class": "chart-grid elx-charts"}, g_chart, p_chart),
-                     data_table("turnout-denominators", ["Election", "Kind", "Who could vote", "Registered", "Ballots cast",
-                                                         "Turnout", "Status"], den_rows,
-                                caption="Turnout with its denominator", numeric=(3, 4, 5), min_width="50rem"),
-                     scope="county", ed=ed))
-
-    # ---- margins
-    eids = {e["election_id"] for e in els}
-    mrows, n_unc, n_nc, band_n = [], 0, 0, {b[0]: 0 for b in BANDS}
-    for c in ed.contests.values():
-        if c["election_id"] not in eids:
-            continue
-        g, place, cross = classify(c)
-        if cross or g in ("Straight-party ballots", "Public questions", "Superior Court retention") or is_question(c):
-            continue
-        m = margin(c)
-        if m is None:
-            n_unc += 1
-            continue
-        if "pts" not in m:
-            n_nc += 1
-            continue
-        e = ed.elections[c["election_id"]]
-        band_n[m["band"]] += 1
-        st = contest_status(c["rows"])
-        mrows.append((m["pts"], e["date"], c, m, e, st, g, place))
-    mrows.sort(key=lambda x: (x[0], x[1]))
-    trs = []
-    for pts, d, c, m, e, st, g, place in mrows:
-        a, b = m["ahead"], m["next"]
-        band_label = next(lab for bid, lab, _, _ in BANDS if bid == m["band"])
-        attrs = {"data-year": d[:4], "data-type": "primary" if "primary" in e["type"] else "general",
-                 "data-band": m["band"], "data-margin": f"{pts:.4f}", "data-date": d,
-                 "data-tf-year": d[:4], "data-tf-type": "primary" if "primary" in e["type"] else "general",
-                 "data-tf-band": m["band"], "data-tf-office": g, "data-tf-place": place or "(not stated)",
-                 "data-tf-district": _district_of(c["label"]), "data-tf-text": _search_text(c["label"])}
-        cells = [
-            h("th", {"scope": "row"}, c["label"],
-              h("span", {"class": "elx-sub muted"}, f" · {m['seats']} seats") if m["seats"] > 1 else None),
-            h("td", None, _election_name(e)),
-            h("td", {"class": "num"}, f"{pts:.2f}"),
-            h("td", {"class": "num"}, f"{m['votes']:,}"),
-            h("td", None, band_label),
-            h("td", None, f"{a['name']} ({a['party'] or 'no party'}) {a['votes']:,}"),
-            h("td", None, f"{b['name']} ({b['party'] or 'no party'}) {b['votes']:,}"),
-            h("td", None, status_badge(st, page), (" ", status_badge("low", page)) if m["low"] else None),
-        ]
-        trs.append(h("tr", attrs, cells))
-    hdr = ["Contest", "Election", "Margin (points)", "Votes apart", "Band", "Last candidate inside the seats", "Next candidate", "Status"]
-    table = h("div", {"class": "table-block"},
-              h("div", {"class": "table-wrap", "role": "region", "tabindex": "0", "aria-label": "Margins in every race"},
-                h("table", {"id": "margins-table", "class": "data", "style": "min-width: 60rem"},
-                  h("caption", None, "Margins in every race decided inside the county, closest first"),
-                  h("thead", None, h("tr", None, [h("th", {"scope": "col", "class": "num" if i in (2, 3) else None}, x)
-                                                  for i, x in enumerate(hdr)])),
-                  h("tbody", None, trs))),
-              h("div", {"class": "table-tools"}, h("button", {"type": "button", "class": "btn btn-small",
-                                                              "data-copy-table": "margins-table", "id": "margins-table-copy"},
-                                                   "Copy CSV")))
-    years = sorted({x[1][:4] for x in mrows}, reverse=True)
-    offices_g = sorted({x[6] for x in mrows})
-    places_g = sorted({x[7] or "(not stated)" for x in mrows})
-    districts_g = sorted({_district_of(x[2]["label"]) for x in mrows} - {""}, key=_district_key)
-    picker = table_filter(
-        "margins-table",
-        [{"key": "year", "label": "Year", "all": "All years", "options": _opts(years)},
-         {"key": "type", "label": "Election", "all": "All elections",
-          "options": [("general", "General elections"), ("primary", "Primaries")]},
-         {"key": "band", "label": "Band", "all": "All bands", "options": [(bid, lab) for bid, lab, _, _ in BANDS]},
-         {"key": "office", "label": "Office", "all": "All offices", "options": _opts(offices_g)},
-         {"key": "place", "label": "Place", "all": "All places", "options": _opts(places_g)},
-         {"key": "district", "label": "District", "all": "Any district", "options": _opts(districts_g)}],
-        len(mrows), noun="race", search="Words in the contest name",
-        sort=[("margin", "Closest first", "margin:asc:n"), ("date", "Newest first", "date:desc:s,margin:asc:n")],
-        label="Filter the margins table")
-    band_chart = hbar("margin-bands", "Races by margin band", [
-        {"label": lab, "value": band_n[bid], "display": f"{band_n[bid]} races"} for bid, lab, _, _ in BANDS],
-        subtitle=f"{len(mrows)} contested races, {els[0]['date'][:4]} to {els[-1]['date'][:4]}", page=page,
-        headers=["Band", "Races"], status="computed",
-        note="Primaries and generals together. Bands are defined above and applied to every race the same way.")
-    page.add(section("margins", 2, "Margins in every race",
-                     h("div", {"class": "callout elx-def", "id": "bands"},
-                       h("p", None, h("strong", None, "How the margin is measured. "),
-                         "Margin in points = the votes of the last candidate inside the seats minus the votes of the next "
-                         "candidate, divided by all votes cast in that contest. In a one-seat race that is the winner and "
-                         "the runner-up. In a race that fills several seats (vote for 3, for example) it compares the "
-                         "candidates just inside and just outside the seats. Places are ranked by votes."),
-                       h("p", None, h("strong", None, "Bands. "), "Under 5 points; 5 to 15 points; over 15 points. Each race "
-                         "is put in a band by its margin alone. The bands describe past results and say nothing about future races.")),
-                     h("p", None, f"{len(mrows)} races are listed, closest first, whatever party finished ahead. "
-                                  f"{n_unc} uncontested races (no more candidates than seats) and {n_nc} races with missing vote "
-                                  "counts or no recorded seat count are not listed. Statewide offices, and legislative districts in "
-                                  "years when they extended outside the county, are left out because the county tally doesn't "
-                                  "decide them. Retention votes and public questions "
-                                  "are yes-or-no votes, not races between candidates; they are on ",
-                       h("a", {"href": page.rel("elections/judges-and-questions/index.html")}, "Judges and public questions"),
-                       ". ",
-                       status_badge("computed", page, "Margins computed from results.csv vote counts.")),
-                     band_chart, picker,
-                     h("p", {"class": "muted"}, "Vote counts in this table come from the county canvass files listed under Sources.",
-                       cites.cite_compact(_src(*[r for x in mrows for r in x[2]["rows"][:1]]))),
-                     table, filter_empty_note("margins-table"),
-                     h("p", {"class": "muted"}, "Party codes: ", "; ".join(f"{k} = {v}" for k, v in PARTY_LABELS.items()), "."),
-                     scope="county", ed=ed))
-
-    # ---- up next
-    items, _ = _calendar_items(ed)
-    urows, uattrs, uoffices = [], [], []
-    for y in (2027, 2028):
-        for it in items[y]:
-            o = it["office"]
-            if not o:
-                continue
-            holders = _holders_now(ed, o["office_id"])
-            ot = ed.office_type_row(o) or {}
-            if not holders:
-                urows.append([str(y), o["title"], "No current officeholder in the guide's data", "", "", "",
-                              ot.get("term_limit") or "Not in the guide's data", h("span", None, cites.cite(o["source_ids"]))])
-                uattrs.append({**_unit_attrs(ed, o), "data-tf-year": str(y), "data-tf-text": o["title"]})
-                uoffices.append(o)
-                continue
-            for t in holders:
-                tl = _term_limit(ed, o, t, y)
-                uattrs.append({**_unit_attrs(ed, o), "data-tf-year": str(y), "data-tf-text": f"{o['title']} {t['person']}"})
-                uoffices.append(o)
-                urows.append([str(y), o["title"], t["person"], _plabel(t.get("party")), fmt_date(t["start"]) or "not in sources",
-                              SELECTED_BY_LABELS.get(t.get("first_selected_by", ""), t.get("first_selected_by")),
-                              h("span", None, tl[0], " ", status_badge("computed", page, tl[1]) if tl[1] else None),
-                              h("span", None, status_badge(t["status"], page),
-                                (" ", status_badge("low", page)) if t.get("confidence") == "low" else None,
-                                cites.cite_compact(t["source_ids"]))])
-    page.add(section("up-next", 3, "Up next: seats on the 2027 and 2028 ballots",
-                     h("p", None, "Each seat on the next two regular ballots, with the person holding it now, how they first took "
-                                  "the office, and the term-limit rule for the office. The years are computed from the office "
-                                  "data (", h("a", {"href": page.rel("elections/calendar/index.html")}, "Election calendar"),
-                       "). Announced retirements and declared candidates are not collected."),
-                     _rule_p(page, ed, "county_row_office_term_limits", detail=True),
-                     table_filter("up-next-table",
-                                  [{"key": "year", "label": "Year", "all": "Both years", "options": [("2027", "2027"), ("2028", "2028")]}]
-                                  + _unit_controls(ed, uoffices),
-                                  len(urows), noun="seat", search="Seat or holder name", label="Filter the up-next table"),
-                     data_table("up-next-table", ["Year", "Seat", "Holder now", "Party", "In office since",
-                                                  "First took office by", "Term-limit status", "Status"], urows,
-                                caption="Seats on the 2027 and 2028 ballots", min_width="60rem", row_attrs=uattrs),
-                     filter_empty_note("up-next-table"),
-                     h("p", {"class": "muted"}, "Term-limit status is computed only for the six offices on the 8-in-12 list, "
-                                                "from the guide's terms data; service chosen by caucus to fill a vacancy is not "
-                                                "counted, as the rule says. Listed by year and office, never by party."),
-                     scope="county", ed=ed))
-
-    # ---- how took office
-    cur = []
-    for o in ed.tables["offices"]:
-        if o.get("elected") != "yes":
-            continue
-        for t in _holders_now(ed, o["office_id"]):
-            cur.append((o, t))
-    cur.sort(key=lambda x: (_place_order(ed, x[0]), x[0]["office_id"]))
-    cnt: dict[str, int] = {}
-    hrows, hattrs = [], []
-    for o, t in cur:
-        k = t.get("first_selected_by") or "unknown"
-        cnt[k] = cnt.get(k, 0) + 1
-        hattrs.append({**_unit_attrs(ed, o), "data-tf-how": SELECTED_BY_LABELS.get(k, k),
-                       "data-tf-text": f"{o['title']} {t['person']}"})
-        hrows.append([o["title"], t["person"], _plabel(t.get("party")), SELECTED_BY_LABELS.get(k, k),
-                      SELECTED_BY_LABELS.get(t.get("selected_by") or "unknown", t.get("selected_by")),
-                      fmt_date(t["start"]) or "not in sources",
-                      h("span", None, status_badge(t["status"], page),
-                        (" ", status_badge("low", page)) if t.get("confidence") == "low" else None, cites.cite_compact(t["source_ids"]))])
-    order = ["election", "caucus", "appointment", "unknown"]
-    hb = hbar("took-office", "How current officeholders first took office",
-              [{"label": SELECTED_BY_LABELS[k].capitalize(), "value": cnt.get(k, 0), "display": f"{cnt.get(k, 0)} people"}
-               for k in order],
-              subtitle=f"{len(cur)} people holding elected offices in the guide's data on {fmt_date(ed.as_of)}",
-              headers=["How first chosen", "People"], status="computed", page=page,
-              note="Counted from the first_selected_by field of each current term. 'Not stated in sources' means the "
-                   "sources don't say how the person first took the office.")
-    page.add(section("how-took-office", 4, "How incumbents took office",
-                     h("p", None, "Every current officeholder, by office, with how they first took the office (election, party "
-                                  "caucus or appointment) and how they got their current term. The same field is shown for "
-                                  "everyone."),
-                     hb,
-                     table_filter("took-office-list",
-                                  _unit_controls(ed, [o for o, _ in cur])
-                                  + [{"key": "how", "label": "First took office by", "all": "Any way",
-                                      "options": _opts([SELECTED_BY_LABELS.get(k, k) for k in order if cnt.get(k)])}],
-                                  len(hrows), noun="officeholder", search="Office or holder name",
-                                  label="Filter the officeholders table"),
-                     data_table("took-office-list", ["Office", "Holder", "Party", "First took office by", "Current term by",
-                                                      "Since", "Status"], hrows,
-                                caption="Current officeholders and how they took office", min_width="52rem",
-                                row_attrs=hattrs),
-                     filter_empty_note("took-office-list"),
-                     scope="county", ed=ed))
-
-    # ---- straight party
-    sourced = _straight_party_years(ed)
-    sp_rows = []
-    for e in els:
-        if e["type"] != "general" or not e.get("straight_party_d"):
-            continue
-        y = int(e["date"][:4])
-        if y not in sourced:
-            continue
-        bal = int(e["ballots_cast"])
-        d, r, o = (int(e[k] or 0) for k in ("straight_party_d", "straight_party_r", "straight_party_other"))
-        tot = d + r + o
-        sp_rows.append((e, bal, d, r, o, tot))
-    blocks = []
-    for e, bal, d, r, o, tot in sp_rows:
-        blocks.append(h("div", None,
-                        h("p", None, f"In the {_election_name(e)}, {tot:,} of {bal:,} ballots ({100 * tot / bal:.1f}%) used a "
-                                     "straight-party mark.", cites.cite(e["source_ids"]), " ", status_badge(e["status"], page), " ",
-                          status_badge("computed", page, "Straight-party ballots divided by ballots cast.")),
-                        data_table(f"straight-{e['election_id']}", ["Straight-party mark", "Ballots", "Share of all ballots"],
-                                   [[party_label("D"), f"{d:,}", f"{100 * d / bal:.1f}%"],
-                                    [party_label("R"), f"{r:,}", f"{100 * r / bal:.1f}%"],
-                                    ["Other parties", f"{o:,}", f"{100 * o / bal:.1f}%"]],
-                                   caption=f"Straight-party ballots, {e['date'][:4]}", numeric=(1, 2))))
-    page.add(section("straight-party", 5, "Straight-party share",
-                     h("p", None, "A share is shown only for years where the guide has a sourced rule for what a straight-party "
-                                  "mark covered. ", f"Years with a sourced rule: {', '.join(map(str, sorted(sourced))) or 'none'}. ",
-                       "The rule in force through 2026 comes from the statute text read in 2026; the year it began is low "
-                       "confidence, so earlier years are not shown even though the county printed their totals. ",
-                       h("a", {"href": page.rel("elections/index.html#general")}, "The straight-party rules")),
-                     blocks,
-                     h("p", {"class": "muted"},
-                       "The county also printed straight-party totals for the general elections of " +
-                       ", ".join(sorted({e["date"][:4] for e in els if e["type"] == "general" and e.get("straight_party_d")
-                                         and int(e["date"][:4]) not in sourced})) +
-                       ". They are in the guide's data files and will be shown here once the rule for those years is sourced."),
-                     scope="county", ed=ed))
-
-    page.add(section("rules", 6, "What this page does not do",
-                     h("ul", None,
-                       h("li", None, "No forecasts and no labels about future races. Everything here describes past results and "
-                                     "current rules."),
-                       h("li", None, "No party filter. Every view covers every party the same way."),
-                       h("li", None, "No precinct maps, voter-file data or donor details. Precinct files are linked on ",
-                         h("a", {"href": page.rel("data/index.html")}, "Data and sources"), "."))))
-    page.finish(gaps=_gaps(ed, "elections-landscape", ["gaps_results"], r"winner|seat count|multi-seat|2026 general"))
-    return page
-
-
 def _straight_party_years(ed) -> set[int]:
     """Years Y for which a straight-party rule row (not low confidence) is sourced: effective_from <= Y <= effective_to.
     A blank effective_from means the start isn't known, so the rule counts only for the year it was read."""
@@ -1447,9 +1706,10 @@ def _term_limit(ed, office, term, year) -> tuple[str, str]:
 
 
 PAGES = {
-    "elections/index.html": build_index,
+    "elections/index.html": build_hub,
+    HOW_IT_WORKS: build_how_it_works,
     "elections/calendar/index.html": build_calendar,
     "elections/results/index.html": build_results,
     "elections/judges-and-questions/index.html": build_judges,
-    "elections/landscape/index.html": build_landscape,
+    # elections/landscape/ (overview), margins/, turnout/ and officeholders/ are built by pages/elections_numbers.py
 }

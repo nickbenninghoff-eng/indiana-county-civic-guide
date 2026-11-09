@@ -158,6 +158,23 @@
   }
   // a mode script that changes what the panel shows (static/js/indicator_map.js) asks for a redraw
   root.addEventListener("cmap-refresh", rest);
+  // another script selects an area (static/js/preselect.js, the saved-place preselect; added 2026-11-09, Wave E
+  // batch 8): "cmap-select" with detail {uid} switches to the layer holding that area and selects it, so the panel
+  // shows it until the reader points at another area; {uid: null} clears the selection. The address is not touched.
+  root.addEventListener("cmap-select", function (ev) {
+    var uid = ev.detail && ev.detail.uid ? ev.detail.uid : null;
+    if (!uid) { last = null; setSelected(null); return; }
+    var shape = null;
+    Array.prototype.forEach.call(svg.querySelectorAll(".cmap-a[data-uid]"), function (a) {
+      if (!shape && a.getAttribute("data-uid") === uid && !a.classList.contains("cmap-va")) shape = a;
+    });
+    if (!shape || !data[uid]) return;
+    var g = shape.closest ? shape.closest("[data-layer]") : null;
+    var tab = g ? g.getAttribute("data-layer") : null;
+    var on = root.querySelector('.cmap-tab[aria-pressed="true"]');
+    if (tab && (!on || on.getAttribute("data-layer") !== tab)) setLayer(tab);
+    setSelected(uid);
+  });
   tabs.addEventListener("click", function (ev) {
     var b = ev.target.closest && ev.target.closest(".cmap-tab");
     if (b) setLayer(b.getAttribute("data-layer"));

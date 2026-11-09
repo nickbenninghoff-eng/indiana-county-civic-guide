@@ -27,6 +27,7 @@ school-phm,phm,
 school-mishawaka,school-city-mishawaka,
 school-john-glenn,john-glenn,
 school-union-north,union-north,
+school-new-prairie,new-prairie,
 library-sjcpl,sjcpl,
 library-mishawaka,mphpl,"Assumed to be the Mishawaka-Penn-Harris Public Library (the only Mishawaka library unit in units.csv); confirm the Gateway unit name."
 library-new-carlisle,,"No matching unit in units.csv (a New Carlisle library appears only in the money files)."

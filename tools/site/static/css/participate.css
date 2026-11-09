@@ -11,3 +11,55 @@
 .gov-seat, .gov-seats { margin: 0 0 4px; font-size: .9rem; color: var(--ink-2); }
 .gov-seats ul { margin: 4px 0 6px; padding-left: 1.2em; }
 .gov-sites { padding-left: 1.2em; }
+
+/* run/index office cards; who-handles-this service rows */
+.run-cards { list-style: none; margin: 0; padding: 0; }
+.run-card { display: flex; flex-direction: column; gap: 6px; }
+.run-card .card-title { margin: 0; }
+.run-facts { display: grid; grid-template-columns: 5.2rem minmax(0, 1fr); gap: 2px 8px; margin: 0; font-size: .88rem; }
+.run-facts dt { font: 600 .66rem/1.5 var(--f-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); }
+.run-facts dd { margin: 0; color: var(--ink-2); }
+.run-more { margin: auto 0 0; padding-top: 8px; font-size: .9rem; }
+.svc-fields { display: grid; grid-template-columns: minmax(0, 1fr); gap: 2px; margin: 0; font-size: .92rem; }
+.svc-fields dt { font: 600 .66rem/1.3 var(--f-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); margin-top: 8px; }
+.svc-fields dd { margin: 0; color: var(--ink-2); }
+
+/* Your place (your-governments/, Wave D batch 6): showing line, inline place list, one card per government */
+.yp-showing { margin: 6px 0 10px; font-size: 1rem; }
+.yp-showing:focus { outline: none; }
+.yp-showing:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+.yp-showing-label { font-size: .72rem; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-3); margin-right: 4px; }
+.yp-change { margin-left: 8px; font-weight: 600; white-space: nowrap; }
+.yp-choose { margin: 0 0 16px; padding: 12px 14px; border: 1px solid var(--line); border-left: 4px solid var(--accent); background: var(--surface); }
+.yp-choose[hidden], .yp-group[hidden], .yp-again[hidden] { display: none; }
+.yp-choose-lead { margin: 0 0 8px; }
+.yp-pick-group .pick-h { margin: 10px 0 6px; font-size: .95rem; }
+.yp-choices { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px 8px; }
+.yp-choices li { margin: 0; }
+.yp-choice { display: inline-block; padding: 5px 10px; border: 1px solid var(--line); background: var(--surface);
+  color: var(--ink); font: inherit; font-size: .92rem; cursor: pointer; text-decoration: none; }
+a.yp-choice { text-decoration: underline; }
+.yp-choice:hover { border-color: var(--accent); }
+.yp-choice[aria-pressed="true"] { border-color: var(--ink); background: var(--accent-wash); font-weight: 600; }
+.yp-choose-more { margin: 10px 0 0; font-size: .88rem; }
+.yp-again { margin: 0 0 12px; }
+.yp-group { margin: 0 0 18px; }
+.yp-group-h { margin: 18px 0 4px; font-size: .78rem; font-family: var(--f-mono); letter-spacing: .1em; text-transform: uppercase; color: var(--ink-3); }
+.yp-card { padding: 12px 0 14px; }
+.yp-name { font-size: 1.12rem; margin: 0 0 2px; }
+.yp-count { margin: 0 0 8px; font-size: .78rem; color: var(--ink-3); letter-spacing: .03em; }
+.yp-seats { margin: 0 0 8px; padding-left: 1.1em; font-size: .92rem; }
+.yp-seats > li { margin: 0 0 4px; }
+.yp-seats .gov-seats { margin: 2px 0 4px; }
+.yp-card .body-breakdowns { font-size: .9rem; }
+.yp-decide { margin: 8px 0 6px; font-size: .92rem; }
+.yp-decide > summary { cursor: pointer; font-weight: 600; }
+.yp-decide ul { margin: 6px 0 0; padding-left: 1.1em; }
+.yp-decide li { margin: 0 0 6px; color: var(--ink-2); }
+.yp-decide li strong { color: var(--ink); }
+.yp-more { margin: 8px 0 0; font-size: .9rem; }
+.yp-sep { color: var(--ink-3); }
+.yp-placeholder .yp-name { font-style: italic; }
+.yp-browse { margin-top: 16px; font-size: .95rem; }
+.yp-card .body-breakdowns { margin: 6px 0 0; padding-top: 6px; border-top: 1px dashed var(--line); }
+.yp-card .body-breakdowns .body-list { list-style: none; padding-left: 0; margin: 0 0 4px; }

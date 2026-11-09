@@ -1,0 +1,56 @@
+/* nav.css: the primary nav menus (Wave D batch 6: Your place · Topics ▾ · Learn ▾ · About), the sitemap breadcrumb
+   (shell.py crumb_nav) and the elections hub cards. Base nav styles stay in style.css; colors are existing tokens only. */
+
+/* ---------------------------------------------------------------- nav bar: one row down to 320 px */
+.nav-list { flex-wrap: nowrap; }
+.nav-list > li { flex: 0 0 auto; }
+.nav-list a.is-current { border-bottom-color: var(--accent); }
+
+/* ---------------------------------------------------------------- menus */
+.menu-topics { grid-template-columns: repeat(5, minmax(0, 1fr)); width: min(1040px, calc(100vw - 32px)); }
+.menu-learn { width: min(460px, calc(100vw - 32px)); grid-template-columns: minmax(0, 1fr); gap: 14px; }
+.menu-head a.menu-hub { display: inline-flex; align-items: center; gap: 6px; padding: 0; color: var(--ink);
+  font: inherit; letter-spacing: inherit; text-transform: inherit; border: 0; text-decoration: underline;
+  text-decoration-color: var(--line); text-underline-offset: 3px; }
+.menu-head a.menu-hub:hover { color: var(--accent); text-decoration-color: currentColor; }
+.menu-head a.menu-hub[aria-current="page"] { color: var(--accent); }
+.menu-hub-arrow { display: inline-block; width: 6px; height: 6px; border-right: 2px solid currentColor;
+  border-top: 2px solid currentColor; transform: rotate(45deg); }
+.menu-panel li { margin: 0; }
+.menu-panel li > a { display: inline-block; }
+.menu-sep { color: var(--ink-3); }
+.menu-path-title { font-weight: 600; }
+.menu-path-meta { color: var(--ink-3); font-size: .8rem; font-weight: 400; }
+
+/* ---------------------------------------------------------------- breadcrumb (the hero eyebrow) */
+.crumbs ol { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; }
+.crumbs li { margin: 0; }
+.crumbs a { color: inherit; text-decoration: underline; text-decoration-color: var(--line); text-underline-offset: 3px; }
+.crumbs a:hover { color: var(--accent); text-decoration-color: currentColor; }
+.crumb-sep { white-space: pre; }
+
+/* ---------------------------------------------------------------- elections hub */
+.ehub-next { margin-top: 18px; }
+.ehub-next-body, .ehub-next-who { grid-column: 1 / -1; margin: 0; }
+.ehub-next-who { font-size: .92rem; }
+.ehub-grid { margin-top: 6px; }
+.ehub-card p { margin: 6px 0 0; }
+.ehub-fact { font-size: .9rem; color: var(--ink-2); border-top: 1px solid var(--line); padding-top: 6px; }
+
+@media (max-width: 1000px) {
+  .menu-topics { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (max-width: 760px) {
+  .menu-topics, .menu-learn { grid-template-columns: minmax(0, 1fr); width: 100%; left: 0; right: auto; }
+  .menu-panel { gap: 14px; }
+}
+@media (max-width: 420px) {
+  .nav-list a, .nav-list summary { padding-inline: 8px; }
+  .nav-list summary::after { margin-left: 6px; }
+  :root[data-look="line"] .nav-list { gap: 2px; }
+  :root[data-look="line"] .nav-list a, :root[data-look="line"] .nav-list summary { padding-inline: 8px; }
+  :root[data-look="line"] .nav-list > li:first-child > a { padding-left: 8px; }
+}
+@media print {
+  .crumbs a { text-decoration: none; }
+}

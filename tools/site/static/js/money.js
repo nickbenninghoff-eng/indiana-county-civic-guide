@@ -194,9 +194,12 @@
     if (other.length) dOut.appendChild(el("p", "muted mn-tb-other", other.join("; ")));
   }
 
+  /* The reader's own choices on this page, saved only when the reader changes a picker (v3, 2026-11-09: v2 was also
+     written on every load, so a first visit's example district hid the saved place on every later visit). */
+  var TB_KEY = "civic-taxbill-v3";
   function saveState() {
     var spec = specials.filter(function (c) { return c.checked; }).map(function (c) { return c.value; });
-    store("civic-taxbill-v2", JSON.stringify({ district: sel.district.value, year: sel.year.value, place: sel.place.value,
+    store(TB_KEY, JSON.stringify({ district: sel.district.value, year: sel.year.value, place: sel.place.value,
       township: sel.township.value, school: sel.school.value, library: sel.library.value, specials: spec }));
   }
 
@@ -204,7 +207,7 @@
     var year = sel.year.value;
     var comp = composition();
     if (picker) picker.hidden = !!comp;
-    if (comp) { renderComposition(comp, year); saveState(); return; }
+    if (comp) { renderComposition(comp, year); return; }
     var place = places[sel.place.value] || {};
     var chosen = [["county-st-joseph", "County"]];
     if (place.muni) chosen.push([place.muni, "City or town"]);
@@ -269,7 +272,6 @@
     out.appendChild(bar);
     out.appendChild(list);
     out.appendChild(el("p", "mn-tb-compare", rateCompare(total, n, dr, year)));
-    saveState();
   }
 
   function render() { renderDistrict(); renderUnits(); }
@@ -294,14 +296,16 @@
     if (place.school) setSel(sel.school, place.school);
   }
 
-  sel.district.addEventListener("change", function () { applyDistrict(); render(); });
-  sel.year.addEventListener("change", render);
-  sel.place.addEventListener("change", function () { applyPlace(); renderUnits(); });
-  ["township", "school", "library"].forEach(function (k2) { sel[k2].addEventListener("change", renderUnits); });
-  specials.forEach(function (c) { c.addEventListener("change", renderUnits); });
+  sel.district.addEventListener("change", function () { applyDistrict(); render(); saveState(); });
+  sel.year.addEventListener("change", function () { render(); saveState(); });
+  sel.place.addEventListener("change", function () { applyPlace(); renderUnits(); saveState(); });
+  ["township", "school", "library"].forEach(function (k2) {
+    sel[k2].addEventListener("change", function () { renderUnits(); saveState(); });
+  });
+  specials.forEach(function (c) { c.addEventListener("change", function () { renderUnits(); saveState(); }); });
 
   var saved = null;
-  try { saved = JSON.parse(store("civic-taxbill-v2") || "null"); } catch (e) { saved = null; }
+  try { saved = JSON.parse(store(TB_KEY) || "null"); } catch (e) { saved = null; }
   if (saved && districts[saved.district]) {
     setSel(sel.district, saved.district);
     setSel(sel.year, saved.year);
@@ -310,29 +314,124 @@
     setSel(sel.school, saved.school);
     setSel(sel.library, saved.library);
     specials.forEach(function (c) { c.checked = (saved.specials || []).indexOf(c.value) >= 0; });
-  } else {
-    /* No tax-bill choice saved yet: start from the reader's saved place (here.js, localStorage
-       "civic-place", unit ids). Pick the district whose name states that place, preferring the one
-       that also states the saved township or school; fill only what the district name leaves open. */
-    var cp = null;
-    try { cp = JSON.parse(store("civic-place") || "null"); } catch (e) { cp = null; }
-    var um = data.uidmap || {};
-    if (cp && places[cp.place]) {
-      var town = cp.township && um[cp.township] ? um[cp.township] : (places[cp.place].township || "");
-      var school = cp.school && um[cp.school] ? um[cp.school] : "";
-      var best = null;
-      data.districts.forEach(function (d) {
-        var pre = d.pre || {};
-        if (pre.place !== cp.place) return;
-        var score = 1 + (town && pre.township === town ? 2 : 0) + (school && pre.school === school ? 1 : 0);
-        if (!best || score > best[0]) best = [score, d];
-      });
-      var pre0 = {};
-      if (best) { setSel(sel.district, best[1].code); applyDistrict(); pre0 = best[1].pre || {}; }
-      else { setSel(sel.place, cp.place); applyPlace(); }
-      if (town && !pre0.township) setSel(sel.township, town);
-      if (school && !pre0.school) setSel(sel.school, school);
-    }
   }
   render();
+
+  /* ------------------------------------------------------------ saved-place preselect (Wave E batch 8, 2026-11-09)
+     With no choice of the reader's own saved on this page, start from the saved place (here.js window.civicHere):
+     pick its taxing district only when exactly one district fits it, by the district names and the state's
+     per-district breakdown (data.hints, civic/preselect.py district_hints and tax_district_for_saved, the same rule).
+     Only the township and school the reader chose count; the defaults here.js stored with the place only order the
+     choices (Wave E batch 8 part 2).
+     Otherwise list the districts that fit and leave the page's example selected. Never guessed; nothing stored. */
+  function fromPlace(m) {
+    var hints = data.hints || {};
+    var cands = data.districts.filter(function (d) { return (d.pre || {}).place === m.place; })
+      .map(function (d) { return d.code; });
+    if (!cands.length) return null;
+    function h(c) { return hints[c] || { tw: [], sc: [] }; }
+    if (m.township) {
+      cands = cands.filter(function (c) { return !h(c).tw.length || h(c).tw.indexOf(m.township) >= 0; });
+      if (!cands.length) return null;
+    }
+    if (m.school) {
+      var ok = cands.filter(function (c) { return !h(c).sc.length || h(c).sc.indexOf(m.school) >= 0; });
+      if (!ok.length) return { choices: cands, why: "conflict", fit_default: [] };
+      cands = ok;
+    }
+    if (cands.length === 1) return { code: cands[0] };
+    var tws = {};
+    cands.forEach(function (c) { tws[h(c).tw.join(",")] = true; });
+    var why = Object.keys(tws).length > 1 && !m.township ? "township" : "school";
+    /* the guide's defaults stored with the place (not chosen by the reader) only order the choices */
+    var dt = (m.defaults || {}).township || "", ds = (m.defaults || {}).school || "";
+    var fit = [];
+    if (dt || ds) {
+      fit = cands.filter(function (c) {
+        return (!dt || !h(c).tw.length || h(c).tw.indexOf(dt) >= 0) && (!ds || !h(c).sc.length || h(c).sc.indexOf(ds) >= 0);
+      });
+      if (fit.length === cands.length) fit = [];
+    }
+    return { choices: fit.concat(cands.filter(function (c) { return fit.indexOf(c) < 0; })), why: why, fit_default: fit };
+  }
+  function districtName(c) { return districts[c] ? c + " " + districts[c].name : c; }
+  function preselect() {
+    var slot = doc.querySelector('[data-here-pre="taxbill"]');
+    if (!slot || !window.civicHere || saved) return;
+    var m = window.civicHere.mine();
+    if (!m) return;
+    var r = fromPlace(m);
+    var who = m.names.join(DOT);
+    if (!r) return;
+    if (r.code) {
+      var example = sel.district.value;
+      var exYear = sel.year.value;
+      var useIt = function () { setSel(sel.district, r.code); applyDistrict(); render(); };
+      var ctl = window.civicHere.line(slot, {
+        onLabel: "From your saved place",
+        onText: "district " + districtName(r.code),
+        onWhy: " The only district whose name and state listing fit " + who + " (kept on this device only). Your tax " +
+               "bill names your district: pick another above if it differs.",
+        offLabel: "Your saved place fits",
+        offText: "district " + districtName(r.code),
+        applyLabel: "Show it",
+        /* when the page's example is the reader's district too, there is nothing to go back to: offer the picker */
+        undoLabel: r.code === example ? "Pick another district" : "Show the example district",
+        apply: useIt,
+        undo: function () {
+          if (r.code === example) { sel.district.focus(); return; }
+          setSel(sel.district, example); setSel(sel.year, exYear); applyDistrict(); render();
+        }
+      });
+      sel.district.addEventListener("change", function () {
+        if (sel.district.value === r.code) { if (ctl.state() !== "on") ctl.set("on"); }
+        else if (ctl.state() === "on") ctl.set("off");
+      });
+      if (window.civicHere.hashWins()) ctl.set("off");
+      else { useIt(); ctl.set("on"); }
+      return;
+    }
+    /* more than one district fits: say which, and let the reader pick (buttons set the district picker) */
+    clear(slot);
+    var lab = el("span", "here-pre-label", "Your saved place: ");
+    slot.appendChild(lab);
+    var why = r.why === "township"
+      ? " could be in any of these districts; the guide can't tell which without your township" +
+        (m.school ? "" : " and school corporation") + ". Your tax bill names it:"
+      : r.why === "conflict"
+        ? " fits these districts by township, but the state lists another school corporation in them than the one " +
+          "you chose. Your tax bill names your district:"
+        : " could be in any of these districts (they differ by school corporation). Your tax bill names it:";
+    slot.appendChild(el("span", "here-pre-text", who + why));
+    var ul = el("ul", "here-pre-choices");
+    r.choices.forEach(function (c) {
+      var li = el("li");
+      var b = el("button", "btn btn-small here-pre-btn", districtName(c));
+      b.type = "button";
+      b.addEventListener("click", function () {
+        setSel(sel.district, c); applyDistrict(); render(); saveState();
+        note.textContent = "Showing district " + districtName(c) + ".";
+      });
+      li.appendChild(b);
+      ul.appendChild(li);
+    });
+    slot.appendChild(ul);
+    if (r.fit_default && r.fit_default.length) {
+      slot.appendChild(el("span", "here-pre-why", "Listed first: the district" +
+        (r.fit_default.length > 1 ? "s that fit" : " that fits") + " the guide's usual " + (m.defaults.school ? "school corporation" : "township") + " for " + m.label +
+        ", which you have not chosen; your address may be in any of these districts."));
+    }
+    var note = el("span", "here-pre-why", "The district shown below is the page's example, " +
+      districtName(sel.district.value) + ", not a match for your place.");
+    slot.appendChild(note);
+    sel.district.addEventListener("change", function () {
+      note.textContent = "Showing district " + districtName(sel.district.value) + ".";
+    });
+    slot.setAttribute("role", "status");
+    slot.hidden = false;
+  }
+  /* app.js is deferred: it runs while readyState is "interactive", before DOMContentLoaded, and before the later
+     partials (here.js, tablefilter.js) have set up; so wait for DOMContentLoaded unless the page is already complete */
+  if (doc.readyState !== "complete") doc.addEventListener("DOMContentLoaded", preselect);
+  else preselect();
 })();

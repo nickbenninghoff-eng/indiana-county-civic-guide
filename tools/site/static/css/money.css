@@ -88,3 +88,5 @@
   .mn-tb-role { grid-column: 2 / -1; grid-row: 1; }
   .mn-tb-key, .mn-tb-name, .mn-tb-val { grid-row: 2; }
 }
+/* a unit's money in and out line inside its budget item (Wave C batch 7) */
+.mn-flows-line { margin: 10px 0 0; font-size: .88rem; }

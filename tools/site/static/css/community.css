@@ -90,3 +90,15 @@
   .tp-filter { display: none !important; }
   .tp-item.is-hidden { display: block; }
 }
+
+/* history/people: the card inside an expanded list row lies photo-left, fields-right (stacked on phones) */
+.ent-item .person-card { flex-direction: row; align-items: flex-start; border: 0; box-shadow: none; background: none; }
+.ent-item .person-photo { flex: 0 0 150px; }
+.ent-item .person-photo img, .ent-item .no-photo { max-height: 200px; }
+.ent-item .person-body { padding: 0 0 4px 16px; }
+.ent-item .person-body .holder-badges { margin-top: 8px !important; }
+@media (max-width: 640px) {
+  .ent-item .person-card { flex-direction: column; }
+  .ent-item .person-photo { flex-basis: auto; width: 100%; max-width: 180px; }
+  .ent-item .person-body { padding: 8px 0 4px; }
+}

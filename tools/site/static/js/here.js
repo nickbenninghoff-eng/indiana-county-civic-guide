@@ -2,8 +2,13 @@
    the layer rows and counts it drives, the landing map as a picker, and small "your place" markers on
    place pages and the election calendar. Plain JS, ASCII only, data inserted with textContent only.
 
-   Storage: localStorage "civic-place" = {"place": id, "township": id|"any", "school": id|"any"}
+   Storage: localStorage "civic-place" = {"place": id, "township": id|"any", "school": id|"any", "set": [...]}
    (ids only; the same key and shape the earlier dropdown used, so a returning reader keeps their place).
+   "set" (added 2026-11-09, Wave E batch 8 part 2) lists the parts the reader chose: "township" and/or "school".
+   Choosing a place fills its township and school with the guide's defaults (civic/layers.py: a town's township, a
+   city's usual school corporation); those are NOT in "set". An object without "set" (saved before this change) counts
+   as all defaults. Only the preselect reads it: a default never makes a page claim something specific about the
+   reader (the tax-bill district, "your school corporation").
    Every access is wrapped: with storage blocked the picker still works for the current page.
 
    This partial sorts before map.js in the built app.js, so it can relabel the landing map's links
@@ -15,6 +20,8 @@
   var ROOT = (site && site.getAttribute("data-root")) || "./";
   var KEY = "civic-place";
   var DOT = " " + String.fromCharCode(183) + " ";
+  /* the address the reader came with, before any map script rewrites it (preselect: an explicit #anchor wins) */
+  var HASH0 = window.location.hash;
 
   function readJSON(id) {
     var el = doc.getElementById(id);
@@ -33,7 +40,12 @@
     var p = H.places[v.place];
     var t = p.t || (has(H.townships, v.township) ? v.township : "any");
     var s = has(H.schools, v.school) ? v.school : "any";
-    return { place: v.place, township: t, school: s };
+    var set = [];
+    if (v.set && v.set.indexOf) {
+      if (v.set.indexOf("township") >= 0 && !p.t && t !== "any") set.push("township");
+      if (v.set.indexOf("school") >= 0 && s !== "any") set.push("school");
+    }
+    return { place: v.place, township: t, school: s, set: set };
   }
   function load() {
     var raw = null;
@@ -43,7 +55,8 @@
   }
   function save(st) {
     try {
-      if (st) window.localStorage.setItem(KEY, JSON.stringify({ place: st.place, township: st.township, school: st.school }));
+      if (st) window.localStorage.setItem(KEY, JSON.stringify({ place: st.place, township: st.township, school: st.school,
+                                                                  set: st.set || [] }));
       else window.localStorage.removeItem(KEY);
     } catch (e) { /* storage unavailable: the choice lasts for this page only */ }
   }
@@ -274,11 +287,17 @@
   }
   function pickTownship(v) {
     if (!state || placeOf(state).t) return;
-    choose(normalize({ place: state.place, township: v, school: state.school }), true);
+    choose(normalize({ place: state.place, township: v, school: state.school, set: chosen("township") }), true);
+  }
+  /* the parts the reader has chosen, plus this one (a pick of "Not sure" is normalized away: "any" is never "set") */
+  function chosen(part) {
+    var set = (state && state.set ? state.set : []).filter(function (x) { return x !== part; });
+    set.push(part);
+    return set;
   }
   function pickSchool(v) {
     if (!state) return;
-    choose(normalize({ place: state.place, township: state.township, school: v }), true);
+    choose(normalize({ place: state.place, township: state.township, school: v, set: chosen("school") }), true);
   }
 
   if (picker) {
@@ -345,6 +364,121 @@
   }
 
   renderAll();
+
+  /* ------------------------------------------------------------ saved-place preselect (added 2026-11-09, Wave E batch 8)
+     window.civicHere lets a page open on the reader's saved place (civic/preselect.py, static/js/preselect.js, and
+     the results explorer and tax bill in elections.js / money.js). Contract:
+       civicHere.mine()        null with no saved place; else {place, muni, townships, township, school, defaults, label,
+                               names, wants(layerKey), sure(layerKey)}: the saved place's governments. township and
+                               school are only what the reader chose ("set"; an unincorporated place's own township is
+                               certain); a default stored with the place is in defaults and never treated as theirs.
+                               An unknown township stands for every township the city lies in; an unknown school
+                               corporation for every one, so nothing that may be the reader's is ever left out.
+       civicHere.hashWins()    true when the reader came with an explicit #anchor (not a map layer name): the page
+                               then opens as the link says and the line only offers the saved place.
+       civicHere.line(slot, o) renders the visible "Showing: ..." line in a placeholder (civic/preselect.py here_slot)
+                               and returns {set(state), state()}: "on" (o.apply has run; the button undoes it),
+                               "off" (an offer: the button applies it) or "note" (text only, o.note).
+     Nothing is written anywhere: the saved place stays in localStorage "civic-place", never in the address. */
+  function mine() {
+    var p = placeOf(state);
+    if (!p) return null;
+    /* only what the reader chose counts (state.set); a default filled in when the place was chosen does not */
+    var set = state.set || [];
+    var tw = p.t || (set.indexOf("township") >= 0 && state.township !== "any" ? state.township : "");
+    var school = set.indexOf("school") >= 0 && state.school !== "any" ? state.school : "";
+    var ts = [];
+    if (tw) ts = [tw];
+    else ts = p.it && p.it.length ? p.it.slice() : Object.keys(H.townships);
+    var names = [];
+    names.push(p.n);
+    if (!p.t) {
+      if (tw) names.push(H.townships[tw]);
+      else names.push(ts.length === 1 ? H.townships[ts[0]] : "the " + ts.length + " townships " + p.s + " lies in (township not chosen)");
+    }
+    names.push(school ? H.schools[school] : "every school corporation (none chosen)");
+    return {
+      place: state.place, muni: p.m || "", township: tw, townships: ts, school: school,
+      /* the guide's defaults still stored with the place: may order choices, never decide anything */
+      defaults: { township: !tw && state.township !== "any" ? state.township : "",
+                  school: !school && state.school !== "any" ? state.school : "" },
+      label: p.n, short: p.s, names: names,
+      wants: function (layer) {
+        if (!layer) return true;                      /* a row the build could not place: never hidden */
+        var i = layer.indexOf(":"), kind = i < 0 ? layer : layer.slice(0, i), id = i < 0 ? "" : layer.slice(i + 1);
+        if (kind === "municipality") return id === p.m;
+        if (kind === "township") return ts.indexOf(id) >= 0;
+        if (kind === "school") return !school || id === school;
+        return true;                                  /* county, state, library (service areas are not mapped) */
+      },
+      /* stricter: the layer is certainly the reader's (a township or school corporation that was not picked never
+         is). For highlighting, where "may be yours" would only add noise. */
+      sure: function (layer) {
+        if (!layer) return false;
+        var i = layer.indexOf(":"), kind = i < 0 ? layer : layer.slice(0, i), id = i < 0 ? "" : layer.slice(i + 1);
+        if (kind === "municipality") return id === p.m;
+        if (kind === "township") return ts.length === 1 && ts[0] === id;
+        if (kind === "school") return !!school && id === school;
+        return kind === "county" || kind === "state";
+      }
+    };
+  }
+  function hashWins() {
+    var hsh = HASH0 || window.location.hash || "";
+    if (hsh.length < 2) return false;
+    var id = hsh.slice(1);
+    try { id = decodeURIComponent(id); } catch (e) { /* keep the raw id */ }
+    var layer = false;
+    each(doc.querySelectorAll(".cmap-tab[data-layer]"), function (b) { if (b.getAttribute("data-layer") === id) layer = true; });
+    return !layer;
+  }
+  function line(slot, o) {
+    if (!slot) return null;
+    var cur = "";
+    clear(slot);
+    var label = doc.createElement("span");
+    label.className = "here-pre-label";
+    var text = doc.createElement("span");
+    text.className = "here-pre-text";
+    var btn = doc.createElement("button");
+    btn.type = "button";
+    btn.className = "btn btn-small here-pre-btn";
+    var why = doc.createElement("span");
+    why.className = "here-pre-why";
+    slot.appendChild(label);
+    slot.appendChild(text);
+    slot.appendChild(doc.createTextNode(" "));
+    slot.appendChild(btn);
+    slot.appendChild(why);
+    function set(s) {
+      cur = s;
+      if (s === "on") {
+        label.textContent = (o.onLabel || "Showing") + ": ";
+        text.textContent = o.onText;
+        btn.textContent = o.undoLabel || "Show all";
+        why.textContent = o.onWhy || " From your saved place, kept on this device only.";
+      } else if (s === "off") {
+        label.textContent = (o.offLabel || "Your saved place") + ": ";
+        text.textContent = o.offText || o.onText;
+        btn.textContent = o.applyLabel || "Show only these";
+        why.textContent = o.offWhy || "";
+      } else {
+        label.textContent = (o.noteLabel || "Your saved place") + ": ";
+        text.textContent = o.note || "";
+        why.textContent = o.noteWhy || "";
+      }
+      btn.hidden = s === "note";
+      slot.classList.toggle("is-on", s === "on");
+      slot.hidden = false;
+    }
+    btn.addEventListener("click", function () {
+      if (cur === "on") { if (o.undo) o.undo(); set("off"); }
+      else if (cur === "off") { if (o.apply) o.apply(); set("on"); }
+    });
+    slot.setAttribute("role", "status");
+    return { set: set, state: function () { return cur; } };
+  }
+  window.civicHere = { mine: mine, hashWins: hashWins, line: line };
 
   /* another tab changed the place: follow it */
   window.addEventListener("storage", function (ev) {

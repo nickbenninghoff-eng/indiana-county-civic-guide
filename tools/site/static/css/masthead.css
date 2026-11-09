@@ -1,0 +1,21 @@
+/* masthead.css: a compact masthead on phones (Wave E batch 9). Sorts after looks.css and search.css, so it wins on
+   equal specificity. At 480 px and narrower the header's controls are laid out as: title; data date, version and
+   "Not your county?" on one line; search; then the Look switcher and the Theme button side by side. Nothing is removed:
+   every control stays a real button/link with its label (the "Look" word becomes visually hidden, the group keeps its
+   accessible name) and keeps its 44 px target. Widths above 480 px are untouched. */
+@media (max-width: 480px) {
+  :root .masthead { gap: 6px 10px; padding-block: 8px 8px; justify-content: flex-start; }
+  /* the .stamp wrapper dissolves so the date line, the Look switch and the Theme button can be placed in rows */
+  :root .masthead .stamp { display: contents; }
+  :root .masthead .lockup { order: 0; flex: 1 1 100%; }
+  :root .masthead .stamp-date, :root .masthead .stamp-ver, :root .masthead .stamp-county { order: 1; }
+  :root .masthead .stamp-county { margin-left: auto; }
+  :root .masthead .site-search { order: 2; flex: 1 1 100%; }
+  :root[data-look] .masthead .look-switch { order: 3; flex: 1 1 0; width: auto; min-width: 0; gap: 0; }
+  :root .masthead .look-label {
+    position: absolute !important; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap;
+  }
+  :root .masthead .look-opts { flex: 1 1 auto; }
+  :root .masthead .look-btn { padding-inline: 4px; font-size: .78rem; gap: 4px; min-width: 0; }
+  :root .masthead .theme-toggle { order: 4; flex: none; padding-inline: 10px; }
+}

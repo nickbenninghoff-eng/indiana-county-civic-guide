@@ -11,3 +11,9 @@ abbr.party-tag[title] { text-decoration: none; cursor: help; }
 .body-party { display: inline; }
 .party-asof { font-size: .82rem; margin: .4em 0; }
 td .name-party, li .name-party { display: inline; }
+/* Seat diagram: .layer-seats is a wrapping flex row of glyph groups; the body summary, the appointed note and the layer note each take their own full-width line under the glyphs */
+.layer-seats > .body-breakdowns, .layer-seats > .party-asof, .layer-seats > .layer-note { flex: 0 0 100%; width: 100%; margin-top: 0; }
+/* Seat diagram layer head (Wave D batch 6, B3 follow-up): .cite has line-height 0 so superscripts never spread a line;
+   when a long layer title wraps and its citation lands alone on a new line, that line had no height and the numbers
+   overlapped the "N elected" count below (SBCSC, the township placeholder, Line map look). Give it a line box here. */
+.layer-head .layer-name .cite { line-height: 1.2; }

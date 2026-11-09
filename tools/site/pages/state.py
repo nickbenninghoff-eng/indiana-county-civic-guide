@@ -7,13 +7,15 @@ from collections import defaultdict
 
 from civic.charts import columns, results_bars
 from civic.components import (bodies_block, name_party_text, name_with_party, callout, data_table, officeholder_card,
-                              party_label, scope_badge, section, status_badge)
+                              party_label, scope_badge, section, see_all_fold, status_badge)
 from civic.district_map import district_map, district_set, load_district_shapes
 from civic.map import load_shapes
 from civic.pick_one import one_bar, one_fold, one_summary
 from civic.data import PARTY_LABELS, fmt_date, parse_date, split_ids
 from civic.html import h, join
 from civic.seat_split import seat_split
+from civic.related import related_items, related_rail
+from civic.campaign_money import STATE_AREA, area_path
 
 IGA_URL = "https://iga.in.gov/"
 CONTEST_RX = re.compile(r"^(\d{4})g-state-(house|senate)-(\d+)$")
@@ -308,6 +310,35 @@ def _result_text(r: dict, scope: str) -> str:
     return {"Y": "Elected", "N": "Not elected"}.get(w, "Not recorded")
 
 
+def _results_summary(page, key, by_year: dict, title: str):
+    """One row per general election for one district: the candidates in the canvass's order with votes, share and
+    the result as recorded, and what the votes cover (the county portion, unless the row says district-wide)."""
+    c = page.cites
+    rows = []
+    for year in sorted(by_year, reverse=True):
+        rs = by_year[year]
+        bits = []
+        for r in rs:
+            scope = _result_scope(r)
+            try:
+                votes = f"{int(float(r['votes'])):,} votes"
+            except ValueError:
+                votes = "votes not recorded"
+            share = f", {float(r['pct']):.1f}%" if r.get("pct") else ""
+            res = _result_text(r, scope)
+            bits.append(h("span", {"class": "res-cand"}, name_with_party(r["candidate"], r["party"]), f" {votes}{share}",
+                          h("span", {"class": "muted"}, f" · {res[:1].lower() + res[1:]}") if res != "Not determined" else None))
+        scopes = list(dict.fromkeys(_result_scope(r) for r in rs))
+        sts = list(dict.fromkeys(r["status"] for r in rs))
+        srcs = ";".join(dict.fromkeys(x for r in rs for x in split_ids(r["source_ids"])))
+        rows.append([f"{year} general", h("span", None, join(bits, "; "),
+                                          h("span", {"class": "muted"}, " Uncontested.") if len(rs) == 1 else None),
+                     "; ".join(scopes), h("span", None, join([status_badge(x, page) for x in sts], " "), c.cite(srcs))])
+    return data_table(f"results-{key[0]}-{key[1]}-summary", ["Election", "Candidates (canvass order)",
+                                                              "What the votes cover", "Status"],
+                      rows, caption=f"{title}: one row per general election", min_width="44rem")
+
+
 CF_BASIS = ("Campaign money is by filing year: totals of the items on reports FILED in each calendar year, not "
             "election-cycle totals. One campaign spans two or more years, and the latest year is partial.")
 CF_DOWNLOAD = "2026-11-07"
@@ -584,37 +615,58 @@ def build_legislators(site):
                             f"{float(r['pct']):.2f}%" if r.get("pct") else "",
                             _result_text(r, scope), scope,
                             h("span", None, status_badge(r["status"], page), c.cite(r["source_ids"]))])
+        # results: one row per election (candidates in ballot order, what the votes cover); every row in a fold
+        n_res = len(trs)
         results = [h("h4", {"id": f"results-{key[0]}-{key[1]}"}, f"{o['title']}: results, 2012 to 2026"),
-                   data_table(f"results-{key[0]}-{key[1]}-table",
-                              ["Election", "Candidate", "Party", "Votes", "Share", "Result as recorded",
-                               "What the votes cover", "Status"],
-                              trs, caption=f"{o['title']}: general election results, 2012 to 2026",
-                              numeric=(3, 4), min_width="60rem") if trs else
+                   _results_summary(page, key, contests[key], o["title"]) if trs else None,
+                   see_all_fold(f"results-{key[0]}-{key[1]}-all", n_res,
+                                data_table(f"results-{key[0]}-{key[1]}-table",
+                                           ["Election", "Candidate", "Party", "Votes", "Share", "Result as recorded",
+                                            "What the votes cover", "Status"],
+                                           trs, caption=f"{o['title']}: general election results, 2012 to 2026",
+                                           numeric=(3, 4), min_width="60rem"),
+                                noun="result row", label=f"See all {n_res} result rows, one per candidate",
+                                hint="Party · share · Copy CSV") if trs else
                    h("p", {"class": "muted"}, "No general election results for this district in the guide's data.")]
+        coms = committees_for(ed, o, st, cf_rows_for(key))
         crow = []
-        for com, role, rs in committees_for(ed, o, st, cf_rows_for(key)):
+        for com, role, rs in coms:
             for r in rs:
                 crow.append([r["committee"], role, r["year"] + (" (partial)" if int(r["year"]) == last_cf else ""),
                              _money(float(r["receipts"] or 0)), _money(float(r["expenditures"] or 0)),
                              h("span", None, status_badge(r["status"], page), c.cite(r["source_ids"]))])
+        sl = area_path(STATE_AREA)
+        sl_link = (h("a", {"href": page.rel(sl)}, "State legislators' committees on the campaign money pages")
+                   if sl in page.site.by_path else None)
         if crow:
-            money_block = [h("h4", None, "Campaign money, by filing year"),
+            money_block = [h("h4", {"id": f"cf-{key[0]}-{key[1]}-h"}, "Campaign money, by filing year"),
                            h("p", {"class": "muted"}, CF_BASIS + " Only the committees of members and 2026 candidates in "
                                                       "the guide's data are included. ",
-                             h("a", {"href": "#money"}, "Every district's committees")),
-                           data_table(f"cf-{key[0]}-{key[1]}", ["Committee", "Whose", "Filing year", "Receipts",
-                                                                "Expenditures", "Status"],
-                                      crow, caption=f"{o['title']}: campaign committees by filing year (not election cycles)",
-                                      numeric=(3, 4), min_width="44rem")]
+                             h("a", {"href": "#money"}, "Every district's committees"),
+                             [" · ", sl_link] if sl_link else None),
+                           h("ul", {"class": "leg-cf"},
+                             [h("li", None, h("strong", None, com), f" ({role}): ", cf_years_text(rs, last_cf), ". ",
+                                status_badge(rs[-1]["status"], page),
+                                c.cite(";".join(dict.fromkeys(x for r in rs for x in split_ids(r["source_ids"])))))
+                              for com, role, rs in coms]),
+                           see_all_fold(f"cf-{key[0]}-{key[1]}-all", len(crow),
+                                        data_table(f"cf-{key[0]}-{key[1]}", ["Committee", "Whose", "Filing year", "Receipts",
+                                                                             "Expenditures", "Status"],
+                                                   crow, caption=f"{o['title']}: campaign committees by filing year (not election cycles)",
+                                                   numeric=(3, 4), min_width="44rem"),
+                                        noun="filing-year row", label=f"See all {len(crow)} filing-year rows: receipts and "
+                                                                      "expenditures")]
         else:
             money_block = [h("p", {"class": "muted"}, "No campaign committee for this district is in the guide's state "
-                                                      "campaign-finance data.")]
+                                                      "campaign-finance data.", [" ", sl_link] if sl_link else None)]
+        rail = related_rail([i for i in related_items(page, office_id=o["office_id"]) if i.key != "campaigns"],
+                            name=o["title"], rail_id=f"related-{key[0]}-{key[1]}", heading_tag="h4")
         digest = [f"Member now: {st['now']}",
                   f" · {st['incoming_text']}" if st["incoming_text"] else "",
                   f" · Next election {o['next_election']}" if o.get("next_election") else ""]
         body = [h("p", {"class": "muted"}, cover_text(key), c.cite(o["source_ids"])),
                 h("div", {"class": "card-grid leg-grid"}, card, fig),
-                results, money_block]
+                rail, results, money_block]
         folds.append(one_fold(f"{key[0]}-{key[1]}", o["title"], one_summary("h3", o["title"], digest), body,
                               item_id=did(key)))
     page.add(section("members", 2, "Each district: who holds it, results and campaign money",
@@ -697,16 +749,22 @@ def build_legislators(site):
                                "cash-on-hand figure. (4) Only committees for the members and 2026 candidates listed here are "
                                "included, not every opponent.", c.cite("MON-020;MON-021;MON-022")), kind="note"),
                      chart,
-                     h("h3", None, "Receipts by committee and filing year"),
-                     data_table("cf-matrix", ["Committee (district)"] + [str(y) for y in years], matrix,
-                                caption="Receipts by committee and filing year (a dash means no committee data for that year)",
-                                numeric=tuple(range(1, len(years) + 1)), min_width="64rem"),
-                     h("details", {"class": "state-details"},
-                       h("summary", {"class": "btn btn-small"}, "Show every row: receipts, expenditures and top contributor types"),
-                       data_table("cf-long", ["Committee", "District", "Filing year", "Receipts", "Expenditures",
-                                              "Top contributor types (amount, as filed)", "Status"],
-                                  long_rows, caption="State legislative committees, receipts and expenditures by filing year",
-                                  numeric=(2, 3, 4), min_width="60rem")),
+                     h("p", None, "Each district's own committees are summarized in its item above. The tables below "
+                                  "list every committee in the data: receipts by filing year, then every row with "
+                                  "expenditures and the top contributor types as filed."),
+                     see_all_fold("cf-matrix-all", len(matrix),
+                                  data_table("cf-matrix", ["Committee (district)"] + [str(y) for y in years], matrix,
+                                             caption="Receipts by committee and filing year (a dash means no committee data for that year)",
+                                             numeric=tuple(range(1, len(years) + 1)), min_width="64rem"),
+                                  noun="committee", label=f"See all {len(matrix)} committees: receipts by committee and "
+                                                          "filing year"),
+                     see_all_fold("cf-long-all", len(long_rows),
+                                  data_table("cf-long", ["Committee", "District", "Filing year", "Receipts", "Expenditures",
+                                                         "Top contributor types (amount, as filed)", "Status"],
+                                             long_rows, caption="State legislative committees, receipts and expenditures by filing year",
+                                             numeric=(2, 3, 4), min_width="60rem"),
+                                  noun="row", label=f"See all {len(long_rows)} rows: receipts, expenditures and top "
+                                                    "contributor types"),
                      scope="county", ed=ed))
 
     gaps = ed.gaps(files=["gaps_results"], pattern=r"legislative district|State Representative District 8|statewide and multi-county")

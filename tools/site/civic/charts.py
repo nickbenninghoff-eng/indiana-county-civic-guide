@@ -435,3 +435,89 @@ def seat_dots(kinds: list[str], label: str, per_row: int = 12) -> Markup:
             marks.append(h("circle", {"class": f"sd sd-{k}", "cx": f"{cx:.1f}", "cy": f"{cy:.1f}", "r": r - (0.75 if k != "vote" else 0)}))
     return h("svg", {"class": "seat-dots", "viewBox": f"0 0 {W} {H}", "width": W, "height": H,
                      "role": "img", "aria-label": label}, marks)
+
+
+# ------------------------------------------------------------------ share bars (small multiples)
+# Added 2026-11-09 (Wave A, batch 1; review pattern P7). One 100% bar per group (office level, year, unit), split
+# into the shares of a few categories, with the counts printed as text under each bar. Never colored by party: the
+# marks are the accent ramp (ordered categories) or the accent/ink alternation (unordered ones), from
+# static/css/patterns.css. HTML, not SVG, so the rows and their count lines reflow at phone width.
+
+SHARE_RAMPS = {
+    # ordered categories (closest to safest margin, say): accent, then lighter steps of it
+    "seq": ["m-share-0", "m-share-1", "m-share-2", "m-share-3"],
+    # unordered categories: accent and ink alternating, as in the tax-bill split
+    "alt": ["m-share-a0", "m-share-a1", "m-share-a2", "m-share-a3", "m-share-a4", "m-share-a5"],
+}
+
+
+def _pct(n: int, total: int) -> str:
+    if not total:
+        return ""
+    p = 100.0 * n / total
+    return "<1%" if 0 < p < 1 else f"{p:.0f}%"
+
+
+def share_bars(fid: str, title: str, groups: list[dict], series: list[dict], subtitle: str | None = None,
+               noun: str | tuple[str, str] = ("item", "items"), ramp: str = "seq", note=None, status=None, page=None,
+               group_header: str = "Group", cite=None, show_zero: bool = True) -> Markup:
+    """Small multiples of 100% stacked bars.
+
+    groups: ``[{label, counts: {series key: int}, href?: drill-down link (shown on the label), tip?: str}]`` in the
+    order given (office levels top-down, years in order; never sorted by a party's share).
+    series: ``[{key, label, mark?}]`` in stack and legend order; ``mark`` overrides the ramp's class (``m-nodata``
+    for "not in the data", ``m-ink``). At most 4 series on the "seq" ramp and 6 on "alt"; more raise ValueError
+    (fold a tail into "Other" first).
+    noun: (singular, plural) of what is counted ("race", "races"). Each row prints its total and every category's
+    count and share as text, so the bar is drawn for the eye only (aria-hidden) and the segments are not tab stops;
+    pointer hover still shows each segment's tooltip. The table view repeats every count."""
+    marks = SHARE_RAMPS.get(ramp)
+    if marks is None:
+        raise ValueError(f"share_bars: unknown ramp {ramp!r}")
+    if len(series) > len(marks):
+        raise ValueError(f"share_bars: {len(series)} series; the {ramp} ramp has {len(marks)} steps")
+    one, many = (noun, noun + "s") if isinstance(noun, str) else noun
+    keys = [s["key"] for s in series]
+    mark_of = {s["key"]: s.get("mark") or marks[i] for i, s in enumerate(series)}
+    rows = []
+    for gi, g in enumerate(groups):
+        counts = {k: int(g.get("counts", {}).get(k) or 0) for k in keys}
+        total = sum(counts.values())
+        label = h("a", {"href": g["href"]}, g["label"]) if g.get("href") else g["label"]
+        segs, texts = [], []
+        for s in series:
+            n = counts[s["key"]]
+            share = _pct(n, total)
+            if n:
+                segs.append(h("span", {"class": f"shb-seg {mark_of[s['key']]}", "style": f"flex-grow: {n}",
+                                       "data-tv": f"{n:,} of {total:,} ({share})",
+                                       "data-tl": f"{g['label']} · {s['label']}"}))
+            if n or show_zero:
+                texts.append(h("li", {"class": "shb-c" + ("" if n else " shb-c-zero")},
+                               h("span", {"class": f"key key-rect {mark_of[s['key']]}", "aria-hidden": "true"}),
+                               h("span", {"class": "shb-cn mono"}, f"{n:,}"), " ", s["label"],
+                               h("span", {"class": "shb-cp"}, f" ({share})") if n else None))
+        tot_txt = f"{total:,} {one if total == 1 else many}"
+        bar = (h("div", {"class": "shb-bar", "aria-hidden": "true"}, segs) if total else
+               h("div", {"class": "shb-bar shb-bar-empty", "aria-hidden": "true"}))
+        rows.append(h("li", {"class": "shb-row", "title": g.get("tip")},
+                      h("p", {"class": "shb-label"}, h("span", {"class": "shb-name"}, label),
+                        h("span", {"class": "shb-total mono"}, tot_txt)),
+                      h("div", {"class": "shb-track"}, bar,
+                        h("ul", {"class": "shb-counts", "aria-label": f"{g['label']}: {tot_txt}"}, texts) if total else
+                        h("p", {"class": "shb-counts shb-none"}, f"No {many} in the guide's data."))))
+    axis = h("div", {"class": "shb-axis", "aria-hidden": "true"},
+             h("span", None, "0%"), h("span", None, "50%"), h("span", None, "100%"))
+    body = h("div", {"class": "shb", "role": "group", "aria-label": f"{title}. Share of {many} in each group; "
+                                                                   "counts are listed under each bar."},
+             h("ol", {"class": "shb-rows"}, rows), axis)
+    hdr = [group_header] + [s["label"] for s in series] + ["Total"]
+    trows = []
+    for g in groups:
+        counts = {k: int(g.get("counts", {}).get(k) or 0) for k in keys}
+        total = sum(counts.values())
+        trows.append([g["label"]] + [f"{counts[k]:,} ({_pct(counts[k], total)})" if total else "0" for k in keys]
+                     + [f"{total:,}"])
+    leg = legend([(mark_of[s["key"]], s["label"]) for s in series]) if len(series) >= 2 else None
+    return figure(fid, title, subtitle, body, hdr, trows, note=note, numeric=tuple(range(1, len(hdr))), status=status,
+                  page=page, legend=leg, kind="share", scroll=False, cite=cite)

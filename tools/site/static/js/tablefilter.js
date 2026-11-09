@@ -10,6 +10,19 @@
        <p data-tf-count>
      </div>
      <p data-tf-empty="TABLE_ID" hidden>
+   TABLE_ID may also name a list (any element, e.g. <ul class="ent-list">): its direct children carrying
+   data-tf-row are filtered and sorted the same way (added 2026-11-09 for entity_list).
+   Deep mode (added 2026-11-09, Wave B batch 2): a container with data-tf-deep filters every descendant carrying
+   data-tf-row, wherever it sits (rows grouped under headings and folds: the margins page's areas and seats, the
+   calendar's years and governments, the officeholders list). Rows are not re-sorted in deep mode. Each descendant
+   marked data-tf-group is hidden while none of its rows is shown; while a filter is on, a group that is (or
+   directly holds) a closed <details> with a shown row is opened, and closed again when the filters are cleared.
+   Outside scope (added 2026-11-09, Wave E batch 8): the bar listens for a "tf-scope" event whose detail is
+   {test: function (row) -> bool} (or null to drop it). Rows the test rejects are hidden as if filtered out, and count
+   as filtered for the count line, the folds and Copy CSV. Reset drops the scope too and fires "tf-scope-cleared" on
+   the bar. static/js/preselect.js uses it for the saved-place preselect ("Showing: your governments").
+   A group marked data-tf-keep (part 2: the calendar's year sections, link targets) is never hidden: while none of
+   its rows is shown, its [data-tf-group-empty] note shows instead.
    ASCII only. */
 (function () {
   "use strict";
@@ -19,9 +32,24 @@
 
   function init(bar) {
     var table = doc.getElementById(bar.getAttribute("data-tf-table"));
-    if (!table || !table.tBodies.length) return;
-    var tbody = table.tBodies[0];
-    var rows = Array.prototype.slice.call(tbody.rows);
+    if (!table) return;
+    var tbody, rows, groups = [];
+    var deep = table.tagName !== "TABLE" && table.hasAttribute("data-tf-deep");
+    if (deep) {
+      tbody = null;
+      rows = Array.prototype.slice.call(table.querySelectorAll("[data-tf-row]"));
+      groups = Array.prototype.slice.call(table.querySelectorAll("[data-tf-group]"));
+      if (!rows.length) return;
+    } else if (table.tagName === "TABLE") {
+      if (!table.tBodies.length) return;
+      tbody = table.tBodies[0];
+      rows = Array.prototype.slice.call(tbody.rows);
+    } else {
+      /* a list (civic/components.py entity_list): its direct children marked data-tf-row are the rows */
+      tbody = table;
+      rows = Array.prototype.filter.call(table.children, function (c) { return c.hasAttribute("data-tf-row"); });
+      if (!rows.length) return;
+    }
     var selects = Array.prototype.slice.call(bar.querySelectorAll("select[data-tf-key]"));
     var q = bar.querySelector("input[data-tf-q]");
     var sortSel = bar.querySelector("select[data-tf-sort]");
@@ -37,6 +65,7 @@
       return (t || "").replace(/\s+/g, " ").toLowerCase();
     });
     var lastOrder = "";
+    var scope = null;   /* outside scope (tf-scope event): a row test, or null */
 
     function specOf() {
       if (!sortSel) return null;
@@ -73,10 +102,12 @@
         for (var w = 0; ok && w < words.length; w++) {
           if (texts[i].indexOf(words[w]) < 0) ok = false;
         }
+        if (ok && scope && !scope(r)) ok = false;
         r.hidden = !ok;
         if (ok) shown++;
       });
-      var spec = specOf();
+      if (deep) showGroups(want.length > 0 || words.length > 0 || !!scope);
+      var spec = deep ? null : specOf();
       var order = sortSel ? sortSel.value : "";
       if (spec && order !== lastOrder) {
         rows.slice().sort(compare(spec)).forEach(function (r) { tbody.appendChild(r); });
@@ -89,6 +120,32 @@
       table.setAttribute("data-tf-shown", String(shown));
       /* Copy CSV (static/app.js) copies only the rows shown and says how many */
       table.dispatchEvent(new CustomEvent("rows-filtered", { bubbles: true }));
+    }
+
+    /* deep mode: hide the groups with no shown row; while filtering, open the folds that hold a shown row */
+    function foldOf(g) {
+      if (g.tagName === "DETAILS") return g;
+      for (var i = 0; i < g.children.length; i++) if (g.children[i].tagName === "DETAILS") return g.children[i];
+      return null;
+    }
+    function showGroups(active) {
+      groups.forEach(function (g) {
+        var any = false;
+        var inside = g.querySelectorAll("[data-tf-row]");
+        for (var i = 0; i < inside.length && !any; i++) if (!inside[i].hidden) any = true;
+        if (g.hasAttribute("data-tf-keep")) {
+          /* a group that is a link target (the calendar's #year-<y>): stays on the page; its note says it is empty */
+          g.hidden = false;
+          var en = g.querySelector("[data-tf-group-empty]");
+          if (en) en.hidden = any || !inside.length;
+          return;
+        }
+        g.hidden = !any;
+        var d = foldOf(g);
+        if (!d) return;
+        if (active && any && !d.open) { d.open = true; d._tfOpened = true; }
+        else if (!active && d._tfOpened) { d.open = false; d._tfOpened = false; }
+      });
     }
 
     selects.forEach(function (s) { s.addEventListener("change", apply); });
@@ -106,6 +163,13 @@
       selects.forEach(function (s) { s.selectedIndex = 0; });
       if (q) q.value = "";
       if (sortSel) sortSel.selectedIndex = 0;
+      var had = !!scope;
+      scope = null;
+      apply();
+      if (had) bar.dispatchEvent(new CustomEvent("tf-scope-cleared"));
+    });
+    bar.addEventListener("tf-scope", function (ev) {
+      scope = ev.detail && typeof ev.detail.test === "function" ? ev.detail.test : null;
       apply();
     });
     bar.hidden = false;

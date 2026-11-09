@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import re
 
-from civic.components import data_table, scope_badge, section
+from civic.components import data_table, scope_badge, section, see_all_fold
 from civic.data import fmt_int
 from civic.html import h
 from civic.sitemap import DATA_PAGES
@@ -51,16 +51,27 @@ def _pull_body(site, page) -> None:
                 for r in inds]
     com_src = "COM-001;COM-002;COM-003;COM-004"
 
+    def pull_fold(pid, title, hint, *children):
+        """One source's steps in a fold (ships open; folds.js closes it and reopens it for a link to any id inside,
+        including the pull-* heading id the old data page's links use)."""
+        kids = children[0] if len(children) == 1 and isinstance(children[0], (list, tuple)) else children
+        return h("details", {"class": "fold-details see-all pull-fold", "open": True, "data-fold": "pull"},
+                 h("summary", {"class": "fold-summary see-all-summary"},
+                   h("h3", {"id": pid}, title), h("span", {"class": "see-all-hint"}, hint),
+                   h("span", {"class": "fold-toggle", "aria-hidden": "true"})),
+                 h("div", {"class": "fold-body see-all-body"}, kids))
+
     pull = section("pull", n, "How to pull it yourself",
                    h("p", {"class": "lead"}, "The guide's figures come from public sources you can open yourself. Here is "
                                              "where each one lives and how it was pulled."),
-                   h("h3", {"id": "pull-results"}, "County election results archive"),
+                   pull_fold("pull-results", "County election results archive", "PDF reports, one per election",
                    h("p", None, "The county election board posts a PDF report for each election on one page: ",
                      ext(res_arch.get("url", "")), c.cite("RES-030"),
                      " Check each report's header: an election-night report says Unofficial; the final canvass says Official. "
                      "Reports from 2010 to 2019 and the 2024 general election are scanned images, so their text has to be "
                      "read by text recognition.", c.cite("RES-001;RES-027")) if res_arch.get("url") else None,
-                   h("h3", {"id": "pull-filings"}, "County candidate filings"),
+                   ),
+                   pull_fold("pull-filings", "County candidate filings", "Scanned local filings",
                    h("p", None, "Local candidates' campaign-finance reports, large-contribution notices and candidacy "
                                 "filings are posted as scanned documents on the county's Candidate Filings page: ",
                      ext(filings.get("url", "")), c.cite("SVC-019"),
@@ -68,7 +79,8 @@ def _pull_body(site, page) -> None:
                      "document number.") if filings.get("url") else
                    h("p", None, "The guide's source files do not include the address of the county's candidate-filings page "
                                 "yet, so it is not listed here. It is recorded under Gaps below."),
-                   h("h3", {"id": "pull-gateway"}, "Indiana Gateway (budgets, tax rates, debt)"),
+                   ),
+                   pull_fold("pull-gateway", "Indiana Gateway (budgets, tax rates, debt)", "Bulk download, county code filter",
                    h("p", None, "Budgets, tax rates and debt come from the bulk download page of Indiana Gateway: ",
                      ext(gw.get("url", "")), c.cite("MON-001;MON-002;MON-004")),
                    h("ol", None,
@@ -77,7 +89,8 @@ def _pull_body(site, page) -> None:
                      h("li", None, f"Filter to county code {cfg.get('gateway_county_code', '')} ({ed.county_label})."),
                      h("li", None, "Remove repeated rows before adding anything up. The download the guide used repeated "
                                    "every row five times.", c.cite("MON-001"))),
-                   h("h3", {"id": "pull-cf"}, "State campaign finance (bulk files)"),
+                   ),
+                   pull_fold("pull-cf", "State campaign finance (bulk files)", "Yearly contribution and expenditure files",
                    h("p", None, "The Indiana Election Division lists its bulk files here: ", ext(cf_page.get("url", "")),
                      c.cite("MON-020"), " Each year has a contribution file and an expenditure file at a fixed address:"),
                    h("pre", {"class": "code-block"},
@@ -85,7 +98,8 @@ def _pull_body(site, page) -> None:
                    h("p", None, "Replace {YEAR} with a four-digit year. Files are grouped by the year a report was filed, "
                                 "not by election cycle, and they have no district or cash-on-hand field.",
                      c.cite("MON-020;MON-021;MON-022")),
-                   h("h3", {"id": "pull-census"}, "Census and Bureau of Labor Statistics queries"),
+                   ),
+                   pull_fold("pull-census", "Census and Bureau of Labor Statistics queries", "Query patterns with this county's codes",
                    h("p", None, f"These are the query patterns the guide used, with {ed.county_label}'s codes filled in "
                                 f"(state {cfg.get('state_fips', '')}, county {cfg.get('county_fips', '')}). "
                                 "The official Census API needs a free key; put it where the query says {KEY}.",
@@ -98,10 +112,12 @@ def _pull_body(site, page) -> None:
                    h("pre", {"class": "code-block"}, h("code", None, _fill(laus.get("table_variable", ""), ed))) if laus else None,
                    h("p", None, h("strong", None, "BLS, jobs located in the county (QCEW):")),
                    h("pre", {"class": "code-block"}, h("code", None, _fill(qcew.get("table_variable", ""), ed))) if qcew else None,
+                   ),
                    h("p", None, "Every indicator, with its table and variable codes:"),
-                   data_table("indicator-defs", ["Indicator", "Label", "Universe", "Table and variables", "Margin of error"],
-                              ind_rows, caption=f"Indicator definitions ({len(inds)}), data/indiana/indicators.csv",
-                              min_width="56rem"),
+                   see_all_fold("indicator-defs-all", len(inds), data_table(
+                       "indicator-defs", ["Indicator", "Label", "Universe", "Table and variables", "Margin of error"],
+                       ind_rows, caption=f"Indicator definitions ({len(inds)}), data/indiana/indicators.csv",
+                       min_width="56rem"), noun="indicator", label=f"See all {len(inds)} indicator definitions"),
                    scope="indiana", ed=ed)
     page.add(pull)
 

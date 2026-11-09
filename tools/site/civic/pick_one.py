@@ -90,3 +90,32 @@ def one_wrap_attrs() -> dict:
     """Attributes for a <details> that holds rows of every area (an all-units table): opened when an area with rows
     in it is chosen, and by Show all; closed by Collapse all."""
     return {"data-one-wrap": True}
+
+
+# ------------------------------------------------------------------ added 2026-11-09 (Wave C batch 7)
+
+def one_wrap_see_all(fold_id: str, label: str, body, hint: str | None = "Copy CSV") -> Markup:
+    """components.see_all_fold's markup (a "See all N rows" fold that ships open) that is also a one_wrap_attrs
+    wrapper: choosing an area that has rows inside opens it (only that area's rows show, and Copy CSV copies them);
+    Show all opens it, Collapse all closes it. Used for the budgets debt table. tools/tests/test_wave_c_batch7.py
+    checks the markup stays the same as see_all_fold's apart from data-one-wrap."""
+    return h("details", {"class": "fold-details see-all", "id": fold_id, "open": True, "data-fold": "see-all",
+                         **one_wrap_attrs()},
+             h("summary", {"class": "fold-summary see-all-summary"},
+               h("span", {"class": "see-all-label"}, label),
+               h("span", {"class": "see-all-hint"}, hint) if hint else None,
+               h("span", {"class": "fold-toggle", "aria-hidden": "true"})),
+             h("div", {"class": "fold-body see-all-body"}, body))
+
+
+def one_chips(label: str, chips: list[tuple[str, str]], note=None, cls: str = "") -> Markup | None:
+    """A row of chip links that choose an area, for areas a map cannot draw (units with no boundary). ``chips`` is
+    [(href '#anchor', text)]; every href lands on an element of that area's item, so it works without JavaScript
+    (it is a plain in-page link) and with it (pick_one.js chooses the area on click)."""
+    if not chips:
+        return None
+    return h("div", {"class": "one-chips" + (f" {cls}" if cls else "")},
+             h("p", {"class": "one-chips-h"}, label),
+             h("ul", {"class": "one-chips-list"},
+               [h("li", None, h("a", {"class": "one-chip", "href": href}, text)) for href, text in chips]),
+             h("p", {"class": "one-chips-note muted"}, note) if note else None)

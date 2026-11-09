@@ -1,6 +1,8 @@
-/* campaigns.js: filing explorer on money/campaigns/. Rows come from #cf-data (built by pages/campaigns.py).
-   Default order is office, district, committee (the order the data arrives in); amount sorts only on request.
-   Inserts data with textContent only. ASCII only. */
+/* campaigns.js: filing explorer on money/campaigns/all-filings/. Every filing is a table row rendered in the HTML
+   (pages/campaigns.py, #cf-table); with JavaScript off the whole table is there. This script only filters and sorts
+   those rows (non-matching rows are taken out of the tbody, never deleted) and derives the one-row-per-committee
+   list from clones of them. #cf-data holds only committee names, cycle totals and badge text. Default order is
+   office, district, committee (the order the rows arrive in); amount sorts only on request. ASCII only. */
 (function () {
   "use strict";
   var doc = document;
@@ -8,7 +10,8 @@
   var block = doc.getElementById("cf-explorer-block");
   var controls = doc.getElementById("cf-controls");
   var tbody = doc.getElementById("cf-tbody");
-  if (!node || !block || !controls || !tbody) return;
+  var table = doc.getElementById("cf-table");
+  if (!node || !block || !controls || !tbody || !table) return;
   var data;
   try { data = JSON.parse(node.textContent); } catch (e) { return; }
   var selCycle = doc.getElementById("cf-cycle");
@@ -17,18 +20,32 @@
   var selSort = doc.getElementById("cf-sort");
   var count = doc.getElementById("cf-count");
   var totalsBox = doc.getElementById("cf-totals");
+  var listBox = doc.getElementById("cf-list");
+  var foldLabel = doc.querySelector("#cf-all-fold .see-all-label");
   var site = doc.getElementById("site");
   var root = (site && site.getAttribute("data-root")) || "";
   if (!selCycle || !selGroup || !selComm || !selSort) return;
 
-  // row fields (see _explorer_block in pages/campaigns.py)
-  var CI = 0, OI = 1, GI = 2, CY = 3, CM = 4, CA = 5, PA = 6, RT = 7, AM = 8, PE = 9, PT = 10,
-      REC = 11, EXP = 12, CASH = 13, ST = 14, DOC = 15, URL = 16, NOTE = 17;
-  var rows = data.rows.map(function (r, i) { r.push(i); return r; });
-  var IDX = 18;
+  // Each filing row carries data-ci (committee), data-oi (office), data-gi (office group), data-cy (cycle),
+  // data-pt (period end), data-rec / data-exp / data-cash (numbers, absent when blank), data-st (the committee name is the .cf-committee text).
+  function num(tr, k) { var v = tr.getAttribute("data-" + k); return v === null ? null : parseFloat(v); }
+  var hdrs = {};
+  var rows = [];
+  Array.prototype.forEach.call(tbody.children, function (tr) {
+    var hk = tr.getAttribute("data-hk");
+    if (hk) { hdrs[hk] = tr; return; }
+    rows.push({
+      tr: tr, idx: rows.length,
+      ci: +tr.getAttribute("data-ci"), oi: tr.getAttribute("data-oi"), gi: tr.getAttribute("data-gi"),
+      cy: tr.getAttribute("data-cy"), cm: (tr.querySelector(".cf-committee") || {}).textContent || "", pt: tr.getAttribute("data-pt") || "",
+      rec: num(tr, "rec"), exp: num(tr, "exp"), cash: num(tr, "cash"), st: tr.getAttribute("data-st")
+    });
+  });
+  if (!rows.length) return;
 
   controls.hidden = false;
-  block.hidden = false;
+  var lb = doc.getElementById("cf-list-block");
+  if (lb) lb.hidden = false;
 
   function money(v) {
     if (v === null || v === undefined) return "blank on form";
@@ -43,16 +60,6 @@
     return e;
   }
   function clear(e) { while (e.firstChild) e.removeChild(e.firstChild); }
-  function cfBadge(status) {
-    var def = data.status[status] || [String(status).toUpperCase(), "Transcription status not recorded."];
-    var a = el("a", "badge-link");
-    a.href = "#method";
-    a.setAttribute("aria-label", def[0] + ": " + def[1]);
-    var s = el("span", "badge badge-cf badge-cf-" + (status || "none"), def[0]);
-    s.title = def[1];
-    a.appendChild(s);
-    return a;
-  }
   function computedBadge() {
     var a = el("a", "badge-link");
     a.href = root + "about/index.html#badges";
@@ -64,9 +71,9 @@
   }
 
   function matches(r, useComm) {
-    if (selCycle.value !== "" && String(r[CY]) !== selCycle.value) return false;
-    if (selGroup.value !== "" && String(r[GI]) !== selGroup.value) return false;
-    if (useComm && selComm.value !== "" && String(r[CI]) !== selComm.value) return false;
+    if (selCycle.value !== "" && r.cy !== selCycle.value) return false;
+    if (selGroup.value !== "" && r.gi !== selGroup.value) return false;
+    if (useComm && selComm.value !== "" && String(r.ci) !== selComm.value) return false;
     return true;
   }
 
@@ -75,9 +82,9 @@
     var seen = {};
     var list = [];
     rows.forEach(function (r) {
-      if (!matches(r, false) || seen[r[CI]]) return;
-      seen[r[CI]] = 1;
-      list.push(r[CI]);
+      if (!matches(r, false) || seen[r.ci]) return;
+      seen[r.ci] = 1;
+      list.push(r.ci);
     });
     list.sort(function (a, b) {
       var x = data.committees[a].n.toLowerCase(), y = data.committees[b].n.toLowerCase();
@@ -97,85 +104,35 @@
   function cmpNum(field, dir) {
     return function (a, b) {
       var x = a[field], y = b[field];
-      var xn = x === null || x === undefined, yn = y === null || y === undefined;
-      if (xn && yn) return a[IDX] - b[IDX];
-      if (xn) return 1;      // blanks always last
-      if (yn) return -1;
+      if (x === null && y === null) return a.idx - b.idx;
+      if (x === null) return 1;      // blanks always last
+      if (y === null) return -1;
       if (x !== y) return dir * (x - y);
-      return a[IDX] - b[IDX];
+      return a.idx - b.idx;
     };
   }
   function sortRows(list) {
     var s = selSort.value;
     if (s === "committee") {
       return list.sort(function (a, b) {
-        var x = a[CM].toLowerCase(), y = b[CM].toLowerCase();
-        return x < y ? -1 : x > y ? 1 : a[IDX] - b[IDX];
+        var x = a.cm.toLowerCase(), y = b.cm.toLowerCase();
+        return x < y ? -1 : x > y ? 1 : a.idx - b.idx;
       });
     }
     if (s === "date") {
       return list.sort(function (a, b) {
-        if (a[PT] === b[PT]) return a[IDX] - b[IDX];
-        if (!a[PT]) return 1;
-        if (!b[PT]) return -1;
-        return a[PT] < b[PT] ? -1 : 1;
+        if (a.pt === b.pt) return a.idx - b.idx;
+        if (!a.pt) return 1;
+        if (!b.pt) return -1;
+        return a.pt < b.pt ? -1 : 1;
       });
     }
     var m = /^(receipts|spent|cash)-(asc|desc)$/.exec(s);
     if (m) {
-      var field = { receipts: REC, spent: EXP, cash: CASH }[m[1]];
+      var field = { receipts: "rec", spent: "exp", cash: "cash" }[m[1]];
       return list.sort(cmpNum(field, m[2] === "asc" ? 1 : -1));
     }
-    return list.sort(function (a, b) { return a[IDX] - b[IDX]; });
-  }
-
-  function headerRow(cls, text) {
-    var tr = el("tr", cls);
-    var th = el("th", null, text);
-    th.setAttribute("scope", "colgroup");
-    th.setAttribute("colspan", "8");
-    tr.appendChild(th);
-    return tr;
-  }
-
-  function rowEl(r, showOffice) {
-    var tr = doc.createElement("tr");
-    var th = el("th");
-    th.setAttribute("scope", "row");
-    th.appendChild(el("span", "cf-committee", r[CM] || "Committee name not written"));
-    var who = [];
-    if (r[CA]) who.push(r[CA]);
-    who.push(data.parties[r[PA]]);
-    th.appendChild(el("span", "cf-sub", who.join(" · ")));
-    if (showOffice) th.appendChild(el("span", "cf-sub", data.offices[r[OI]]));
-    tr.appendChild(th);
-    tr.appendChild(el("td", null, data.types[r[RT]] + (r[AM] ? " (amended)" : "")));
-    tr.appendChild(el("td", null, r[PE]));
-    var unread = r[ST] === "unreadable";
-    [REC, EXP, CASH].forEach(function (f) {
-      tr.appendChild(el("td", "num", unread ? "not readable" : money(r[f])));
-    });
-    var st = el("td", "cf-status");
-    st.appendChild(cfBadge(r[ST]));
-    if (r[NOTE]) {
-      var d = el("details", "cf-note-details");
-      d.appendChild(el("summary", null, "Note"));
-      d.appendChild(el("p", "cf-note", r[NOTE]));
-      st.appendChild(d);
-    }
-    tr.appendChild(st);
-    var form = el("td");
-    if (r[URL]) {
-      var a = el("a", null, "doc " + r[DOC]);
-      a.href = /^https?:/.test(r[URL]) ? r[URL] : data.url + r[URL];
-      a.target = "_blank";
-      a.rel = "noopener";
-      form.appendChild(a);
-    } else {
-      form.textContent = "doc " + r[DOC];
-    }
-    tr.appendChild(form);
-    return tr;
+    return list.sort(function (a, b) { return a.idx - b.idx; });
   }
 
   function renderTotals() {
@@ -207,24 +164,119 @@
     totalsBox.hidden = false;
   }
 
+  /* One row per committee: a <details> with the committee, who it backs, how many reports are on file, the cash
+     figure on its latest report and the transcription-status mix; it opens to that committee's reports, which are
+     clones of the table rows (the filings themselves exist once, in the table). */
+  function statusMix(rs) {
+    var n = {}, order = [];
+    rs.forEach(function (r) { if (!n[r.st]) { n[r.st] = 0; order.push(r.st); } n[r.st] += 1; });
+    return order.map(function (k) { return n[k] + " " + ((data.status[k] || [String(k).toUpperCase()])[0]); }).join(", ");
+  }
+  function reportsTable(rs) {
+    var wrap = el("div", "table-wrap");
+    wrap.setAttribute("role", "region");
+    wrap.setAttribute("tabindex", "0");
+    wrap.setAttribute("aria-label", "Reports of " + (rs[0].cm || "this committee"));
+    var t = el("table", "data cf-table cf-comm-table");
+    t.style.minWidth = "60rem";
+    var cap = el("caption", null, "Reports on file: " + (rs[0].cm || "committee name not written"));
+    cap.className = "visually-hidden";
+    t.appendChild(cap);
+    var thr = el("tr");
+    ["Report", "Period", "Receipts this period", "Expenditures this period", "Cash on hand at close", "Status", "Form"]
+      .forEach(function (x, i) {
+        var th = el("th", i >= 2 && i <= 4 ? "num" : null, x);
+        th.setAttribute("scope", "col");
+        thr.appendChild(th);
+      });
+    var thead = el("thead");
+    thead.appendChild(thr);
+    t.appendChild(thead);
+    var tb = el("tbody");
+    rs.forEach(function (r) {
+      var tr = r.tr.cloneNode(true);
+      tr.removeChild(tr.firstElementChild);   /* the committee is the row's heading above the table */
+      var typeCell = tr.firstElementChild;    /* the report-type cell becomes the row heading */
+      var th = el("th");
+      th.setAttribute("scope", "row");
+      while (typeCell.firstChild) th.appendChild(typeCell.firstChild);
+      tr.replaceChild(th, typeCell);
+      tb.appendChild(tr);
+    });
+    t.appendChild(tb);
+    wrap.appendChild(t);
+    return wrap;
+  }
+  function renderList(list, grouped) {
+    if (!listBox) return;
+    clear(listBox);
+    var order = [], by = {};
+    list.forEach(function (r) {
+      if (!by[r.ci]) { by[r.ci] = []; order.push(r.ci); }
+      by[r.ci].push(r);
+    });
+    var ul = el("ul", "one-list ent-list cf-comm-list");
+    var lastG = null, lastO = null;
+    order.forEach(function (ci) {
+      var rs = by[ci], c = data.committees[ci];
+      if (grouped && rs[0].gi !== lastG) {
+        lastG = rs[0].gi; lastO = null;
+        ul.appendChild(el("li", "cf-list-group", data.groups[+rs[0].gi]));
+      }
+      if (grouped && rs[0].oi !== lastO) {
+        lastO = rs[0].oi;
+        ul.appendChild(el("li", "cf-list-office", data.offices[+rs[0].oi]));
+      }
+      var latest = rs.slice().sort(function (a, b) {
+        return a.pt < b.pt ? -1 : a.pt > b.pt ? 1 : a.idx - b.idx;
+      }).pop();
+      var li = el("li", "ent-row");
+      var d = el("details", "fold-details one-fold ent-item cf-comm");
+      d.id = "cf-comm-" + ci;
+      var sm = el("summary", "fold-summary one-summary");
+      sm.appendChild(el("h3", "one-h ent-name", c.n || "Committee name not written"));
+      var facts = [];
+      if (c.c) facts.push(c.c + " (" + (c.p || "no party on the form") + ")");
+      facts.push(rs.length + " report" + (rs.length === 1 ? "" : "s") + " on file");
+      facts.push(latest.st === "unreadable" ? "latest report not readable" :
+        "latest cash on hand: " + money(latest.cash) + (latest.pt ? " (" + latest.pt + ")" : ""));
+      sm.appendChild(el("span", "one-digest ent-facts", facts.join(" \u00b7 ")));
+      sm.appendChild(el("span", "ent-status cf-mix", statusMix(rs)));
+      sm.appendChild(el("span", "fold-toggle")).setAttribute("aria-hidden", "true");
+      d.appendChild(sm);
+      var body = el("div", "fold-body one-body");
+      body.appendChild(reportsTable(rs));
+      d.appendChild(body);
+      li.appendChild(d);
+      ul.appendChild(li);
+    });
+    if (!order.length) ul.appendChild(el("li", "cf-list-empty", "No filings match these choices."));
+    listBox.appendChild(ul);
+    /* built here, so it starts closed except when it is small */
+    if (order.length > 3) {
+      Array.prototype.forEach.call(ul.querySelectorAll("details"), function (x) { x.open = false; });
+    }
+  }
+
   function render() {
     var list = sortRows(rows.filter(function (r) { return matches(r, true); }));
     var grouped = selSort.value === "office";
+    table.classList.toggle("cf-grouped", grouped);
     var frag = doc.createDocumentFragment();
     var lastG = null, lastO = null;
     var comms = {};
     list.forEach(function (r) {
-      comms[r[CI]] = 1;
-      if (grouped && r[GI] !== lastG) {
-        lastG = r[GI];
+      comms[r.ci] = 1;
+      if (grouped && r.gi !== lastG) {
+        lastG = r.gi;
         lastO = null;
-        frag.appendChild(headerRow("cf-group-row", data.groups[r[GI]]));
+        if (hdrs["g" + r.gi]) frag.appendChild(hdrs["g" + r.gi]);
       }
-      if (grouped && r[OI] !== lastO) {
-        lastO = r[OI];
-        frag.appendChild(headerRow("cf-office-row", data.offices[r[OI]]));
+      if (grouped && r.oi !== lastO) {
+        lastO = r.oi;
+        if (hdrs["o" + r.gi + "-" + r.oi]) frag.appendChild(hdrs["o" + r.gi + "-" + r.oi]);
       }
-      frag.appendChild(rowEl(r, !grouped));
+      frag.appendChild(r.tr);
     });
     clear(tbody);
     if (!list.length) {
@@ -235,6 +287,8 @@
       frag.appendChild(tr);
     }
     tbody.appendChild(frag);
+    renderList(list, grouped);
+    if (foldLabel) foldLabel.textContent = "See all " + list.length + " filing" + (list.length === 1 ? "" : "s") + " as one table";
     var nc = Object.keys(comms).length;
     if (count) {
       count.textContent = "Showing " + list.length + " report" + (list.length === 1 ? "" : "s") + " from " + nc +

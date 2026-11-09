@@ -60,3 +60,108 @@
 }
 /* link from a contest card to the map's "How areas voted" layer on that race (pages/elections.py, civic/map.py race_by_contest) */
 .elx-maplink { margin: 8px 0 0; font-size: .86rem; }
+
+/* ---- Elections by the numbers (pages/elections_numbers.py, Wave B batch 2, 2026-11-09). Existing tokens only;
+   no party colors: the margin strip is the accent ramp, like charts.share_bars. */
+
+/* overview: four summary cards (elections/landscape/) */
+.ov-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 28px; }
+.ov-grid > .block { min-width: 0; }
+.ov-grid .chart { margin-bottom: 8px; }
+.ov-links { list-style: none; margin: 6px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px 16px; }
+.ov-links li { margin: 0; }
+.ov-links a { font-weight: 600; }
+.ov-links a::after { content: " \203A"; }
+@media (max-width: 900px) { .ov-grid { grid-template-columns: minmax(0, 1fr); } }
+
+/* margins: the short answer */
+.mg-lede { font-size: 1.08rem; max-width: 70ch; }
+.mg-tiles { list-style: none; margin: 10px 0 6px; padding: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+.mg-tile { margin: 0; max-width: none; display: flex; flex-direction: column; gap: 2px; min-width: 0;
+  padding: 10px 12px; background: var(--surface); border: 1px solid var(--line); border-top: 4px solid var(--accent); }
+.mg-tile-unc { border-top-color: var(--ink-3); }
+.mg-tile-nc, .mg-tile-all { border-top-color: var(--line); }
+.mg-tile-n { font-size: 1.9rem; font-weight: 700; line-height: 1.05; }
+.mg-tile-l { font-weight: 600; }
+.mg-tile-d { font-size: .8rem; color: var(--ink-3); }
+@media (max-width: 760px) { .mg-tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+/* margins: find a race (areas -> seats -> races) */
+.mg-key { max-width: 75ch; font-size: .84rem; }
+.mg-find { margin-top: 8px; }
+.mg-level { margin: 18px 0 0; }
+.mg-level[hidden], .mg-area[hidden], .mg-seat[hidden] { display: none; }
+.mg-level-h { margin: 0 0 4px; font-size: .78rem; font-family: var(--f-mono); letter-spacing: .07em; text-transform: uppercase; color: var(--ink-3); }
+.mg-areas { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line); }
+.mg-area { margin: 0; max-width: none; }
+.mg-seats { padding: 2px 0 10px; }
+.mg-seat { margin: 0 0 14px; padding: 8px 0 0 12px; border-left: 3px solid var(--grid); min-width: 0; }
+.mg-seat-h { margin: 0; font-size: .98rem; }
+.mg-seat-n { font-weight: 400; color: var(--ink-3); font-size: .86rem; }
+.mg-seat-sum { margin: 2px 0 6px; font-size: .82rem; color: var(--ink-3); }
+.mg-races { list-style: none; margin: 0; padding: 0; }
+.mg-race { margin: 0; max-width: none; padding: 7px 0 8px; border-top: 1px solid var(--grid); min-width: 0; }
+.mg-race p { margin: 0; max-width: 75ch; }
+.mg-rh { display: flex; flex-wrap: wrap; gap: 2px 12px; align-items: baseline; }
+.mg-pts { font-weight: 700; }
+.mg-band { font-size: .8rem; color: var(--ink-2); }
+.mg-when { font-size: .84rem; color: var(--ink-3); }
+.mg-who { font-size: .9rem; overflow-wrap: anywhere; }
+.mg-note { font-size: .8rem; color: var(--ink-3); }
+.mg-ft { display: flex; flex-wrap: wrap; gap: 4px 14px; align-items: center; margin-top: 3px !important; font-size: .84rem; }
+.mg-nc .mg-pts { color: var(--ink-3); }
+/* the margin strip: 0 to 30 points, band edges at 5 and 15 (16.7% and 50%); the mark is the race */
+.mg-tick { position: relative; display: block; height: 8px; margin: 5px 0 4px; max-width: 22rem; border-radius: 2px;
+  background: linear-gradient(to right,
+    color-mix(in srgb, var(--accent) 55%, var(--surface)) 0 16.667%,
+    color-mix(in srgb, var(--accent) 30%, var(--surface)) 16.667% 50%,
+    var(--surface-2) 50% 100%); }
+.mg-tick::after { content: ""; position: absolute; top: -3px; left: var(--x, 0%); width: 3px; height: 14px; margin-left: -1px;
+  background: var(--ink); border-radius: 1px; }
+.mg-unc { margin: 6px 0 0; }
+.mg-unc-h { margin: 0; font-size: .8rem; font-weight: 600; color: var(--ink-2); }
+.mg-unc-list { list-style: none; margin: 2px 0 0; padding: 0; font-size: .84rem; }
+.mg-unc-list li { margin: 1px 0; max-width: 75ch; overflow-wrap: anywhere; }
+
+/* officeholders */
+.oh-list { list-style: none; margin: 8px 0 12px; padding: 0; border-top: 1px solid var(--line); }
+.oh-gov { margin: 0; max-width: none; }
+.oh-gov[hidden], .oh-row[hidden] { display: none; }
+.oh-rows { list-style: none; margin: 0; padding: 0 0 8px; }
+.oh-row { margin: 0; max-width: none; padding: 7px 0; border-top: 1px solid var(--grid); }
+.oh-row p { margin: 0; max-width: 75ch; }
+.oh-office { font-weight: 600; }
+.oh-who { font-size: .92rem; }
+.oh-how { font-size: .84rem; color: var(--ink-2); }
+
+/* calendar: every seat, by year */
+.cal-jump ul { list-style: none; margin: 6px 0 10px; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+.cal-jump li { margin: 0; }
+.cal-jump a { display: inline-block; min-width: 44px; padding: 8px 12px; border: 1px solid var(--line); background: var(--surface);
+  text-align: center; font-weight: 600; }
+.cal-year { margin: 16px 0 0; }
+.cal-year[hidden], .cal-gov[hidden], .cal-seat[hidden] { display: none; }
+.cal-year-h { margin: 0 0 4px; font-size: 1.05rem; }
+.cal-gov { border-bottom: 1px solid var(--line); }
+.cal-gov-sum { flex-wrap: wrap; align-items: baseline; gap: 2px 14px; padding: 8px 0; min-height: 44px; }
+.cal-gov-sum > .fold-toggle { align-self: center; }
+.cal-gov-h { margin: 0; font-size: 1rem; }
+.cal-gov-n { flex: 1 1 10rem; font-size: .84rem; color: var(--ink-2); }
+.cal-seats { list-style: none; margin: 0; padding: 0 0 8px 12px; border-left: 3px solid var(--grid); }
+.cal-seat { margin: 0; max-width: none; padding: 5px 0; border-top: 1px solid var(--grid); }
+.cal-seat:first-child { border-top: 0; }
+.cal-seat-h { margin: 0; }
+.cal-office { font-weight: 600; }
+.cal-meta { font-size: .84rem; color: var(--ink-3); }
+.cal-holders { list-style: none; margin: 2px 0 0; padding: 0; font-size: .86rem; }
+.cal-holders li { margin: 2px 0; max-width: 80ch; }
+.cal-now { font-weight: 600; }
+.cal-limit { color: var(--ink-2); }
+
+/* Judges and questions (Wave C, batch 5): questions grouped by who voted, one row each */
+.elx-qgroup { margin-top: 20px; }
+.elx-qgroup-h { margin: 0 0 2px; font-size: 1.05rem; }
+.elx-qgroup-n { font-size: .85rem; font-weight: 400; }
+.elx-qgroup-note { margin: 0 0 8px; font-size: .88rem; }
+.elx-qgroup .ent-name { font-size: 1rem; }
+.elx-label { font-size: .85rem; margin: 6px 0; }

@@ -18,6 +18,7 @@ no party colour beyond the guide's standard name tags, sums marked COMPUTED.
 from __future__ import annotations
 
 import csv
+import re
 from collections import Counter, OrderedDict, defaultdict
 from functools import partial
 from pathlib import Path
@@ -25,7 +26,7 @@ from pathlib import Path
 from civic import campaign_money as cm
 from civic.campaign_map import (NO_SHAPES, SET_NOTES, campaign_map, district_sets, load_district_shapes, map_layers,
                                 record_line)
-from civic.components import (callout, data_table, name_with_form_party, name_with_party, party_label, scope_badge,
+from civic.components import (callout, data_table, entity_list, name_with_form_party, name_with_party, party_label, scope_badge,
                               section, status_badge)
 from civic.data import fmt_date, split_ids
 from civic.html import Markup, h
@@ -228,9 +229,11 @@ def race_block(ed, page, race: dict) -> Markup:
 
 
 # --------------------------------------------------------------------------- other filings (no race)
-def committee_cycles(ed, page, rows: list[dict], tid: str) -> list:
+def committee_cycles(ed, page, rows: list[dict], tid: str, as_items: bool = False) -> list:
     """Reports grouped by committee, then cycle, each cycle with the same whole-cycle figures as a race (expected:
-    the annual report only, since these committees have no ballot line in the guide's results)."""
+    the annual report only, since these committees have no ballot line in the guide's results).
+    ``as_items=True`` returns ``entity_list`` items instead (one per committee: name, candidate and party as written,
+    reports on file and status mix on the line; the cycle blocks inside)."""
     out = []
     by_key = OrderedDict()
     for r in sorted(rows, key=lambda r: (r["_label"].casefold(), r["_key"], r.get("period_to") or "")):
@@ -265,6 +268,20 @@ def committee_cycles(ed, page, rows: list[dict], tid: str) -> list:
                             h("p", {"class": "cf-race-meta"}, line, " ",
                               status_badge("computed", page, "Sum of the reports in the table, by the guide's rules.")),
                             _reports_table(ed, page, f"{tid}-{k}-{n}", s, spec), _notes(s)))
+        if as_items:
+            mix = Counter(x["transcription_status"] for x in krows)
+            mix_text = ", ".join(f"{n} {cf.STATUS_CF.get(st, (st.upper(),))[0]}" for st, n in mix.most_common())
+            cycles = sorted({cm.money_cycle(x) for x in krows})
+            slug = re.sub(r"[^a-z0-9]+", "-", f"{tid}-{k}".lower()).strip("-")
+            out.append({"key": slug, "name": krows[0]["_label"], "item_id": f"cmte-{slug}",
+                        "facts": [who if cand else "No candidate named",
+                                  f"{len(krows)} report{'s' if len(krows) != 1 else ''}, "
+                                  f"{len(cycles)} cycle{'s' if len(cycles) != 1 else ''}",
+                                  mix_text],
+                        "search": " ".join(cycles) + " " + (cand[0][0] if cand else ""),
+                        "body": h("div", {"class": "cf-committee-block"},
+                                  h("p", {"class": "cf-sub"}, "Candidate: ", who), blocks)})
+            continue
         out.append(h("div", {"class": "cf-committee-block"},
                      h("h4", None, krows[0]["_label"], h("span", {"class": "cf-sub"}, "Candidate: ", who)), blocks))
     return out
@@ -453,6 +470,13 @@ def build_area(aid: str, site):
         notes.append(h("p", {"class": "muted"}, "Penn-Harris-Madison's township seats are held by residents of each "
                                                 "township and elected by voters across the whole school corporation.",
                        c.cite("MAP-033")))
+    u = ed.units.get(aid)
+    if aid == "county":
+        notes.append(h("p", {"class": "muted"}, "The county's other facts: ",
+                       h("a", {"href": page.rel("county/index.html")}, "St. Joseph County, the county page"), "."))
+    elif u and u["unit_type"] in ("city", "town", "township"):
+        notes.append(h("p", {"class": "muted"}, "Everything else the guide has about this place: ",
+                       h("a", {"href": page.rel(f"places/{aid}/index.html")}, u["name"]), "."))
     page.add(h("header", {"class": "page-hero"},
                cf.crumbs(page, (a["name"], None)),
                h("p", {"class": "eyebrow mono"}, "Reference · Money · Campaign finance"),
@@ -616,8 +640,14 @@ def build_other(site):
         if not groups[g]:
             continue
         n += 1
+        items = committee_cycles(ed, page, groups[g], g, as_items=True)
         page.add(section(g, n, title, h("p", None, note, c.cite(cf.SRC_COVERAGE)),
-                         *committee_cycles(ed, page, groups[g], g), scope="county", ed=ed))
+                         h("p", {"class": "muted"}, f"{len(items)} committee{'s' if len(items) != 1 else ''}, by name. "
+                           "Each row opens to the committee's reports, by cycle, with the cycle totals and notes."),
+                         entity_list(f"{g}-list", items, noun="committee", search="Find a committee or candidate",
+                                     label=title) if len(items) > 4 else entity_list(f"{g}-list", items, noun="committee",
+                                                                                      label=title),
+                         scope="county", ed=ed))
     if large:
         n += 1
         page.add(section("large", n, "Large contributions (CFA-11 notices)", *_large_rows(ed, page, large),

@@ -25,7 +25,9 @@ from civic.spending import has_money_in_out, money_in_out
 from civic.map import load_shapes
 from civic import tax_base as tb
 from civic.money_map import county_figure, method_note, money_map, money_map_data, money_map_tables
-from civic.pick_one import one_bar, one_empty, one_fold, one_row, one_scope, one_summary, one_wrap_attrs
+from civic.preselect import district_hints, here_slot
+from civic.pick_one import (one_bar, one_chips, one_empty, one_fold, one_row, one_scope, one_summary,
+                            one_wrap_see_all)
 
 # Unit names as the state budget file (Gateway, MON-001) lists them; tools/build_money.py
 # carries the same mapping. Used for units with no units.csv row and to match gaps_money items.
@@ -72,8 +74,6 @@ GATEWAY_LABELS = {
     "special-redevelopment-authority": "St. Joseph Redevelopment Authority",
 }
 
-# money ids with a units.csv row that derived/unit_id_aliases.csv doesn't map yet (shared with civic/tax_base.py)
-EXTRA_UNIT_IDS = tb.EXTRA_UNIT_IDS
 
 GROUPS = [("county", "County"), ("city", "Cities"), ("town", "Towns"), ("township", "Townships"),
           ("school", "School corporations"), ("library", "Public libraries"), ("special", "Special units")]
@@ -204,9 +204,8 @@ class Money:
 
     # ---- names and anchors ---------------------------------------------------
     def _uid(self, mid: str) -> str | None:
-        """The units.csv id of a money id: derived/unit_id_aliases.csv, then EXTRA_UNIT_IDS (ids the alias file
-        doesn't map yet, shared with civic/tax_base.py)."""
-        return self.ed.unit_alias(mid) or EXTRA_UNIT_IDS.get(mid)
+        """The units.csv id of a money id (derived/unit_id_aliases.csv)."""
+        return self.ed.unit_alias(mid)
 
     def label(self, mid: str) -> str:
         uid = self._uid(mid)
@@ -664,7 +663,8 @@ def build_budgets(site):
                                            h("p", {"class": "mn-nodata"}, "No budget data for this unit in the guide's data."
                                              if not mo.has_budget(mid) else
                                              "No adopted multi-year series for this unit in the guide's data."),
-                                           other_tbl])))
+                                           other_tbl,
+                                           _unit_flows_line(mo, page, mid)])))
         blocks.append(h("div", {"class": "one-list mn-unit-list"}, group_items))
     page.add(section("over-time", 2, "Budgets over time",
                      h("p", None, "Each unit's adopted budget for every year the state file has it. A chart never mixes two ways "
@@ -779,17 +779,12 @@ def build_budgets(site):
                      later_debt_note(mo, page, "city-south-bend"),
                      h("div", one_scope("No debt rows for {name} in the state's debt file."),
                        one_empty(),
-                       h("details", dict({"class": "fold-details mn-debt-fold", "open": True, "data-fold": "debt"},
-                                         **one_wrap_attrs()),
-                         h("summary", {"class": "fold-summary"},
-                           h("h3", {"class": "one-h"}, f"Debt by class and unit ({len(cls_rows)} rows)"),
-                           h("span", {"class": "fold-toggle", "aria-hidden": "true"})),
-                         h("div", {"class": "fold-body"},
-                           h("p", {"class": "muted"}, "When you pick a unit, only its rows are shown, and Copy CSV copies "
-                                                      "those rows."),
-                           data_table("debt-classes", ["Unit", "Year", "Debt type", "Amount", "Status", "Note"], cls_rows,
-                                      caption="Debt by class and unit", numeric=(3,), min_width="54rem",
-                                      row_attrs=cls_attrs)))),
+                       one_wrap_see_all("debt-classes-all", f"See all {len(cls_rows)} rows: debt by class and unit",
+                                        [h("p", {"class": "muted"}, "When you pick a unit, only its rows are shown, and "
+                                                                   "Copy CSV copies those rows."),
+                                         data_table("debt-classes", ["Unit", "Year", "Debt type", "Amount", "Status", "Note"],
+                                                    cls_rows, caption="Debt by class and unit", numeric=(3,),
+                                                    min_width="54rem", row_attrs=cls_attrs)])),
                      scope="county", ed=ed))
 
     # ------------------------------------------------------------------ 5 tax base
@@ -901,6 +896,7 @@ def _money_map_section(mo: Money, page) -> Markup | None:
                                 "the buttons above the map."),
                    county_figure(page, ed, mm),
                    money_map(page, ed, shapes, mm, in_page=in_page),
+                   _no_boundary_chips(mo, page),
                    method_note(page, ed),
                    h("details", {"class": "fold-details mn-map-tables", "open": True, "data-fold": "tables"},
                      h("summary", {"class": "fold-summary"},
@@ -915,13 +911,12 @@ def _flows_section(mo: Money, page) -> Markup:
     The county, cities, towns, townships and schools show the same block on their own pages."""
     ed = mo.ed
     c = page.cites
-    ids = [m for m in mo.unit_ids if group_of(m) in ("library", "special") and has_money_in_out(ed, m)]
-    ids += sorted(m for m in {r["unit_id"] for r in ed.table("spending_breakdowns")}
-                  if group_of(m) in ("library", "special") and m not in ids)
+    ids = _flow_ids(mo)
     blocks = []
     for m in ids:
         name = re.sub(r" \(state data: .*\)$", "", mo.label(m))
-        blocks.append(h("article", {"class": "mn-unit", "aria-label": mo.label(m)},
+        blocks.append(h("article", {"class": "mn-unit", "aria-label": mo.label(m), "id": f"flows-{mo.anchor(m)}",
+                                    "data-one-for": mo.anchor(m)},
                         one_fold(mo.anchor(m), mo.label(m), one_summary("h3", name, _flows_digest(ed, m)),
                                  money_in_out(ed, page, m, level=4, label=name))))
     links = [h("a", {"href": page.rel("county/index.html#money")}, "the county")]
@@ -936,6 +931,72 @@ def _flows_section(mo: Money, page) -> Markup:
                                       "and special units; it is on the unit's own page."),
                      one_empty(), h("div", {"class": "one-list"}, blocks)),
                    scope="county", ed=ed)
+
+
+NO_BOUNDARY_GROUPS = ("library", "special")
+
+
+def no_boundary_units(mo: Money) -> list[tuple[str, str]]:
+    """[(money id, in-page target id)] for the county and every library and special unit with a block on the budgets
+    page: their budget item (id = Money.anchor) when they have one, else their money-in-and-out item (flows-<anchor>).
+    The map draws none of them (the county is the whole map), so they are chosen from chips instead."""
+    blocks = [m for m in mo.unit_ids if mo.has_budget(m) or mo.in_units_csv(m)]
+    out = [(m, mo.anchor(m)) for m in blocks if group_of(m) == "county"]
+    out += [(m, mo.anchor(m)) for m in blocks if group_of(m) in NO_BOUNDARY_GROUPS]
+    for m in _flow_ids(mo):
+        if m not in blocks:
+            out.append((m, f"flows-{mo.anchor(m)}"))
+    return out
+
+
+def _no_boundary_chips(mo: Money, page) -> Markup | None:
+    chips = [(f"#{t}", re.sub(r" \(state data: .*\)$", "", mo.label(m)) + (" (the whole county)" if group_of(m) == "county" else ""))
+             for m, t in no_boundary_units(mo)]
+    return one_chips(f"No boundary on the map ({len(chips)}): pick one here", chips,
+                     note="The county covers the whole map; the libraries and special units serve areas the map does not "
+                          "draw. Picking one shows its budget history, debt and money in and out below, as a map click does.",
+                     cls="mn-chips")
+
+
+def _flow_ids(mo: Money) -> list[str]:
+    """The libraries and special units in Money in and out (section 7), in its order."""
+    ed = mo.ed
+    ids = [m for m in mo.unit_ids if group_of(m) in NO_BOUNDARY_GROUPS and has_money_in_out(ed, m)]
+    ids += sorted(m for m in {r["unit_id"] for r in ed.table("spending_breakdowns")}
+                  if group_of(m) in NO_BOUNDARY_GROUPS and m not in ids)
+    return ids
+
+
+def _flows_target(mo: Money, page, mid: str) -> tuple[str, str] | None:
+    """(href, text) of the unit's full money-in-and-out charts: its own page's block (county, places, schools) or
+    its item in section 7 on this page (libraries, special units). None when the unit has no such charts."""
+    ed = mo.ed
+    if not has_money_in_out(ed, mid):
+        return None
+    uid = mo._uid(mid)
+    unit = ed.units.get(uid) if uid else None
+    built = page.site.by_path
+    if mid == "county-st-joseph" and "county/index.html" in built:
+        return page.rel("county/index.html#money"), "County government page"
+    if unit and unit["unit_type"] in ("city", "town", "township") and f"places/{uid}/index.html" in built:
+        return page.rel(f"places/{uid}/index.html#money-{uid}"), f"{re.sub(r'^(City|Town) of ', '', unit['name'])} place page"
+    if unit and unit["unit_type"] == "school_corporation" and "schools/index.html" in built:
+        return page.rel(f"schools/index.html#money-flows-{uid}"), "Schools page"
+    if group_of(mid) in NO_BOUNDARY_GROUPS and mid in _flow_ids(mo):
+        return f"#flows-{mo.anchor(mid)}", "Money in and out, below"
+    return None
+
+
+def _unit_flows_line(mo: Money, page, mid: str) -> Markup | None:
+    """One line in a unit's budget item: its counted money in and out from the state's annual report, with a link to
+    the full charts (the budget totals above and these report figures have different scopes)."""
+    tgt = _flows_target(mo, page, mid)
+    if not tgt:
+        return None
+    return h("p", {"class": "mn-flows-line"}, h("strong", None, "Money in and out: "),
+             _flows_digest(mo.ed, mid)[:1].lower() + _flows_digest(mo.ed, mid)[1:],
+             " (actual figures from the state's annual report, a different scope from the adopted budgets above). ",
+             h("a", {"href": tgt[0]}, tgt[1] if tgt[0].startswith("#") else f"Full charts on the {tgt[1]}"), ".")
 
 
 def _scope_note(rows) -> str:
@@ -1002,6 +1063,11 @@ def _breakdown_block(mo: Money, page, mid: str) -> Markup:
                          note=note, cite=c.cite(union_sources(rows))))
     out.append(h("div", {"class": "chart-grid"}, figs))
     out += tables
+    own = _flows_target(mo, page, mid)
+    if own:
+        out.append(h("p", {"class": "mn-unit-note"}, "Its money in and money out (income by source and spending by "
+                                                       "purpose, the state's annual report): ",
+                     h("a", {"href": own[0]}, own[1]), "."))
     anchor = mo.anchor(mid)
     shown = [titles[b][1].replace(", 2024 actual", "").lower() for b in titles if groups.get(b)]
     digest = ("2024 actual: " + "; ".join(shown)) if shown else "No 2024 breakdown rows"
@@ -1296,7 +1362,7 @@ def build_tax_bill(site):
         adop = {str(r["year"]): float(r["rate_per_100"]) for r in adopted if r["unit_id"] == mid}
         units[mid] = {"label": re.sub(r" \(state data: .*\)$", "", mo.label(mid)), "group": group_of(mid),
                       "role": ROLE.get(group_of(mid), "Unit"),
-                      "uid": ed.unit_alias(mid) or EXTRA_UNIT_IDS.get(mid, ""), "cert": cert, "adopted": adop}
+                      "uid": ed.unit_alias(mid) or "", "cert": cert, "adopted": adop}
     rev = {v["uid"]: k for k, v in units.items() if v["uid"]}
     lay = build_layers(ed)
     places = []
@@ -1383,6 +1449,9 @@ def build_tax_bill(site):
                "places": places, "districts": dlist, "years": cert_years, "default": sel,
                # units.csv id -> money id, so static/js/money.js can start from the saved place (civic-place)
                "uidmap": {uid: mid for uid, mid in rev.items() if uid}}
+    # saved-place preselect (Wave E batch 8): the township and school each district fits, in the saved place's ids
+    # (civic/preselect.py district_hints; money.js picks a district only when exactly one fits)
+    payload["hints"] = district_hints(dlist, payload["uidmap"])
     caps = ed.local_rules.get("property_tax_caps", {})
     cap_detail = sentences(caps.get("detail", ""))
     credit_sents = [s for s in cap_detail if re.search(r"credit|referendum|first due", s)]
@@ -1406,6 +1475,7 @@ def build_tax_bill(site):
                                   "rate for each taxing district: the rate on the bill before any credits.",
                        c.cite(cert_src), " ", status_badge("official", page)),
                      district_picker,
+                     here_slot("taxbill", "tb-district"),
                      h("div", {"class": "mn-tb", "id": "tb-district-out", "aria-live": "polite"},
                        _render_district(default, sel["year"])),
                      h("p", {"class": "muted"}, "Rates are dollars per $100 of assessed value. The marks at $1, $2 and $3 "

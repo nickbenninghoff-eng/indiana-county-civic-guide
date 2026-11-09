@@ -147,6 +147,43 @@ def fmt_pct(value, places: int = 1) -> str:
 
 # --------------------------------------------------------------------------- edition
 
+# Contest stems (contest_id minus its election id and primary-party suffix) that do not equal an office_id but are
+# the same office. results.csv and offices.csv are not edited for this: contest ids are link targets and results.csv
+# carries hand edits its generator would lose, so the correspondence lives here, in one place.
+# Reviewed 2026-11-09 against every contest in results.csv (tools/tests/test_wave_b_fixups.py lists what stays
+# unmatched: state offices, retention votes, public questions, straight-party counts, Osceola's ward-numbered
+# seats and New Prairie's combined "at-large / District 2" line, none of which is plainly one office here).
+def _board_aliases() -> dict[str, str]:
+    out = {"walkerton-judge": "walkerton-town-judge"}
+    for town in ("roseland", "new-carlisle", "north-liberty", "lakeville", "osceola"):  # one at-large council office each
+        out[f"{town}-council-at-large"] = f"{town}-council"
+    # school boards: <body stem> -> (office prefix, {seat words in the contest id: office suffix})
+    boards = {
+        "south-bend-schools-board": ("sbcsc-board-", {"1": "d1", "2": "d2", "3": "d3", "4": "d4", "5": "d5",
+                                                       "at-large": "at-large"}),
+        "penn-harris-madison-schools-board": ("phm-board-", {"at-large": "at-large", "harris": "harris",
+                                                             "madison": "madison", "penn": "penn"}),
+        "john-glenn-schools-board": ("john-glenn-board-", {k: k for k in ("johnson", "liberty", "lincoln", "polk")}),
+        "union-north-schools-board": ("union-north-board-", {"at-large": "at-large", "north": "north", "union": "union"}),
+        "laville-schools-board": ("union-north-board-", {"north": "north", "union": "union"}),  # Union-North's new name
+        "new-prairie-schools-board": ("new-prairie-board-", {"at-large": "at-large", "1": "d1", "2": "d2", "3": "d3"}),
+    }
+    for stem, (prefix, seats) in boards.items():
+        for word, suffix in seats.items():
+            for tail in ("", "-township", "-twp") if word.isalpha() and word != "at-large" else ("",):
+                out[f"{stem}-{word}{tail}"] = prefix + suffix
+    for tail in ("first-listed", "second-listed"):  # Lincoln Township has two seats, listed twice
+        for t in ("township", "twp"):
+            out[f"john-glenn-schools-board-lincoln-{t}-{tail}"] = "john-glenn-board-lincoln"
+    out["new-prairie-schools-board-2-hudson-wills-townships"] = "new-prairie-board-d2"
+    for stem in ("mishawaka-schools-board", "mishawaka-schools-board-at-large", "mishawaka-schools-board-board-of-school-trustees"):
+        out[stem] = "school-city-mishawaka-board"  # the elected seats
+    return out
+
+
+CONTEST_OFFICE_ALIASES: dict[str, str] = _board_aliases()
+
+
 @dataclass
 class Edition:
     root: Path
@@ -348,6 +385,8 @@ class Edition:
         m = re.match(r"^county-superior-court-retention-(.+)$", rest)
         if m:
             candidates.insert(0, "superior-court-judge-" + m.group(1).split("-")[-1])
+        if rest in CONTEST_OFFICE_ALIASES:
+            candidates.insert(0, CONTEST_OFFICE_ALIASES[rest])
         for c in candidates:
             if c in self.offices:
                 return c

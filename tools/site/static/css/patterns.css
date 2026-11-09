@@ -1,0 +1,103 @@
+/* patterns.css: shared foundation patterns (Wave A batch 1, 2026-11-09). Existing tokens only.
+   - .related       "More about <entity>" rail            civic/related.py related_links
+   - .see-all       "See all N rows" fold                  civic/components.py see_all_fold / see_all_table
+   - .ent-list      one row per entity, expandable         civic/components.py entity_list (on pick_one's one_fold)
+   - .shb, .m-share small-multiple 100% share bars          civic/charts.py share_bars
+   Party colors never appear here: share marks are the accent ramp or the accent/ink alternation. */
+
+/* ---- "More about" rail */
+.related { margin: 16px 0 6px; min-width: 0; }
+.related-h { margin: 0 0 8px; font: 600 .7rem/1.2 var(--f-mono); letter-spacing: .08em; text-transform: uppercase;
+  color: var(--ink-3); }
+.related-list { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
+.related-list > li { margin: 0; min-width: 0; max-width: none; }
+.related-link { display: flex; flex-direction: column; justify-content: center; gap: 2px; min-height: 44px;
+  padding: 6px 12px; border: 1px solid var(--line); border-radius: var(--r, 2px); background: var(--surface);
+  color: var(--ink); text-decoration: none; }
+.related-link:hover { border-color: var(--accent); color: var(--ink); }
+.related-link:hover .related-text { text-decoration: underline; text-decoration-color: var(--accent);
+  text-decoration-thickness: 2px; text-underline-offset: 3px; }
+.related-link:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+.related-topic { font: 600 .64rem/1.1 var(--f-mono); letter-spacing: .07em; text-transform: uppercase; color: var(--ink-3); }
+.related-text { font-weight: 600; font-size: .9rem; line-height: 1.25; }
+@media (max-width: 480px) {
+  .related-list > li { flex: 1 1 calc(50% - 8px); }
+}
+@media print { .related { display: none; } }
+
+/* ---- "See all rows" fold */
+.see-all { margin: 12px 0 18px; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); min-width: 0; }
+.see-all > .see-all-summary { flex-wrap: wrap; gap: 2px 12px; padding: 6px 0; }
+.see-all-label { font-weight: 700; font-size: .98rem; }
+.see-all-hint { font: 500 .68rem/1.2 var(--f-mono); letter-spacing: .06em; text-transform: uppercase; color: var(--ink-3); }
+.see-all-summary:hover .see-all-label { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px; }
+.see-all > .see-all-body { padding: 2px 0 14px; }
+
+/* ---- entity list (pick_one one_fold rows) */
+.ent-list { list-style: none; padding: 0; }
+.ent-list > .ent-row { margin: 0; max-width: none; }
+.ent-list > .ent-row[hidden] { display: none; }
+.ent-item > .one-summary > .ent-status { flex: none; align-self: center; }
+.ent-sep { color: var(--ink-3); }
+.ent-block .tf { margin-bottom: 4px; }
+
+/* ---- share bars (small multiples of 100% stacked bars) */
+.m-share-0 { --mark: var(--accent); }
+.m-share-1 { --mark: color-mix(in srgb, var(--accent) 72%, var(--surface)); }
+.m-share-2 { --mark: color-mix(in srgb, var(--accent) 48%, var(--surface)); }
+.m-share-3 { --mark: color-mix(in srgb, var(--accent) 28%, var(--surface)); }
+.m-share-a0 { --mark: var(--accent); }
+.m-share-a1 { --mark: var(--ink-3); }
+.m-share-a2 { --mark: color-mix(in srgb, var(--accent) 55%, var(--surface)); }
+.m-share-a3 { --mark: var(--ink); }
+.m-share-a4 { --mark: color-mix(in srgb, var(--accent) 30%, var(--surface)); }
+.m-share-a5 { --mark: color-mix(in srgb, var(--ink-3) 45%, var(--surface)); }
+.shb { min-width: 0; }
+.shb .shb-rows { list-style: none; margin: 0; padding: 0; }
+.shb .shb-row { display: grid; grid-template-columns: minmax(0, 11rem) minmax(0, 1fr); gap: 4px 16px; align-items: start;
+  margin: 0; padding: 9px 0; border-bottom: 1px solid var(--grid); max-width: none; }
+.shb .shb-row:last-child { border-bottom: 0; }
+.shb .shb-label { display: flex; flex-direction: column; gap: 2px; margin: 0; min-width: 0; max-width: none; }
+.shb-name { font-weight: 600; font-size: .92rem; line-height: 1.25; }
+.shb-total { font-size: .74rem; color: var(--ink-3); }
+.shb-track { min-width: 0; }
+.shb-bar { display: flex; gap: 2px; height: 14px; margin-top: 3px; border-radius: 4px; overflow: hidden; background: var(--surface); }
+.shb-bar-empty { border: 1px dashed var(--line); box-sizing: border-box; }
+.shb-seg { flex: 1 1 0; min-width: 2px; background: var(--mark); }
+.shb-seg:hover { opacity: .82; }
+.shb .shb-counts { list-style: none; margin: 6px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 2px 14px;
+  font-size: .8rem; color: var(--ink-2); max-width: none; }
+.shb .shb-c { margin: 0; max-width: none; }
+.shb-c .key { width: 10px; height: 10px; margin-right: 5px; }
+.shb-cn { font-weight: 600; color: var(--ink); }
+.shb-cp { color: var(--ink-3); }
+.shb .shb-c-zero, .shb .shb-c-zero .shb-cn { color: var(--ink-3); font-weight: 400; }
+.shb-none { color: var(--ink-3); }
+.shb-axis { display: grid; grid-template-columns: 1fr auto 1fr; margin: 4px 0 0 calc(11rem + 16px);
+  font: .68rem/1 var(--f-mono); color: var(--ink-3); }
+.shb-axis > :nth-child(2) { text-align: center; }
+.shb-axis > :last-child { text-align: right; }
+@media (max-width: 560px) {
+  .shb .shb-row { grid-template-columns: minmax(0, 1fr); }
+  .shb .shb-label { flex-direction: row; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 2px 10px; }
+  .shb-axis { margin-left: 0; }
+}
+@media (forced-colors: active) {
+  .shb-seg { forced-color-adjust: none; }
+}
+@media print { .shb-bar, .shb-c .key { print-color-adjust: exact; -webkit-print-color-adjust: exact; } }
+
+/* ---- results explorer: one contest from #contest-<id> (static/js/elections.js) */
+.elx-permalink { margin: 6px 0 0; font-size: .86rem; }
+.elx-picker .elx-all { align-self: flex-end; min-height: 40px; }
+.elx-card:focus { outline: none; }
+.elx-card:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+/* the "every contest" table (results page): fixed column widths, so rows above a #contest-<id> row don't change
+   height while the rest of the 1,200-row table is still loading (the browser's jump to the row then holds) */
+#every-contest { table-layout: fixed; width: 100%; }
+#every-contest th:nth-child(1) { width: 17%; }
+#every-contest th:nth-child(2) { width: 14%; }
+#every-contest th:nth-child(3), #every-contest th:nth-child(4) { width: 10%; }
+#every-contest th:nth-child(5) { width: 39%; }
+#every-contest th:nth-child(6) { width: 10%; }
+#every-contest td, #every-contest th { overflow-wrap: anywhere; }

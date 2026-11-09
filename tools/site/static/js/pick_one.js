@@ -143,6 +143,25 @@
     });
   });
 
+  /* another script (static/js/preselect.js, the saved-place preselect; added 2026-11-09, Wave E batch 8) opens the
+     items of one or more keys ("one:choose", detail {keys: [...]}) or every item ("one:all"). The address is not
+     touched. */
+  doc.addEventListener("one:choose", function (ev) {
+    var want = ev.detail && ev.detail.keys ? ev.detail.keys : [];
+    var on = {};
+    want.forEach(function (k) { if (Object.prototype.hasOwnProperty.call(names, k)) on[k] = true; });
+    if (!Object.keys(on).length) return;
+    items.forEach(function (d) {
+      var o = !!on[d.getAttribute("data-one")];
+      if (d.open !== o) d.open = o;
+    });
+    wraps.forEach(function (w) {
+      Object.keys(on).forEach(function (k) { if (!w.open && w.querySelector('[data-one="' + k + '"]')) w.open = true; });
+    });
+    sync();
+  });
+  doc.addEventListener("one:all", function () { setAll(true); });
+
   /* a reader opening or closing a summary by hand */
   var pending = false;
   items.forEach(function (d) {

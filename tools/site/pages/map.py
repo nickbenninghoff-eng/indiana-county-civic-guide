@@ -49,7 +49,7 @@ def build(site):
           boundary_map(page, ed, shapes, votes=votes),
           h("p", {"class": "muted cmap-caveat"},
             f"Boundaries are Census TIGER ({vintage}) and may differ slightly from county GIS. The guide does not place addresses: "
-            "to find which governments cover yours, use ", h("a", {"href": page.rel("your-governments/index.html")}, "Find your governments"),
+            "to find which governments cover yours, use ", h("a", {"href": page.rel("your-governments/index.html")}, "Your place"),
             ". In the government layers, color shows the type of government only. In the \"How areas voted\" layer, color shows the margin "
             "between the two leading parties in one past race.", c.cite_compact(SRC + (VOTE_SRC if votes else [])))),
         section("areas", 1, "All areas as a list",

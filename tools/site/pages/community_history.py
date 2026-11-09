@@ -20,9 +20,11 @@ from collections import Counter, OrderedDict
 
 from civic.charts import (_svg, _txt, bar_path, columns, figure, hbar, legend, line,
                           party_mark, party_timeline)
-from civic.components import (callout, data_table, name_with_party, party_label, section, status_badge)
+from civic.components import (callout, data_table, entity_list, name_with_party, party_label, section, see_all_fold, see_all_table, status_badge)
 from civic.data import PARTY_LABELS, SELECTED_BY_LABELS, fmt_date, parse_date, split_ids
 from civic.html import Markup, h, join, json_script
+from civic.pick_one import one_bar
+from civic.preselect import here_slot
 from civic.map import LAYERS, TYPE_LABEL, embedded_map, load_shapes, shade_defs
 from civic.shading import classify, shade_class, shade_legend
 
@@ -387,6 +389,7 @@ def indicator_map_section(page, ed, iv, inds, vintage, sid, num, title):
                    h("p", None, f"Each area shaded by one estimate from the {vintage} survey: pick it above the map. "
                                 "Point at an area (or tap it, or move to it with Tab) to see all of its estimates with "
                                 "their margins of error.", c.cite(src) if src else None, " ", status_badges(used, page)),
+                   here_slot("map", sid),
                    cmap,
                    h("p", {"class": "muted cmap-mnote"},
                      "Shading uses natural breaks rounded to readable figures, set separately for each estimate and "
@@ -870,8 +873,10 @@ def build_income_work(site):
                         h("p", None, h("strong", None, "Rule: "), rule, ". ", c.cite(sids), " ",
                           status_badge(rows[0]["status"], page)),
                         h("p", {"class": "muted"}, rows[0]["notes"]),
-                        data_table(f"employers-{n}", hdr, trs, caption=f"Employers named: {rule}",
-                                   numeric=(0, 3) if has_counts else (0,), min_width="30rem")))
+                        see_all_fold(f"employers-{n}-all", len(trs),
+                                     data_table(f"employers-{n}", hdr, trs, caption=f"Employers named: {rule}",
+                                                numeric=(0, 3) if has_counts else (0,), min_width="30rem"),
+                                     noun="employer")))
     if singles:
         srows = [[r["name"], r["sector"], fmt_value("qcew_x", _f(r["employees"])) if r["employees"] else "not stated",
                   fmt_date(r["as_of"]), r["selection_rule"], r["notes"],
@@ -880,9 +885,11 @@ def build_income_work(site):
                         h("h3", None, "Single counts published by one organization"),
                         h("p", None, "Each of these is one organization's own figure for itself, not part of a list. "
                                      "Definitions of an employee differ."),
-                        data_table("employers-single", ["Name", "Sector", "Count", "As of", "What the count is", "Notes",
-                                                        "Status"], srows, caption="Single published counts",
-                                   numeric=(2,), min_width="56rem")))
+                        see_all_fold("employers-single-all", len(srows),
+                                     data_table("employers-single", ["Name", "Sector", "Count", "As of", "What the count is",
+                                                                     "Notes", "Status"], srows,
+                                                caption="Single published counts", numeric=(2,), min_width="56rem"),
+                                     noun="count")))
     page.add(section("employers", 5, "Employer lists, as published",
                      callout(h("p", None, h("strong", None, "Selection rule. "),
                                "The guide lists employers only as they appear in a named, published list, in the order the "
@@ -1594,7 +1601,7 @@ def build_history_people(site):
     shown.sort(key=lambda p: (_first_year(p) or 9999, p["name"]))
     low_table.sort(key=lambda p: (_first_year(p) or 9999, p["name"]))
 
-    cards = []
+    items = []
     for p in shown:
         in_office = p.get("in_office_now") == "true"
         parties = _parties(p) or "Party not documented in the sources"
@@ -1602,31 +1609,60 @@ def build_history_people(site):
         summary = _card_summary(p)
         badges = [status_badge(p["status"], page)]
         anchor = p["person_id"].lower() if p.get("person_id") else re.sub(r"[^a-z0-9]+", "-", p["name"].lower()).strip("-")
-        cards.append(h("article", {"class": "card person-card", "id": f"person-{anchor}"},
-                       _photo(ed, page, p, images),
-                       h("div", {"class": "person-body"},
-                         h("p", {"class": "person-flags"},
-                           h("span", {"class": "badge badge-inoffice"}, "IN OFFICE") if in_office else
-                           h("span", {"class": "badge badge-former"}, "NOT IN OFFICE")),
-                         h("h3", {"class": "card-title person-name"}, _person_tag(p), c.cite(_people_sources(p))),
-                         h("dl", {"class": "person-fields"},
-                           h("dt", None, "Offices"), h("dd", None, p["offices_summary"]),
-                           h("dt", None, "Party"), h("dd", None, parties),
-                           h("dt", None, "Rules met"), h("dd", None, join([h("span", {"class": "crit-tag mono"},
-                                                                              CRITERIA_LABELS.get(k, k)) for k in crit(p)], " ")),
-                           h("dt", None, "Summary"),
-                           h("dd", None, summary if summary else h("span", {"class": "muted"},
-                                                                   "No profile written yet; offices and dates are from "
-                                                                   "the guide's officeholder records.")),
-                           h("dt", None, "Official findings"),
-                           h("dd", None, findings if findings else h("span", {"class": "muted"}, "None documented in the sources."))),
-                         h("p", {"class": "holder-badges"}, badges))))
+        card = h("article", {"class": "card person-card"},
+                 _photo(ed, page, p, images),
+                 h("div", {"class": "person-body"},
+                   h("p", {"class": "person-flags"},
+                     h("span", {"class": "badge badge-inoffice"}, "IN OFFICE") if in_office else
+                     h("span", {"class": "badge badge-former"}, "NOT IN OFFICE")),
+                   h("p", {"class": "card-title person-name"}, _person_tag(p), c.cite(_people_sources(p))),
+                   h("dl", {"class": "person-fields"},
+                     h("dt", None, "Offices"), h("dd", None, p["offices_summary"]),
+                     h("dt", None, "Party"), h("dd", None, parties),
+                     h("dt", None, "Rules met"), h("dd", None, join([h("span", {"class": "crit-tag mono"},
+                                                                        CRITERIA_LABELS.get(k, k)) for k in crit(p)], " ")),
+                     h("dt", None, "Summary"),
+                     h("dd", None, summary if summary else h("span", {"class": "muted"},
+                                                             "No profile written yet; offices and dates are from "
+                                                             "the guide's officeholder records.")),
+                     h("dt", None, "Official findings"),
+                     h("dd", None, findings if findings else h("span", {"class": "muted"}, "None documented in the sources."))),
+                   h("p", {"class": "holder-badges"}, badges)))
+        segs = _office_segments(p["offices_summary"])
+        first = segs[0][0] if segs else p["offices_summary"]
+        if len(segs) > 1:
+            first += f" and {len(segs) - 1} more"
+        yrs = [int(y) for y in re.findall(r"\b(1[89]\d\d|20\d\d)\b", p["offices_summary"])]
+        span = ""
+        if yrs:
+            end = "present" if in_office else str(max(yrs))
+            span = f"{min(yrs)}–{end}" if end != str(min(yrs)) else str(min(yrs))
+        rules = ", ".join(CRITERIA_LABELS.get(k, k) for k in crit(p))
+        items.append({"key": anchor, "name": p["name"], "item_id": f"person-{anchor}",
+                      "facts": [f"{first}, {span}" if span else first, _parties(p) or "Party not documented", f"Rule: {rules}"],
+                      "status": p["status"],
+                      "search": p["offices_summary"] + " " + rules,
+                      "attrs": {"data-tf-era": _era(_first_year(p)),
+                                "data-tf-office": "now" if in_office else "former"},
+                      "body": card})
+    era_opts = [(e, e.replace("-", "–") if e != "unknown" else "Year not documented")
+                for e in ["pre-1950", "1950-1979", "1980-1999", "2000-present", "unknown"]
+                if any(i["attrs"]["data-tf-era"] == e for i in items)]
     page.add(section("people", 2, f"The people ({len(shown)})",
                      h("p", None, f"{len(shown)} people meet a rule with medium or high confidence in the data. "
                                   f"{len(low_table)} more are listed in the table below with a low-confidence flag, and "
                                   f"{len(pending)} whose only qualifying claim is an unverified first are listed under "
-                                  "Gaps as pending verification."),
-                     h("div", {"class": "person-grid"}, cards),
+                                  "Gaps as pending verification. Each row opens to the full card: photo and credit, "
+                                  "offices, party, rules met, summary, findings and sources. Rows run by first year of "
+                                  "documented service, then name, never by party."),
+                     one_bar("person", "people", "Pick a person to open the card."),
+                     entity_list("people-list", items, noun="person", plural="people",
+                                 search="Find a name, office or rule",
+                                 controls=[{"key": "era", "label": "First documented service", "all": "All eras",
+                                            "options": era_opts},
+                                           {"key": "office", "label": "Holds office now", "all": "Either",
+                                            "options": [("now", "In office now"), ("former", "Not in office")]}],
+                                 label="People the rules picked"),
                      scope="county", ed=ed))
 
     lrows = []

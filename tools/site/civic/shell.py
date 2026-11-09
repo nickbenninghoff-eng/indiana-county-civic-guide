@@ -8,6 +8,7 @@ forms required by the Artifact host:
 from __future__ import annotations
 
 import posixpath
+import re
 from pathlib import Path
 
 from . import sitemap
@@ -70,6 +71,22 @@ def about_looks_section(ed, num: int | None) -> Markup:
           h("p", None, "Your browser remembers the look on this device. Light or dark mode is a separate setting "
                        "(the Theme button) and works with every look. Printed pages use plain black ink on white.")),
         ed=ed)
+
+
+# A hand-written hero eyebrow: plain text only (every page module writes one; see Page._main)
+# Pages that stay over about 9.5 screens at 1280 px after the Wave A-D splits (measured 2026-11-09, height / 800, folds
+# closed). static/js/onpage.js adds the sticky "On this page" bar and a "Back to top" link at each h2 on these pages,
+# built from the page's own .toc. Without JavaScript they keep the plain table of contents.
+ONPAGE_PAGES = frozenset({
+    "money/campaigns/county/index.html", "money/campaigns/all-filings/index.html", "history/index.html",
+    "money/campaigns/how-it-works/index.html", "money/budgets/index.html", "county/index.html", "about/index.html",
+    "money/your-tax-bill/index.html", "elections/how-it-works/index.html", "places/mishawaka/index.html",
+    "community/people/index.html", "elections/calendar/index.html", "places/south-bend/index.html",
+    "community/income-and-work/index.html", "money/campaigns/mishawaka/index.html",
+    "money/campaigns/south-bend/index.html", "elections/margins/index.html", "elections/results/index.html",
+    "money/campaigns/sbcsc/index.html"})
+
+_LEGACY_EYEBROW = re.compile(r'<p class="eyebrow mono">[^<]*</p>')
 
 
 class Site:
@@ -238,26 +255,86 @@ class Page:
                    h("a", {"class": "here-pick", "href": pick}, "Pick your place to see what applies to you")))
 
     def _nav(self) -> Markup:
+        """Primary nav (Wave D batch 6, review 1.4 / Q1): Your place · Topics ▾ · Learn ▾ · About.
+
+        Topics and Learn are <details> menus, so without JavaScript they open and close natively and every link is a
+        plain link; static/js/nav.js adds closing on Escape / outside click, one menu open at a time and aria-expanded
+        on the summary. The Topics menu keeps the id "ref-menu" (old fixtures and static/app.js use it). Each topic's
+        heading links to its hub page; the leaves come from sitemap.TOPICS."""
+        by_path = self.site.by_path
+
         def link(path, label, extra_cls=None):
             target_path = path.split("#")[0]
             current = "page" if target_path == self.path and "#" not in path else None
             return h("a", {"href": self.rel(path), "aria-current": current, "class": extra_cls}, label)
 
         groups = []
-        for g in sitemap.REFERENCE_GROUPS:
-            items = [e for e in self.site.entries if e.group == g]
-            groups.append(h("div", {"class": "menu-group"}, h("p", {"class": "menu-head"}, g),
-                            h("ul", None, [h("li", None, link(e.path, e.nav)) for e in items])))
-        ref_current = self.entry is not None and bool(self.entry.group)
+        for t in sitemap.TOPICS:
+            slug = re.sub(r"[^a-z0-9]+", "-", t["name"].lower()).strip("-")
+            hid = f"nav-topic-{slug}"
+            leaves = []
+            for leaf in t["leaves"]:
+                paths = leaf if isinstance(leaf, tuple) else (leaf,)
+                paths = [p for p in paths if p.split("#")[0] in by_path]
+                if paths:
+                    leaves.append(h("li", None, join([link(p, sitemap.menu_label(by_path, p)) for p in paths],
+                                                     h("span", {"class": "menu-sep", "aria-hidden": "true"}, " · "))))
+            hub_cur = "page" if t["hub"] == self.path else None
+            groups.append(h("div", {"class": "menu-group"},
+                            h("p", {"class": "menu-head", "id": hid},
+                              h("a", {"class": "menu-hub", "href": self.rel(t["hub"]), "aria-current": hub_cur},
+                                t["name"], h("span", {"class": "menu-hub-arrow", "aria-hidden": "true"}))),
+                            h("ul", {"aria-labelledby": hid}, leaves)))
+        paths = [h("li", None,
+                   h("a", {"href": self.rel(p["stops"][0]["page"]) + f"#path-{p['id']}-1", "class": "menu-path"},
+                     h("span", {"class": "menu-path-title"}, p["title"]),
+                     h("span", {"class": "menu-path-meta mono"}, f" · about {p['minutes']} min")))
+                 for p in sitemap.PATHS]
+        learn = [h("div", {"class": "menu-group"},
+                   h("p", {"class": "menu-head", "id": "nav-learn-paths"},
+                     h("a", {"class": "menu-hub", "href": self.rel("index.html#paths")}, "Learning paths",
+                       h("span", {"class": "menu-hub-arrow", "aria-hidden": "true"}))),
+                   h("ul", {"aria-labelledby": "nav-learn-paths"}, paths)),
+                 h("div", {"class": "menu-group"},
+                   h("p", {"class": "menu-head", "id": "nav-learn-teach"}, "Teaching"),
+                   h("ul", {"aria-labelledby": "nav-learn-teach"},
+                     h("li", None, link(sitemap.LEARN_PAGE, "For teachers and groups"))))]
+        topic = sitemap.topic_of(self.path)
+        topics_current = topic is not None and self.path != sitemap.YOUR_PLACE
+        learn_current = self.path.startswith("teach/")
+        about_cur = "page" if self.path == sitemap.ABOUT_PAGE else None
         return h("nav", {"class": "nav", "aria-label": "Primary"},
                  h("ul", {"class": "nav-list"},
-                   h("li", None, link("index.html#paths", "Paths")),
+                   h("li", None, link(sitemap.YOUR_PLACE, "Your place", "nav-place")),
                    h("li", {"class": "nav-menu"},
-                     h("details", {"id": "ref-menu"},
-                       h("summary", {"class": "is-current" if ref_current else None}, "Reference"),
-                       h("div", {"class": "menu-panel"}, groups))),
-                   h("li", None, link("teach/index.html", "For teachers")),
-                   h("li", None, link("about/index.html", "About & methods"))))
+                     h("details", {"id": "ref-menu", "class": "nav-dd", "data-nav-menu": True},
+                       h("summary", {"class": "is-current" if topics_current else None}, "Topics"),
+                       h("div", {"class": "menu-panel menu-topics"}, groups))),
+                   h("li", {"class": "nav-menu"},
+                     h("details", {"id": "learn-menu", "class": "nav-dd", "data-nav-menu": True},
+                       h("summary", {"class": "is-current" if learn_current else None}, "Learn"),
+                       h("div", {"class": "menu-panel menu-learn"}, learn))),
+                   h("li", None, h("a", {"href": self.rel(sitemap.ABOUT_PAGE), "aria-current": about_cur,
+                                         "class": "is-current" if self.path.startswith("about/") else None},
+                                   "About"))))
+
+    def crumb_nav(self) -> Markup | None:
+        """The page's breadcrumb (sitemap.crumbs) as the hero eyebrow: <nav class="crumbs eyebrow mono"
+        aria-label="Breadcrumb"> with an <ol>; the topic and parent pages are links, the page itself is
+        aria-current. None for the home page and pages outside every topic."""
+        items = sitemap.crumbs(self.site.by_path, self.path)
+        if not items:
+            return None
+        lis = []
+        for i, (label, target) in enumerate(items):
+            last = i == len(items) - 1
+            sep = h("span", {"class": "crumb-sep", "aria-hidden": "true"}, " · ") if i else None
+            if target:
+                body = h("a", {"href": self.rel(target)}, label)
+            else:
+                body = h("span", {"aria-current": "page" if last else None}, label)
+            lis.append(h("li", None, sep, body))
+        return h("nav", {"class": "crumbs eyebrow mono", "aria-label": "Breadcrumb"}, h("ol", None, lis))
 
     def _banners(self) -> Markup:
         if not self.banners:
@@ -302,21 +379,33 @@ class Page:
                    h("span", {"class": "print-only"}, f" · {self.path}")))
 
     # ---- output -------------------------------------------------------------------
+    def _main(self) -> Markup:
+        """The page's parts. A page whose hero still carries a hand-written eyebrow (<p class="eyebrow mono">, the
+        pre-batch-6 "Reference · Money" labels in the page modules) gets the sitemap breadcrumb in its place, so the
+        labels follow sitemap.py (Wave D batch 6 renames: Reference -> Topics, Context -> Community & history, ...).
+        Only the first such paragraph is replaced, and only when the sitemap has a breadcrumb for the page."""
+        html = join(self.parts, "\n")
+        crumb = self.crumb_nav()
+        if crumb is None:
+            return html
+        return Markup(_LEGACY_EYEBROW.sub(lambda m: str(crumb), str(html), count=1))
+
     def render(self) -> str:
         paths_payload = {"root": self.root, "paths": [
             {"id": p["id"], "title": p["title"],
              "stops": [{"page": s["page"], "anchor": s["anchor"], "title": s["title"], "lead": s["lead"]}
                        for s in p["stops"]]} for p in sitemap.PATHS]}
         cls = "site" + (f" {self.body_class}" if self.body_class else "")
+        onpage = ' data-onpage="1"' if self.path in ONPAGE_PAGES else ""
         body = join([
             h("a", {"class": "skip-link", "href": "#main"}, "Skip to content"),
-            Markup(f'<div class="{esc(cls)}" id="site" data-root="{esc(self.root)}" data-page="{esc(self.path)}">'),
+            Markup(f'<div class="{esc(cls)}" id="site" data-root="{esc(self.root)}" data-page="{esc(self.path)}"{onpage}>'),
             self._masthead(),
             self._nav(),
             self._here_bar(),
             self._banners(),
             h("div", {"id": "path-bar", "class": "path-bar", "hidden": True, "aria-live": "polite"}),
-            h("main", {"id": "main", "tabindex": "-1"}, join(self.parts, "\n")),
+            h("main", {"id": "main", "tabindex": "-1"}, self._main()),
             self._footer(),
             Markup("</div>"),
             json_script("paths-data", paths_payload),

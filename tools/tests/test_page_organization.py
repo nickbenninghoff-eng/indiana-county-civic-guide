@@ -28,7 +28,9 @@ ID_RE = re.compile(r'\sid="([^"]+)"')
 HREF_RE = re.compile(r'<a\b[^>]*\shref="([^"]+)"')
 
 PAGES = ["data/index.html", "data/pull/index.html", "about/index.html", "about/sources/index.html",
-         "elections/landscape/index.html", "elections/calendar/index.html"] + \
+         "elections/landscape/index.html", "elections/calendar/index.html",
+         # Wave B batch 2 split the landscape page; its tables and filters now live on these pages
+         "elections/margins/index.html", "elections/turnout/index.html", "officeholders/index.html"] + \
         [f"data/{slug}/index.html" for slug, _, _ in sitemap.DATA_PAGES]
 
 
@@ -77,11 +79,13 @@ class Built(unittest.TestCase):
         self.assertEqual([i for i in before if i not in self.ids["elections/calendar/index.html"]], [])
 
     def test_old_margin_controls_replaced(self):
-        before = set(json.loads(FIXTURE.read_text(encoding="utf-8"))["ids"]["elections/landscape/index.html"])
-        gone = before - self.ids["elections/landscape/index.html"]
-        self.assertEqual(gone, {"mg-year", "mg-type", "mg-band", "mg-sort", "mg-count"})
+        # the five obsolete controls stay gone; the table's filter ids moved with it to elections/margins/ (Wave B
+        # batch 2; tools/tests/test_wave_b_numbers.py pins every landscape id)
+        for gone in ("mg-year", "mg-type", "mg-band", "mg-sort", "mg-count"):
+            self.assertNotIn(gone, self.ids["elections/landscape/index.html"])
+            self.assertNotIn(gone, self.ids["elections/margins/index.html"])
         for suffix in ("year", "type", "band", "office", "place", "district", "q", "sort"):
-            self.assertIn(f"tf-margins-table-{suffix}", self.ids["elections/landscape/index.html"])
+            self.assertIn(f"tf-margins-table-{suffix}", self.ids["elections/margins/index.html"])
 
     def test_path_stop_anchors(self):
         for p in sitemap.PATHS:
@@ -166,7 +170,8 @@ class Built(unittest.TestCase):
 
     def test_citation_links_resolve_in_fold(self):
         """Every in-page #src- link lands on an id that exists on the page (inside the fold)."""
-        for p in ("elections/landscape/index.html", "elections/calendar/index.html", "data/results/index.html"):
+        for p in ("elections/landscape/index.html", "elections/calendar/index.html", "data/results/index.html",
+                  "elections/margins/index.html", "officeholders/index.html"):
             h = self.html[p]
             for frag in HREF_RE.findall(h):
                 if frag.startswith("#src-"):
@@ -199,12 +204,12 @@ class Built(unittest.TestCase):
         self.assertIn(f'data-tf-empty="{table_id}"', h)
 
     def test_margins_filters_have_office_place_district(self):
-        self._check_filter("elections/landscape/index.html", "margins-table",
+        self._check_filter("elections/margins/index.html", "margins-table",
                            ["year", "type", "band", "office", "place", "district"])
 
     def test_up_next_and_officeholders_filters(self):
-        self._check_filter("elections/landscape/index.html", "up-next-table", ["year", "level", "government"])
-        self._check_filter("elections/landscape/index.html", "took-office-list", ["level", "government", "how"])
+        self._check_filter("elections/calendar/index.html", "up-next-table", ["year", "level", "government"])
+        self._check_filter("officeholders/index.html", "took-office-list", ["level", "government", "how"])
 
     def test_calendar_every_seat_filters(self):
         self._check_filter("elections/calendar/index.html", "calendar-table", ["year", "level", "government"])
@@ -213,7 +218,7 @@ class Built(unittest.TestCase):
         from pages.elections import _search_text
         self.assertEqual(_search_text("St. Joseph County Council, District H (Democratic primary)"),
                          "St. Joseph County Council, District H")
-        h = self.html["elections/landscape/index.html"]
+        h = self.html["elections/margins/index.html"]
         self.assertNotRegex(h, r'data-tf-text="[^"]*primary\)')
 
     def test_table_filter_helper(self):

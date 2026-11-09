@@ -50,5 +50,5 @@ At most 3 agents run at once. Usage guard: pause everything at 90% of the 5-hour
 ## Status
 - [x] Map batch (pre-plan, in flight) verified (build PASSED 109 pages, 153 tests, check_gov 0, check_money OK, browser)
 - [x] Campaigns Part 4 (2023 YTD basis audit) verified (spot-checked against raw filings)
-- [ ] Commit (rollback point)
-- [ ] Wave A  - [ ] Wave B  - [ ] Wave C  - [ ] Wave D  - [ ] Wave E
+- [x] Commit (rollback point): 240a3e8, not pushed
+- [x] Wave A (verified ~03:30)  - [x] Wave B (verified ~05:00)  - [x] Wave C (verified ~06:40)  - [x] Wave D (verified ~07:30)  - [x] Wave E (verified ~09:40)
