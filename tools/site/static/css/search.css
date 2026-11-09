@@ -1,0 +1,57 @@
+/* Header search (civic/shell.py _search, static/js/search.js). Tokens only. Inside the Wayfinding
+   masthead the shell remaps --surface/--ink to the dark sign colors, so the box follows the header. */
+
+/* the results list hangs below the masthead, so the masthead must sit above the sticky nav */
+.masthead { z-index: 31; }
+
+.site-search { position: relative; flex: 1 1 15rem; max-width: 24rem; min-width: 0; }
+.search-nojs { font-size: .88rem; font-weight: 600; }
+.search-form { position: relative; display: flex; align-items: center; margin: 0; }
+.search-icon {
+  position: absolute; left: 13px; top: 50%; width: 13px; height: 13px; margin-top: -8px;
+  border: 2px solid var(--ink); border-radius: 50%; pointer-events: none;
+}
+.search-icon::after {
+  content: ""; position: absolute; width: 2px; height: 7px; background: var(--ink);
+  right: -4px; bottom: -6px; transform: rotate(-45deg);
+}
+.search-input {
+  width: 100%; min-height: 44px; margin: 0; padding: 8px 12px 8px 36px;
+  font: 400 1rem/1.2 var(--f-sans); color: var(--ink); background: var(--surface);
+  border: 2px solid var(--ink); border-radius: var(--r-btn);
+}
+.search-input::placeholder { color: var(--ink-3); opacity: 1; }
+.search-input:focus-visible { outline: 3px solid var(--focus); outline-offset: 1px; }
+
+.search-pop {
+  position: absolute; top: calc(100% + 6px); right: 0; z-index: 45;
+  width: min(34rem, calc(100vw - 32px)); max-height: min(70vh, 34rem); overflow-y: auto;
+  background: var(--surface); color: var(--ink); border: 2px solid var(--rule); border-radius: var(--r);
+  box-shadow: 0 14px 30px var(--shadow); padding: 6px;
+}
+.search-status { margin: 4px 8px 6px; font-size: .82rem; color: var(--ink-3); }
+.search-list { list-style: none; margin: 0; padding: 0; }
+.search-opt {
+  display: block; padding: 9px 10px; border-radius: var(--r-sm); cursor: pointer;
+  border-left: 4px solid transparent;
+}
+.search-opt:hover { background: var(--surface-2); }
+.search-opt.is-active { background: var(--surface-2); border-left-color: var(--accent); }
+.search-opt-main { display: flex; align-items: baseline; justify-content: space-between; gap: 4px 12px; flex-wrap: wrap; }
+.search-opt-label { font-weight: 600; min-width: 0; }
+.search-opt-kind { font: 600 .66rem/1.2 var(--f-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); }
+.search-opt-sub { display: block; font-size: .82rem; color: var(--ink-3); margin-top: 1px; }
+.search-foot { margin: 6px 8px 4px; font-size: .85rem; }
+
+:root[data-look="line"] .search-input { border: 1px solid var(--ctl-line); border-radius: 999px; }
+:root[data-look="line"] .search-pop { border: 1px solid var(--line); }
+:root[data-look="wayfinding"] .search-input { font-weight: 600; }
+:root[data-look="wayfinding"] .search-opt.is-active { border-left-color: var(--hl); }
+
+@media (max-width: 760px) {
+  .site-search { flex-basis: 100%; max-width: none; }
+  .search-pop { left: 0; right: 0; width: auto; }
+}
+@media print {
+  .site-search { display: none !important; }
+}

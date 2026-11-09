@@ -1,0 +1,778 @@
+/* Reader-selectable looks: Ballot (default), Line map, Wayfinding.
+   html[data-look] is set before first paint by the inline script in civic/shell.py (_head) and
+   changed by static/js/looks.js. No data-look (no JS) = Ballot, so every "Ballot" rule below is the
+   unscoped default, and Line map / Wayfinding override it under :root[data-look="..."].
+
+   Rules that never change between looks:
+   - The edition color (--edition / --accent) is the accent in every look.
+   - Party colors (--party-*) and chart data marks (.m-*) are not redefined here.
+   - Layer colors (--lyr-*, --way-*) are categorical by kind of government. Each one is checked
+     against both party colors (OKLab dE >= 15, light and dark) so none reads as a party color.
+
+   Cascade: this partial comes after style.css. Ballot tokens use the same three selectors as the
+   base (:root, the dark media block, [data-theme="dark"]) and win by order. Line map and Wayfinding
+   use one more attribute, so their light block beats Ballot dark and their dark blocks beat their
+   own light block. Component selectors start with :root so they also win over partials that sort
+   after this file (map.css, meta.css, ...). */
+
+/* TOKENS:BEGIN */
+/* look:ballot mode:light */
+:root {
+  --bg: #fbfaf6;
+  --surface: #ffffff;
+  --surface-2: #f1efe8;
+  --ink: #1b1b1b;
+  --ink-2: #3a3833;
+  --ink-3: #57534e;
+  --rule: #1b1b1b;
+  --line: #c9c5ba;
+  --grid: #e6e3da;
+  --tip-bg: #1b1b1b;
+  --tip-ink: #fbfaf6;
+  --shadow: #1b1b1b26;
+  --nav-bg: #1b1b1b;
+  --nav-ink: #fbfaf6;
+  --nav-ink-2: #d6d3cb;
+  --nav-line: #57534e;
+  --hl: #f2d16b;
+  --hl-ink: #1b1b1b;
+}
+@media (prefers-color-scheme: dark) {
+  /* look:ballot mode:dark */
+  :root:not([data-theme="light"]) {
+    --bg: #12120f;
+    --surface: #1b1a17;
+    --surface-2: #262521;
+    --ink: #f3f0e7;
+    --ink-2: #d6d2c6;
+    --ink-3: #aba699;
+    --rule: #f3f0e7;
+    --line: #4a473f;
+    --grid: #2c2a25;
+    --tip-bg: #f3f0e7;
+    --tip-ink: #12120f;
+    --shadow: #00000066;
+    --nav-bg: #2a2924;
+    --nav-ink: #f3f0e7;
+    --nav-ink-2: #cfcabd;
+    --nav-line: #6b675d;
+    --hl: #e3c45e;
+    --hl-ink: #1b1b1b;
+  }
+}
+/* look:ballot mode:dark */
+:root[data-theme="dark"] {
+  --bg: #12120f;
+  --surface: #1b1a17;
+  --surface-2: #262521;
+  --ink: #f3f0e7;
+  --ink-2: #d6d2c6;
+  --ink-3: #aba699;
+  --rule: #f3f0e7;
+  --line: #4a473f;
+  --grid: #2c2a25;
+  --tip-bg: #f3f0e7;
+  --tip-ink: #12120f;
+  --shadow: #00000066;
+  --nav-bg: #2a2924;
+  --nav-ink: #f3f0e7;
+  --nav-ink-2: #cfcabd;
+  --nav-line: #6b675d;
+  --hl: #e3c45e;
+  --hl-ink: #1b1b1b;
+}
+
+/* look:line mode:light */
+:root[data-look="line"] {
+  --bg: #ffffff;
+  --surface: #ffffff;
+  --surface-2: #f4f4f5;
+  --ink: #18181b;
+  --ink-2: #3f3f46;
+  --ink-3: #52525b;
+  --rule: #18181b;
+  --line: #e4e4e7;
+  --grid: #ececef;
+  --tip-bg: #18181b;
+  --tip-ink: #ffffff;
+  --shadow: #18181b1f;
+  --nav-bg: #ffffff;
+  --nav-ink: #18181b;
+  --nav-ink-2: #52525b;
+  --nav-line: #e4e4e7;
+  --hl: #f4f4f5;
+  --hl-ink: #18181b;
+  --ctl-line: #82828c;
+  --lyr-state: #6d28d9;
+  --lyr-township: #7a4a24;
+  --lyr-muni: #857000;
+  --lyr-school: #475569;
+  --lyr-library: #18181b;
+}
+@media (prefers-color-scheme: dark) {
+  /* look:line mode:dark */
+  :root[data-look="line"]:not([data-theme="light"]) {
+    --bg: #0c0c0e;
+    --surface: #16161a;
+    --surface-2: #222227;
+    --ink: #f4f4f5;
+    --ink-2: #d4d4d8;
+    --ink-3: #a1a1aa;
+    --rule: #f4f4f5;
+    --line: #303036;
+    --grid: #232328;
+    --tip-bg: #f4f4f5;
+    --tip-ink: #0c0c0e;
+    --shadow: #00000080;
+    --nav-bg: #0c0c0e;
+    --nav-ink: #f4f4f5;
+    --nav-ink-2: #a1a1aa;
+    --nav-line: #303036;
+    --hl: #222227;
+    --hl-ink: #f4f4f5;
+    --ctl-line: #75757e;
+    --lyr-state: #c084fc;
+    --lyr-township: #d6b98c;
+    --lyr-muni: #fde047;
+    --lyr-school: #b6c2d1;
+    --lyr-library: #f4f4f5;
+  }
+}
+/* look:line mode:dark */
+:root[data-look="line"][data-theme="dark"] {
+  --bg: #0c0c0e;
+  --surface: #16161a;
+  --surface-2: #222227;
+  --ink: #f4f4f5;
+  --ink-2: #d4d4d8;
+  --ink-3: #a1a1aa;
+  --rule: #f4f4f5;
+  --line: #303036;
+  --grid: #232328;
+  --tip-bg: #f4f4f5;
+  --tip-ink: #0c0c0e;
+  --shadow: #00000080;
+  --nav-bg: #0c0c0e;
+  --nav-ink: #f4f4f5;
+  --nav-ink-2: #a1a1aa;
+  --nav-line: #303036;
+  --hl: #222227;
+  --hl-ink: #f4f4f5;
+  --ctl-line: #75757e;
+  --lyr-state: #c084fc;
+  --lyr-township: #d6b98c;
+  --lyr-muni: #fde047;
+  --lyr-school: #b6c2d1;
+  --lyr-library: #f4f4f5;
+}
+
+/* look:wayfinding mode:light */
+:root[data-look="wayfinding"] {
+  --bg: #f5f5f4;
+  --surface: #ffffff;
+  --surface-2: #eceae9;
+  --ink: #111111;
+  --ink-2: #292524;
+  --ink-3: #44403c;
+  --rule: #111111;
+  --line: #a8a29e;
+  --grid: #e7e5e4;
+  --tip-bg: #111111;
+  --tip-ink: #ffffff;
+  --shadow: #1111112e;
+  --nav-bg: #111111;
+  --nav-ink: #ffffff;
+  --nav-ink-2: #d6d3d1;
+  --nav-line: #44403c;
+  --hl: #ffc20e;
+  --hl-ink: #111111;
+  --way-state: #111111;
+  --way-state-ink: #ffffff;
+  --way-county: #5b21b6;
+  --way-county-ink: #ffffff;
+  --way-township: #7a4a24;
+  --way-township-ink: #ffffff;
+  --way-school: #ffc20e;
+  --way-school-ink: #111111;
+  --way-library: #475569;
+  --way-library-ink: #ffffff;
+}
+@media (prefers-color-scheme: dark) {
+  /* look:wayfinding mode:dark */
+  :root[data-look="wayfinding"]:not([data-theme="light"]) {
+    --bg: #0c0c0b;
+    --surface: #1a1918;
+    --surface-2: #292524;
+    --ink: #fafaf9;
+    --ink-2: #e7e5e4;
+    --ink-3: #c3bdb7;
+    --rule: #fafaf9;
+    --line: #57534e;
+    --grid: #292524;
+    --tip-bg: #fafaf9;
+    --tip-ink: #0c0c0b;
+    --shadow: #00000080;
+    --nav-bg: #000000;
+    --nav-ink: #ffffff;
+    --nav-ink-2: #d6d3d1;
+    --nav-line: #44403c;
+    --hl: #ffc20e;
+    --hl-ink: #111111;
+    --way-state: #e7e5e4;
+    --way-state-ink: #111111;
+    --way-county: #5b21b6;
+    --way-county-ink: #ffffff;
+    --way-township: #7a4a24;
+    --way-township-ink: #ffffff;
+    --way-school: #ffc20e;
+    --way-school-ink: #111111;
+    --way-library: #475569;
+    --way-library-ink: #ffffff;
+  }
+}
+/* look:wayfinding mode:dark */
+:root[data-look="wayfinding"][data-theme="dark"] {
+  --bg: #0c0c0b;
+  --surface: #1a1918;
+  --surface-2: #292524;
+  --ink: #fafaf9;
+  --ink-2: #e7e5e4;
+  --ink-3: #c3bdb7;
+  --rule: #fafaf9;
+  --line: #57534e;
+  --grid: #292524;
+  --tip-bg: #fafaf9;
+  --tip-ink: #0c0c0b;
+  --shadow: #00000080;
+  --nav-bg: #000000;
+  --nav-ink: #ffffff;
+  --nav-ink-2: #d6d3d1;
+  --nav-line: #44403c;
+  --hl: #ffc20e;
+  --hl-ink: #111111;
+  --way-state: #e7e5e4;
+  --way-state-ink: #111111;
+  --way-county: #5b21b6;
+  --way-county-ink: #ffffff;
+  --way-township: #7a4a24;
+  --way-township-ink: #ffffff;
+  --way-school: #ffc20e;
+  --way-school-ink: #111111;
+  --way-library: #475569;
+  --way-library-ink: #ffffff;
+}
+
+/* Print is skin-neutral: ink on white whatever the look or theme. The id inside :not() lifts the
+   specificity above every look/theme selector; no element carries that id. */
+@media print {
+  :root:not(#looks-print-override) {
+    --edition: {{edition_light}};
+    --bg: #ffffff;
+    --surface: #ffffff;
+    --surface-2: #f2f2f2;
+    --ink: #000000;
+    --ink-2: #222222;
+    --ink-3: #444444;
+    --rule: #000000;
+    --line: #999999;
+    --grid: #cccccc;
+    --accent-ink: #ffffff;
+    --nav-bg: #ffffff;
+    --nav-ink: #000000;
+    --nav-ink-2: #222222;
+    --nav-line: #999999;
+    --hl: #ffffff;
+    --hl-ink: #000000;
+    --unofficial: #7f4d00;
+    --unofficial-wash: #ffffff;
+    --unofficial-line: #7f4d00;
+    color-scheme: light;
+  }
+}
+/* TOKENS:END */
+
+/* ================================================================ look variables (no colors) */
+:root {
+  --f-sans: "Barlow", system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  --f-display: "Barlow Condensed", "Arial Narrow", "Roboto Condensed", "Helvetica Neue", Arial, sans-serif;
+  --f-label: var(--f-display);
+  --f-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  --display-wt: 700;
+  --display-case: uppercase;
+  --display-track: .01em;
+  --h2-font: var(--f-display);
+  --h2-case: uppercase;
+  --h2-size: 1.8rem;
+  --h2-track: .01em;
+  --r-sm: 0px;      /* badges, small buttons */
+  --r: 0px;         /* cards, inputs */
+  --r-lg: 0px;      /* panels, charts */
+  --r-btn: 0px;     /* buttons and links-as-buttons */
+  --bw-heavy: 3px;  /* section rules */
+}
+:root[data-look="line"] {
+  --f-sans: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  --f-display: "Space Grotesk", "Inter", system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
+  --f-label: var(--f-sans);
+  --display-wt: 700;
+  --display-case: none;
+  --display-track: -.02em;
+  --h2-font: var(--f-display);
+  --h2-case: none;
+  --h2-size: 1.6rem;
+  --h2-track: -.015em;
+  --r-sm: 999px;
+  --r: 12px;
+  --r-lg: 16px;
+  --r-btn: 999px;
+  --bw-heavy: 1px;
+}
+:root[data-look="wayfinding"] {
+  --f-sans: "Overpass", "Helvetica Neue", Arial, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-display: "Overpass", "Helvetica Neue", Arial, system-ui, sans-serif;
+  --f-label: var(--f-sans);
+  --display-wt: 800;
+  --display-case: none;
+  --display-track: -.01em;
+  --h2-font: var(--f-sans);
+  --h2-case: none;
+  --h2-size: 1.65rem;
+  --h2-track: -.005em;
+  --r-sm: 4px;
+  --r: 10px;
+  --r-lg: 14px;
+  --r-btn: 8px;
+  --bw-heavy: 4px;
+}
+
+/* ================================================================ shared treatments (all looks) */
+:root body { background: var(--bg); color: var(--ink); font-family: var(--f-sans); }
+/* on dark bars the edition color is too dim for a focus ring: use the bar's ink (menu panel is page-colored) */
+:root .nav { --focus: var(--nav-ink); }
+:root .menu-panel, :root .masthead { --focus: var(--ink); }
+:root[data-look="wayfinding"] .masthead { --focus: var(--hl); }
+
+:root .series, :root .page-hero h1, :root .hero-h, :root .section-h, :root .elx-yr, :root .handout-title {
+  font-family: var(--f-display); font-weight: var(--display-wt);
+  text-transform: var(--display-case); letter-spacing: var(--display-track);
+}
+:where(.gaps, .sources) > h2,
+:where(.block-head) h2 {
+  font-family: var(--h2-font); text-transform: var(--h2-case); font-size: var(--h2-size);
+  letter-spacing: var(--h2-track); font-weight: 700;
+}
+:root .eyebrow, :root .picker-head, :root .next-h, :root .menu-head {
+  font-family: var(--f-label);
+}
+:root .block-head, :root .gaps, :root .sources { border-top: var(--bw-heavy) solid var(--rule); }
+:root .site-footer { border-top: var(--bw-heavy) solid var(--rule); }
+
+:root .badge, :root .scope { border-radius: var(--r-sm); }
+:root .btn, :root .theme-toggle { border-radius: var(--r-btn); }
+:root .card, :root .contact-card, :root .elx-card, :root .place-card { border-radius: var(--r); }
+:root .callout, :root .exception, :root .path-bar, :root .banner, :root .context-strip { border-radius: 0 var(--r) var(--r) 0; }
+:root .chart, :root .layers-block, :root .table-wrap, :root .menu-panel, :root .cmap-panel, :root .cmap-svg { border-radius: var(--r-lg); }
+:root .field select { border-radius: var(--r); min-height: 44px; }
+:root .theme-toggle { min-height: 44px; min-width: 44px; padding: 6px 12px; }
+
+@media (max-width: 760px) {
+  :root .layer-toggle { min-height: 44px; padding: 8px 12px; }
+}
+
+/* ================================================================ look switcher */
+.look-switch { display: none; }
+:root[data-look] .look-switch { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; min-width: 0; }
+:root[data-look] .look-nojs { display: none; }
+.look-label { font: 700 .74rem/1 var(--f-label); letter-spacing: .1em; text-transform: uppercase; color: var(--ink-2); }
+.look-opts { display: inline-flex; min-width: 0; }
+.look-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  min-height: 44px; min-width: 44px; padding: 6px 12px; margin: 0;
+  font: 600 .86rem/1.1 var(--f-sans); color: var(--ink); background: var(--surface);
+  border: 0; cursor: pointer; white-space: nowrap;
+}
+.look-btn:hover { background: var(--surface-2); }
+.look-btn[aria-pressed="true"] { font-weight: 700; }
+
+/* Ballot: a boxed row of choices, each with an oval answer bubble (filled = chosen) */
+:root .look-opts { border: 2px solid var(--rule); background: var(--surface); }
+:root .look-btn + .look-btn { border-left: 2px solid var(--rule); }
+:root .look-btn::before {
+  content: ""; flex: none; width: 20px; height: 13px; border-radius: 50%;
+  border: 2px solid var(--ink); background: transparent;
+}
+:root .look-btn[aria-pressed="true"]::before { background: var(--ink); }
+:root .look-btn:focus-visible { outline-offset: -5px; }
+
+/* Line map: segmented control on a gray track */
+:root[data-look="line"] .look-opts { border: 0; background: var(--surface-2); border-radius: 12px; padding: 2px; gap: 2px; }
+:root[data-look="line"] .look-btn { border: 0; background: transparent; border-radius: 10px; font-weight: 500; }
+:root[data-look="line"] .look-btn::before { display: none; }
+:root[data-look="line"] .look-btn:hover { background: var(--surface); }
+:root[data-look="line"] .look-btn[aria-pressed="true"] { background: var(--surface); font-weight: 700;
+  box-shadow: 0 0 0 1.5px var(--ink-3), 0 1px 3px var(--shadow); }
+:root[data-look="line"] .look-btn:focus-visible { outline-offset: 1px; }
+
+/* Wayfinding: a sign strip, chosen option is a black panel */
+:root[data-look="wayfinding"] .look-label { color: var(--nav-ink-2); }
+:root[data-look="wayfinding"] .look-opts { border: 2px solid var(--nav-ink); border-radius: 8px; overflow: hidden; background: var(--nav-bg); }
+:root[data-look="wayfinding"] .look-btn { background: var(--nav-bg); color: var(--nav-ink); font-weight: 700; border-left: 0; }
+:root[data-look="wayfinding"] .look-btn + .look-btn { border-left: 2px solid var(--nav-ink); }
+:root[data-look="wayfinding"] .look-btn::before { display: none; }
+:root[data-look="wayfinding"] .look-btn:hover { background: var(--nav-line); }
+:root[data-look="wayfinding"] .look-btn[aria-pressed="true"] { background: var(--hl); color: var(--hl-ink); font-weight: 800; }
+:root[data-look="wayfinding"] .look-btn:focus-visible { outline: 3px solid var(--hl); outline-offset: -6px; }
+:root[data-look="wayfinding"] .look-btn[aria-pressed="true"]:focus-visible { outline-color: var(--hl-ink); }
+
+/* About page block uses the same buttons on the page background */
+.about-looks .look-switch { margin: 6px 0 14px; }
+.look-list { padding-left: 1.2em; }
+.look-list li { margin-bottom: 6px; }
+:root[data-look="wayfinding"] .about-looks .look-label { color: var(--ink-2); }
+
+/* ================================================================ BALLOT (default) */
+:root .masthead::before { box-shadow: inset 0 calc(-1 * var(--bw-heavy)) 0 var(--rule); }
+:root .series { font-size: clamp(1.35rem, 2.9vw, 2rem); }
+:root .eyebrow { font-size: .9rem; letter-spacing: .1em; color: var(--ink-3); font-weight: 600; }
+:root .kicker { font-family: var(--f-display); font-size: .95rem; font-weight: 700; }
+:root .nav-list a, :root .nav-list summary { font-family: var(--f-sans); font-size: .98rem; }
+:root .btn, :root .theme-toggle {
+  border: 2px solid var(--ink); color: var(--ink); background: var(--surface);
+  font-family: var(--f-display); font-size: .86rem; font-weight: 600; letter-spacing: .06em;
+}
+:root .btn:hover, :root .theme-toggle:hover { background: var(--surface-2); border-color: var(--ink); }
+:root .btn-small { font-size: .78rem; }
+/* filter buttons (aria-pressed) read as ballot choices */
+:root .btn[aria-pressed]::before {
+  content: ""; display: inline-block; width: 16px; height: 10px; margin-right: 6px; vertical-align: -1px;
+  border-radius: 50%; border: 2px solid currentColor;
+}
+:root .btn[aria-pressed="true"] { background: var(--ink); color: var(--surface); border-color: var(--ink); }
+:root .btn[aria-pressed="true"]::before { background: currentColor; }
+:root .tp-filter [aria-pressed="true"] { color: var(--surface); border-color: var(--ink); }
+
+/* side colors only: variants (.card-conflict, .callout-conflict, ...) keep their top/left color */
+:root .card { border-width: 3px 2px 2px; border-right-color: var(--rule); border-bottom-color: var(--rule); border-left-color: var(--rule); }
+:root .callout { border-width: 2px 2px 2px 6px; border-top-color: var(--rule); border-right-color: var(--rule); border-bottom-color: var(--rule); }
+:root .chart, :root .layers-block, :root .table-wrap, :root .contact-card, :root .elx-card { border: 2px solid var(--rule); }
+:root .contact-card { border-top: 4px solid var(--accent); }
+:root .chart-title, :root .card-title { font-weight: 700; }
+:root table.data caption, :root table.data thead th {
+  font-family: var(--f-display); font-size: .82rem; font-weight: 700; letter-spacing: .06em; color: var(--ink-2);
+}
+:root table.data thead th { border-bottom: 2px solid var(--rule); }
+:root .field label { font-family: var(--f-display); font-size: .82rem; font-weight: 700; letter-spacing: .08em; color: var(--ink-2); }
+:root .field select { border: 2px solid var(--ink); font-family: var(--f-sans); font-size: 1rem; background: var(--surface); }
+:root .picker { border-bottom: 3px solid var(--rule); }
+:root .path-link { border: 2px solid var(--rule); border-top: 6px solid var(--accent); }
+:root .path-link:hover { border-color: var(--rule); border-top-color: var(--accent); }
+:root .path-title { font-family: var(--f-display); font-size: 1.3rem; text-transform: uppercase; letter-spacing: .01em; }
+
+/* layers: each layer reads like a ballot race header (ink bar); the chosen place's is edition color */
+:root .layer { border-bottom: 2px solid var(--grid); }
+:root .layer-name { font-family: var(--f-display); font-size: .95rem; font-weight: 700; letter-spacing: .06em; }
+:root .layer-title { background: var(--ink); color: var(--surface); padding: 2px 8px; display: inline-block; }
+:root .layer-placeholder .layer-title { background: transparent; color: var(--ink-3); box-shadow: inset 0 0 0 2px var(--line); }
+:root .layer.is-here .layer-title,
+:root .layer[data-key="municipality"]:not([hidden]) .layer-title,
+:root .layers:not(:has(> .layer[data-key="municipality"]:not([hidden]))) > .layer[data-key="township"]:not([hidden]) .layer-title {
+  background: var(--accent); color: var(--accent-ink);
+}
+
+/* "when you vote" callouts: the highlighter is reserved for these */
+:root .next-strip, :root .elx-next-card, :root .hl-callout {
+  --ink: var(--hl-ink); --ink-2: var(--hl-ink); --ink-3: var(--hl-ink); --accent: var(--hl-ink); --rule: var(--hl-ink);
+  background: var(--hl); color: var(--hl-ink);
+}
+:root .next-strip { border: 2px solid var(--hl-ink); padding: 14px 18px; }
+:root .next-strip a { color: var(--hl-ink); }
+:root .next-h { font-size: .95rem; font-weight: 700; letter-spacing: .1em; }
+:root .next-body .fig { font-family: var(--f-display); font-size: 1.7rem; }
+:root .elx-next-card { border: 2px solid var(--hl-ink); }
+
+/* generic choice hook for place options (button[aria-pressed] or a[aria-current]) */
+.choice-list { display: flex; flex-wrap: wrap; gap: 8px 10px; list-style: none; margin: 0; padding: 0; }
+:root .choice {
+  display: inline-flex; align-items: center; gap: 10px; min-height: 44px; padding: 6px 12px 6px 8px;
+  font: 500 1rem/1.2 var(--f-sans); color: var(--ink); background: var(--surface); text-decoration: none;
+  border: 2px solid transparent; cursor: pointer;
+}
+:root .choice::before {
+  content: ""; flex: none; width: 26px; height: 16px; border-radius: 50%; border: 2px solid var(--ink); background: transparent;
+}
+:root .choice:hover { border-color: var(--line); color: var(--ink); }
+:root .choice[aria-pressed="true"], :root .choice[aria-current] { font-weight: 700; }
+:root .choice[aria-pressed="true"]::before, :root .choice[aria-current]::before { background: var(--ink); }
+
+/* map tabs (map.css hooks): boxed segments, ink fill when pressed */
+:root .cmap-tabs { border: 2px solid var(--rule); border-radius: var(--r-btn); }
+:root .cmap-tab { border-right: 2px solid var(--rule); min-height: 44px; font-family: var(--f-sans); color: var(--ink); }
+:root .cmap-tab[aria-pressed="true"] { background: var(--ink); color: var(--surface); }
+
+/* ================================================================ LINE MAP */
+:root[data-look="line"] .masthead::before { box-shadow: inset 0 -1px 0 var(--line); }
+:root[data-look="line"] .nav::before { box-shadow: inset 0 -1px 0 var(--line); }
+:root[data-look="line"] .series { font-size: clamp(1.2rem, 2.4vw, 1.6rem); }
+:root[data-look="line"] .edition { font-family: var(--f-sans); letter-spacing: .04em; text-transform: none; font-size: .82rem; }
+:root[data-look="line"] .eyebrow { font-size: .82rem; letter-spacing: .02em; text-transform: none; color: var(--ink-3); }
+:root[data-look="line"] .kicker {
+  font-family: var(--f-sans); font-size: .74rem; padding: 4px 9px; border-radius: 999px;
+  background: var(--accent-wash); color: var(--ink);
+}
+:root[data-look="line"] .page-hero h1 { font-size: clamp(2.2rem, 6vw, 3.6rem); line-height: 1.02; }
+:root[data-look="line"] .hero-h { line-height: 1.02; }
+:root[data-look="line"] .nav-list { gap: 4px; padding-block: 6px; }
+:root[data-look="line"] .nav-list a, :root[data-look="line"] .nav-list summary {
+  border-bottom: 0; border-radius: 999px; padding: 10px 14px; font-weight: 500;
+}
+:root[data-look="line"] .nav-list > li:first-child > a { padding-left: 14px; }
+:root[data-look="line"] .nav-list a:hover, :root[data-look="line"] .nav-list summary:hover { background: var(--surface-2); }
+:root[data-look="line"] .nav-list a[aria-current="page"], :root[data-look="line"] .nav-list summary.is-current {
+  background: var(--accent-wash); box-shadow: inset 0 0 0 1.5px var(--accent); font-weight: 600;
+}
+:root[data-look="line"] .menu-panel { border: 1px solid var(--line); border-top: 1px solid var(--line); box-shadow: 0 16px 36px var(--shadow); margin-top: 6px; }
+:root[data-look="line"] .block-head { border-top: 1px solid var(--line); padding-top: 14px; }
+:root[data-look="line"] .gaps, :root[data-look="line"] .sources, :root[data-look="line"] .site-footer { border-top: 1px solid var(--line); }
+
+:root[data-look="line"] .btn, :root[data-look="line"] .theme-toggle {
+  border: 1px solid var(--ctl-line); background: var(--surface); color: var(--ink);
+  font-family: var(--f-sans); font-size: .84rem; font-weight: 600; letter-spacing: 0; text-transform: none; padding: 8px 14px;
+}
+:root[data-look="line"] .btn-small { font-size: .78rem; padding: 6px 12px; }
+:root[data-look="line"] .btn:hover, :root[data-look="line"] .theme-toggle:hover { background: var(--surface-2); }
+:root[data-look="line"] .btn[aria-pressed]::before { display: none; }
+:root[data-look="line"] .btn[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+
+:root[data-look="line"] .chart, :root[data-look="line"] .layers-block,
+:root[data-look="line"] .table-wrap, :root[data-look="line"] .contact-card, :root[data-look="line"] .elx-card {
+  border: 1px solid var(--line);
+}
+/* cards: thin gray box; the base top rule uses --rule, so soften it locally and variants keep their color */
+:root[data-look="line"] .card { --rule: var(--line); border-width: 3px 1px 1px; border-right-color: var(--line);
+  border-bottom-color: var(--line); border-left-color: var(--line); padding: 16px 18px; }
+:root[data-look="line"] .contact-card { border-top: 1px solid var(--line); box-shadow: inset 4px 0 0 var(--accent); }
+:root[data-look="line"] .callout { border-width: 0 0 0 4px; padding: 14px 18px; }
+:root[data-look="line"] table.data thead th { background: var(--surface-2); border-bottom: 1px solid var(--line); font-family: var(--f-sans); text-transform: none; letter-spacing: 0; font-size: .8rem; }
+:root[data-look="line"] table.data caption { font-family: var(--f-sans); text-transform: none; letter-spacing: 0; font-size: .82rem; }
+:root[data-look="line"] .field label { font-family: var(--f-sans); text-transform: none; letter-spacing: 0; font-size: .8rem; }
+:root[data-look="line"] .field select { border: 1px solid var(--ctl-line); background: var(--surface); padding: 9px 12px; }
+:root[data-look="line"] .picker { border-bottom: 1px solid var(--line); }
+:root[data-look="line"] .picker-head { text-transform: none; letter-spacing: 0; font-size: .86rem; }
+:root[data-look="line"] .path-link { border: 1px solid var(--line); border-radius: 16px; padding: 16px; }
+:root[data-look="line"] .path-link:hover { border-color: var(--ink-3); background: var(--surface-2); }
+:root[data-look="line"] .path-num {
+  align-self: flex-start; padding: 3px 9px; border-radius: 999px; background: var(--accent); color: var(--accent-ink);
+}
+:root[data-look="line"] .path-card-small .path-link { border-left: 1px solid var(--line); }
+:root[data-look="line"] .next-strip { border: 1px solid var(--line); border-radius: 16px; padding: 16px 20px; }
+:root[data-look="line"] .elx-next-card { border: 1px solid var(--line); }
+:root[data-look="line"] .next-body .fig { font-family: var(--f-display); }
+
+/* transit route: each layer is a stop on a vertical line in its own color */
+:root[data-look="line"] .layer { --lc: var(--ink-3); position: relative; padding-left: 46px; border-bottom: 0; }
+:root[data-look="line"] .layer[data-key="state"] { --lc: var(--lyr-state); }
+:root[data-look="line"] .layer[data-key="county"] { --lc: var(--accent); }
+:root[data-look="line"] .layer[data-key="township"] { --lc: var(--lyr-township); }
+:root[data-look="line"] .layer[data-key="municipality"] { --lc: var(--lyr-muni); }
+:root[data-look="line"] .layer[data-key="school"] { --lc: var(--lyr-school); }
+:root[data-look="line"] .layer[data-key="library"] { --lc: var(--lyr-library); }
+:root[data-look="line"] .layer::before {
+  content: ""; position: absolute; left: 14px; top: 22px; bottom: -22px; width: 6px; background: var(--lc);
+}
+:root[data-look="line"] .layer::after {
+  content: ""; position: absolute; left: 6px; top: 12px; width: 22px; height: 22px; border-radius: 50%;
+  border: 5px solid var(--lc); background: var(--surface);
+}
+:root[data-look="line"] .layer:not(:has(~ .layer:not([hidden])))::before { display: none; }
+:root[data-look="line"] .layer-name { font-family: var(--f-sans); font-size: 1rem; font-weight: 700; letter-spacing: 0; text-transform: none; }
+:root[data-look="line"] .layer-title { background: none; color: var(--ink); padding: 0; box-shadow: none; }
+:root[data-look="line"] .layer-leader { visibility: hidden; }
+:root[data-look="line"] .layer-placeholder .layer-title { color: var(--ink-3); }
+:root[data-look="line"] .layer.is-here::after,
+:root[data-look="line"] .layer[data-key="municipality"]:not([hidden])::after,
+:root[data-look="line"] .layers:not(:has(> .layer[data-key="municipality"]:not([hidden]))) > .layer[data-key="township"]:not([hidden])::after {
+  left: 3px; top: 9px; width: 28px; height: 28px; background: var(--lc);
+}
+:root[data-look="line"] .layer.is-here .layer-title,
+:root[data-look="line"] .layer[data-key="municipality"]:not([hidden]) .layer-title,
+:root[data-look="line"] .layers:not(:has(> .layer[data-key="municipality"]:not([hidden]))) > .layer[data-key="township"]:not([hidden]) .layer-title {
+  background: none; color: var(--ink);
+}
+:root[data-look="line"] .layer.is-here .layer-title::after,
+:root[data-look="line"] .layer[data-key="municipality"]:not([hidden]) .layer-title::after,
+:root[data-look="line"] .layers:not(:has(> .layer[data-key="municipality"]:not([hidden]))) > .layer[data-key="township"]:not([hidden]) .layer-title::after {
+  content: "You are here"; display: inline-block; margin-left: 8px; padding: 2px 8px; border-radius: 999px;
+  font: 600 .72rem/1.3 var(--f-sans); letter-spacing: 0; background: var(--ink); color: var(--surface); vertical-align: 1px;
+}
+:root[data-look="line"] .gov-item { position: relative; padding-left: 26px; border-bottom: 1px solid var(--line); }
+:root[data-look="line"] .gov-item::before {
+  content: ""; position: absolute; left: 2px; top: 15px; width: 14px; height: 14px; border-radius: 50%;
+  border: 4px solid var(--lc, var(--ink-3)); background: var(--surface);
+}
+:root[data-look="line"] .gov-item[data-layer^="state"] { --lc: var(--lyr-state); }
+:root[data-look="line"] .gov-item[data-layer^="county"] { --lc: var(--accent); }
+:root[data-look="line"] .gov-item[data-layer^="township"] { --lc: var(--lyr-township); }
+:root[data-look="line"] .gov-item[data-layer^="municipality"] { --lc: var(--lyr-muni); }
+:root[data-look="line"] .gov-item[data-layer^="school"] { --lc: var(--lyr-school); }
+:root[data-look="line"] .gov-item[data-layer^="library"] { --lc: var(--lyr-library); }
+
+:root[data-look="line"] .choice { border: 1px solid var(--ctl-line); border-radius: 999px; padding: 8px 14px; font-size: .9rem; }
+:root[data-look="line"] .choice::before { display: none; }
+:root[data-look="line"] .choice:hover { border-color: var(--ink); }
+:root[data-look="line"] .choice[aria-pressed="true"], :root[data-look="line"] .choice[aria-current] {
+  background: var(--accent); color: var(--accent-ink); border-color: var(--accent);
+}
+:root[data-look="line"] .cmap-tabs { border: 0; background: var(--surface-2); border-radius: 12px; padding: 3px; gap: 2px; }
+:root[data-look="line"] .cmap-tab { border: 0; border-radius: 9px; background: transparent; color: var(--ink); }
+:root[data-look="line"] .cmap-tab[aria-pressed="true"] { background: var(--surface); color: var(--ink); font-weight: 700;
+  box-shadow: 0 0 0 1.5px var(--ink-3), 0 1px 3px var(--shadow); }
+
+/* ================================================================ WAYFINDING */
+:root[data-look="wayfinding"] .masthead {
+  --ink: var(--nav-ink); --ink-2: var(--nav-ink-2); --ink-3: var(--nav-ink-2); --line: var(--nav-line);
+  --surface: var(--nav-bg); --surface-2: var(--nav-line);
+  color: var(--nav-ink);
+}
+:root[data-look="wayfinding"] .masthead::before { background: var(--nav-bg); box-shadow: none; }
+:root[data-look="wayfinding"] .nav::before { box-shadow: inset 0 -5px 0 var(--hl); }
+:root[data-look="wayfinding"] .nav-list a, :root[data-look="wayfinding"] .nav-list summary { font-weight: 700; padding-bottom: 14px; border-bottom-width: 5px; }
+:root[data-look="wayfinding"] .nav-list a:hover, :root[data-look="wayfinding"] .nav-list summary:hover,
+:root[data-look="wayfinding"] .nav-list a[aria-current="page"], :root[data-look="wayfinding"] .nav-list summary.is-current { border-bottom-color: var(--nav-ink); }
+:root[data-look="wayfinding"] .menu-panel { border: 2px solid var(--rule); border-top: 2px solid var(--rule); }
+:root[data-look="wayfinding"] .edition { color: var(--hl); letter-spacing: .12em; font-family: var(--f-sans); font-weight: 700; }
+:root[data-look="wayfinding"] .series { letter-spacing: .03em; text-transform: uppercase; font-size: clamp(1.2rem, 2.5vw, 1.7rem); }
+:root[data-look="wayfinding"] .glyph-county { fill: var(--nav-line); stroke: var(--nav-bg); }
+:root[data-look="wayfinding"] .glyph-edition { stroke: var(--nav-bg); }
+:root[data-look="wayfinding"] .stamp a { color: var(--nav-ink); }
+:root[data-look="wayfinding"] .eyebrow { font-weight: 800; letter-spacing: .12em; color: var(--ink-3); font-size: .82rem; }
+:root[data-look="wayfinding"] .kicker {
+  font-family: var(--f-sans); font-weight: 800; padding: 5px 8px 3px; border-radius: 4px;
+  background: var(--nav-bg); color: var(--hl); letter-spacing: .06em;
+}
+:root[data-look="wayfinding"] .block-head { border-top-width: 4px; padding-top: 12px; }
+
+:root[data-look="wayfinding"] .btn, :root[data-look="wayfinding"] .theme-toggle {
+  border: 2px solid var(--ink); background: var(--surface); color: var(--ink);
+  font-family: var(--f-sans); font-weight: 800; letter-spacing: .06em; font-size: .78rem;
+}
+:root[data-look="wayfinding"] .btn:hover { background: var(--ink); color: var(--bg); }
+:root[data-look="wayfinding"] .btn[aria-pressed]::before { display: none; }
+:root[data-look="wayfinding"] .btn[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+:root[data-look="wayfinding"] .masthead .theme-toggle { border-color: var(--nav-ink); background: var(--nav-bg); color: var(--nav-ink); }
+:root[data-look="wayfinding"] .masthead .theme-toggle:hover { background: var(--nav-line); }
+
+:root[data-look="wayfinding"] .chart, :root[data-look="wayfinding"] .layers-block,
+:root[data-look="wayfinding"] .table-wrap, :root[data-look="wayfinding"] .elx-card {
+  border: 2px solid var(--rule);
+}
+:root[data-look="wayfinding"] .card { border-width: 4px 2px 2px; }
+:root[data-look="wayfinding"] .card-title, :root[data-look="wayfinding"] .chart-title { font-weight: 800; }
+:root[data-look="wayfinding"] .callout { border-width: 2px 2px 2px 10px; }
+:root[data-look="wayfinding"] table.data thead th { background: var(--nav-bg); color: var(--nav-ink); border-bottom: 0;
+  font-family: var(--f-sans); font-weight: 800; }
+:root[data-look="wayfinding"] table.data caption { font-family: var(--f-sans); font-weight: 800; color: var(--ink-2); }
+:root[data-look="wayfinding"] .field label { font-family: var(--f-sans); font-weight: 800; color: var(--ink-2); }
+:root[data-look="wayfinding"] .field select { border: 2px solid var(--ink); font-weight: 700; border-radius: 6px; }
+:root[data-look="wayfinding"] .picker { border-bottom: 4px solid var(--rule); }
+
+/* links as sign buttons: black panel, yellow arrow */
+:root[data-look="wayfinding"] .path-link {
+  --ink: var(--nav-ink); --ink-2: var(--nav-ink-2); --ink-3: var(--nav-ink-2); --accent: var(--hl);
+  background: var(--nav-bg); color: var(--nav-ink); border: 2px solid var(--nav-line); border-radius: 12px; padding: 16px;
+}
+:root[data-look="wayfinding"] .path-link:hover { background: var(--nav-bg); color: var(--nav-ink); border-color: var(--hl); }
+:root[data-look="wayfinding"] .path-title { font-weight: 800; }
+:root[data-look="wayfinding"] .path-title::before,
+:root[data-look="wayfinding"] .next-link a::before,
+:root[data-look="wayfinding"] .hero-cta a::before,
+:root[data-look="wayfinding"] .pb-nav a::before {
+  content: "\2192"; content: "\2192" / ""; display: inline-block; margin-right: 8px; font-weight: 800; color: var(--hl);
+}
+:root[data-look="wayfinding"] .next-link a::before, :root[data-look="wayfinding"] .hero-cta a::before, :root[data-look="wayfinding"] .pb-nav a::before { color: inherit; }
+:root[data-look="wayfinding"] .next-link a, :root[data-look="wayfinding"] .hero-cta a {
+  display: inline-flex; align-items: center; min-height: 44px; padding: 8px 16px; border-radius: 8px;
+  background: var(--ink); color: var(--bg); font-weight: 800; text-decoration: none;
+}
+:root[data-look="wayfinding"] .next-link a:hover, :root[data-look="wayfinding"] .hero-cta a:hover { color: var(--bg); box-shadow: 0 0 0 3px var(--hl); }
+:root[data-look="wayfinding"] .path-card-small .path-link { border-left: 2px solid var(--nav-line); }
+:root[data-look="wayfinding"] .next-strip, :root[data-look="wayfinding"] .elx-next-card { border: 2px solid var(--hl-ink); border-radius: 12px; }
+:root[data-look="wayfinding"] .next-h { font-family: var(--f-sans); font-weight: 800; letter-spacing: .12em; }
+:root[data-look="wayfinding"] .next-body .fig { font-family: var(--f-sans); font-weight: 800; font-size: 1.8rem; }
+/* next-strip link sits on yellow: keep the black sign button readable there */
+:root[data-look="wayfinding"] .next-strip .next-link a { background: var(--hl-ink); color: var(--hl); }
+:root[data-look="wayfinding"] .next-strip .next-link a:hover { color: var(--hl); box-shadow: 0 0 0 3px var(--hl-ink); }
+
+/* layers as signs: the head of each layer is a panel in its kind-of-government color */
+:root[data-look="wayfinding"] .layer { --sg: var(--way-state); --sg-ink: var(--way-state-ink); border-bottom: 0; padding: 8px 0; }
+:root[data-look="wayfinding"] .layer[data-key="state"] { --sg: var(--way-state); --sg-ink: var(--way-state-ink); }
+:root[data-look="wayfinding"] .layer[data-key="county"] { --sg: var(--way-county); --sg-ink: var(--way-county-ink); }
+:root[data-look="wayfinding"] .layer[data-key="township"] { --sg: var(--way-township); --sg-ink: var(--way-township-ink); }
+:root[data-look="wayfinding"] .layer[data-key="municipality"] { --sg: var(--accent); --sg-ink: var(--accent-ink); }
+:root[data-look="wayfinding"] .layer[data-key="school"] { --sg: var(--way-school); --sg-ink: var(--way-school-ink); }
+:root[data-look="wayfinding"] .layer[data-key="library"] { --sg: var(--way-library); --sg-ink: var(--way-library-ink); }
+:root[data-look="wayfinding"] .layer-head {
+  background: var(--sg); color: var(--sg-ink); border-radius: 8px; padding: 10px 12px; align-self: start;
+  box-shadow: inset 0 0 0 2px var(--sg-ink), 0 0 0 1px var(--sg);
+}
+:root[data-look="wayfinding"] .layer-head .cite a { color: var(--sg-ink); }
+:root[data-look="wayfinding"] .layer-name { font-family: var(--f-sans); font-weight: 800; font-size: .95rem; letter-spacing: .02em; text-transform: none; }
+:root[data-look="wayfinding"] .layer-title { background: none; color: inherit; padding: 0; box-shadow: none; }
+:root[data-look="wayfinding"] .layer-count { color: var(--sg-ink); font-family: var(--f-sans); font-weight: 600; }
+:root[data-look="wayfinding"] .layer-leader { visibility: hidden; }
+:root[data-look="wayfinding"] .layer-head .layer-toggle { border-color: var(--sg-ink); background: var(--sg); color: var(--sg-ink); }
+:root[data-look="wayfinding"] .layer.is-here .layer-head,
+:root[data-look="wayfinding"] .layer[data-key="municipality"]:not([hidden]) .layer-head,
+:root[data-look="wayfinding"] .layers:not(:has(> .layer[data-key="municipality"]:not([hidden]))) > .layer[data-key="township"]:not([hidden]) .layer-head {
+  outline: 3px solid var(--ink); outline-offset: 2px;
+}
+:root[data-look="wayfinding"] .layer.is-here .layer-title::before,
+:root[data-look="wayfinding"] .layer[data-key="municipality"]:not([hidden]) .layer-title::before,
+:root[data-look="wayfinding"] .layers:not(:has(> .layer[data-key="municipality"]:not([hidden]))) > .layer[data-key="township"]:not([hidden]) .layer-title::before {
+  content: "You are here"; display: block; font-size: .7rem; letter-spacing: .14em; text-transform: uppercase; margin-bottom: 2px;
+}
+:root[data-look="wayfinding"] .gov-item { border-left: 10px solid var(--sg, var(--ink)); padding-left: 12px; border-bottom: 2px solid var(--grid); }
+:root[data-look="wayfinding"] .gov-item[data-layer^="state"] { --sg: var(--way-state); }
+:root[data-look="wayfinding"] .gov-item[data-layer^="county"] { --sg: var(--way-county); }
+:root[data-look="wayfinding"] .gov-item[data-layer^="township"] { --sg: var(--way-township); }
+:root[data-look="wayfinding"] .gov-item[data-layer^="municipality"] { --sg: var(--accent); }
+:root[data-look="wayfinding"] .gov-item[data-layer^="school"] { --sg: var(--way-school); }
+:root[data-look="wayfinding"] .gov-item[data-layer^="library"] { --sg: var(--way-library); }
+:root[data-look="wayfinding"] .gov-name { font-weight: 800; }
+
+:root[data-look="wayfinding"] .choice { border: 2px solid var(--ink); border-radius: 6px; padding: 8px 14px; font-weight: 700; }
+:root[data-look="wayfinding"] .choice::before { display: none; }
+:root[data-look="wayfinding"] .choice:hover { background: var(--surface-2); border-color: var(--ink); }
+:root[data-look="wayfinding"] .choice[aria-pressed="true"], :root[data-look="wayfinding"] .choice[aria-current] {
+  background: var(--nav-bg); color: var(--hl); border-color: var(--nav-bg); font-weight: 800; box-shadow: 0 0 0 3px var(--hl);
+}
+:root[data-look="wayfinding"] .cmap-tabs { border: 2px solid var(--ink); border-radius: 8px; }
+:root[data-look="wayfinding"] .cmap-tab { border-right: 2px solid var(--ink); font-weight: 700; }
+:root[data-look="wayfinding"] .cmap-tab[aria-pressed="true"] { background: var(--ink); color: var(--bg); font-weight: 800; }
+
+/* ================================================================ small screens */
+@media (max-width: 480px) {
+  :root[data-look] .masthead .look-switch { width: 100%; }
+  :root .masthead .look-opts { flex: 1 1 auto; }
+  :root .masthead .look-btn { flex: 1 1 0; padding-inline: 6px; gap: 5px; font-size: .8rem; }
+  :root .masthead .look-btn::before { width: 14px; height: 10px; }
+  :root[data-look="line"] .layer { padding-left: 40px; }
+}
+@media (max-width: 760px) {
+  :root[data-look="line"] .nav-list a, :root[data-look="line"] .nav-list summary { padding: 10px 11px; }
+  :root[data-look="line"] .nav-list > li:first-child > a { padding-left: 11px; }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .look-btn, .choice { transition: background-color .15s ease, color .15s ease, box-shadow .15s ease; }
+}
+
+/* ================================================================ print: skin-neutral */
+@media print {
+  .look-switch, .about-looks .look-switch { display: none !important; }
+  :root .masthead::before, :root .nav::before { box-shadow: none; }
+  :root .path-link, :root .next-strip, :root .elx-next-card, :root .hl-callout, :root .layer-head, :root .layer-title {
+    background: none !important; color: var(--ink) !important; box-shadow: none !important;
+  }
+  :root .layer::before, :root .layer::after, :root .layer-title::after, :root .layer-title::before { display: none !important; }
+  :root .layer { padding-left: 0 !important; }
+}

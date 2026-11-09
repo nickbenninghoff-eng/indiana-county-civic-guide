@@ -1,0 +1,92 @@
+/* Community and History pages (pages/community_history.py). Tokens only; no new tokens. */
+
+/* ACS estimates: margin of error and unreliable (CV > 30%) estimates */
+.est { white-space: nowrap; }
+.moe { color: var(--ink-3); font-size: .86em; }
+.est-unreliable { color: var(--ink-3); }
+.est-unreliable .moe { color: var(--ink-3); }
+.cv-mark { font-family: var(--f-mono); font-size: .75em; margin-left: 1px; }
+.cv-legend { font-size: .84rem; }
+.pair-tables { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr)); gap: 0 16px; }
+.pair-tables > * { min-width: 0; }
+.chart-grid-wide { grid-template-columns: minmax(0, 1fr); }
+
+/* a third line style for non-party line charts (benchmarks) */
+.m-ink-dash { --mark: var(--ink-2); }
+.line.m-ink-dash { stroke-dasharray: 6 4; }
+.key-line.m-ink-dash, .tip-key.m-ink-dash {
+  background: repeating-linear-gradient(90deg, var(--mark) 0 5px, transparent 5px 8px);
+}
+
+/* hub */
+.hub-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 240px), 1fr)); gap: 12px; }
+.hub-card { display: flex; flex-direction: column; gap: 6px; text-decoration: none; color: var(--ink); border-top-color: var(--accent); }
+.hub-card:hover { color: var(--ink); background: var(--accent-wash); }
+.hub-title { font-weight: 700; font-size: 1.05rem; margin: 0; }
+.hub-desc { font-size: .9rem; color: var(--ink-2); }
+
+/* employer lists */
+.employer-list h3 { margin-top: 1.2em; }
+
+/* research on voting */
+.callout-fallacy {
+  border-left-color: var(--accent);
+  background: var(--accent-wash);
+  padding: 16px 20px;
+  margin-block: 24px 8px;
+}
+.callout-fallacy p { max-width: var(--measure); }
+.fallacy-kicker { font-size: .7rem; letter-spacing: .12em; text-transform: uppercase; color: var(--accent); margin-bottom: 4px; }
+.fallacy-h { font-size: 1.35rem; margin-bottom: .5em; }
+.study-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr)); gap: 12px; }
+.study-fields, .person-fields { display: grid; grid-template-columns: minmax(0, 1fr); gap: 2px; margin: 8px 0 0; font-size: .9rem; }
+.study-fields dt, .person-fields dt { font: 600 .66rem/1.3 var(--f-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); margin-top: 8px; }
+.study-fields dd, .person-fields dd { margin: 0; color: var(--ink-2); }
+
+/* history: badges, mayors */
+.badge-row { display: inline-flex; flex-wrap: wrap; gap: 4px; align-items: center; }
+
+/* turning points timeline */
+.tp-keys { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)); gap: 8px 16px; margin: 12px 0; }
+.tp-key { border-left: 3px solid var(--line); padding: 4px 0 4px 12px; }
+.tp-key p { margin: 0 0 6px; font-size: .9rem; color: var(--ink-2); }
+.tp-filter { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin: 12px 0 16px; }
+.tp-filter [aria-pressed="true"] { border-color: var(--accent); color: var(--accent); }
+.tp-list { list-style: none; margin: 0; padding: 0 0 0 18px; border-left: 2px solid var(--line); }
+.tp-item { position: relative; padding: 0 0 18px 4px; max-width: var(--measure); }
+.tp-item::before {
+  content: ""; position: absolute; left: -25px; top: 5px; width: 10px; height: 10px;
+  border-radius: 50%; background: var(--surface); border: 2px solid var(--ink-3);
+}
+.tp-item[data-cat="economic"]::before, .tp-item[data-cat="population"]::before { border-color: var(--accent); background: var(--accent); }
+.tp-meta { font-size: .74rem; letter-spacing: .04em; color: var(--ink-3); margin: 0 0 2px; }
+.tp-cat { text-transform: uppercase; }
+.tp-title { font-size: 1rem; margin: 0 0 4px; }
+.tp-desc { margin: 0 0 4px; font-size: .94rem; color: var(--ink-2); }
+.tp-item.is-hidden { display: none; }
+
+/* people who shaped local government */
+.rule-list { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 8px 14px; align-items: baseline; max-width: var(--measure); }
+.rule-list dd { margin: 0; }
+.crit-tag {
+  display: inline-block; font-size: .66rem; letter-spacing: .06em; text-transform: uppercase;
+  border: 1px solid var(--line); border-radius: 2px; padding: 1px 5px; color: var(--ink-2); background: var(--surface-2);
+}
+.badge-inoffice { color: var(--accent); }
+.badge-former { color: var(--ink-3); }
+.person-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr)); gap: 12px; align-items: stretch; }
+.person-card { display: flex; flex-direction: column; padding: 0; overflow: hidden; }
+.person-photo { margin: 0; }
+.person-photo img, .no-photo { display: block; width: 100%; aspect-ratio: 4 / 5; max-height: 300px; object-fit: cover; object-position: top; background: var(--surface-2); }
+.no-photo { display: flex; align-items: center; justify-content: center; border-bottom: 1px solid var(--line); }
+.no-photo-initials { font: 800 2.6rem/1 var(--f-display); letter-spacing: .04em; color: var(--ink-3); }
+.photo-credit { font-size: .7rem; line-height: 1.35; color: var(--ink-3); padding: 6px 14px 0; }
+.person-body { padding: 8px 14px 14px; display: flex; flex-direction: column; flex: 1; min-width: 0; }
+.person-flags { margin: 0 0 4px; }
+.person-name { font-size: 1.1rem; margin: 0; }
+.person-body .holder-badges { margin-top: auto !important; padding-top: 10px; }
+
+@media print {
+  .tp-filter { display: none !important; }
+  .tp-item.is-hidden { display: block; }
+}

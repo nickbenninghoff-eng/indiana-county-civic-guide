@@ -1,0 +1,109 @@
+/* Your place: "You are here" bar (civic/shell.py), visible place picker and landing map section
+   (civic/picker.py, pages/landing.py), answer-first summary boxes (pages/places.py, pages/county.py)
+   and "your place" markers (static/js/here.js). Tokens only; looks.css styles .choice and .hl-callout. */
+
+/* ================================================================ "You are here" bar */
+.here-bar { position: relative; isolation: isolate; font-size: .92rem; color: var(--ink); }
+.here-bar::before {
+  content: ""; position: absolute; inset: 0 -100vmax; z-index: -1;
+  background: var(--surface-2); box-shadow: inset 0 -2px 0 var(--rule);
+}
+.here-bar p { margin: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 2px 10px; min-height: 44px; padding-block: 4px; }
+.here-pin { flex: none; width: 18px; height: 12px; border-radius: 50%; border: 2px solid var(--ink); }
+.here-set .here-pin { background: var(--ink); }
+.here-label { font-family: var(--f-label); letter-spacing: .04em; }
+.here-names { min-width: 0; flex: 1 1 18rem; }
+.here-names a { color: var(--ink); font-weight: 600; }
+.here-missing { color: var(--ink-3); font-style: italic; }
+.here-change, .here-pick { display: inline-flex; align-items: center; min-height: 40px; font-weight: 700; color: var(--ink); }
+.here-change { margin-left: auto; padding-inline: 4px; }
+
+:root[data-look="line"] .here-bar::before { background: var(--accent-wash); box-shadow: inset 0 -1px 0 var(--line); }
+:root[data-look="line"] .here-pin { width: 14px; height: 14px; border-color: var(--accent); }
+:root[data-look="line"] .here-set .here-pin { background: var(--accent); }
+:root[data-look="line"] .here-label { font-weight: 600; }
+:root[data-look="wayfinding"] .here-bar::before { background: var(--surface); box-shadow: inset 0 -4px 0 var(--rule); }
+:root[data-look="wayfinding"] .here-label { font-weight: 800; text-transform: uppercase; letter-spacing: .1em; font-size: .8rem; }
+:root[data-look="wayfinding"] .here-pin { border-radius: 3px; width: 14px; height: 14px; }
+
+/* ================================================================ landing: map + lists */
+.pick { margin-top: 30px; }
+.pick-title { font-size: clamp(1.5rem, 4vw, 2.3rem); margin: 0 0 14px; }
+.pick-grid { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); gap: 20px 36px; align-items: start; }
+.pick-grid-solo { grid-template-columns: minmax(0, 1fr); }
+.pick-map, .pick-lists { min-width: 0; }
+.pick-step { margin: 0 0 8px; font-size: .78rem; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-3); }
+.pick .cmap { margin-top: 0; }
+.pick .cmap-grid { grid-template-columns: minmax(0, 1fr); gap: 12px; margin-top: 10px; }
+.pick .cmap-panel { position: static; min-height: 0; }
+.pick .cmap-svg { max-height: 62vh; }
+.pick-map-note { font-size: .86rem; margin-top: 10px; }
+
+/* ================================================================ picker lists (landing and Find your governments) */
+.pick-lists { padding-bottom: 6px; }
+.pick-group { margin: 0 0 18px; }
+.pick-lists .pick-h { margin: 0 0 8px; font-size: 1rem; font-weight: 700; color: var(--ink-2); }
+.pick-note { margin: -2px 0 8px; font-size: .86rem; }
+.pick-lists .choice-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(10rem, 1fr)); gap: 6px 10px; }
+#pick-school .choice-list { grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr)); }
+.pick-lists .choice-list > li { min-width: 0; }
+.pick-lists .choice { width: 100%; max-width: 100%; text-align: left; overflow-wrap: anywhere; }
+.pick-status {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; margin: 0 0 16px; padding: 10px 14px;
+  background: var(--surface); border: 2px solid var(--rule); border-radius: var(--r);
+}
+.pick-status-line { margin: 0; flex: 1 1 16rem; min-width: 0; }
+.pick-status-label { font-weight: 700; }
+.pick-clear { flex: none; min-height: 40px; }
+.pick-privacy { font-size: .82rem; margin: 6px 0 0; }
+.pick-lists .picker-help { margin: 0; }
+.layers-showing { margin: 0 0 6px; text-transform: none; letter-spacing: 0; font-size: .9rem; color: var(--ink-2); }
+.layers-showing [data-here-text] { font-weight: 600; color: var(--ink); }
+
+:root[data-look="line"] .pick-status { border: 1px solid var(--line); }
+:root[data-look="wayfinding"] .pick-status { border-width: 3px; }
+:root[data-look="wayfinding"] .pick-lists .pick-h { font-weight: 800; }
+
+/* ================================================================ answer-first summary */
+.answers { margin: 18px 0 14px; }
+.answers-h { margin: 0 0 8px; font: 600 .78rem/1.2 var(--f-label); letter-spacing: .1em; text-transform: uppercase; color: var(--ink-3); }
+.answer-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 13.5rem), 1fr)); gap: 2px;
+  background: var(--rule); border: 2px solid var(--rule); border-radius: var(--r-lg); overflow: hidden;
+}
+.answer { background: var(--surface); padding: 14px 16px; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
+.answer > * { margin: 0; }
+.answers .answer-q { margin: 0; font: 700 .82rem/1.2 var(--f-label); letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); }
+.answer-big { font: var(--display-wt) 1.55rem/1.1 var(--f-display); color: var(--ink); }
+.answer-line { font-size: .92rem; color: var(--ink-2); }
+.answer-more { font-size: .88rem; font-weight: 600; margin-top: auto; }
+.answer .name-party { white-space: normal; }
+
+:root[data-look="line"] .answer-grid { background: transparent; border: 0; gap: 10px; overflow: visible; }
+:root[data-look="line"] .answer { border: 1px solid var(--line); border-radius: var(--r); }
+:root[data-look="line"] .answers .answer-q { text-transform: none; letter-spacing: 0; font-size: .86rem; }
+:root[data-look="wayfinding"] .answer-grid { border-width: 3px; gap: 3px; }
+:root[data-look="wayfinding"] .answers .answer-q { font-weight: 800; }
+
+/* ================================================================ "your place" markers (here.js) */
+.here-tag {
+  display: inline-block; align-self: flex-start; margin: 0 0 6px; padding: 2px 8px;
+  font: 700 .72rem/1.4 var(--f-label); letter-spacing: .06em; text-transform: uppercase;
+  background: var(--ink); color: var(--surface); border-radius: var(--r-sm);
+}
+.answers.is-here .answer-grid { box-shadow: 0 0 0 3px var(--accent); }
+.elx-next-card.is-here { box-shadow: 0 0 0 4px var(--accent); }
+[data-here-uninc].is-here { border-left: 6px solid var(--accent); padding-left: 12px; }
+[data-here-note] { font-weight: 600; }
+
+@media (max-width: 900px) {
+  .pick-grid { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 480px) {
+  .here-change { margin-left: 0; }
+  .answer { padding: 12px; }
+  .answer-big { font-size: 1.35rem; }
+}
+@media print {
+  .here-bar, .pick-status, .pick-privacy { display: none !important; }
+}

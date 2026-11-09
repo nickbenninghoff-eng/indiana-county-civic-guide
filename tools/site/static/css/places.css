@@ -1,0 +1,17 @@
+/* Places and schools pages */
+.cov-strip { list-style: none; display: flex; flex-wrap: wrap; gap: 8px 16px; padding: 0; margin: 14px 0 0; }
+.cov-strip li { display: flex; align-items: center; gap: 6px; font-size: .85rem; }
+.cov-name { color: var(--ink-2); }
+.cov { display: inline-block; font: 600 .68rem/1 var(--f-mono); letter-spacing: .06em; text-transform: uppercase; padding: 3px 6px; border: 1px solid currentColor; }
+.cov-covered { color: var(--accent); }
+.cov-partial { color: var(--unofficial); background: var(--unofficial-wash); border-color: var(--unofficial-line); }
+.cov-none { color: var(--ink-3); border-style: dashed; }
+.callout-conflict { border-left-color: var(--unofficial-line); background: var(--unofficial-wash); }
+.card-conflict { border-top-color: var(--unofficial-line); }
+.place-dl { margin: 0; font-size: .88rem; }
+.place-dl dt { font: 600 .66rem/1.2 var(--f-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); margin-top: 10px; }
+.place-dl dd { margin: 2px 0 0; color: var(--ink-2); }
+ul.plain { list-style: none; padding: 0; margin: 0; }
+.ctx-card { overflow-x: auto; }
+details.more > summary { cursor: pointer; margin-bottom: 12px; }
+.results-year { margin-top: 20px; }

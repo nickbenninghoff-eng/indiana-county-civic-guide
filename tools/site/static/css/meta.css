@@ -1,0 +1,81 @@
+/* meta.css: about/, data/, teach/ pages. Existing tokens only (no new colors). */
+
+/* ---- about: disclosure and placeholders */
+.disclosure { margin: 16px 0; padding: 14px 16px; border: 1px solid var(--line); border-left: 4px solid var(--accent); background: var(--surface); }
+.disclosure p:last-child { margin-bottom: 0; }
+.disclosure-label { font-size: .78rem; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; margin-bottom: .4em; }
+.disclosure-pending { border-style: dashed; border-left-style: solid; border-left-color: var(--unofficial-line); background: var(--unofficial-wash); }
+.disclosure-pending .disclosure-label { color: var(--unofficial); }
+
+/* ---- about: term lists, swatches, criteria, changelog, source index */
+.term-list { list-style: none; padding: 0; margin: 0 0 1em; display: flex; flex-wrap: wrap; gap: 6px 8px; }
+.term-list li { margin: 0; }
+.term-list code, .code-block, .ids { font-family: var(--f-mono); }
+.term-list code { display: inline-block; padding: 1px 8px; border: 1px solid var(--line); background: var(--surface-2); font-size: .82rem; }
+.swatch-list { list-style: none; padding: 0; margin: 0 0 1em; display: grid; gap: 6px; }
+.swatch-list li { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.swatch { flex: none; display: inline-block; width: 18px; height: 18px; border-radius: 3px; background: var(--mark, var(--ink-3)); }
+.swatch-accent { --mark: var(--accent); }
+.criteria { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 6px 16px; margin: 0 0 1em; }
+.criteria dt { font-weight: 600; font-size: .85rem; }
+.criteria dd { margin: 0; }
+.changelog dt { font-weight: 700; margin-top: .4em; }
+.changelog dd { margin: .3em 0 0; }
+.src-jump ul { list-style: none; padding: 0; margin: 8px 0 0; display: flex; flex-wrap: wrap; gap: 4px 16px; }
+.src-group { margin-top: 28px; }
+.source-index { list-style: none; padding-left: 0; }
+.source-index li { padding-left: 0; }
+.source-index li:target, .source-list li:target { background: var(--accent-wash); }
+
+/* ---- data: dataset meta, status mix, copy note, code blocks */
+.ds-meta { font-size: .8rem; color: var(--ink-3); margin-bottom: .5em; }
+.status-mix { list-style: none; padding: 0; margin: 0 0 .8em; display: flex; flex-wrap: wrap; gap: 6px 14px; }
+.status-mix li { display: inline-flex; align-items: center; gap: 6px; margin: 0; }
+.mix-n { font-size: .82rem; color: var(--ink-2); }
+.ds-tools { flex-wrap: wrap; }
+.ds-copy-note { font-size: .8rem; }
+.ids { font-size: .78rem; }
+.code-block { margin: 0 0 1em; padding: 10px 12px; background: var(--surface-2); border: 1px solid var(--line); overflow-x: auto;
+  font-size: .78rem; line-height: 1.5; white-space: pre; max-width: 100%; }
+.code-block code { font-family: inherit; }
+table.data code { font-size: .78rem; white-space: normal; overflow-wrap: anywhere; }
+
+/* ---- teach */
+.kit-facts { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 4px 16px; margin: 0 0 1em; }
+.kit-facts dt { font-family: var(--f-mono); font-size: .8rem; color: var(--ink-3); text-transform: uppercase; letter-spacing: .04em; padding-top: 2px; }
+.kit-facts dd { margin: 0; }
+.fact-list li { margin-bottom: .4em; }
+.prompt-list > li { margin-bottom: .8em; }
+.prompt-key { padding: 10px 12px; border: 1px solid var(--line); border-left: 4px solid var(--accent); background: var(--surface); list-style-position: inside; }
+.teacher-note { margin-top: 10px; padding-top: 8px; border-top: 1px solid var(--line); }
+.teacher-note .mono { font-size: .75rem; text-transform: uppercase; letter-spacing: .05em; color: var(--ink-3); margin-bottom: .3em; }
+.teacher-note p:last-child { margin-bottom: 0; }
+.handout { margin-top: 12px; padding: 24px 22px; background: var(--surface); border: 2px solid var(--rule); max-width: 46rem; }
+.handout-head { border-bottom: 2px solid var(--rule); padding-bottom: 10px; margin-bottom: 14px; }
+.handout-series { font-size: .72rem; letter-spacing: .05em; text-transform: uppercase; color: var(--ink-3); margin-bottom: .3em; }
+.handout-title { font-family: var(--f-display); font-size: 1.8rem; text-transform: uppercase; margin: 0 0 .4em; }
+.handout-name { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 8px; margin: 0; }
+.fill-line { display: inline-block; flex: 1 1 8rem; min-width: 6rem; height: 1.4em; border-bottom: 1px solid var(--ink-3); }
+.fill-wide { display: block; width: 100%; margin-top: 4px; }
+.handout-qs { padding-left: 1.3em; }
+.handout-qs > li { margin-bottom: 18px; break-inside: avoid; }
+.handout-qs p { margin-bottom: .2em; }
+.handout-where { font-size: .74rem; color: var(--ink-3); }
+.handout-check { font-weight: 600; }
+.handout-foot { font-size: .72rem; color: var(--ink-3); margin: 0; }
+.outline-grid { align-items: start; }
+.outline-card .path-meta { font-size: .76rem; color: var(--ink-3); }
+.outline-h { font-weight: 700; margin: .8em 0 .3em; }
+.outline-stops { padding-left: 1.2em; }
+
+@media (max-width: 480px) {
+  .criteria, .kit-facts { grid-template-columns: minmax(0, 1fr); }
+  .handout { padding: 16px 14px; }
+}
+
+@media print {
+  .teach-page .screen-only { display: none !important; }
+  .teach-page #handout { break-before: page; }
+  .handout { border-width: 1px; max-width: none; }
+  .ds-tools, .src-jump { display: none !important; }
+}

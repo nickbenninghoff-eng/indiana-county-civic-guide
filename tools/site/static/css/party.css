@@ -1,0 +1,13 @@
+/* Party tags and breakdowns: small mono text. The dot repeats the party token color; the text label is always present. */
+.name-party { white-space: normal; }
+.party-tag, .party-breakdown { font-family: var(--f-mono); font-size: .78em; font-weight: 500; color: var(--ink-2); text-decoration: none; border-bottom: 0; white-space: nowrap; }
+abbr.party-tag[title] { text-decoration: none; cursor: help; }
+.party-tag::before { content: ""; display: inline-block; width: .5em; height: .5em; border-radius: 50%; margin-right: .3em; background: var(--party-other); vertical-align: baseline; }
+.party-D::before { background: var(--party-d); }
+.party-R::before { background: var(--party-r); }
+.party-none::before, .party-NP::before, .party-vacant::before { background: transparent; border: 1px solid var(--ink-3); width: .45em; height: .45em; }
+.party-low { font-style: italic; }
+.party-breakdown-none { font-style: italic; }
+.body-party { display: inline; }
+.party-asof { font-size: .82rem; margin: .4em 0; }
+td .name-party, li .name-party { display: inline; }

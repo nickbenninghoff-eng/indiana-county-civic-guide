@@ -9,8 +9,11 @@ built to be reusable for other Indiana counties. Python stdlib generator; data i
 - Build: `python -P -E tools/site/build.py --edition st-joseph --check` → must end `PASSED: ...` and print no `BUILD FAILED`.
 - Precinct data: `python -X utf8 -P -E tools/build_precinct_results.py --edition st-joseph`, then
   `python -P -E tools/build_map.py --edition st-joseph`.
-- Governance data check: `python -P -E tools/check_gov.py` (1 known error, see below).
-- Local preview: pm2 process `civic-guide-preview` serving `site/st-joseph` on http://localhost:8787.
+- Governance data check: `python -P -E tools/check_gov.py` (0 errors since 2026-11-08).
+- Local preview: pm2 process `civic-guide-preview` serving `site/st-joseph` on http://localhost:8787. Not saved with
+  `pm2 save`, so it does not survive a reboot. Restart it (after a build, since `site/` is not in git) with:
+  `pm2 start C:\Python313\python.exe --name civic-guide-preview --cwd C:\Users\nickb\local-gov-guide -- -m http.server 8787 --directory C:/Users/nickb/local-gov-guide/site/st-joseph`
+  Run it from Bash: PowerShell 5.1 drops the bare `--`, and pm2 then rejects `--directory`.
 - Private review link (Artifact, not public): https://claude.ai/artifact/3oF7hxKBPhBpq4S74vuHQ2 — republish with
   `file_path=site/st-joseph/index.html`, `root=site/st-joseph`, files from `planning/publish-files.json`
   (regenerate it if pages/assets change: every html except index + `assets/*` + referenced images).
@@ -42,9 +45,12 @@ built to be reusable for other Indiana counties. Python stdlib generator; data i
   stated caveat when parties ran different numbers of candidates.
 
 ## Known issues / open items
-- `check_gov.py` 1 error: SBCSC at-large 2016 canvass shows 3 winners vs 2 seats in IC 20-23-15-6(c) (disclosed on site).
-- Not found: Eli Wax's exact start day (Nov 2020; WebLink "Council_Voting_Record" is a lead); South Bend 2027 ADOPTED
-  all-funds total (proposed $433.8M recorded); LaVille rename vote count (June 9, 2025 agenda item found).
+- SBCSC 2016 at-large fixed 2026-11-08 (two seats; McCullough did not win in 2016). Only the printed "Vote for" line on View/60008 is unread.
+- **tools/site/ (the whole generator) was never in git**: .gitignore `site/` matched it. Now `/site/`; 58 files untracked, waiting on Nick's commit.
+- Don't rerun tools/res_main.py over results.csv: it drops ~30 later hand fixes (see Roadmap).
+- 2026-11-08 research applied: SB 2027 adopted $439,062,691; LaVille rename 4-0 June 9, 2025; Wax seated Nov 24-Dec 14, 2020; Roseland no charges as of 2026-11-08. check_money.py is stale (518 false errors).
+- Still not found: Eli Wax's oath day (window Nov 24-Dec 14, 2020); South Bend 2026 adopted all-funds total; the June 8,
+  2026 LaVille resolution tally (minutes have none).
 - Certified 2026 results: re-run when the county posts the certified canvass (2026 rows are unofficial).
 - 2013 ABC57 story on an earlier Roseland clerk charged with theft — offered to Nick, not researched.
 - Nick's Downloads folder: 21 sjc-*/sb-2027budget-* PDFs, all hash-verified copies in `sources/`; recycling blocked
@@ -60,5 +66,15 @@ built to be reusable for other Indiana counties. Python stdlib generator; data i
   rebuild need the ignored PDFs re-downloaded.
 - Commit and deploy only on Nick's explicit trigger words (global CLAUDE.md). Public hosting = deploy trigger.
 
+## Waiting on Nick
+- License for the public repo (suggested: MIT for code, CC BY 4.0 for data/text) — none added yet.
+- Whether to keep the Gmail address on commits or switch git to the GitHub noreply address.
+- Close Adobe Acrobat, then the 21 leftover PDFs in Downloads can go to the Recycle Bin (all have copies in `sources/`).
+- Optional: research the 2013 Roseland clerk theft case for the town's history.
+- Public hosting of the site: only on Nick's explicit deploy trigger.
+
 ## Next step
-Nick's call: push to a GitHub remote (private?) and/or plan public hosting; otherwise continue from Roadmap Phase 5 open items.
+Session ended 2026-11-08 for a computer restart, with everything committed and pushed (`main` = `origin/main`;
+working tree clean before this handoff edit). Nothing was mid-stride: no agents running, no pending downloads.
+On resume: read Roadmap.md Phase 5, rebuild the site, restart the preview (command above), then take Nick's answers
+on the items above or continue with Phase 5's open optional items.

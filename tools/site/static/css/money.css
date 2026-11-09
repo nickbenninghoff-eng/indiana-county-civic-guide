@@ -1,0 +1,90 @@
+/* Money section (pages/money.py): budget flags, unit sections, tax-bill split, headline facts.
+   Uses existing tokens only (no new colors). */
+
+/* ---- budget charts: unexplained-change flags and breaks */
+.mn-flag { fill: var(--surface); stroke: var(--ink); stroke-width: 1.5; }
+.mn-flag-t { font: 700 9px var(--f-mono); fill: var(--ink); pointer-events: none; }
+.mn-flag-line { stroke: var(--ink-3); stroke-width: 1; stroke-dasharray: 2 2; }
+.mn-break { stroke-dasharray: 4 3; stroke-width: 1.5; }
+.mn-flag-key {
+  display: inline-flex; align-items: center; justify-content: center; width: 14px; height: 14px; margin-right: 6px;
+  transform: rotate(45deg); border: 1.5px solid var(--ink); background: var(--surface);
+  font: 700 9px/1 var(--f-mono); color: var(--ink); vertical-align: -2px;
+}
+.mn-flag-key { text-indent: 0; }
+.mn-break-key { display: inline-block; width: 0; height: 14px; margin: 0 8px 0 4px; border-left: 1.5px dashed var(--ink-3); vertical-align: -2px; }
+.mn-m3 { --mark: var(--ink); }
+.line.mn-m3 { stroke-dasharray: 6 3; }
+
+/* ---- unit sections */
+.mn-unitnav { list-style: none; margin: 12px 0 20px; padding: 10px 12px; border: 1px solid var(--line); background: var(--surface); }
+.mn-unitnav li { display: grid; grid-template-columns: minmax(0, 11rem) minmax(0, 1fr); gap: 4px 12px; padding: 4px 0; border-bottom: 1px solid var(--grid); }
+.mn-unitnav li:last-child { border-bottom: 0; }
+.mn-unitnav-h { font-size: .68rem; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); padding-top: 2px; }
+.mn-unitnav-links { font-size: .86rem; min-width: 0; }
+.mn-group-h { margin: 28px 0 8px; padding-bottom: 4px; border-bottom: 2px solid var(--rule); }
+.mn-unit { margin: 0 0 22px; scroll-margin-top: 72px; min-width: 0; }
+.mn-unit-head { margin: 0 0 8px; }
+.mn-unit-h { margin: 14px 0 2px; font-size: 1.02rem; }
+.mn-unit-note { margin: 0; font-size: .8rem; color: var(--ink-3); }
+.mn-nodata { color: var(--ink-3); font-size: .9rem; padding: 10px 12px; border: 1px dashed var(--line); }
+.mn-alias { display: block; height: 0; }
+.mn-others { margin-top: 8px; }
+.mn-others-h { font-size: .82rem; color: var(--ink-2); margin: 10px 0 4px; max-width: var(--measure); }
+.mn-breakdown { margin: 0 0 24px; }
+.mn-other-breakdown { margin: 0 0 16px; }
+.mn-defs { margin: 8px 0 16px; max-width: var(--measure); }
+.mn-defs dt { font-weight: 700; margin-top: 10px; }
+.mn-defs dd { margin: 2px 0 0; }
+
+/* ---- headline facts */
+.mn-facts { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 210px), 1fr)); gap: 12px; }
+.mn-fact { background: var(--surface); border: 1px solid var(--line); border-top: 3px solid var(--accent); padding: 12px 14px; min-width: 0; }
+.mn-fact p { margin: 0; }
+.mn-fact-v { font-size: 1.5rem; font-weight: 600; color: var(--ink); }
+.mn-fact-l { font-size: .86rem; color: var(--ink-2); margin-top: 4px !important; }
+.mn-fact-b { margin-top: 8px !important; }
+
+/* ---- tax-bill picker and split */
+.mn-picker { margin: 14px 0 16px; background: var(--surface); border: 1px solid var(--line); padding: 14px 16px; }
+.mn-specials { flex-basis: 100%; margin: 4px 0 0; padding: 8px 10px; border: 1px solid var(--line); min-width: 0; }
+.mn-specials legend { font: 600 .68rem/1 var(--f-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); padding: 0 4px; }
+.mn-check { display: inline-flex; align-items: center; gap: 6px; margin: 4px 16px 4px 0; font-size: .9rem; }
+.mn-check input { width: 16px; height: 16px; accent-color: var(--accent); }
+.mn-tb { background: var(--surface); border: 1px solid var(--line); padding: 14px 16px 10px; min-width: 0; }
+.mn-tb-total { margin: 0 0 10px; }
+.mn-tb-total .mono { font-size: .74rem; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-3); }
+.mn-tb-sum { font: 600 1.3rem var(--f-mono); }
+.mn-tb-bar { position: relative; display: flex; height: 30px; margin: 0 0 30px; background: var(--surface-2); border-radius: 2px; }
+.mn-tb-seg { display: block; height: 100%; flex: none; background: var(--seg); border-right: 2px solid var(--surface); }
+.mn-tb-cap { position: absolute; top: -4px; bottom: -6px; width: 0; border-left: 1.5px dashed var(--ink); }
+.mn-tb-cap-l { position: absolute; top: 100%; left: 0; transform: translateX(-50%); font-size: .66rem; color: var(--ink-3); white-space: nowrap; padding-top: 2px; }
+.mn-tb-list { list-style: none; margin: 0; padding: 0; }
+.mn-tb-item { display: grid; grid-template-columns: 14px minmax(0, 9.5rem) minmax(0, 1fr) auto; gap: 4px 10px; align-items: baseline; padding: 6px 0; border-bottom: 1px solid var(--grid); }
+.mn-tb-item:last-child { border-bottom: 0; }
+.mn-tb-key { width: 12px; height: 12px; border-radius: 2px; background: var(--seg); align-self: center; }
+.mn-tb-missing { color: var(--ink-3); }
+.mn-tb-key-none { background: none; border: 1px dashed var(--line); }
+.mn-tb-role { font-size: .68rem; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-3); }
+.mn-tb-name { min-width: 0; }
+.mn-tb-val { font-size: .86rem; text-align: right; }
+.mn-tb-compare { margin: 10px 0 0; font-size: .9rem; max-width: var(--measure); }
+.mn-tb-other { margin: 0; font-size: .82rem; }
+
+/* ---- budgets: nominal / constant-dollar toggle (shown by money.js) */
+.mn-dollars-toggle { margin: 10px 0 14px; padding: 8px 12px; border: 1px solid var(--line); background: var(--surface); min-width: 0; }
+.mn-dollars-toggle legend { font: 600 .68rem/1 var(--f-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); padding: 0 4px; }
+.mn-dollars-toggle label { display: inline-flex; align-items: center; gap: 6px; margin: 4px 16px 4px 0; font-size: .9rem; }
+.mn-dollars-toggle input { width: 16px; height: 16px; accent-color: var(--accent); }
+.mn-seg-0 { --seg: var(--accent); }
+.mn-seg-1 { --seg: var(--ink-3); }
+.mn-seg-2 { --seg: color-mix(in srgb, var(--accent) 55%, var(--surface)); }
+.mn-seg-3 { --seg: var(--ink); }
+.mn-seg-4 { --seg: color-mix(in srgb, var(--accent) 30%, var(--surface)); }
+.mn-seg-5 { --seg: color-mix(in srgb, var(--ink-3) 45%, var(--surface)); }
+@media (max-width: 520px) {
+  .mn-unitnav li { grid-template-columns: minmax(0, 1fr); }
+  .mn-tb-item { grid-template-columns: 14px minmax(0, 1fr) auto; }
+  .mn-tb-role { grid-column: 2 / -1; grid-row: 1; }
+  .mn-tb-key, .mn-tb-name, .mn-tb-val { grid-row: 2; }
+}

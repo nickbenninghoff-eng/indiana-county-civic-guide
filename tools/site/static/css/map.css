@@ -1,0 +1,96 @@
+/* Boundary map (civic/map.py, pages/map.py). Colors are categorical by type of government, never party.
+   The government-layer fills share a widget with the "How areas voted" layer, so each one is kept at least
+   OKLab dE 15 (x100) from both party colors, the other-party gray and all six vote-band tints
+   (static/css/map_votes.css), in every look, light and dark, including the township background at .85 opacity.
+   Measured 2026-11-08: minimum 15.5 (light, township background vs the R +5 to 15 tint), 16.8 (dark).
+   The values sit in the yellow-green range and in neutral grays, the hues farthest from both party colors.
+   Same-layer pairs stay apart: city/town/township >= 20, school shades >= 19. Re-check after changing a party
+   color, a surface or the band mix steps. */
+/* TOKENS:BEGIN */
+/* cm:light */
+:root {
+  --cm-city: #6aaea6;
+  --cm-town: #d8a63c;
+  --cm-township: #ece9e1;
+  --cm-school-0: #e6dfc9;
+  --cm-school-1: #c5d6c8;
+  --cm-school-2: #d3cbe0;
+}
+@media (prefers-color-scheme: dark) {
+  /* cm:dark */
+  :root:not([data-theme="light"]) {
+    --cm-city: #2f8a80;
+    --cm-town: #a8801f;
+    --cm-township: #2b2d2f;
+    --cm-school-0: #3a3f36;
+    --cm-school-1: #2f4a44;
+    --cm-school-2: #4a4058;
+  }
+}
+/* cm:dark */
+:root[data-theme="dark"] {
+  --cm-city: #2f8a80;
+  --cm-town: #a8801f;
+  --cm-township: #2b2d2f;
+  --cm-school-0: #3a3f36;
+  --cm-school-1: #2f4a44;
+  --cm-school-2: #4a4058;
+}
+/* TOKENS:END */
+.cmap { margin: 8px 0 0; }
+.cmap-tabs { display: inline-flex; flex-wrap: wrap; border: 1px solid var(--line); border-radius: 3px; overflow: hidden; background: var(--surface); }
+.cmap-tabs[hidden] { display: none; }
+.cmap-tab { font: 600 .84rem/1.2 var(--f-sans); padding: 9px 14px; min-height: 40px; border: 0; border-right: 1px solid var(--line); background: var(--surface); color: var(--ink-2); cursor: pointer; }
+.cmap-tab:last-child { border-right: 0; }
+.cmap-tab[aria-pressed="true"] { background: var(--accent); color: var(--surface); }
+.cmap-tab:focus-visible { outline: 3px solid var(--focus); outline-offset: -3px; }
+.cmap-grid { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); gap: 16px 28px; margin-top: 14px; align-items: start; }
+.cmap-stage { min-width: 0; }
+.cmap-svg { display: block; width: 100%; height: auto; max-height: 78vh; background: var(--surface); }
+.cmap-layer { display: none; }
+.cmap-layer.is-on { display: inline; }
+.cmap-s { stroke: var(--surface); stroke-width: 1.25px; vector-effect: non-scaling-stroke; stroke-linejoin: round; }
+.cmap-city { fill: var(--cm-city); }
+.cmap-town { fill: var(--cm-town); }
+.cmap-township { fill: var(--cm-township); }
+.cmap-school-0 { fill: var(--cm-school-0); }
+.cmap-school-1 { fill: var(--cm-school-1); }
+.cmap-school-2 { fill: var(--cm-school-2); }
+.cmap-nolink { fill: var(--nodata); }
+.cmap-back-s { opacity: .85; }
+.cmap-dot { fill: var(--cm-town); stroke: var(--ink); stroke-width: 1px; vector-effect: non-scaling-stroke; }
+.cmap-a { cursor: pointer; outline: none; }
+.cmap-a:hover .cmap-s { stroke: var(--ink); stroke-width: 2px; }
+.cmap-a:focus-visible .cmap-s { stroke: var(--focus); stroke-width: 3px; }
+.cmap-outline { fill: none; stroke: var(--ink-3); stroke-width: 1.5px; vector-effect: non-scaling-stroke; pointer-events: none; }
+.cmap-hl { fill: none; stroke: var(--ink); stroke-width: 2.5px; vector-effect: non-scaling-stroke; pointer-events: none; stroke-linejoin: round; }
+.cmap-hl.is-focus { stroke: var(--focus); stroke-width: 3.5px; }
+.cmap-label { pointer-events: none; fill: var(--ink); paint-order: stroke; stroke: var(--surface); stroke-width: 3px; stroke-linejoin: round; font-family: var(--f-sans); }
+.cmap-label-place { font-size: 9.5px; font-weight: 700; }
+.cmap-label-township { font-size: 8.5px; font-weight: 600; fill: var(--ink-2); letter-spacing: .02em; }
+.cmap-legend { display: none; list-style: none; margin: 10px 0 0; padding: 0; flex-wrap: wrap; gap: 4px 16px; font-size: .82rem; color: var(--ink-2); }
+.cmap-legend.is-on { display: flex; }
+.cmap-key { display: inline-block; width: 14px; height: 14px; border: 1px solid var(--line); margin-right: 6px; vertical-align: -2px; }
+/* legend keys are HTML spans, so they need background, not the SVG fill */
+.cmap-key.cmap-city { background: var(--cm-city); }
+.cmap-key.cmap-town { background: var(--cm-town); }
+.cmap-key.cmap-township { background: var(--cm-township); }
+.cmap-key.cmap-school-0 { background: var(--cm-school-0); }
+.cmap-panel { border: 1px solid var(--line); border-top: 3px solid var(--accent); background: var(--surface); padding: 14px 16px; min-height: 9rem; position: sticky; top: 12px; }
+.cmap-hint { margin: 0; color: var(--ink-3); font-size: .9rem; }
+.cmap-panel h3 { margin: 0 0 2px; font-size: 1.15rem; }
+.cmap-type { font: 600 .68rem/1.2 var(--f-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); margin: 0 0 10px; }
+.cmap-facts { margin: 0; font-size: .88rem; }
+.cmap-facts dt { font: 600 .66rem/1.2 var(--f-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); margin-top: 9px; }
+.cmap-facts dd { margin: 2px 0 0; color: var(--ink-2); }
+.cmap-note { font-size: .85rem; color: var(--ink-2); margin: 10px 0 0; }
+.cmap-open { display: inline-block; margin-top: 12px; }
+.cmap-list { margin-top: 26px; }
+.cmap-js .cmap-list:not(.is-on) { display: none; }
+.cmap-caveat { margin-top: 14px; }
+@media (max-width: 760px) {
+  .cmap-grid { grid-template-columns: minmax(0, 1fr); }
+  .cmap-panel { position: static; min-height: 0; }
+  .cmap-tab { flex: 1 1 auto; padding-inline: 8px; font-size: .8rem; }
+  .cmap-tabs { display: flex; width: 100%; }
+}

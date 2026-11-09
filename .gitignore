@@ -1,5 +1,9 @@
-# build output (regenerate with tools/site/build.py)
-site/
+# build output (regenerate with tools/site/build.py). Anchored to the repo root: an unanchored
+# "site/" also matched tools/site/ and kept the whole generator out of git.
+/site/
+
+# browser-test logs
+.playwright-mcp/
 
 # Python caches
 __pycache__/

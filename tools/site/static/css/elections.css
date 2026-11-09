@@ -1,0 +1,60 @@
+/* Elections pages (pages/elections.py). Existing tokens only; no literal colors. */
+
+.elx-rule { max-width: 72ch; }
+.elx-statute { color: var(--ink-3); font-size: .78rem; }
+.elx-select { user-select: all; -webkit-user-select: all; overflow-wrap: anywhere; }
+.elx-low { margin-top: 12px; }
+.elx-sub { font-size: .82rem; }
+
+/* calendar strip */
+.elx-strip { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; margin: 8px 0 16px; }
+.elx-year { background: var(--surface); border: 1px solid var(--line); border-top: 4px solid var(--accent); padding: 10px 12px 12px; min-width: 0; }
+.elx-year-odd { border-top-color: var(--ink-3); }
+.elx-year-past { background: var(--surface-2); }
+.elx-yr { margin: 0 0 6px; font-family: var(--f-display); font-weight: 800; font-size: 1.9rem; line-height: 1; }
+.elx-when, .elx-lvls { list-style: none; margin: 0; padding: 0; font-size: .86rem; }
+.elx-when li { margin: 2px 0; }
+.elx-lvls { margin-top: 8px; border-top: 1px solid var(--grid); padding-top: 6px; }
+.elx-lvls li { display: flex; flex-direction: column; margin: 0 0 6px; min-width: 0; }
+.elx-lv { font-weight: 600; }
+.elx-n { font-size: .74rem; color: var(--ink-3); overflow-wrap: anywhere; }
+.elx-yr-note { margin: 6px 0 0; font-size: .82rem; color: var(--ink-3); }
+.elx-next-card ul { margin: 6px 0 0; padding-left: 18px; }
+.elx-def { border-left-color: var(--accent); }
+
+/* results explorer */
+.elx-picker { margin-bottom: 12px; }
+.elx-results { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 22rem), 1fr)); gap: 12px; }
+.elx-card { background: var(--surface); border: 1px solid var(--line); border-top: 3px solid var(--rule); padding: 10px 12px 12px; min-width: 0; }
+.elx-card-title { margin: 0; font-size: 1rem; }
+.elx-card-meta { margin: 2px 0 4px; font-size: .72rem; color: var(--ink-3); }
+.elx-tags { margin: 4px 0 8px; display: flex; flex-wrap: wrap; gap: 4px 6px; align-items: center; font-size: .78rem; }
+.elx-xc { font-size: .68rem; letter-spacing: .06em; color: var(--ink-2); }
+.elx-cands { list-style: none; margin: 0; padding: 0; }
+.elx-cand { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr) auto; gap: 2px 8px; align-items: center;
+  padding: 5px 0; border-bottom: 1px solid var(--grid); }
+.elx-cand:last-child { border-bottom: 0; }
+.elx-cand-lab { min-width: 0; display: flex; flex-direction: column; }
+.elx-name { font-weight: 600; font-size: .9rem; overflow-wrap: anywhere; }
+.elx-party { font-size: .7rem; color: var(--ink-3); }
+.elx-track { height: 12px; background: var(--nodata); position: relative; min-width: 0; }
+.elx-fill { height: 100%; background: var(--mark); border-radius: 0 3px 3px 0; }
+.elx-val { font-size: .78rem; white-space: nowrap; text-align: right; }
+.elx-card-foot { margin: 8px 0 0; font-size: .74rem; overflow-wrap: anywhere; }
+.elx-more-wrap { margin-top: 12px; }
+
+/* public questions */
+.elx-question { border-top: 1px solid var(--line); padding-top: 12px; margin-top: 16px; }
+.elx-wording { margin: 8px 0 12px; padding: 10px 14px; border-left: 4px solid var(--ink-3); background: var(--surface); max-width: 75ch; }
+.elx-wording p { margin: 0 0 6px; }
+.elx-wording footer { font-size: .8rem; color: var(--ink-3); }
+.elx-gapline { font-size: .88rem; color: var(--ink-3); }
+
+@media (max-width: 900px) {
+  .elx-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 560px) {
+  .elx-strip { grid-template-columns: minmax(0, 1fr); }
+  .elx-cand { grid-template-columns: minmax(0, 1fr) auto; }
+  .elx-track { grid-column: 1 / -1; grid-row: 2; }
+}

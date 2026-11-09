@@ -1,0 +1,49 @@
+/* campaigns: money/campaigns/ (pages/campaigns.py, static/js/campaigns.js). Existing tokens only; no party colours. */
+.badge-cf-verified { color: var(--ink); }
+.badge-cf-derived { color: var(--ink-2); border-style: dashed; }
+.badge-cf-filer-inconsistent { color: var(--unofficial); background: var(--unofficial-wash); border-color: var(--unofficial-line); }
+.badge-cf-unreadable { color: var(--ink-3); border-style: dotted; }
+.cf-method { border-left-color: var(--accent); max-width: calc(var(--measure) + 40px); }
+.cf-method p { margin: 0 0 10px; }
+.cf-sub { display: block; font-size: .8rem; font-weight: 400; color: var(--ink-3); }
+.cf-badges { display: inline-flex; flex-wrap: wrap; gap: 4px; }
+.cf-related { margin-top: 36px; font-size: .92rem; }
+
+/* coverage matrix */
+table.cf-coverage td.cov { white-space: nowrap; font-family: var(--f-mono); font-size: .82rem; }
+.cov-k { display: block; font-weight: 600; color: var(--ink); }
+.cov-sub { display: block; font-size: .72rem; color: var(--ink-3); }
+.cov-all { background: var(--accent-wash); }
+.cov-some { background: var(--surface-2); }
+.cov-none .cov-k { color: var(--ink-2); }
+.cov-na { color: var(--ink-3); text-align: center; }
+table.data tr.cf-group-row > th { background: var(--surface-2); font: 600 .72rem/1.2 var(--f-mono); letter-spacing: .08em;
+  text-transform: uppercase; color: var(--ink-2); border-bottom: 1px solid var(--line); }
+table.data tr.cf-office-row > th { font-weight: 700; padding-top: 14px; border-bottom: 1px solid var(--line); }
+
+/* explorer */
+.cf-picker { margin-bottom: 12px; }
+.cf-count { font: 500 .82rem/1.4 var(--f-mono); color: var(--ink-2); margin: 0 0 8px; }
+.cf-committee { font-weight: 600; }
+table.cf-table tbody th { min-width: 16ch; }
+table.cf-table td.cf-status { min-width: 12ch; }
+.cf-note-details { margin-top: 6px; font-size: .8rem; }
+.cf-note-details > summary { cursor: pointer; color: var(--ink-2); font-family: var(--f-mono); font-size: .72rem;
+  letter-spacing: .06em; text-transform: uppercase; }
+.cf-note { margin: 6px 0 0; color: var(--ink-2); max-width: 46ch; overflow-wrap: anywhere; }
+.cf-totals { margin: 0 0 12px; padding: 12px 16px; background: var(--surface); border: 1px solid var(--line);
+  border-left: 4px solid var(--accent); max-width: calc(var(--measure) + 40px); }
+.cf-totals-h { margin: 0 0 6px; font-weight: 700; }
+.cf-totals-list { margin: 0 0 6px; padding-left: 1.1em; }
+.cf-totals-list li { margin-bottom: 4px; }
+
+/* races and large contributions */
+.cf-race { margin: 18px 0 8px; }
+.cf-race h4 { margin: 0 0 2px; font-size: 1rem; }
+.cf-race-meta { margin: 0; font-size: .78rem; color: var(--ink-3); }
+.cf-race-note { font-size: .82rem; }
+.cf-lnote { font-size: .82rem; color: var(--ink-2); }
+.cf-details { margin: 14px 0; }
+.cf-details > summary { cursor: pointer; font-weight: 600; }
+.cf-empty-races { columns: 18rem; column-gap: 24px; font-size: .9rem; }
+.cf-empty-races li { break-inside: avoid; }

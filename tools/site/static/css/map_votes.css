@@ -1,0 +1,84 @@
+/* "How areas voted" layer of the boundary map. Party tokens appear only here, always with text labels in the
+   legend, panel and tables. Every party uses the same mix steps (28%, 52%, 80%) toward the surface color; parties
+   other than D and R (Libertarian, independents, others) share the --party-other gray. "Not on this ballot" (outside
+   a district) is a hatch of two neutral tokens, so it never reads as a party color. */
+:root {
+  --cm-vb-even: color-mix(in srgb, var(--ink-3) 14%, var(--surface));
+  --cm-vb-d1: color-mix(in srgb, var(--party-d) 28%, var(--surface));
+  --cm-vb-d2: color-mix(in srgb, var(--party-d) 52%, var(--surface));
+  --cm-vb-d3: color-mix(in srgb, var(--party-d) 80%, var(--surface));
+  --cm-vb-r1: color-mix(in srgb, var(--party-r) 28%, var(--surface));
+  --cm-vb-r2: color-mix(in srgb, var(--party-r) 52%, var(--surface));
+  --cm-vb-r3: color-mix(in srgb, var(--party-r) 80%, var(--surface));
+  --cm-vb-o1: color-mix(in srgb, var(--party-other) 28%, var(--surface));
+  --cm-vb-o2: color-mix(in srgb, var(--party-other) 52%, var(--surface));
+  --cm-vb-o3: color-mix(in srgb, var(--party-other) 80%, var(--surface));
+}
+.cmap-vb-even { fill: var(--cm-vb-even); background: var(--cm-vb-even); }
+.cmap-vb-d1 { fill: var(--cm-vb-d1); background: var(--cm-vb-d1); }
+.cmap-vb-d2 { fill: var(--cm-vb-d2); background: var(--cm-vb-d2); }
+.cmap-vb-d3 { fill: var(--cm-vb-d3); background: var(--cm-vb-d3); }
+.cmap-vb-r1 { fill: var(--cm-vb-r1); background: var(--cm-vb-r1); }
+.cmap-vb-r2 { fill: var(--cm-vb-r2); background: var(--cm-vb-r2); }
+.cmap-vb-r3 { fill: var(--cm-vb-r3); background: var(--cm-vb-r3); }
+.cmap-vb-o1 { fill: var(--cm-vb-o1); background: var(--cm-vb-o1); }
+.cmap-vb-o2 { fill: var(--cm-vb-o2); background: var(--cm-vb-o2); }
+.cmap-vb-o3 { fill: var(--cm-vb-o3); background: var(--cm-vb-o3); }
+.cmap-vb-none { fill: var(--nodata); background: var(--nodata); }
+.cmap-vb-off { fill: url(#cmap-hatch); background: repeating-linear-gradient(45deg, var(--line) 0 2px, var(--surface-2) 2px 6px); }
+.cmap-hatch-bg { fill: var(--surface-2); }
+.cmap-hatch-ln { stroke: var(--line); stroke-width: 2.5; }
+.cmap-vb-bg { fill: var(--surface-2); }
+.cmap-vg { display: none; }
+.cmap-vg.is-on { display: inline; }
+.cmap-va.is-dim { opacity: .28; pointer-events: none; }
+.cmap-v-dot { stroke: var(--ink); }
+
+/* race picker: Level / Office / District / Year, then Show by */
+.cmap-vctl { margin-top: 10px; display: grid; gap: 10px; }
+.cmap-vctl[hidden] { display: none; }
+.cmap-vsel { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 10px 18px; padding: 10px 12px; border: 1px solid var(--line); border-radius: var(--r, 0); background: var(--surface); }
+.cmap-vf { border: 0; margin: 0; padding: 0; min-width: 0; display: flex; flex-direction: column; gap: 5px; }
+.cmap-vf[hidden] { display: none; }
+.cmap-vf-office { flex: 1 1 15rem; max-width: 24rem; }
+.cmap-vf-district { flex: 0 1 13rem; }
+.cmap-chips-l { display: block; padding: 0; font: 600 .66rem/1.2 var(--f-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); }
+.cmap-seg { display: flex; flex-wrap: wrap; gap: 6px; }
+.cmap-select { font: 500 .9rem/1.2 var(--f-sans); color: var(--ink); background: var(--surface); border: 1px solid var(--ink-3); border-radius: var(--r, 2px); padding: 8px 10px; min-height: 40px; width: 100%; min-width: 0; max-width: 100%; }
+.cmap-select:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+.cmap-chip { font: 600 .8rem/1.2 var(--f-sans); padding: 8px 11px; min-height: 40px; border: 1px solid var(--line); border-radius: var(--r-btn, 3px); background: var(--surface); color: var(--ink-2); cursor: pointer; }
+.cmap-chip[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--surface); }
+.cmap-chip:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+.cmap-tag { font: 500 .66rem/1 var(--f-mono); letter-spacing: .04em; text-transform: uppercase; opacity: .85; }
+.cmap-vrule { font-size: .8rem; margin: 0; max-width: none; }
+.cmap-vrule-d > summary { cursor: pointer; font-size: .82rem; color: var(--ink-2); padding: 2px 0; }
+.cmap-vrule-d[open] > summary { margin-bottom: 4px; }
+.cmap-vcounty { font-size: .86rem; font-weight: 600; margin: 0; max-width: none; color: var(--ink); }
+.cmap-vt .cmap-vcounty { margin: 0 0 6px; font-weight: 400; }
+.cmap-vnote { display: none; font-size: .8rem; margin: 8px 0 0; max-width: none; }
+.cmap-vnote.is-on { display: block; }
+.cmap-vnote[hidden] { display: none; }
+.cmap-legend li[hidden] { display: none; }
+.cmap-vtab { width: 100%; border-collapse: collapse; font-size: .84rem; margin: 6px 0 10px; }
+.cmap-vtab th, .cmap-vtab td { text-align: left; padding: 5px 6px; border-bottom: 1px solid var(--line); vertical-align: top; }
+.cmap-vtab th[scope="col"] { font: 600 .64rem/1.2 var(--f-mono); letter-spacing: .06em; text-transform: uppercase; color: var(--ink-3); }
+.cmap-vtab .num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.cmap-acts { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0 0; }
+.cmap-drill { margin-top: 16px; border-top: 2px solid var(--rule); padding-top: 10px; }
+.cmap-drill[hidden] { display: none; }
+.cmap-drill-top { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 6px 12px; }
+.cmap-drill-top h3 { margin: 0; font-size: 1.02rem; }
+.cmap-drill-list { list-style: none; margin: 8px 0 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(15rem, 100%), 1fr)); gap: 4px 12px; }
+.cmap-drill-btn { display: grid; grid-template-columns: auto 1fr; gap: 0 8px; align-items: center; width: 100%; text-align: left; padding: 6px 8px; min-height: 40px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); cursor: pointer; font: inherit; font-size: .84rem; }
+.cmap-drill-btn:focus-visible { outline: 3px solid var(--focus); outline-offset: 1px; }
+.cmap-drill-m { grid-column: 2; color: var(--ink-3); font-size: .78rem; }
+.cmap-vd { margin: 10px 0; }
+.cmap-vd > summary { cursor: pointer; font-weight: 600; padding: 6px 0; }
+.cmap-vt h4 { margin: 14px 0 6px; }
+.cmap-vjs[hidden], .cmap-nojs[hidden] { display: none; }
+@media (max-width: 760px) {
+  .cmap-vsel { padding: 10px; gap: 10px 12px; }
+  .cmap-vf-office { flex: 1 1 100%; max-width: none; }
+  .cmap-vf-district { flex: 1 1 100%; }
+  .cmap-chip { padding: 8px 9px; font-size: .78rem; }
+}

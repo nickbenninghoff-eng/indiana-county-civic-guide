@@ -61,3 +61,8 @@ Source of corrections: `planning/fact-check-report.md` (source id GOV-015 in `so
 - SBCSC at-large seat count (research and ABC57: 2; 2016 canvass transcription: 3 winners); office seats left blank.
 - Mishawaka mayor Prickett start year (source range 1963-1979, Jan 1964 start inferred) and "first woman mayor" (unverified, not asserted).
 - New Carlisle, North Liberty and Roseland 2026 town winners: seat counts not printed.
+
+## 2026-11-08: SBCSC 2016 at-large race
+- The 2016 transcription labelled the SBCSC at-large race "3 seats" and marked McCullough a winner. Statute (IC 20-23-15-6(c), 2016 text: two at-large members) and ABC57 (Nov 6, 2020, GOV-138: McCullough a "new board member" after 2020, taking Rudy Monterrosa's place) show two seats; winners Robles and Anella.
+- results.csv: vote_for 2 on all 8 rows; McCullough winner N. terms.csv: McCullough term now starts 2021-01-01 (id ...__2021-01); Robles end date marked as scheduled, likely earlier; Monterrosa term added (start unknown, end 2020-12-31). research/results-2015-2019.md corrected so a regeneration keeps the fix. Source: planning/qa/research-2026-11-08-roseland-sbcsc.md.
+- Not yet re-read: the printed "Vote for" line on canvass View/60008 (county site blocks automated fetches).
