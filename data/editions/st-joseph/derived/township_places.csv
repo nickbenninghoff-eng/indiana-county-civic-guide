@@ -1,0 +1,20 @@
+township_unit_id,place_name,place_kind,place_unit_id,coverage,status,source_ids,notes
+centre-township,South Bend,city,south-bend,partial,secondary,GOV-022;GOV-076,Township website says a small part of the township lies in South Bend.
+clay-township,Indian Village,town,indian-village,listed,secondary,GOV-022,Listed on the township's Wikipedia page; not cross-checked against county GIS or Census.
+clay-township,Mishawaka,city,mishawaka,partial,secondary,GOV-022,
+clay-township,Roseland,town,roseland,listed,secondary,GOV-022,
+clay-township,South Bend,city,south-bend,partial,secondary,GOV-022,
+clay-township,Granger,cdp,,partial,secondary,GOV-022,Census-designated place (not a government); west quarter listed.
+clay-township,Notre Dame,cdp,,listed,secondary,GOV-022,Census-designated place (not a government).
+german-township,South Bend,city,south-bend,partial,secondary,GOV-022,
+harris-township,Mishawaka,city,mishawaka,partial,secondary,GOV-022,
+harris-township,Granger,cdp,,partial,secondary,GOV-022,Census-designated place (not a government).
+liberty-township,North Liberty,town,north-liberty,listed,secondary,GOV-022,
+lincoln-township,Walkerton,town,walkerton,listed,secondary,GOV-022,
+olive-township,New Carlisle,town,new-carlisle,listed,secondary,GOV-022,
+penn-township,Mishawaka,city,mishawaka,partial,secondary,GOV-022,
+penn-township,Osceola,town,osceola,listed,secondary,GOV-022,
+penn-township,South Bend,city,south-bend,partial,secondary,GOV-022,
+portage-township,South Bend,city,south-bend,partial,secondary,GOV-022,
+union-township,Lakeville,town,lakeville,listed,secondary,GOV-022;GOV-075,
+warren-township,South Bend,city,south-bend,partial,secondary,GOV-022,

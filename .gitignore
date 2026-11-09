@@ -1,0 +1,25 @@
+# build output (regenerate with tools/site/build.py)
+site/
+
+# Python caches
+__pycache__/
+*.pyc
+
+# binary source downloads (~1.6 GB); URLs are recorded in data/**/sources_*.csv
+sources/**/*.pdf
+sources/**/*.PDF
+sources/**/*.zip
+sources/**/*.jpg
+sources/**/*.jpeg
+sources/**/*.png
+sources/**/*.xlsx
+sources/**/*.docx
+
+# scratch
+research/tmp/
+*.bak
+*.bak-*
+
+# raw full-text dumps of source documents (may contain private individuals' contact details; regenerate from the PDFs)
+sources/recovered/**/*.txt
+!sources/recovered/laville-rename/notes.txt

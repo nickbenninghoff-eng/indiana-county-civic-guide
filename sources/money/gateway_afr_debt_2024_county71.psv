@@ -1,0 +1,164 @@
+year|cnty_description|county_cd_fk|budget_unit_type|unit_code|submit_status|unit_name|afr_unit_type|sboa_id|ent_id|ent_description|ent_name|debt_class_code|debt_class_name|debt_description|end_principal_bal|principal_amt_due_1yr|
+2024|St. Joseph|71|1|0000|2|ST. JOSEPH COUNTY|1|71-000.00|0||Governmental Activities|1|General Obligation Bonds|2016 Special Taxing District Bonds|5565000.00|565000.00|
+2024|St. Joseph|71|1|0000|2|ST. JOSEPH COUNTY|1|71-000.00|0||Governmental Activities|1|General Obligation Bonds|2017 GO Bonds Guaranteed Energy Savings|5870000.00|725000.00|
+2024|St. Joseph|71|1|0000|2|ST. JOSEPH COUNTY|1|71-000.00|0||Governmental Activities|1|General Obligation Bonds|2019 Special Tax Bonds (South Shore Double Tracking)|9375000.00|0.00|
+2024|St. Joseph|71|1|0000|2|ST. JOSEPH COUNTY|1|71-000.00|0||Governmental Activities|1|General Obligation Bonds|2022 General Obligation HIghway Bonds|2010000.00|2010000.00|
+2024|St. Joseph|71|1|0000|2|ST. JOSEPH COUNTY|1|71-000.00|0||Governmental Activities|2|Revenue Bonds|2014 CEDIT Revenue Bonds  (PASP)|4460000.00|385000.00|
+2024|St. Joseph|71|1|0000|2|ST. JOSEPH COUNTY|1|71-000.00|0||Governmental Activities|2|Revenue Bonds|2015 Economic Development Bonds (General Sheet Metal)|1825000.00|280000.00|
+2024|St. Joseph|71|1|0000|2|ST. JOSEPH COUNTY|1|71-000.00|0||Governmental Activities|2|Revenue Bonds|2024 Econmic Development Bonds (Project Honeysuckle)|50000000.00|2000000.00|
+2024|St. Joseph|71|1|0000|2|ST. JOSEPH COUNTY|1|71-000.00|0||Governmental Activities|2|Revenue Bonds|2024 RDA Lease Rental Revenue (GM/Samsung) Non-Taxable|10000000.00|0.00|
+2024|St. Joseph|71|1|0000|2|ST. JOSEPH COUNTY|1|71-000.00|0||Governmental Activities|2|Revenue Bonds|2024 RDA Lease Rental Revenue (GM/Samsung) Taxable|40000000.00|0.00|
+2024|St. Joseph|71|1|0000|2|ST. JOSEPH COUNTY|1|71-000.00|0||Governmental Activities|2|Revenue Bonds|2024 Redevelopmnet District Special Taxing District Bonds|5000000.00|0.00|
+2024|St. Joseph|71|2|0008|2|MADISON TOWNSHIP|7|71-028.00|0||Governmental Activities|11|Notes and Loans Payable - Short Term|fire truck|301176.00||
+2024|St. Joseph|71|2|0009|2|OLIVE TOWNSHIP|7|71-029.00|0||Governmental Activities|10|Notes and Loans Payable - Long Term|2020 Pumper Tanker|89083.60|89083.60|
+2024|St. Joseph|71|2|0009|2|OLIVE TOWNSHIP|7|71-029.00|0||Governmental Activities|10|Notes and Loans Payable - Long Term|2023 Chevrolet Silverado|46857.24|46857.24|
+2024|St. Joseph|71|2|0009|2|OLIVE TOWNSHIP|7|71-029.00|0||Governmental Activities|10|Notes and Loans Payable - Long Term|2023 Chevrolet Tahoe|22026.55|22026.55|
+2024|St. Joseph|71|2|0009|2|OLIVE TOWNSHIP|7|71-029.00|0||Governmental Activities|10|Notes and Loans Payable - Long Term|Construction Loan|502185.07|502185.07|
+2024|St. Joseph|71|2|0009|2|OLIVE TOWNSHIP|7|71-029.00|0||Governmental Activities|10|Notes and Loans Payable - Long Term|Pierce Freightliner Tanker|946151.40|946151.40|
+2024|St. Joseph|71|2|0010|2|PENN TOWNSHIP|7|71-030.00|0||Governmental Activities|1|General Obligation Bonds|Penn Township Series 2019|1235000.00|610000.00|
+2024|St. Joseph|71|2|0011|2|PORTAGE TOWNSHIP|7|71-031.00|0||Governmental Activities|1|General Obligation Bonds|2024 Bond Proceeds|3000000.00|890000.00|
+2024|St. Joseph|71|2|0012|2|UNION TOWNSHIP|7|71-032.00|0||Governmental Activities|14|Other - Long Term|2018 Lease Rental Bonds|1590000.00|95000.00|
+2024|St. Joseph|71|2|0013|2|WARREN TOWNSHIP|7|71-033.00|0||Governmental Activities|1|General Obligation Bonds|General Obligation Bonds, Series 2022|1110000.00|55000.00|
+2024|St. Joseph|71|2|0013|2|WARREN TOWNSHIP|7|71-033.00|0||Governmental Activities|10|Notes and Loans Payable - Long Term|Building Debt, Series 2022A|5560000.00|220000.00|
+2024|St. Joseph|71|2|0013|2|WARREN TOWNSHIP|7|71-033.00|0||Governmental Activities|10|Notes and Loans Payable - Long Term|Building Debt. Series 2022B|5560000.00|220000.00|
+2024|St. Joseph|71|3|0103|2|SOUTH BEND CIVIL CITY|2|71-002.00|0||Governmental Activities|1|General Obligation Bonds|DS0165 - 2017 Park District General Obligation Bonds, Series A-K|8760000.00|920000.00|
+2024|St. Joseph|71|3|0103|2|SOUTH BEND CIVIL CITY|2|71-002.00|0||Governmental Activities|1|General Obligation Bonds|DS0168 - 2018 General Obligation Bonds (Fire Station #9 Project)|3755000.00|230000.00|
+2024|St. Joseph|71|3|0103|2|SOUTH BEND CIVIL CITY|2|71-002.00|0||Governmental Activities|10|Notes and Loans Payable - Long Term|DS0139 - 2015 Century Center Energy QECB Conservation Bond (Banc of America)|2169315.00|315561.00|
+2024|St. Joseph|71|3|0103|2|SOUTH BEND CIVIL CITY|2|71-002.00|33048|Supplies residents of the City of South Bend with clean and drinkable water|WATER|10|Notes and Loans Payable - Long Term|DS0068 - 2009 Water Works Improvements - SRF Loan|144975.00|27262.00|
+2024|St. Joseph|71|3|0103|2|SOUTH BEND CIVIL CITY|2|71-002.00|0||Governmental Activities|14|Other - Long Term|DS0116 - 2013 Bldg Corp Mortgage Bonds (Fire Station/Tower)|3170000.00|290000.00|
+2024|St. Joseph|71|3|0103|2|SOUTH BEND CIVIL CITY|2|71-002.00|0||Governmental Activities|2|Revenue Bonds|DS0054 - 2015 Eddy Street Commons - Lease Rental Revenue Bonds & Refunding 2008|18015000.00|1840000.00|
+2024|St. Joseph|71|3|0103|2|SOUTH BEND CIVIL CITY|2|71-002.00|0||Governmental Activities|2|Revenue Bonds|DS0062 - 2013 Century Center Special Tax Bonds (Refunding 2008)|535000.00|375000.00|
+2024|St. Joseph|71|3|0103|2|SOUTH BEND CIVIL CITY|2|71-002.00|0||Governmental Activities|2|Revenue Bonds|DS0133 - 2014 St. Joseph County PSAP (EDIT) Rev Bonds|1294738.00|111765.50|
+2024|St. Joseph|71|3|0103|2|SOUTH BEND CIVIL CITY|2|71-002.00|0||Governmental Activities|2|Revenue Bonds|DS0135 - 2015 South Bend Redevelopment Authority Lease Rental Revenue Bonds|17330000.00|1160000.00|
+2024|St. Joseph|71|3|0103|2|SOUTH BEND CIVIL CITY|2|71-002.00|0||Governmental Activities|2|Revenue Bonds|DS0141 - 2015 Economic Development Income Tax Revenue Bonds (Park Projects)|3600000.00|260000.00|
+2024|St. Joseph|71|3|0103|2|SOUTH BEND CIVIL CITY|2|71-002.00|0||Governmental Activities|2|Revenue Bonds|DS0163 - 2017 Taxable Economic Development Revenue Bonds (Eddy Street Phase II)|22015000.00|865000.00|
+2024|St. Joseph|71|3|0103|2|SOUTH BEND CIVIL CITY|2|71-002.00|0||Governmental Activities|2|Revenue Bonds|DS0169 - 2018 Redevelop District Bonds (Park Improvements)|7385000.00|775000.00|
+2024|St. Joseph|71|3|0103|2|SOUTH BEND CIVIL CITY|2|71-002.00|0||Governmental Activities|2|Revenue Bonds|DS0175 - 2018 Economic Develop Rev Bonds (Potawatomi Zoo Project)|2410000.00|200000.00|
+2024|St. Joseph|71|3|0103|2|SOUTH BEND CIVIL CITY|2|71-002.00|0||Governmental Activities|2|Revenue Bonds|DS0200 - 2019 Redevelop Authority Bonds (South Shore Double Tracking Project)|4440000.00|795000.00|
+2024|St. Joseph|71|3|0103|2|SOUTH BEND CIVIL CITY|2|71-002.00|0||Governmental Activities|2|Revenue Bonds|DS0210 - 2020 Taxable Economic Development Tax Increment Revenue Bonds (Community Education Center Project)|3475000.00|240000.00|
+2024|St. Joseph|71|3|0103|2|SOUTH BEND CIVIL CITY|2|71-002.00|0||Governmental Activities|2|Revenue Bonds|DS0215 - 2021 Bldg Corp LIT Lease Rental Revenue Bonds (Infrastructure Projects)|6320000.00|425000.00|
+2024|St. Joseph|71|3|0103|2|SOUTH BEND CIVIL CITY|2|71-002.00|0||Governmental Activities|2|Revenue Bonds|DS0221 - 2022 Morris Performing Arts Center Revenue Bonds|5910000.00|200000.00|
+2024|St. Joseph|71|3|0103|2|SOUTH BEND CIVIL CITY|2|71-002.00|0||Governmental Activities|2|Revenue Bonds|DS0222 - 2022 Economic Develop Revenue Bonds (Zoo Project)|5155000.00|235000.00|
+2024|St. Joseph|71|3|0103|2|SOUTH BEND CIVIL CITY|2|71-002.00|0||Governmental Activities|2|Revenue Bonds|DS0239 - 2024A Lease Rental Bonds - Four Winds Field Project|44860000.00|730000.00|
+2024|St. Joseph|71|3|0103|2|SOUTH BEND CIVIL CITY|2|71-002.00|0||Governmental Activities|2|Revenue Bonds|DS0240 - 2024B Lease Rental Bonds - Madison Lifestyle District|24480000.00|160000.00|
+2024|St. Joseph|71|3|0103|2|SOUTH BEND CIVIL CITY|2|71-002.00|0||Governmental Activities|2|Revenue Bonds|DS227 - Redevelopment Authority Lease Rental Revenue Bonds|29155000.00|530000.00|
+2024|St. Joseph|71|3|0103|2|SOUTH BEND CIVIL CITY|2|71-002.00|33047|Allows the residents of the City of South Bend to have access to municipal wastewater treatment|WASTEWATER|2|Revenue Bonds|DS0080 - 2020 Sewage Works Refunding Revenue Bonds (Refund 2010)|3025000.00|455000.00|
+2024|St. Joseph|71|3|0103|2|SOUTH BEND CIVIL CITY|2|71-002.00|33047|Allows the residents of the City of South Bend to have access to municipal wastewater treatment|WASTEWATER|2|Revenue Bonds|DS0101 - 2012 Sewage Works Revenue Bonds|11725000.00|1300000.00|
+2024|St. Joseph|71|3|0103|2|SOUTH BEND CIVIL CITY|2|71-002.00|33047|Allows the residents of the City of South Bend to have access to municipal wastewater treatment|WASTEWATER|2|Revenue Bonds|DS0105 - 2013A Sewage Works Revenue Bonds (Refunding 1998 & 2004)|0.00|0.00|
+2024|St. Joseph|71|3|0103|2|SOUTH BEND CIVIL CITY|2|71-002.00|33047|Allows the residents of the City of South Bend to have access to municipal wastewater treatment|WASTEWATER|2|Revenue Bonds|DS0145 - 2015 Sewage Works Revenue Bonds (Refunding 2006, 2007, & 2007B)|3025000.00|3025000.00|
+2024|St. Joseph|71|3|0103|2|SOUTH BEND CIVIL CITY|2|71-002.00|33047|Allows the residents of the City of South Bend to have access to municipal wastewater treatment|WASTEWATER|2|Revenue Bonds|DS0219 - 2021 Sewage Works Refunding Revenue Bonds (Refund 2009 & 2011)|8795000.00|1230000.00|
+2024|St. Joseph|71|3|0103|2|SOUTH BEND CIVIL CITY|2|71-002.00|33047|Allows the residents of the City of South Bend to have access to municipal wastewater treatment|WASTEWATER|2|Revenue Bonds|DS235 - Sewage Works Revenue Bonds (SRF)|32150000.00|725000.00|
+2024|St. Joseph|71|3|0103|2|SOUTH BEND CIVIL CITY|2|71-002.00|33048|Supplies residents of the City of South Bend with clean and drinkable water|WATER|2|Revenue Bonds|DS0069 - 2019 Amended Water Works Revenue Bonds of 2009, Series B|2025000.00|360000.00|
+2024|St. Joseph|71|3|0103|2|SOUTH BEND CIVIL CITY|2|71-002.00|33048|Supplies residents of the City of South Bend with clean and drinkable water|WATER|2|Revenue Bonds|DS0099 - 2012 Water Works Revenue Bonds|3860000.00|430000.00|
+2024|St. Joseph|71|3|0103|2|SOUTH BEND CIVIL CITY|2|71-002.00|33048|Supplies residents of the City of South Bend with clean and drinkable water|WATER|2|Revenue Bonds|DS0156 - 2016 Water Works Refunding Bonds (Refund 2000 & 2006)|630000.00|310000.00|
+2024|St. Joseph|71|3|0103|2|SOUTH BEND CIVIL CITY|2|71-002.00|33048|Supplies residents of the City of South Bend with clean and drinkable water|WATER|2|Revenue Bonds|DS0238 - 2024 Water Works Improvements - SRF Loan|10743000.00|0.00|
+2024|St. Joseph|71|3|0117|2|MISHAWAKA CIVIL CITY|2|71-001.00|0||Governmental Activities|2|Revenue Bonds|Fieldhouse TIF 2023|35465000.00|0.00|
+2024|St. Joseph|71|3|0117|2|MISHAWAKA CIVIL CITY|2|71-001.00|0||Governmental Activities|2|Revenue Bonds|Fire Station #4|660956.11|266668.00|
+2024|St. Joseph|71|3|0117|2|MISHAWAKA CIVIL CITY|2|71-001.00|0||Governmental Activities|2|Revenue Bonds|Ironworks Phase 2 TIF 2023|10306000.00|0.00|
+2024|St. Joseph|71|3|0117|2|MISHAWAKA CIVIL CITY|2|71-001.00|0||Governmental Activities|2|Revenue Bonds|RDA Lease Rental Rev 2021|35800000.00|3590000.00|
+2024|St. Joseph|71|3|0117|2|MISHAWAKA CIVIL CITY|2|71-001.00|0||Governmental Activities|2|Revenue Bonds|TIF Battell Center|675000.00|40000.00|
+2024|St. Joseph|71|3|0117|2|MISHAWAKA CIVIL CITY|2|71-001.00|33051|Electric  Utility|ELECTRIC|2|Revenue Bonds|Electric 2021|26120000.00|1705000.00|
+2024|St. Joseph|71|3|0117|2|MISHAWAKA CIVIL CITY|2|71-001.00|33053|Sewer, Wastewater|WASTEWATER|2|Revenue Bonds|Sewage 2010A|814000.00|137000.00|
+2024|St. Joseph|71|3|0117|2|MISHAWAKA CIVIL CITY|2|71-001.00|33053|Sewer, Wastewater|WASTEWATER|2|Revenue Bonds|Sewage 2015|9090000.00|3520000.00|
+2024|St. Joseph|71|3|0117|2|MISHAWAKA CIVIL CITY|2|71-001.00|33053|Sewer, Wastewater|WASTEWATER|2|Revenue Bonds|Sewage 2017A|9175000.00|1140000.00|
+2024|St. Joseph|71|3|0117|2|MISHAWAKA CIVIL CITY|2|71-001.00|33053|Sewer, Wastewater|WASTEWATER|2|Revenue Bonds|Sewage 2017B|16670000.00|1150000.00|
+2024|St. Joseph|71|3|0117|2|MISHAWAKA CIVIL CITY|2|71-001.00|33053|Sewer, Wastewater|WASTEWATER|2|Revenue Bonds|Sewage 2018|10485000.00|560000.00|
+2024|St. Joseph|71|3|0117|2|MISHAWAKA CIVIL CITY|2|71-001.00|33053|Sewer, Wastewater|WASTEWATER|2|Revenue Bonds|Sewage 2023|33775000.00|250000.00|
+2024|St. Joseph|71|3|0117|2|MISHAWAKA CIVIL CITY|2|71-001.00|33054|Water Utility|WATER|2|Revenue Bonds|Water 2018|11195000.00|622000.00|
+2024|St. Joseph|71|3|0117|2|MISHAWAKA CIVIL CITY|2|71-001.00|33054|Water Utility|WATER|2|Revenue Bonds|Water 2021|47610000.00|1980000.00|
+2024|St. Joseph|71|3|0862|2|LAKEVILLE CIVIL TOWN|3|71-004.00|0||Governmental Activities|10|Notes and Loans Payable - Long Term|WETLAND BARN|261850.00|22924.00|
+2024|St. Joseph|71|3|0862|2|LAKEVILLE CIVIL TOWN|3|71-004.00|33056|to dispose of sewage for the town of Lakeville thru the pond system|SEWER UTILITY|2|Revenue Bonds|2020 Sewer Bond|1015000.00|80000.00|
+2024|St. Joseph|71|3|0862|2|LAKEVILLE CIVIL TOWN|3|71-004.00|33057|water for the Town|WATER UTILITY|2|Revenue Bonds|1997 Water Project|277000.00|17000.00|
+2024|St. Joseph|71|3|0862|2|LAKEVILLE CIVIL TOWN|3|71-004.00|33057|water for the Town|WATER UTILITY|2|Revenue Bonds|2023 Water Tower Project|5353000.00|214000.00|
+2024|St. Joseph|71|3|0863|2|NEW CARLISLE CIVIL TOWN|3|71-005.00|0||Governmental Activities|1|General Obligation Bonds|General Obligation Bonds of 2022|850000.00|80000.00|
+2024|St. Joseph|71|3|0863|2|NEW CARLISLE CIVIL TOWN|3|71-005.00|33058||ELECTRIC|2|Revenue Bonds|Electric Utility Revenue Bonds of 2007|110000.00|40000.00|
+2024|St. Joseph|71|3|0863|2|NEW CARLISLE CIVIL TOWN|3|71-005.00|33059||WASTEWATER|2|Revenue Bonds|Sewage Works Revenue Bonds of 2007|0.00|0.00|
+2024|St. Joseph|71|3|0864|2|NORTH LIBERTY CIVIL TOWN|3|71-006.00|33061||WASTEWATER|14|Other - Long Term|SRF|1560151.00|133000.00|
+2024|St. Joseph|71|3|0864|2|NORTH LIBERTY CIVIL TOWN|3|71-006.00|0||Governmental Activities|2|Revenue Bonds|Lease Rental Bonds|898000.00|30000.00|
+2024|St. Joseph|71|3|0864|2|NORTH LIBERTY CIVIL TOWN|3|71-006.00|33062|Water Operations|WATER|2|Revenue Bonds|Waterworks 2023 Revenue Water Tower|1213000.00|48000.00|
+2024|St. Joseph|71|3|0864|2|NORTH LIBERTY CIVIL TOWN|3|71-006.00|33062|Water Operations|WATER|2|Revenue Bonds|Waterworks Utility Revenue and Refunding of 2021|1120000.00|60000.00|
+2024|St. Joseph|71|3|0867|2|WALKERTON CIVIL TOWN|3|71-009.00|0||Governmental Activities|1|General Obligation Bonds|General Obligation Bonds of 2021|230000.00|86000.00|
+2024|St. Joseph|71|3|0867|2|WALKERTON CIVIL TOWN|3|71-009.00|0||Governmental Activities|14|Other - Long Term|AD VALOREM PROPERTY TAX LEASE RENTAL BONDS, SERIES 2013|875000.00|95000.00|
+2024|St. Joseph|71|3|0867|2|WALKERTON CIVIL TOWN|3|71-009.00|0||Governmental Activities|2|Revenue Bonds|Park District Bonds of 2020|135000.00|89000.00|
+2024|St. Joseph|71|3|0867|2|WALKERTON CIVIL TOWN|3|71-009.00|33065|Wastewater utility|WASTEWATER|2|Revenue Bonds|Wastewater Sewage Works Bonds of 2014|2415000.00|53000.00|
+2024|St. Joseph|71|3|0867|2|WALKERTON CIVIL TOWN|3|71-009.00|33066|Water utility|WATER|2|Revenue Bonds|Water Treatment Plant Water Bonds 2018|3747868.00|208487.00|
+2024|St. Joseph|71|4|7150|2|JOHN GLENN SCHOOL CORPORATION|5|71-011.00|0||Governmental Activities|1|General Obligation Bonds|General Obligation Bond 2011|0.00|0.00|
+2024|St. Joseph|71|4|7150|2|JOHN GLENN SCHOOL CORPORATION|5|71-011.00|0||Governmental Activities|1|General Obligation Bonds|General Obligation Bond 2019|1330000.00|475000.00|
+2024|St. Joseph|71|4|7150|2|JOHN GLENN SCHOOL CORPORATION|5|71-011.00|0||Governmental Activities|1|General Obligation Bonds|General Obligation Bond 2022|585000.00|225000.00|
+2024|St. Joseph|71|4|7175|2|PENN-HARRIS-MADISON-SCHOOL CORPORATION|5|71-013.00|0||Governmental Activities|1|General Obligation Bonds|Bond 2018|0.00|0.00|
+2024|St. Joseph|71|4|7175|2|PENN-HARRIS-MADISON-SCHOOL CORPORATION|5|71-013.00|0||Governmental Activities|1|General Obligation Bonds|Bond 2023A|3135000.19|2065000.00|
+2024|St. Joseph|71|4|7175|2|PENN-HARRIS-MADISON-SCHOOL CORPORATION|5|71-013.00|0||Governmental Activities|1|General Obligation Bonds|Bond 2023B|7895000.00|770000.00|
+2024|St. Joseph|71|4|7175|2|PENN-HARRIS-MADISON-SCHOOL CORPORATION|5|71-013.00|0||Governmental Activities|1|General Obligation Bonds|Bond 2025|14430000.00|0.00|
+2024|St. Joseph|71|4|7175|2|PENN-HARRIS-MADISON-SCHOOL CORPORATION|5|71-013.00|0||Governmental Activities|11|Notes and Loans Payable - Short Term|CSF Technology 2023 Spring|0.00||
+2024|St. Joseph|71|4|7175|2|PENN-HARRIS-MADISON-SCHOOL CORPORATION|5|71-013.00|0||Governmental Activities|11|Notes and Loans Payable - Short Term|CSF Technology 2023 STAA|195759.00||
+2024|St. Joseph|71|4|7175|2|PENN-HARRIS-MADISON-SCHOOL CORPORATION|5|71-013.00|0||Governmental Activities|11|Notes and Loans Payable - Short Term|CSF Technology 2024 Spring|1088000.00||
+2024|St. Joseph|71|4|7175|2|PENN-HARRIS-MADISON-SCHOOL CORPORATION|5|71-013.00|0||Governmental Activities|11|Notes and Loans Payable - Short Term|CSF Technology 2024 STAA|217512.00||
+2024|St. Joseph|71|4|7175|2|PENN-HARRIS-MADISON-SCHOOL CORPORATION|5|71-013.00|0||Governmental Activities|11|Notes and Loans Payable - Short Term|Tech Fall 2022 B0404|776308.00||
+2024|St. Joseph|71|4|7175|2|PENN-HARRIS-MADISON-SCHOOL CORPORATION|5|71-013.00|0||Governmental Activities|11|Notes and Loans Payable - Short Term|Tech Fall B0364|995220.00||
+2024|St. Joseph|71|4|7175|2|PENN-HARRIS-MADISON-SCHOOL CORPORATION|5|71-013.00|0||Governmental Activities|11|Notes and Loans Payable - Short Term|Technology Fall 2018|111430.00||
+2024|St. Joseph|71|4|7175|2|PENN-HARRIS-MADISON-SCHOOL CORPORATION|5|71-013.00|0||Governmental Activities|11|Notes and Loans Payable - Short Term|Technology Fall 2020|551559.00||
+2024|St. Joseph|71|4|7175|2|PENN-HARRIS-MADISON-SCHOOL CORPORATION|5|71-013.00|0||Governmental Activities|11|Notes and Loans Payable - Short Term|Technology Spring 2020|561213.00||
+2024|St. Joseph|71|4|7175|2|PENN-HARRIS-MADISON-SCHOOL CORPORATION|5|71-013.00|0||Governmental Activities|11|Notes and Loans Payable - Short Term|Technology Spring 2021|555000.00||
+2024|St. Joseph|71|4|7175|2|PENN-HARRIS-MADISON-SCHOOL CORPORATION|5|71-013.00|0||Governmental Activities|11|Notes and Loans Payable - Short Term|Technology STAA 2018|0.00||
+2024|St. Joseph|71|4|7175|2|PENN-HARRIS-MADISON-SCHOOL CORPORATION|5|71-013.00|0||Governmental Activities|11|Notes and Loans Payable - Short Term|Technology STAA 2021|108098.00||
+2024|St. Joseph|71|4|7175|2|PENN-HARRIS-MADISON-SCHOOL CORPORATION|5|71-013.00|0||Governmental Activities|11|Notes and Loans Payable - Short Term|Technology STAA 2022 B0391|150696.00||
+2024|St. Joseph|71|4|7200|2|MISHAWAKA CITY SCHOOL CORPORATION|5|71-012.00|0||Governmental Activities|1|General Obligation Bonds|Energy Saviings - 2011|160000.00|160000.00|
+2024|St. Joseph|71|4|7200|2|MISHAWAKA CITY SCHOOL CORPORATION|5|71-012.00|0||Governmental Activities|1|General Obligation Bonds|Go Bond, Series 2023 A|1380000.00|1050000.00|
+2024|St. Joseph|71|4|7200|2|MISHAWAKA CITY SCHOOL CORPORATION|5|71-012.00|0||Governmental Activities|1|General Obligation Bonds|Go Bond, Series 2023 B|1375000.00|1045000.00|
+2024|St. Joseph|71|4|7200|2|MISHAWAKA CITY SCHOOL CORPORATION|5|71-012.00|0||Governmental Activities|10|Notes and Loans Payable - Long Term|CSF Loan:  A0524|56250.00|37500.00|
+2024|St. Joseph|71|4|7200|2|MISHAWAKA CITY SCHOOL CORPORATION|5|71-012.00|0||Governmental Activities|10|Notes and Loans Payable - Long Term|CSF Loan:  A0568|0.00|0.00|
+2024|St. Joseph|71|4|7200|2|MISHAWAKA CITY SCHOOL CORPORATION|5|71-012.00|0||Governmental Activities|10|Notes and Loans Payable - Long Term|CSF Loan:  A0807|183600.00|21600.00|
+2024|St. Joseph|71|4|7200|2|MISHAWAKA CITY SCHOOL CORPORATION|5|71-012.00|0||Governmental Activities|10|Notes and Loans Payable - Long Term|CSF Loan:  B0118|0.00|0.00|
+2024|St. Joseph|71|4|7200|2|MISHAWAKA CITY SCHOOL CORPORATION|5|71-012.00|0||Governmental Activities|10|Notes and Loans Payable - Long Term|CSF Loan:  B0165|50910.00|50910.00|
+2024|St. Joseph|71|4|7200|2|MISHAWAKA CITY SCHOOL CORPORATION|5|71-012.00|0||Governmental Activities|10|Notes and Loans Payable - Long Term|CSF Loan:  B0208|51657.60|51657.60|
+2024|St. Joseph|71|4|7200|2|MISHAWAKA CITY SCHOOL CORPORATION|5|71-012.00|0||Governmental Activities|10|Notes and Loans Payable - Long Term|CSF Loan:  B0249|153960.00|102640.00|
+2024|St. Joseph|71|4|7200|2|MISHAWAKA CITY SCHOOL CORPORATION|5|71-012.00|0||Governmental Activities|10|Notes and Loans Payable - Long Term|CSF Loan:  B0290|151668.60|101112.40|
+2024|St. Joseph|71|4|7200|2|MISHAWAKA CITY SCHOOL CORPORATION|5|71-012.00|0||Governmental Activities|10|Notes and Loans Payable - Long Term|CSF Loan:  B0314|255445.50|102178.20|
+2024|St. Joseph|71|4|7200|2|MISHAWAKA CITY SCHOOL CORPORATION|5|71-012.00|0||Governmental Activities|10|Notes and Loans Payable - Long Term|CSF Loan:  B0349|361085.63|103167.32|
+2024|St. Joseph|71|4|7200|2|MISHAWAKA CITY SCHOOL CORPORATION|5|71-012.00|0||Governmental Activities|10|Notes and Loans Payable - Long Term|CSF Loan:  B0406|404319.67|101079.92|
+2024|St. Joseph|71|4|7200|2|MISHAWAKA CITY SCHOOL CORPORATION|5|71-012.00|0||Governmental Activities|10|Notes and Loans Payable - Long Term|CSF Loan:  B0483|477995.90|0.00|
+2024|St. Joseph|71|4|7200|2|MISHAWAKA CITY SCHOOL CORPORATION|5|71-012.00|0||Governmental Activities|10|Notes and Loans Payable - Long Term|CSF Loan:  C0001|216050.00|14900.00|
+2024|St. Joseph|71|4|7200|2|MISHAWAKA CITY SCHOOL CORPORATION|5|71-012.00|0||Governmental Activities|10|Notes and Loans Payable - Long Term|CSF Loan:  C0016|650000.00|100000.00|
+2024|St. Joseph|71|4|7200|2|MISHAWAKA CITY SCHOOL CORPORATION|5|71-012.00|0||Governmental Activities|14|Other - Long Term|Energy Savings - 2011 (QZAB)|45000.00|45000.00|
+2024|St. Joseph|71|4|7205|2|SOUTH BEND COMMUNITY SCHOOL CORPORATION|5|71-014.00|0||Governmental Activities|1|General Obligation Bonds|General Obligation Bonds, Series 2013|1430000.00|0.00|
+2024|St. Joseph|71|4|7205|2|SOUTH BEND COMMUNITY SCHOOL CORPORATION|5|71-014.00|0||Governmental Activities|1|General Obligation Bonds|General Obligation Bonds, Series 2018|925000.00|0.00|
+2024|St. Joseph|71|4|7205|2|SOUTH BEND COMMUNITY SCHOOL CORPORATION|5|71-014.00|0||Governmental Activities|1|General Obligation Bonds|General Obligation Bonds, Series 2019|3595000.00|0.00|
+2024|St. Joseph|71|4|7205|2|SOUTH BEND COMMUNITY SCHOOL CORPORATION|5|71-014.00|0||Governmental Activities|1|General Obligation Bonds|General Obligation Bonds, Series 2020A|3945000.00|0.00|
+2024|St. Joseph|71|4|7205|2|SOUTH BEND COMMUNITY SCHOOL CORPORATION|5|71-014.00|0||Governmental Activities|1|General Obligation Bonds|General Obligation Bonds, series 2020B|815000.00|0.00|
+2024|St. Joseph|71|4|7205|2|SOUTH BEND COMMUNITY SCHOOL CORPORATION|5|71-014.00|0||Governmental Activities|1|General Obligation Bonds|General Obligation Bonds, Series 2021A|1715000.00|0.00|
+2024|St. Joseph|71|4|7205|2|SOUTH BEND COMMUNITY SCHOOL CORPORATION|5|71-014.00|0||Governmental Activities|1|General Obligation Bonds|General Obligation Bonds, Series 2021B|845000.00|0.00|
+2024|St. Joseph|71|4|7205|2|SOUTH BEND COMMUNITY SCHOOL CORPORATION|5|71-014.00|0||Governmental Activities|1|General Obligation Bonds|General Obligation Bonds, Series 2022A|2635000.00|0.00|
+2024|St. Joseph|71|4|7205|2|SOUTH BEND COMMUNITY SCHOOL CORPORATION|5|71-014.00|0||Governmental Activities|1|General Obligation Bonds|General Obligation Bonds, Series 2022B|310000.00|0.00|
+2024|St. Joseph|71|4|7205|2|SOUTH BEND COMMUNITY SCHOOL CORPORATION|5|71-014.00|0||Governmental Activities|1|General Obligation Bonds|General Obligation Bonds, Series 2023|4575000.00|0.00|
+2024|St. Joseph|71|4|7205|2|SOUTH BEND COMMUNITY SCHOOL CORPORATION|5|71-014.00|0||Governmental Activities|14|Other - Long Term|Common School Fund Loan B0133|163667.00|0.00|
+2024|St. Joseph|71|4|7205|2|SOUTH BEND COMMUNITY SCHOOL CORPORATION|5|71-014.00|0||Governmental Activities|14|Other - Long Term|Common School Fund Loan B0172|493752.00|0.00|
+2024|St. Joseph|71|4|7205|2|SOUTH BEND COMMUNITY SCHOOL CORPORATION|5|71-014.00|0||Governmental Activities|14|Other - Long Term|Common School Fund Loan B0352|1053634.00|0.00|
+2024|St. Joseph|71|4|7205|2|SOUTH BEND COMMUNITY SCHOOL CORPORATION|5|71-014.00|0||Governmental Activities|14|Other - Long Term|Common School Loan B0292|772414.00|0.00|
+2024|St. Joseph|71|4|7205|2|SOUTH BEND COMMUNITY SCHOOL CORPORATION|5|71-014.00|0||Governmental Activities|14|Other - Long Term|Common School Loan B0410|1317555.00|0.00|
+2024|St. Joseph|71|4|7215|2|UNION-NORTH UNITED SCHOOL CORPORATION|5|71-015.00|0||Governmental Activities|1|General Obligation Bonds|2017 Bond- LaVille Elementary & LaVille Jr./Sr. High School Needs|0.00|0.00|
+2024|St. Joseph|71|4|7215|2|UNION-NORTH UNITED SCHOOL CORPORATION|5|71-015.00|0||Governmental Activities|1|General Obligation Bonds|2022 Bond|140000.00|140000.00|
+2024|St. Joseph|71|4|7215|2|UNION-NORTH UNITED SCHOOL CORPORATION|5|71-015.00|0||Governmental Activities|1|General Obligation Bonds|2024 Bond|1610000.00|1035000.00|
+2024|St. Joseph|71|4|7215|2|UNION-NORTH UNITED SCHOOL CORPORATION|5|71-015.00|0||Governmental Activities|10|Notes and Loans Payable - Long Term|2012 Bond|0.00|0.00|
+2024|St. Joseph|71|4|7215|2|UNION-NORTH UNITED SCHOOL CORPORATION|5|71-015.00|0||Governmental Activities|10|Notes and Loans Payable - Long Term|2014 Bond|0.00|0.00|
+2024|St. Joseph|71|4|7215|2|UNION-NORTH UNITED SCHOOL CORPORATION|5|71-015.00|0||Governmental Activities|10|Notes and Loans Payable - Long Term|2016 Bond|825000.00|230000.00|
+2024|St. Joseph|71|4|7215|2|UNION-NORTH UNITED SCHOOL CORPORATION|5|71-015.00|0||Governmental Activities|10|Notes and Loans Payable - Long Term|2018 Bond|6635000.00|465000.00|
+2024|St. Joseph|71|4|7215|2|UNION-NORTH UNITED SCHOOL CORPORATION|5|71-015.00|0||Governmental Activities|10|Notes and Loans Payable - Long Term|2020 Bond|3860000.00|155000.00|
+2024|St. Joseph|71|4|7215|2|UNION-NORTH UNITED SCHOOL CORPORATION|5|71-015.00|0||Governmental Activities|10|Notes and Loans Payable - Long Term|2021 Bond|4295000.00|230000.00|
+2024|St. Joseph|71|5|0203|2|MISHAWAKA PUBLIC LIBRARY|6|71-017.00|0||Governmental Activities|1|General Obligation Bonds|General Obligations Bond of 2017|0.00|0.00|
+2024|St. Joseph|71|5|0203|2|MISHAWAKA PUBLIC LIBRARY|6|71-017.00|0||Governmental Activities|1|General Obligation Bonds|General Obligations Bond of 2020|2930000.00|340000.00|
+2024|St. Joseph|71|5|0203|2|MISHAWAKA PUBLIC LIBRARY|6|71-017.00|0||Governmental Activities|1|General Obligation Bonds|General Obligations Bond of 2024|4200000.00|185000.00|
+2024|St. Joseph|71|5|0204|2|NEW CARLISLE PUBLIC LIBRARY|6|71-018.00|0||Governmental Activities|1|General Obligation Bonds|Renovation|915000.00|80000.00|
+2024|St. Joseph|71|5|0205|2|WALKERTON PUBLIC LIBRARY|6|71-020.00|0||Governmental Activities|1|General Obligation Bonds|New Library Building|255000.00|80000.00|
+2024|St. Joseph|71|5|0206|2|ST. JOSEPH COUNTY PUBLIC LIBRARY|6|71-019.00|0||Governmental Activities|1|General Obligation Bonds|Construction & equipping of new Community Education Center (Series 2018)|0.00|0.00|
+2024|St. Joseph|71|5|0206|2|ST. JOSEPH COUNTY PUBLIC LIBRARY|6|71-019.00|0||Governmental Activities|1|General Obligation Bonds|General Obligation Bonds, Series 2020|4605000.00|270000.00|
+2024|St. Joseph|71|5|0206|2|ST. JOSEPH COUNTY PUBLIC LIBRARY|6|71-019.00|0||Governmental Activities|1|General Obligation Bonds|General Obligation Bonds, Series 2024 A|4000000.00|205000.00|
+2024|St. Joseph|71|5|0206|2|ST. JOSEPH COUNTY PUBLIC LIBRARY|6|71-019.00|0||Governmental Activities|1|General Obligation Bonds|Renovation & construction of Main Library (Series 2019)|8955000.00|525000.00|
+2024|St. Joseph|71|6|0048|2|ST JOSEPH CO REGIONAL WATER SEWER|20|71-048.00|32797|Wastewater Utility|Wastewater Utility|2|Revenue Bonds|Sewage Works Revenue Bonds of 2009|273000.00|8000.00|
+2024|St. Joseph|71|6|0048|2|ST JOSEPH CO REGIONAL WATER SEWER|20|71-048.00|32797|Wastewater Utility|Wastewater Utility|2|Revenue Bonds|Sewage Works Revenue Bonds of 2011|1452000.00|148000.00|
+2024|St. Joseph|71|6|0048|2|ST JOSEPH CO REGIONAL WATER SEWER|20|71-048.00|32797|Wastewater Utility|Wastewater Utility|2|Revenue Bonds|Sewage Works Revenue Bonds of 2020|2653166.04|52000.00|
+2024|St. Joseph|71|6|0866|2|ST. JOSEPH AIRPORT|25|71-042.00|0||Governmental Activities|1|General Obligation Bonds|2019 Refunding Bonds|3820000.00|1050000.00|
+2024|St. Joseph|71|6|0866|2|ST. JOSEPH AIRPORT|25|71-042.00|0||Governmental Activities|1|General Obligation Bonds|Tasable GO Bonds of 2024 - construction quick-turn around facility|6200000.00|235000.00|
+2024|St. Joseph|71|6|0867|2|SOUTH BEND PUBLIC TRANSPORTATION|14|71-035.00|0||Governmental Activities|15|Other - Short Term|Operating Asssitance|530000.00||
+2024|St. Joseph|71|6|1008|2|ST. JOSEPH SOLID WASTE MANAGEMENT|16|71-055.00|0||Governmental Activities|14|Other - Long Term|No Debt|0.00|0.00|
+2024|St. Joseph|71|8|0001|2|St. Joseph Redevelopment Authority|36|71-000.01|0||Governmental Activities|1|General Obligation Bonds|2024A Lease Rental Revenue Bond (GM Samsung) Non-Taxable|10000000.00|0.00|
+2024|St. Joseph|71|8|0001|2|St. Joseph Redevelopment Authority|36|71-000.01|0||Governmental Activities|1|General Obligation Bonds|2024B Lease Rental Revenue Bond (GM Samsung) Taxable|40000000.00|0.00|

@@ -1,0 +1,21 @@
+year,chamber,d_seats,r_seats,other_seats,total_seats,supermajority_party,status,source_ids,notes
+2009,House,52,48,0,100,none,secondary,IND-034;IND-027,"Seat counts at the start of the period (Wikipedia table). Supermajority here means two-thirds (67 House / 34 Senate), the quorum threshold in Art. 4 sec. 11. Period 2009-2010."
+2011,House,40,60,0,100,none,secondary,IND-034;IND-027,Period 2011-2012. Republicans held a majority but fewer than 67 seats.
+2013,House,31,69,0,100,R,secondary,IND-034;IND-027,Period 2013-2014.
+2015,House,29,71,0,100,R,secondary,IND-034;IND-027,Period 2015-2016.
+2017,House,30,70,0,100,R,secondary,IND-034;IND-027,Period 2017-2018.
+2019,House,33,67,0,100,R,secondary,IND-034;IND-027,Period 2019-2020. Exactly 67 Republican seats.
+2021,House,29,71,0,100,R,secondary,IND-034;IND-027,Period 2021-2022.
+2023,House,30,70,0,100,R,secondary,IND-034;IND-027,Period 2023-2024.
+2025,House,30,70,0,100,R,secondary,IND-034;IND-027,"Period 2025-2026. By November 2026 the Wikipedia roster shows 69 R, 30 D and 1 independent after Edward Clere left the Republican caucus in January 2026."
+2027,House,,,,100,,unofficial,IND-028;IND-027,"Seat totals not published here. Democrats broke the House Republican two-thirds supermajority in the 2026 election (the first time since the 2012 election), per Indiana Capital Chronicle; unofficial. The 54 R / 46 D figure on Wikipedia is not used because that page is internally inconsistent. Whether Speaker Huston was re-elected was not confirmed."
+2009,Senate,17,33,0,50,none,secondary,IND-035;IND-027,Period 2009-2010. 33 R is below 34.
+2011,Senate,13,37,0,50,R,secondary,IND-035;IND-027,Period 2011-2012.
+2013,Senate,13,37,0,50,R,secondary,IND-035;IND-027,Period 2013-2014.
+2015,Senate,10,40,0,50,R,secondary,IND-035;IND-027,Period 2015-2016.
+2017,Senate,9,41,0,50,R,secondary,IND-035;IND-027,Period 2017-2018.
+2019,Senate,10,40,0,50,R,secondary,IND-035;IND-027,Period 2019-2020.
+2021,Senate,11,39,0,50,R,secondary,IND-035;IND-027,Period 2021-2022.
+2023,Senate,10,40,0,50,R,secondary,IND-035;IND-027,"Period 2023-2024. The source table is garbled (39 or 40 Republicans); one Republican, R. Michael Young, is noted as not caucusing. Either count is above 34."
+2025,Senate,10,40,0,50,R,secondary,IND-035;IND-027,Period 2025-2026.
+2027,Senate,,,,50,,unofficial,IND-028;IND-027,"Seat totals not published here. Democrats gained at least four seats in the 2026 election (unofficial). The 15 D / 34 R figure in the research adds to 49, not 50, and is not used."

@@ -1,0 +1,39 @@
+alias_id,unit_id,notes
+county-st-joseph,county,Money files (budgets/tax_rates/debt/budget_breakdowns) use a type-prefixed id scheme; mapped to units.csv by name.
+city-south-bend,south-bend,
+city-mishawaka,mishawaka,
+town-indian-village,indian-village,
+town-lakeville,lakeville,
+town-new-carlisle,new-carlisle,
+town-north-liberty,north-liberty,
+town-osceola,osceola,
+town-roseland,roseland,
+town-walkerton,walkerton,
+township-centre,centre-township,
+township-clay,clay-township,
+township-german,german-township,
+township-greene,greene-township,
+township-harris,harris-township,
+township-liberty,liberty-township,
+township-lincoln,lincoln-township,
+township-madison,madison-township,
+township-olive,olive-township,
+township-penn,penn-township,
+township-portage,portage-township,
+township-union,union-township,
+township-warren,warren-township,
+school-sbcsc,sbcsc,
+school-phm,phm,
+school-mishawaka,school-city-mishawaka,
+school-john-glenn,john-glenn,
+school-union-north,union-north,
+library-sjcpl,sjcpl,
+library-mishawaka,mphpl,"Assumed to be the Mishawaka-Penn-Harris Public Library (the only Mishawaka library unit in units.csv); confirm the Gateway unit name."
+library-new-carlisle,,"No matching unit in units.csv (a New Carlisle library appears only in the money files)."
+library-walkerton,,"No matching unit in units.csv (a Walkerton library appears only in the money files)."
+special-airport,sjc-airport-authority,
+special-sb-transpo,transpo,
+special-sb-redevelopment,,"South Bend Redevelopment Commission is a board in appointed_boards.csv (south-bend-redevelopment-commission), not a unit in units.csv."
+special-solid-waste,,No matching unit in units.csv.
+special-redevelopment-authority,,No matching unit in units.csv.
+special-regional-water-sewer,,No matching unit in units.csv.

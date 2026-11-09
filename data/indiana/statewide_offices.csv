@@ -1,0 +1,8 @@
+office,what_it_does,term_years,elected_or_appointed,status,source_ids
+Governor,Chief executive of the state. Signs or vetoes bills and oversees state agencies.,4 (no more than 8 years in any 12),elected,official,IND-008;IND-020
+Lieutenant Governor,Presides over the Senate and succeeds the Governor if the office is vacant; assists the Governor.,4,elected,secondary,IND-020
+Attorney General,The state's lawyer. Assists the Governor and represents the state in court.,4,elected,secondary,IND-020;IND-022
+Secretary of State,"Oversees the state elections division and business filings. Major-party nominees are chosen at party conventions, not primaries.",4,elected,secondary,IND-020;IND-022
+Treasurer of State,Manages the state's cash and investments. Major-party nominees are chosen at party conventions.,4,elected,secondary,IND-019;IND-020;IND-022
+State Comptroller (formerly Auditor of State),"Keeps the state's books: pays state employees, distributes tax dollars and prepares year-end financial reports. Renamed 'State Comptroller' beginning with the 2023 state budget (HEA 1001-2023) and formalized by SEA 221-2025 (P.L. 40-2025), which requires 'state comptroller (auditor of state)' on the 2026 ballot. The constitution still names the Auditor of State. Audits of state and local governments are done by the State Board of Accounts.",4,elected,secondary,IND-019;IND-029
+Secretary of Education,"Leads the state education agency. Appointed by the Governor. Replaced the elected Superintendent of Public Instruction (HEA 1005-2017, effective date moved to 2021 by HEA 1005-2019). Katie Jenner was the first, from 2021-01-11.",Serves at the Governor's pleasure,appointed,secondary,IND-054

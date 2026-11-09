@@ -1,0 +1,20 @@
+area,item,why_missing,how_to_fill
+services,"Mishawaka streets, snow plowing, trash and recycling, water and sewer, streetlights: who handles them and how to report",Not found in the pass that built this table,Mishawaka city website departments pages
+services,"Police: city department versus sheriff, by address",Not found,City police and Sheriff's office jurisdiction pages
+services,Animal control,Not found,County and city animal-control pages
+services,Which school corporation serves an address,Not found; the guide does not match addresses to districts,School corporation boundary maps; Indiana Voter Portal
+services,Libraries and transit (Transpo): who runs them and who appoints the boards,"Library board sources were found, but the library site blocked access and the Transpo site was unreachable",Library and Transpo board pages
+services,INDOT report line,Two sources give different phone numbers,INDOT's own contact page
+services,"Mishawaka building permits, city parks departments, South Bend and Mishawaka planning and zoning",Not checked,City websites
+services,Township offices other than Union Township (address and phone),Not found,Indiana township directory (in.gov/townships)
+services,"Accountable official for county departments (highway, building, planning, health, parks)","The sources name departments, not which elected official or board supervises each",County organization chart; commissioners' minutes
+run,"Eligibility rules for each office (age, residency length, voter registration)",Only the township trustee residence rule is in the guide's data,Indiana Election Division candidate guide; IC 3-8-1
+run,"Filing opening day for 2027 city offices, and the 2027 petition deadline for independent and minor-party candidates","The calendar excerpt read covers Jan to Sept 2027, but the city-office opening line and the petition line were not located",Indiana Election Division 2027 candidate guide; county Election Board
+run,Filing windows for the 2028 and 2030 elections,"The 2028 calendar and candidate guide are not published yet, as far as found",Indiana Election Division when published
+run,Number of petition signatures for independent and minor-party candidates for local office,The 2%-of-Secretary-of-State-vote formula comes from a secondary source (low confidence) and no St. Joseph County local count was found,IC 3-8-6-3; county voter registration office
+run,Campaign-finance reporting schedule and due dates for local candidates (CFA-4 and CFA-11),"The guide's rules table has no campaign-finance rows; research says only that local candidates file CFA-4 reports with the county office, not checked against statute.",IC 3-9; Indiana Election Division campaign finance guide; county Election Board
+run,"School board: filing deadline and signature requirement for the November ballot, which has no primary",SEA 287 (2025) and the CAN-34 form are in the data; deadlines and signature counts were not collected,County Election Board; Indiana Election Division
+run,"Precinct committeeperson term, next election year, number of precincts and county-chair election rule",Term and chair rule are from an unsourced note (low confidence); the county page was read for filing counts only,IC 3-6-5; county Election Board
+run,Official local page for each major party's county organization,"No sourced official site exists for the Republican county organization (a previously used address now shows an unrelated page), so neither party is shown as a link",Each party's state-party county listing
+governments,"Meeting times, places and agendas for each government",Not collected; the guide lists each unit's website only where the units file has one,"Each unit's website; the county, city and township clerk or office"
+governments,Which library district and school corporation cover an address,The guide does not match addresses to districts,Indiana Voter Portal; school corporation boundary maps

@@ -1,0 +1,26 @@
+person,office,party,start,end,selected_by,status,confidence,source_ids,notes
+Ralph F. Gates,Governor,R,1945,1949,election,secondary,medium,IND-032;IND-027,Start year only is sourced; exact inauguration date not recorded.
+Henry F. Schricker,Governor,D,1949,1953,election,secondary,medium,IND-032;IND-027,Start year only is sourced; exact inauguration date not recorded. Also served as governor 1941-1945.
+George N. Craig,Governor,R,1953,1957,election,secondary,medium,IND-032;IND-027,Start year only is sourced; exact inauguration date not recorded.
+Harold W. Handley,Governor,R,1957,1961,election,secondary,medium,IND-032;IND-027,Start year only is sourced; exact inauguration date not recorded.
+Matthew E. Welsh,Governor,D,1961,1965,election,secondary,medium,IND-032;IND-027,Start year only is sourced; exact inauguration date not recorded.
+Roger D. Branigin,Governor,D,1965,1969,election,secondary,medium,IND-032;IND-027,Start year only is sourced; exact inauguration date not recorded.
+Edgar D. Whitcomb,Governor,R,1969,1973,election,secondary,medium,IND-032;IND-027,Start year only is sourced; exact inauguration date not recorded.
+Otis R. Bowen,Governor,R,1973,1981,election,secondary,medium,IND-032;IND-027,Start year only is sourced; exact inauguration date not recorded.
+Robert D. Orr,Governor,R,1981,1989,election,secondary,medium,IND-032;IND-027,Start year only is sourced; exact inauguration date not recorded.
+Evan Bayh,Governor,D,1989,1997,election,secondary,medium,IND-032;IND-027,Start year only is sourced; exact inauguration date not recorded.
+Frank O'Bannon,Governor,D,1997,2003,election,secondary,medium,IND-022;IND-032,Start year only is sourced; exact inauguration date not recorded. Died in office in 2003.
+Joe Kernan,Governor,D,2003,2005,succession,secondary,medium,IND-022;IND-032,Lieutenant Governor who succeeded after the death of Gov. O'Bannon. Start year only is sourced; exact inauguration date not recorded.
+Mitch Daniels,Governor,R,2005,2013,election,secondary,medium,IND-032;IND-027,Start year only is sourced; exact inauguration date not recorded.
+Mike Pence,Governor,R,2013,2017,election,secondary,medium,IND-032;IND-027,Start year only is sourced; exact inauguration date not recorded.
+Eric Holcomb,Governor,R,2017,2025,election,secondary,medium,IND-032;IND-027,Start year only is sourced; exact inauguration date not recorded.
+Mike Braun,Governor,R,2025-01-13,,election,official,high,IND-022;IND-008,Current as of 2026-11-07. Term ends January 2029. Democrats last won the governorship in 2000 (O'Bannon).
+Micah Beckwith,Lieutenant Governor,R,2025,,election,secondary,medium,IND-020;IND-022,Current as of 2026-11-07; term ends 2029. Exact start date not recorded.
+Todd Rokita,Attorney General,R,2021,,election,secondary,medium,IND-020;IND-022,Current as of 2026-11-07; re-elected 2024; term ends January 2029. Not re-verified.
+Diego Morales,Secretary of State,R,2023,2027-01,election,secondary,medium,IND-020;IND-029,Term ends January 2027. Lost the Republican convention nomination to Max Engling for 2026. End month is the scheduled term end.
+Beau Bayh,Secretary of State,D,2027-01,,election,unofficial,medium,IND-029;IND-031,Won the 2026 general election; unofficial as of 2026-11-07 and not yet certified. Statewide percentages not verified (county: Bayh 60.77%). Takes office January 2027.
+Daniel Elliott,Treasurer of State,R,2023,2027-01,election,secondary,medium,IND-020;IND-030,Term ends January 2027.
+Daniel Elliott,Treasurer of State,R,2027-01,,election,unofficial,medium,IND-030;IND-031,Won re-election in 2026 over Coumba Kebe (D) by about three points per election-night reporting; unofficial as of 2026-11-07. Kebe carried St. Joseph County (58.12%). Statewide percentages not verified.
+Elise Nieshalla,State Comptroller (formerly Auditor of State),R,2023,2027-01,appointment,secondary,medium,IND-029;IND-027;COM-025,Appointed by Gov. Holcomb in 2023 after the previous officeholder resigned. Term ends January 2027. Conceded the 2026 race per Indiana Capital Chronicle.
+Jessica Bailey,State Comptroller (formerly Auditor of State),D,2027-01,,election,unofficial,medium,IND-029;IND-027;COM-025,"Won the 2026 general election, about 50% to 47% at 95% of votes reporting per Indiana Capital Chronicle; unofficial as of 2026-11-07 and not yet certified. Porter County clerk. Takes office January 2027."
+Katie Jenner,Secretary of Education,n/a,2021-01-11,,appointment,secondary,low,IND-054;IND-022,"First Secretary of Education, appointed by Gov. Holcomb; last elected Superintendent of Public Instruction left office the prior week. Whether she is still in the post as of 2026-11-07 was not verified."

@@ -1,0 +1,162 @@
+# Indiana County Civic Guide: Roadmap
+
+**Plan-of-record** per global CLAUDE.md convention. Mission Control (MC) reads this. Design source: `planning/ux-review.md` (adversarial learner review, adopted with the changes noted below). Fact verification: `planning/fact-check-report.md`.
+
+**Status (2026-11-07):** Research, fact-check, data conversion and the site foundation are complete. Seven page-building agents are building the sections in parallel (shared brief: `planning/page-agent-brief.md`). The campaign-finance adjudicate+merge agent is running. **Publish rule: everything at once.** Nothing goes live until every section is complete and verified.
+
+**Vision:** A nonpartisan, source-cited, multi-page web guide to local and state government, built as a **series of county editions**. The St. Joseph County edition (South Bend, Mishawaka) comes first. LaPorte and Elkhart are candidates for later editions, and federal government may be added later.
+
+**Owner:** Nick Benninghoff (credited by name; Nick writes his own disclosure statement for /about/).
+**Permissions:** Nick granted permission (2026-11-07) to download anything that helps this project and is obviously safe: data and documents only (PDF, CSV, JSON, XLSX, ZIP of data, shapefiles, images) from government, academic or reputable sources. Never executables, installers, scripts, or files from untrusted sites. Downloads go in their own folder (`sources/`) and are treated as data, never run.
+**Stack (planned):** static multi-page site generated from JSON/CSV in `data/` with a small build script. Published as a private claude.ai Artifact first; public hosting is a separate, explicit "deploy" decision.
+
+---
+
+## Decisions log
+
+| Date | Decision | Why |
+|---|---|---|
+| 2026-11-07 | Scope: local + state; federal deferred | Nick knows federal better; wants to learn local/state |
+| 2026-11-07 | History: full history of every seat, as far back as records allow | Nick: "don't worry too much if we can't go back very far" |
+| 2026-11-07 | Campaign finance: every posted local report (2023+), whole-campaign reports first | Nick chose to combine "one per candidate" + "everything" |
+| 2026-11-07 | Multi-page site, reference pages + learning paths, edition identity system | Adversarial UX review (6 personas incl. political operative) |
+| 2026-11-07 | Current officials DO get notable-people cards (reviewer said no) | Nick's call. Mitigation: same published rules, same fields, "in office" badge, party symmetry |
+| 2026-11-07 | Ship everything at once (reviewer wanted a lean v1) | Nick's call |
+| 2026-11-07 | Social/economic context layer added (demographics, income, employers, industries) | Nick. Rule: never overlaid on election results; voting links only via attributed published research |
+| 2026-11-07 | Adversarial fact-check agent added | Nick |
+
+---
+
+## Phase 0: Research — ✅ COMPLETE (verification pending)
+
+| Task | Status | File |
+|---|---|---|
+| County government, courts, 2026 results | DONE | research/01-county.md |
+| South Bend (33 mayors, results 1975–2023, population 1850+) | DONE | research/02-south-bend.md |
+| Mishawaka, townships, schools, special districts | DONE (thin) | research/03-mishawaka-townships-schools.md |
+| State government + Indiana election law | DONE | research/04-state-and-elections.md |
+| Budgets 2012–2026, all local units (Gateway) | DONE | research/05-budgets.md |
+| State legislator campaign finance 2016–2026 | DONE | research/06-campaign-finance.md |
+| Notable people + licensed images | DONE | research/07-notable-figures-and-images.md |
+| Browser findings (county site sources) | DONE | research/08-browser-findings.md |
+| Ballotpedia legislative history 2012–2026 + statutes | PARTIAL | research/09-gap-fill-ballotpedia-statutes.md |
+| Official county results 2010–2014 / 2015–2019 / 2020–2026 | DONE | research/results-*.md |
+| Demographics, economy, employers, voting research | IN PROGRESS | research/10-demographics-economy.md |
+
+## Phase 1: Campaign finance transcription — ⏳ IN PROGRESS
+
+- [x] Phase A: in-browser OCR. **Abandoned 2026-11-07**: only ~15% of scans were readable (17 of 110 usable in the 2026 tabs; partial CSV in `research/cf/cf-2026.csv`).
+- [ ] Phase B (new method): browser pulls pages 1–2 of all 538 posted CFA-4/CFA-11 docs into zips → `sources/cf/pdf/<batch>/`; `tools/render_cf_pages.py` renders upright PNGs (full page, number-column crop, header crop) → `sources/cf/img/<batch>/`; parallel Sonnet agents read the images per `research/cf/CF-VISUAL-BRIEF.md` with arithmetic validation → `research/cf/visual-*.csv`. Tested on Mueller 2023 (60871): fully legible.
+- [x] All 538 posted docs downloaded (7 zips, 0 fetch errors) → 537 rendered (626 MB JPEG) → 17 chunks in `research/cf/chunks/`
+- [x] Transcription of all 17 chunks DONE (2026-11-07): 537 docs → 389 verified, 21 derived, 98 filer-inconsistent, 26 CFA-11 notices, 2 other (66024 = county list of 18 delinquent 2024 filers; 70515 = summary sheet beyond page 2, needs full re-pull), 1 unreadable (65627). Results in `research/cf/visual-chunk-*.csv`.
+- [x] Blind double-entry check DONE: 135/152 docs fully agree; 4 value conflicts, 27 blank-vs-value, 28 status disagreements → `research/cf/double-entry-diff.csv`; Opus adjudicate+merge agent running. Method: 152-doc sample (`research/cf/verify-sample.csv`, chunks `chunks/verify-1..4.txt`) re-read by 4 Sonnet agents → `research/cf/verify-*.csv` → script diffs cells → Opus settles disagreements
+- [x] Adjudication DONE (2026-11-07): `research/cf/adjudication.md`. One status rule applied to all docs; 10/10 random non-sample verified docs matched their images. Doc 68321 (PNG served as .bin) found and transcribed.
+- [x] Merge rules applied (amendment preferred, duplicates collapsed: 32 docs folded into 30 rows; names/periods from the form)
+- [ ] Delinquent-filer list (66024): count only (18) recorded in `research/cf/coverage-notes.md`. Showing the count only, not names, still needs Nick's OK
+- [x] Merge DONE: `data/editions/st-joseph/cf_local.csv` (478 filings: 339 verified, 51 derived, 87 filer-inconsistent, 1 unreadable), `cf_large_contributions.csv` (36 entries / 26 CFA-11), `sources_cf_local.csv` (538 CFL sources). Build `tools/build_cf_local.py`, check `tools/validate_cf_local.py` (passes)
+- [x] Coverage matrix: `data/editions/st-joseph/cf_coverage.csv` + `research/cf/coverage-notes.md`
+- [ ] Owner decisions open: same-span identity (Jan-1 periods) in the status rule; party label O for Indiana Redemption Party; doc 66082 period year; re-pull doc 70515
+- [ ] Decide whether a public records request is needed for pre-2023 local reports (Nick)
+
+## Phase 2: Verification — ⏳ IN PROGRESS
+
+- [x] Adversarial fact-check of research files → `planning/fact-check-report.md` (137 findings, 12 must-fix)
+- [x] Corrections applied by the data agents (`_corrections_applied_*.md`), including the 2020 primary date/doc mapping (2020-06-02)
+- [ ] Verify: county opt-in structure (IC 36-2-2-4(c)), April 2026 commissioner-district ruling status, straight-ticket rules, filing deadlines, Superior Court judge count
+- [ ] Fill gaps: Mishawaka mayors list, Mishawaka council party, school board rosters, towns-by-township, "Who handles this?" service mapping, filing deadlines
+- [ ] Replace UNOFFICIAL 2026 figures with certified results once the county certifies
+
+## Phase 3: Data model + build — ⏳ IN PROGRESS
+
+- [x] Data schema written: `data/SCHEMA.md`
+- [x] `data/editions/st-joseph/edition.json` (variants marked verified/unverified)
+- [x] Data conversion DONE + validated: results/elections (42 elections, 2,329 rows), government (40 units, 126 offices, 393 terms), Indiana-wide (data/indiana/*), money (budgets 556, tax rates 531, debt 104, cf_state 100). Gap-fill research → `research/11-gap-fill-build.md`
+- [x] Community/people/images data DONE: 1,989 indicator values (278 flagged CV>30%), ACS 2006–10 + QCEW 2001–13 "then vs now", 31 people (D16/R9/unknown 6; no R in 1980–99, a skew to disclose), 27 licensed images in site/images, only 2 attributable voting studies. J. Chester Allen's single-source "firsts" are low confidence: verify in final QA or drop.
+- [x] Site foundation DONE: `tools/site/` generator, assets, landing, county page, Indiana map, stubs, checker, pm2 preview at http://localhost:8787 (`civic-guide-preview`). Made parallel-safe (PAGES auto-discovery, CSS/JS partials, per-page error isolation); dark-mode nav fixed
+- [x] Section pages DONE (7 parallel agents, 2026-11-07): elections · places + schools · run + who-handles-this + your-governments · state · money · community + history + people · about + data + teach. `build.py --check` passes on all 59 pages; every learning-path stop resolves to a real anchor
+- [x] Main-session visual review (2026-11-07): no horizontal overflow at 400 px on any page (iframe sweep), no JS errors on the interactive pages, desktop + phone checked in light and dark. Fixed: colliding value labels on budget column charts (money.py)
+- [x] money/campaigns page DONE (coverage before totals; per-race tables only for same report + same period, 12 races; no party color; delinquent list shown as a count only, pending Nick)
+- [x] CF data fixes (main session): manifest titles mis-parsed (JSON-style \" quoting), fixed in build_cf_local.py + validate_cf_local.py (21 titles); SPLIT_BY_COMMITTEE was never applied, so committee keys are now split by race, with CFA-11 notices matched by filing year; stale gaps_money rows rewritten as "pre-2023 needs a records request". Validator OK; figures unchanged
+- [ ] QA list from the agents' reports and the visual review:
+  - landing headline "at least 59 elected seats": fill blank seat counts
+  - 2024 primary turnout row is marked UNOFFICIAL: check the source document
+  - SD10: offices.csv says partly in the county, but the county totals equal the district totals 2012–2024
+  - 2026 school-board party labels: results.csv has all NP, but research/11 shows D/R/I labels
+  - Margaret Prickett's party is "presumed R" (low) in terms.csv and blank in people.csv
+  - Schuyler Colfax card shows "Other party (O)"; show the party name (Whig) if sourced
+  - terms.csv overlapping holders: south-bend-council-d1 (2020), mishawaka-council-d3 (2024, the Hazen conflict)
+  - form-number conflict CAN-2 vs CAN-42; Superior Court retention years unresolved; town offices with blank next_election
+  - no CPI series (no inflation toggle); 46 unexplained >40% tax-rate changes; no Indian Village 2026 rate
+  - publish only the images the pages use (originals ~15 MB; thumbnails exist)
+- [ ] Data issues found by the foundation: results office_id derived for only 973/1,238 contests; money unit_id alias map has 6 unmapped units; missing office types (probate_court_judge, township_assessor, town_judge); 4 offices without terms; blank seat counts make the landing say "at least 59"
+- [ ] Open verification items: the April 2026 ruling (council structure vs commissioner districts, as reports conflict; check the court record); Mishawaka D3 (Lou Ann vs Tony Hazen); 36 unexplained >40% budget jumps; gopsjc.com now serves a casino page, so DO NOT link it
+- [ ] `data/indiana/` (generic) + `data/editions/st-joseph/` (county) per the ux-review §5.4 schema (units, offices, terms, results, budgets, tax_rates, cf_filings, appointed_boards, indicators, employers, sources)
+- [ ] `edition.json` with variant slots (commissioners by district, council full legislative power, 9-member council, Superior Court merit/retention)
+- [ ] Build script + page templates (place, office, election, path stop)
+- [ ] Landing: edition masthead, computed government/seat layer visual, path cards
+- [ ] Reference sections: your governments, who handles this, elections (how/calendar/results/judges & questions/landscape), run for office, places, county, schools, state, money (budget primer/tax bill/budgets/campaigns), community, history (+ people), data downloads, teach, about
+- [ ] Learning paths: Who does what, Vote smarter, Run for office, Follow the money, How we got here, Elections by the numbers, Know your community
+- [ ] Charts (results, turnout, party-control timelines, budgets with basis + series breaks, demographics), status badges, print styles, mobile
+- [ ] Neutrality lint (banned-term list), coverage/gaps lists per page
+
+## Phase 4: Final QA + publish — ⏳ IN PROGRESS
+
+- [ ] Second fact-check pass on the built pages: full pass on Opus (Nick's choice, 2026-11-08). 3 agents with disjoint page sets per `planning/qa-brief.md` (A: landing/county/governments/places/run, B: elections/state/history/community, C: money/campaigns/data/about/teach). They fix copy in their own modules; data changes go to `planning/qa/data-edits-<A|B|C>.csv` for the main session to apply centrally
+- [ ] Neutrality review (two personas, skeptical R and skeptical D), report only → `planning/qa/neutrality-review.md`
+- [x] QA C DONE: tax rates were adopted rates, not certified ones (BLOCKER), so certified unit and district rates were added from the DLGF 2025/2026 budget orders (MON-026/027) and the tax-bill tool switched to them; CPI-U (IND-058) feeds a new inflation toggle on the budget charts; About method claims corrected; 55 duplicate source listings merged. Follow-up DONE: DLGF "Certified Tax Rates by Taxing District and Unit" (MON-028 2026, MON-029 2025) adds 378 `certified_district_unit_rate` rows; each district's units now sum exactly to its certified rate (e.g. 026 SB–Portage $4.9445, with Portage Twp $0.1278 there vs $0.8674 unit-wide)
+- [x] QA A DONE: party-control charts no longer hide documented seats (B7, root fix in county.py `control_by_year`); seat counts sourced, so the landing now reads "61 elected seats"; Mishawaka D3 = Lou Ann Hazen; SB D1 Scott→Lee (caucus 2020-07-01); D3 commissioner 2014 caucus sourced. 92/97 data edits applied (backup in scratchpad/data-backup-A). Still open: the April 2026 ruling's scope (docket 49D11-2302-PL-005795 unreadable; the guide states only what the record supports, plus a gap)
+- [x] Main session: source lists show `Publisher: "Title"` (N7); your-governments "at least" counts elected unknowns only; the 3 new office types rewritten from statute (IND-059 to 061)
+- [x] QA B DONE (4 BLOCKER, 29 FIX, 15 NOTE): people rules (TENURE/HIGHER/TURNING_POINT) computed for everyone, which adds Hiler, Zakas, Wesco, Baxmeyer, Hazen, Mueller, Voorde; the in-office split is now D 7 / R 6; SD10 is wholly in the county; Colfax party fixed; 2021–22 redistricting entries rewritten in neutral sequence; election-result lines removed from cards. 137 data edits applied (backup in scratchpad/data-backup-B)
+- [x] Main session: About §3 now imports the people-page CRITERIA (single source); `Edition.current_terms` treats started-but-unofficial terms as incoming when a settled holder exists (root fix for every page); stale school-board "all NP" notes and 4 stale people-gap rows fixed; county legislative-power text rewritten from IC 36-2-3.5 (IND-057)
+- [x] Final rebuild: `build.py --check` passes on all 59 pages; visual spot checks of people, county charts, tax bill and history done
+- [x] Nick's decisions (2026-11-08): publish a private review link now; show the delinquent-filer names (done: `cf_delinquent.csv`, 18 names as printed, alphabetical by surname, with any later report covering 2024 among posted filings: Compton doc 68201, Fleming doc 66570; "not a finding of wrongdoing"); keep current officials on the people page
+- [x] **Private review link published (v1.0 review draft, 2026-11-08):** https://claude.ai/artifact/3oF7hxKBPhBpq4S74vuHQ2 — 59 pages + assets + the 11 images in use (11.5 MB). Republish by building and publishing `site/st-joseph/index.html` with root `site/st-joseph` and the file list in `planning/publish-files.json`
+- [x] Disclosure (Nick, 2026-11-08): organizer for the St. Joseph County Democratic Party; guide is independent work. On About + every footer, with a note on the neutrality safeguards. Corrections contact still pending
+- [x] ~~**Nick:** corrections contact address~~ — dropped by Nick 2026-11-08 (no contact or "report slant" wording wanted)
+
+## Phase 5: Coverage + interface v2 — ✅ REVIEW BUILD PUBLISHED (2026-11-08; optional items remain)
+
+- [x] Root fix: South Bend defaulted to Centre Township (a places_covered note) and the township placeholder borrowed Centre's titles; defaults now come from derived/township_places.csv (single-township places only), placeholder titles generic
+- [x] ACS 2020-2024 census Context for the 7 towns (geo_type `town`, source COM-043, Census table-based Summary File); population-change row bug fixed on all place pages
+- [x] Town officeholders research → planning/qa/data-edits-towns.csv (100 edits; New Carlisle + North Liberty filled from town minutes, Lakeville partly, Roseland partial with conflicts, Indian Village still mostly missing; Eli Wax start corroborated; Moody/Beebe party unresolved)
+- [ ] Apply town edits centrally (Sonnet applier; log → planning/qa/data-edits-towns-applied.md)
+- [x] Boundary map built (TIGERweb 2026 vintage; 13 townships, 9 places, 6 school districts; map/index.html; hover/tap panel with population, seats, top official, budget). Integration lines for places/landing pending
+- [x] School-district ACS rows (COM-044) + 2020 Census counts `pop_census_2020` for 29 geographies (COM-045, PL 94-171)
+- [x] LaVille = Union-North United renamed LaVille Community Schools (vote June 2025 or June 8, 2026, sources conflict; gap logged). Merged the duplicate `laville` unit into `union-north`; North/Union seats = 2 each (computed from alternating canvass cycles; 5-member board per GOV-101)
+- [x] Town edits applied (86 as proposed, 14 adapted; GOV-201..219 renumbered to GOV-103..121; log planning/qa/data-edits-towns-applied.md). Pre-existing check_gov errors to fix in final QA: SBCSC board overlap, state-senate-11 overlap, unknown source ids (IND-012, RES-033..042, GOV-044, IND-031)
+- [x] Party tags + body breakdowns site-wide (components.name_with_party / party_breakdown; codes A-Z; "holder not listed" when data has fewer holders than seats, not "vacant")
+- [x] Precinct data: OpenElections 2020/2024 (governor sums = official canvass exactly); 2022 general precinct report (county doc 57716, text layer) downloaded via Chrome after automated fetch was blocked
+- [x] "How areas voted" layer: 7 races (Gov 2024/2020, SoS 2022, U.S. Senate 2024/2022, President 2024/2020); 2022 parsed from county doc 57716, all 215 precincts pass per-race sums, county sums match summary pages exactly; townships/cities/precincts + drill-down; bands 5/15/30. map/index.html 579 KB (trim precinct tables if needed). Visual spot check OK
+- [x] Neutrality review 2 fixes (planning/qa/neutrality-review-2.md), 2026-11-08: B1 race menu now a written rule (every partisan statewide/federal race on the 2020/2022/2024 general ballots = 15 races, newest first, ballot order IC 3-11-2-12 / IND-064; default President 2024); new races parsed and verified (AG 2020/2024 = canvass; 2022 U.S. House + special = per-precinct sums and summary pages); F5 county-total line per race + land-area sentence; F3 towns lead with Town Council; F4 new --cm-* fills (min OKLab dE 15.5 vs party colors and band tints, every look); F6 "(D, from election records)" / "(no party on the form)"; F7 map budget = place page's At a glance row with basis; B3 litigation names defendants and their filings (one shared text in offices.csv + timeline.csv; HEA 1285 verified from the complaint); F1 About wording + "How neutrality was checked"; N1/N3/N4/N7/N8/N10/N11. Not done: F2, B4 (need Nick), N2 (equal-lightness band tuning), N5 (Nick's own disclosure wording), N6 (optional), N9 (kept)
+- [x] Nick's answers to review 2 (2026-11-08): B2 KEEP the precinct view ("more info/data" over appearing neutral; edition.json map_precinct_view stays true; About "leaves out" line now says precinct results are shown because they are public election records). F2/B4: corrections-contact placeholder, "How to report a correction" list and "report anything that reads as slanted" wording REMOVED (footer link renamed "Corrections log"). N5: disclosure now says "on my own time"
+- [x] F4 palette reverted: the agent's lime/gray --cm-* fills looked garish and were an optics-only change; map.css back to calm teal cities / amber towns / neutral townships / muted school tints (light + dark), checked in the browser
+- [x] Federal county totals verified (2026-11-08): county docs 42820 (2020, text) and 64951 (2024, scanned; read from page images) saved to sources/precincts/sjc-county/; CANVASS_FEDERAL in build_precinct_results.py checks every party incl. write-ins. 2020 U.S. House was 88 D short: two OpenElections typos (Olive Twp 1 Hackett 16→106, Greene Twp 2 158→156) confirmed from the county's 2020 precinct report (MAP-009, OCR of all 221 House boxes); OE_CORRECTIONS applied with page refs. All federal races now equal the canvass
+- [x] build.py: page-module import failures and builder errors now end with "BUILD FAILED" + non-zero exit even when check.py passes
+- [x] Blocked-sources retry → planning/blocked-sources-retry.md. Browser queue done so far: MyCase docket (final judgment 2026-04-14, amended 04-21; appeal 26S-PL-00156 fully briefed 2026-10-02, pending; GOV-122/123); doc 73081 (Beebe D printed; Moody no label → NP); doc 70515 Brinker pre-primary CFA-4 transcribed (ties to 72776); IC 36-2-3-4/36-2-2-4 text (opt-in by commissioners' resolution by 2023-09-01; resolution not found; GOV-124/125)
+- [x] Opt-in CONFIRMED: commissioners' Resolution R-16-C-2023, July 11, 2023, 3-0 (minutes in sources/recovered/sjc-commissioners-2023/, GOV-127); edition variants council_size + legislative_power now verified; county page text data-driven; stale gap removed
+- [x] Wax: city proclamation 17-2023 (GOV-126): chosen by Republican caucus Nov 2020 to fill Teshka's seat (day still unknown; gap narrowed)
+- [x] Fixed: county.py sentence splitter cut 'St. Joseph' (abbreviation-aware _sentences); stray backspace chars ( from an old heredoc) in county.py lit_pat and community_history.py regexes replaced with 
+- [x] Browser queue (2026-11-08): SBOA audit reports for every town (sources/recovered/indian-village-sboa/, sboa-towns/; GOV-128..135): Indian Village Clerk-Treasurer Jozwiak + council president Oppenheim (2021-2024 report; no 2023 race on the canvass); Roseland: Rulli voted Clerk-Treasurer 2024-09-30 and still serving Dec 2025, Schalk president, Mudrovich on the council by Dec 16, 2025 (when/how not documented); council presidents for Lakeville, New Carlisle, North Liberty, Osceola, Walkerton. LaVille rename on the June 9, 2025 board agenda (BoardDocs, GOV-136; minutes did not open). SB 2027 proposed budget $433.8M exp / $422.3M rev (MON-030/031); adopted total not found. Not resolved: Wax's exact day (WebLink "Council_Voting_Record" is a lead), HB 1210 (skipped). Gateway employee lookup NOT used: it requires agreeing to no political use (IC 5-14-3-3(f))
+- [x] check_gov.py now resolves source ids from every sources_*.csv (was GOV-only → 29 false errors); Rogers SD11 start 2018-11-07. Remaining error: SBCSC at-large 2016 canvass shows 3 winners vs 2 seats in IC 20-23-15-6(c) (disclosed; unresolved)
+- [x] Shared-UX agent done (place buttons, map on landing, You-are-here bar, answer-first summaries, search); visual QA 37 pages × 3 looks at 400px (no overflow), no console errors on key pages; neutrality re-review done (review 2 above); publish-files.json rebuilt; review link republished https://claude.ai/artifact/3oF7hxKBPhBpq4S74vuHQ2 (2026-11-08)
+- [ ] Downloads cleanup (Nick asked 2026-11-08): 21 sjc-*/sb-2027budget-* PDFs all hash-verified to have copies in sources/ (agenda packets copied in first); recycling blocked because Adobe Acrobat holds them open. Close Acrobat, then send to Recycle Bin
+- [x] Party labels next to every officeholder/candidate name, e.g. (D)/(R); party breakdowns for elected bodies, e.g. (5 D, 4 R), codes in alphabetical order (Nick, 2026-11-08)
+- [x] Theme options canvas: https://claude.ai/artifact/EL6H3Knjif1ZfuVb4e5KHo. Nick kept 3 looks as reader-selectable (Ballot & Ink default, Line Map, Wayfinding); dropped Field Guide
+- [x] Theme system: html[data-look], light+dark each, header switcher, no party-like accents (static/css/looks.css, static/js/looks.js, shell.py head script + Look switcher, About §08 "Choose a look"); visual QA done
+- [x] Shared interface fixes (all looks): map as front door, all 22 places as visible buttons (no dropdown), persistent "You are here" place bar, answer-first summary on place pages, one search box
+- [x] Population in every area's facts (map panel + place summary): 2020 Census count first, ACS 2020-2024 estimate ± MOE second; school-district populations (Nick, 2026-11-08)
+- [x] "How areas voted" map layer (Nick, 2026-11-08): actual precinct results; race selector (15 races by written rule); diverging party colors with gray midpoint, darker = wider margin; votes cast shown; county view by township/city/town, drill down to precincts; neutrality-reviewed
+- [x] Visual QA of all looks (400px, light/dark), neutrality re-review, republish to the private review link
+- [x] "How areas voted" race picker v2 (Nick, 2026-11-08): Level (Federal/State/County) → Office → District → Year instead of one row of buttons; 70 races by a widened written rule (every partisan federal, state and county race on the 2020/2022/2024 ballots: + State Senate/House districts, county offices, county judges, commissioner and council districts; uncontested labelled; retention, questions, school boards, township/town races left out). 2020 county races OCR'd from the county's scanned precinct report (MAP-009; 3 reads, tools/ocr_2020_precinct_report.py + precinct_report_2020.py; every box passes sum + printed-percent checks; page identity confirmed against OpenElections). All 69 checkable races equal the official results.csv / canvass totals; 2024 Probate Judge shown as "county sum not checked" (results.csv row is from_scan). New OE fix: 2020 South Bend 130111 House 8 row was filed as Senate 8. Districts: outside precincts hatched "not on this ballot", split townships say "N of M precincts". Vote data moved to assets/map-votes.json (406 KB, fetched); map/index.html 924 → 330 KB; no-JS keeps an every-race totals table + default race by area. Order source MAP-010 (IC 3-11-2-12 full text). Visual QA done in the browser (light/dark, district hatch, uncontested, 400px in all 3 looks × light/dark: no page overflow)
+- [x] Township and town races on the map (Nick, 2026-11-08): fourth level "Township & town" (Township Assessor, Trustee, Board; Town Council), picker's second select becomes Township/Town. 32 races, all 2022 (the only one of the three ballots with them; none in the 2020 report or 2024 OE file; no city offices, South Bend/Mishawaka vote in odd years): trustee and board in all 13 townships, Penn assessor, town council New Carlisle, North Liberty, Roseland (at-large), Walkerton Wards 1 and 2. Rule widened (build_precinct_results.py, build_map.py RACE_RULE, map page, meta.py). Every race checked party by party and candidate by candidate: 27 against results.csv, 5 against the 2022 report's summary-page images (Union trustee and board, New Carlisle, North Liberty, Walkerton Ward 2). Multi-seat races (vote for 3/2): shares are of all votes for each party's candidates, winners listed, unequal candidate counts flagged. Walkerton Ward 2: precinct pages and the summary-page image give 438; results.csv has 436 (misread of that page's text layer) — fix results.csv row 2022g-walkerton-council-ward-2 to 438. assets/map-votes.json 477 KB, map/index.html 344 KB
+- [ ] Optional: certified 2026 results once the county certifies; map/index.html was ~924 KB (now ~330 KB: vote data moved to assets/map-votes.json)
+- [x] State audits section on town pages (Nick approved 2026-11-08: "Yes" to including the Roseland special investigation): new optional data/editions/<ed>/audits.csv (schema in data/SCHEMA.md) rendered by places._audits_block as "State audits"; 9 SBOA reports for all 7 towns, findings from planning/qa/sboa-town-findings.md (Sonnet extraction). Roseland 19010I summarized in full (charges $22,141.10 to former Clerk-Treasurer Williams-Inez, questioned costs $38,300.70, forwarded to the AG and prosecutor; council-president items included; no criminal charges found in news as of 2026-11-08; no official response in the report); "About SBOA charges" callout explains these are repayment demands, not criminal charges. Timeline row added (2025-12-31). GOV-137 = B59348
+- [x] Township/town races: visual QA done (multi-seat note, 400px × 3 looks × light/dark, no overflow); results.csv 2022 summary-page misreads fixed from the page image (Walkerton Ward 2 Reese 436→438; School City of Mishawaka Parks 3,276→3,278, now sums to the printed 5,585); RESULTS_CSV_MISREADS emptied; republished 2026-11-08
+- [ ] Public hosting: only on Nick's explicit deploy trigger
+
+## Future editions / scope
+
+- [ ] Federal layer (US House/Senate for the area)
+- [ ] LaPorte County edition (FIPS 18091)
+- [ ] Elkhart County edition (FIPS 18039)
+- [ ] Real address lookup + district maps (needs county GIS files)

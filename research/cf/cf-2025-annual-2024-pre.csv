@@ -1,0 +1,67 @@
+doc_id,tab,committee,candidate,office,party,report_type,period_from,period_to,amended,l13A,l14B,l15aA,l15bA,l15cA,l16A,l17aA,l17bA,l17cA,l18A,l15aB,l15bB,l15cB,l16B,l17aB,l17bB,l17cB,l18B,l19,status,checks_passed,notes
+64481,2024 Pre-Election CFA-4,Amanda Mitchell for County Commissioner District 3,Amanda Mitchell Libertarian,County Commissioner District 3,Libertarian,pre-election,04/08/2024,10/13/2024,N?,0,0,1200,190,1390,1390,781.69,116,897.69,492.31,1200,190,1390,1390,781.69,116,897.69,492.31,,derived,9,p1 label derived 17cA:897.69 derived 17cB:897.69
+64482,2024 Pre-Election CFA-4,Friends of Andy Rutten,Anthony (Andy) Rutten,County Council - District i St. Joseph,Republican,pre-election,4/13/2024,10/11/2024,N?,2037.05,0,8550,695,9245,11282.05,9522.14,98.19,9620.33,1661.72,17650,3223,20873,20873,19001.64,209.64,19211.28,1661.72,,verified,9,p1 strip
+64483,2024 Pre-Election CFA-4,COMMITTEE TO ELECT TONY HAZEN,"ANTHONY ""TONY"" HAZEN","ST. JOSEPH COUNTY COMMISSIONER, DISTRICT 3",REPUBLICAN,pre-election,04-13-2024,10-11-2024,N?,24471.86,13630.06,83437.28,1317.91,84755.19,109227.05,104757.71,260.18,105017.89,4209.16,168103.56,3002.47,171106.03,184736.09,179603.18,923.75,180526.93,4209.16,,verified,9,p1 strip
+64484,2024 Pre-Election CFA-4,,,,,pre-election,,,,,,,,,,,,,,,,,,,,,,,failed,0,p1 strip
+64485,2024 Pre-Election CFA-4,St. Joseph County Democratic Central Committee,?,?,?,pre-election,04/13/24,10/11/24,N?,139477.87,13560.66,69180.71,10434.91,79615.62,219093.49,131180.77,0,131180.77,87912.72,221321.25,10434.91,231756.16,245316.82,157404.1,0,157404.1,87912.72,,derived,9,p1 label derived 14B:13560.66
+64452,2024 Pre-Election CFA-4,,,,,pre-election,,,,,,,,,,,,,,,,,,,,,,,failed,0,"p1 strip, all-zero or unreadable (handwritten)"
+64453,2024 Pre-Election CFA-4,,,,,pre-election,,,,,,,,,,,,,,,,,,,,,,,failed,0,p1 label handwritten
+64454,2024 Pre-Election CFA-4,,,,,pre-election,,,,,,,,,,,,,,,,,,,,,,,failed,0,p1 strip derived 15aA:0
+64455,2024 Pre-Election CFA-4,,,,,pre-election,,,,,,,,,,,,,,,,,,,,,,,failed,0,p1 strip
+64456,2024 Pre-Election CFA-4,Cichowicz for Judge,Jason Allen Cichowicz Democrat,Probate Judge,Democrat,pre-election,4/1/24,10/18/24,N?,60337.82,60337.82,155800,0,155800,216137.82,198784.63,0,198784.63,17353.19,155800,0,155800,216137.82,198784.63,0,198784.63,17353.19,,verified,9,p1 label
+64457,2024 Pre-Election CFA-4,,,,,pre-election,,,,,,,,,,,,,,,,,,,,,,,failed,0,p1 strip
+64458,2024 Pre-Election CFA-4,,,,,pre-election,,,,,,,,,,,,,,,,,,,,,,,failed,0,p1 strip
+64459,2024 Pre-Election CFA-4,,,,,pre-election,,,,,,,,,,,,,,,,,,,,,,,failed,0,p1 strip
+64460,2024 Pre-Election CFA-4,,,,,pre-election,,,,,,,,,,,,,,,,,,,,,,,failed,0,p1 strip
+64461,2024 Pre-Election CFA-4,,,,,pre-election,,,,,,,,,,,,,,,,,,,,,,,failed,0,weak derived2 p2 strip
+64462,2024 Pre-Election CFA-4,?,Loris Zappia,?,?,pre-election,4-13-2024,10-11-2024,N?,8009.7,0,61620.4,2830,64450.4,72460.1,68532.84,118.94,68651.78,3808.32,74042.34,3520,77562.34,77562.34,73589.93,164.09,73754.02,3808.32,,verified,9,p1 strip
+64463,2024 Pre-Election CFA-4,,,,,pre-election,,,,,,,,,,,,,,,,,,,,,,,not-summary,0,no summary rows located on p1-2 (4 pages)
+64464,2024 Pre-Election CFA-4,,,,,pre-election,,,,,,,,,,,,,,,,,,,,,,,failed,0,p1 label
+64465,2024 Pre-Election CFA-4,,,,,pre-election,,,,,,,,,,,,,,,,,,,,,,,failed,0,"p1 strip derived2 15cA352.64,17aA629.9 18A18B"
+64466,2024 Pre-Election CFA-4,,,,,pre-election,,,,,,,,,,,,,,,,,,,,,,,failed,0,p1 strip
+64467,2024 Pre-Election CFA-4,,,,,pre-election,,,,,,,,,,,,,,,,,,,,,,,not-summary,0,no summary rows located on p1-2 (21 pages)
+64468,2024 Pre-Election CFA-4,,,,,pre-election,,,,,,,,,,,,,,,,,,,,,,,not-summary,0,no summary rows located on p1-2 (5 pages)
+64469,2024 Pre-Election CFA-4,Patricia Jordan MD for Coroner,Patricia Ann Jordan,?,?,pre-election,?,?,N?,0,0,17910.3,550,18460.3,18460.3,0,0,0,18460.3,17910.3,550,18460.3,18460.3,0,0,0,18460.3,,derived,9,p1 label derived2 17aA0 18A18460.3 derived2 17aB0 18B18460.3
+64470,2024 Pre-Election CFA-4,,,,,pre-election,,,,,,,,,,,,,,,,,,,,,,,failed,0,"p1 label derived2 16A2077.41,18A1155.05 derived 15cB4850 18A18B"
+64471,2024 Pre-Election CFA-4,Friends to Elect Randall Figg,Randall L Figg,County Council District F St. Joseph,Republican,pre-election,04/13/24,10/11/24,N?,6160.8,2459.68,150,100,250,6410.8,3917.19,0,3917.19,2493.61,12683.27,3851,16534.27,18993.95,16355.21,145.13,16500.34,2493.61,,verified,9,p1 strip
+64472,2024 Pre-Election CFA-4,,,,,pre-election,,,,,,,,,,,,,,,,,,,,,,,failed,0,p2 strip
+64473,2024 Pre-Election CFA-4,,,,,pre-election,,,,,,,,,,,,,,,,,,,,,,,not-summary,0,no summary rows located on p1-2 (5 pages)
+64474,2024 Pre-Election CFA-4,,,,,pre-election,,,,,,,,,,,,,,,,,,,,,,,failed,0,p1 strip derived 17aA0
+64475,2024 Pre-Election CFA-4,,,,,pre-election,,,,,,,,,,,,,,,,,,,,,,,failed,0,"p1 label derived2 15cB0,17aB0"
+64476,2024 Pre-Election CFA-4,St. Joseph County Young Republicans,?,?,Republican,pre-election,?,?,N?,0,0,1750,379.8,2129.8,2129.8,650,0,650,1479.8,1750,379.8,2129.8,2129.8,650,0,650,1479.8,,derived,9,p1 label derived 17cA650
+64477,2024 Pre-Election CFA-4,,,,,pre-election,,,,,,,,,,,,,,,,,,,,,,,failed,0,"p2 strip derived2 16A0,15aA0"
+64478,2024 Pre-Election CFA-4,,,,,pre-election,,,,,,,,,,,,,,,,,,,,,,,failed,0,p1 strip
+64479,2024 Pre-Election CFA-4,,,,,pre-election,,,,,,,,,,,,,,,,,,,,,,,not-summary,0,no summary rows located on p1-2 (3 pages)
+64480,2024 Pre-Election CFA-4,,,,,pre-election,,,,,,,,,,,,,,,,,,,,,,,not-summary,0,no summary rows located on p1-2 (4 pages)
+64486,2024 Pre-Primary CFA-4,Amanda Mitchell for County Commissioner District 3,Amanda Mitchell Libertarian,County Commissioner District 3,Libertarian,pre-primary,04/08/2024,10/13/2024,N?,0,0,1200,190,1390,1390,781.69,116,897.69,492.31,1200,190,1390,1390,781.69,116,897.69,492.31,,derived,9,p1 label derived 17cA897.69 derived 17cB897.69
+62642,2024 Pre-Primary CFA-4,Friends of Andy Rutten,Anthony (Andy) Rutten,County Council - District i St. Joseph,Republican,pre-primary,?,?,N?,0,0,9100,2528,11628,11628,9479.5,111.45,9590.95,2037.05,9100,2528,11628,11628,9479.5,111.45,9590.95,2037.05,,derived,9,p1 strip derived 17cA9590.95 derived 17cB9590.95
+62643,2024 Pre-Primary CFA-4,Committee To Elect Candace Brown,Candance Sue Brown Republican,County Recorder St. Joseph,Republican,pre-primary,01/01/2024,04/12/2024,N?,0,0,9970.47,0,9970.47,9970.47,6369.55,19.15,6388.7,3581.77,9970.47,0,9970.47,9970.47,6388.7,0,6388.7,3581.77,,derived,9,p1 label derived2 17aA6369.55 18A3581.77 derived2 17aB6388.7 18B3581.77
+63665,2024 Pre-Primary CFA-4,,,,,pre-primary,,,,,,,,,,,,,,,,,,,,,,,not-summary,0,no summary rows located on p1-2 (1 pages)
+62625,2024 Pre-Primary CFA-4,Cichowicz for Judge,Jason Allen Cichowicz,?,Democrat,pre-primary,?,?,N?,59280.2,59280.2,5073.8,0,5073.8,64354,4016.18,0,4016.18,60337.82,5073.8,0,5073.8,64354,4016.18,0,4016.18,60337.82,,verified,9,p1 strip
+62626,2024 Pre-Primary CFA-4,,,,,pre-primary,,,,,,,,,,,,,,,,,,,,,,,failed,0,p2 derived2 not trusted (and 18A=0 contradicts 13A on 64457)
+62627,2024 Pre-Primary CFA-4,,,,,pre-primary,,,,,,,,,,,,,,,,,,,,,,,failed,0,p1 label
+62628,2024 Pre-Primary CFA-4,KENT HIZER FOR COUNTY COUNCIL,"Kent D, Hizer Republican",St. Joseph County Council District),?,pre-primary,01/01/2024,04/12/2024,N?,0,0,24848.69,0,24848.69,24848.69,18086.93,288.89,18375.82,6472.87,24848.69,0,24848.69,24848.69,18086.93,288.89,18375.82,6472.87,,derived,9,p1 label derived 18A:6472.87 derived2 17aB:18086.93 18B:6472.87
+62629,2024 Pre-Primary CFA-4,,,,,pre-primary,,,,,,,,,,,,,,,,,,,,,,,not-summary,0,no summary rows located on p1-2 (5 pages)
+62630,2024 Pre-Primary CFA-4,?,?,ST. JOSEPH COUNTY PROBATE COURT JUDGE,?,pre-primary,01-01-2024,04-12-2024,N?,0,0,12421.94,690,13111.94,13111.94,5057.09,45.15,5102.24,8009.7,7421.94,5690,13111.94,13111.94,5057.09,45.15,5102.24,8009.7,,derived,9,p1 label derived 15aB:7421.94
+62631,2024 Pre-Primary CFA-4,,,,,pre-primary,,,,,,,,,,,,,,,,,,,,,,,failed,0,p1 strip
+62632,2024 Pre-Primary CFA-4,"Committee ta Elect Mark Catanzarite to County Council District ""G""",Mark A. Catanzarite Democrat,"St. Joseph County Council District ""G""",Democrat,pre-primary,01-01-2024,04-12-2024,N?,5712.15,5712.15,0,0,0,5712.15,75,32.87,107.87,5604.28,0,0,0,5712.15,75,32.87,107.87,5604.28,,derived,9,p1 strip derived 13A:5712.15 derived 14B:5712.15
+62633,2024 Pre-Primary CFA-4,,,,,pre-primary,,,,,,,,,,,,,,,,,,,,,,,failed,0,p1 strip
+62634,2024 Pre-Primary CFA-4,?,?,?,Independent,pre-primary,1/1/2024,4/12/2024,N?,0,0,1238.92,90.5,1329.42,1329.42,97.47,0,97.47,1231.95,11038.92,290.5,11329.42,11329.42,10097.47,0,10097.47,1231.95,,derived,9,p1 strip derived2 15cA:1329.42 15aA:1238.92
+62635,2024 Pre-Primary CFA-4,,,,,pre-primary,,,,,,,,,,,,,,,,,,,,,,,failed,0,p1 strip
+62657,2024 Pre-Primary CFA-4,,,,,pre-primary,,,,,,,,,,,,,,,,,,,,,,,failed,0,p1 strip all-zero (genuine zero report or unreadable)
+62636,2024 Pre-Primary CFA-4,,,,,pre-primary,,,,,,,,,,,,,,,,,,,,,,,failed,0,p1 strip
+62637,2024 Pre-Primary CFA-4,,,,,pre-primary,,,,,,,,,,,,,,,,,,,,,,,failed,0,weak derived2
+62638,2024 Pre-Primary CFA-4,,,,,pre-primary,,,,,,,,,,,,,,,,,,,,,,,failed,0,p1 strip
+63583,2024 Pre-Primary CFA-4,St. Joseph County Republican Part,?,?,Republican,pre-primary,01/01/2024,04/12/2024,N?,267461.42,267461.42,165285.77,0,165285.77,432747.19,38742.75,6,38748.75,393998.44,165285.77,0,165285.77,432747.19,38742.75,6,38748.75,393998.44,,derived,9,p1 label derived 17cB:38748.75
+62639,2024 Pre-Primary CFA-4,,,,,pre-primary,,,,,,,,,,,,,,,,,,,,,,,not-summary,0,no summary rows located on p1-2 (1 pages)
+62640,2024 Pre-Primary CFA-4,Friends of Tom McCormick,"McCormick Thomas Eric, aka Tom",?,Republican,pre-primary,01/01/2024,04/12/2024,N?,1150,1150,16498.98,4835,21333.98,22483.98,15317.91,153.82,15471.73,7012.25,16498.98,4835,21333.98,22483.98,15317.91,153.82,15471.73,7012.25,,verified,9,p1 strip
+62641,2024 Pre-Primary CFA-4,,,,,pre-primary,,,,,,,,,,,,,,,,,,,,,,,failed,0,p2 strip derived2 not trusted
+68240,2025 Annual CFA-4,,,,,annual,,,,,,,,,,,,,,,,,,,,,,,failed,0,p1 strip
+67921,2025 Annual CFA-4,,,,,annual,,,,,,,,,,,,,,,,,,,,,,,failed,0,p1 label all-zero (genuine zero report or unreadable)
+68241,2025 Annual CFA-4,,,,,annual,,,,,,,,,,,,,,,,,,,,,,,failed,0,p1 strip all-zero (genuine zero report or unreadable)
+68267,2025 Annual CFA-4,,,,,annual,,,,,,,,,,,,,,,,,,,,,,,not-summary,0,no summary rows located on p1-2 (1 pages)
+68082,2025 Annual CFA-4,Amy Cressy for Prosecutor,Amy S. Cressy Democrat,Prosecutor for St. Joseph County,?,annual,01/01/2025,12/31/2025,N?,0,14844,8650,6194,14844,14844,1283.71,99.49,1383.2,13460.8,0,0,0,14844,1383.2,0,1383.2,13460.8,,derived,9,p1 label derived2 14B:14844 17aB:1383.2
+67909,2025 Annual CFA-4,?,Amy Drake,?,?,annual,1/1/2025,12/31/2025,N?,50290,50290,0,0,0,50290,50202,88,50290,0,0,0,0,50290,50202,88,50290,0,,verified,9,p1 strip
+68150,2025 Annual CFA-4,?,?,?,?,annual,01/01/2025,12/31/2025,N?,50290,50290,0,0,0,50290,50202,88,50290,0,0,0,0,50290,50202,88,50290,0,,verified,9,p1 label identical values to 67909 - possible duplicate scan
+67918,2025 Annual CFA-4,?,?,ST. JOSEPH COUNTY COUNCIL DISTRICT B,?,annual,1-1-2025,12-31-2026,N?,2419.75,2419.75,78678.1,5004.06,83682.16,86101.91,27851,145,27996,58105.91,78678.1,5004.06,83682.16,86101.91,27851,145,27996,58105.91,,verified,9,p1 label
+68207,2025 Annual CFA-4,,,,,annual,,,,,,,,,,,,,,,,,,,,,,,failed,0,p1 strip

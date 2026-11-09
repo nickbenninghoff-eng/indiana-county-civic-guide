@@ -1,0 +1,31 @@
+area,item,why_missing,how_to_fill
+election_rules,Primary filing deadlines and signature requirements for each office,The 2026 candidate guide PDF returned 404 and statute IC 3-8-2 / 3-8-6 was not read,Read IC 3-8-2 and 3-8-6 on iga.in.gov and the SOS candidate guide
+election_rules,"Statutory basis for the 'convention nominees' rule for Secretary of State, Treasurer and Comptroller",Only Wikipedia coverage of the 2026 races,Read IC 3-8-4 / 3-10-... on iga.in.gov
+election_rules,Precinct committeeperson term (4 years) and county chair election rule,Unsourced research note [L]; encoded with confidence=low,Read IC 3-6-5 on iga.in.gov
+election_rules,Year and bill that removed straight-party voting for at-large races (SB 61 of 2016?),Search summary of an NCSL note only; confidence=low,Check the 2016 session act on iga.in.gov
+election_rules,"Independent-candidate signature thresholds (2% formula) and the 36,943 figure",Only a news report,Read IC 3-8-6-3 and the SOS petition guide
+election_rules,Whether the Senate or House has scheduled any change to primary rules for 2027-2028,Not searched beyond the 2026 summary,Check iga.in.gov 2027 session bills
+election_rules,Legislative-day limits (61 and 30 days) and March 14 short-session end date from the statute text itself,The FindLaw page fetched did not state them,Read IC 2-2.1-1-2 on iga.in.gov
+election_rules,"Official in.gov text of Art. 5 sec. 14 (veto override), 1972 and 1990 amendment history",Official site text not retrieved; secondary text used,Read the Constitution on iga.in.gov or in.gov/history
+election_rules,Statutory text of Art. 6 sec. 2 (8-in-12 limit) and IC 36-1-8-15,Read through a search summary and a state brochure,Read the Constitution on iga.in.gov
+election_rules,"Current membership and composition of the Lake and St. Joseph judicial nominating commissions after the 2021 law (HEA 1453), and IC 33-33-71-40 on appointment",Retention section only was read,"Read IC 33-33-71, 33-33-45 and 33-33-49 on iga.in.gov"
+election_rules,Whether any 2026 or 2027 legislation changed the lack of a citizen initiative,Ballotpedia pages do not show a change; later legislation was not searched,Check Ballotpedia and iga.in.gov for SJR proposals
+election_rules,"Mechanics of school and local referendums, including petitions and thresholds",Not collected,Read IC 20-46-1 and the DLGF referendum pages
+state_local_rules,Exact text of IC 36-1-3-8 (limits on home rule) and whether home rule applies to townships,Page fetched did not include it,Read IC 36-1-3 on iga.in.gov
+state_local_rules,DLGF budget approval authority text; current maximum levy growth quotient for 2027,Search summaries only,Read the DLGF 2026 State Budget Agency memo and IC 6-1.1-17
+state_local_rules,SEA 1 deduction schedule and the current dates after HEA 1210 for LIT credit elimination,Sources disagree or predate the 2026 delay,Read the enrolled text of SEA 1-2025 and HEA 1210-2026 on iga.in.gov
+state_local_rules,"List of counties where the council holds full legislative power; whether Lake, Marion and St. Joseph are the only ones",Brochure statement only; fact-check says do not repeat the 'three counties' line without a statute check,Read IC 36-2-3.5 and the Marion Unigov statutes
+state_local_rules,Library board term and appointment rules; whether library districts levy tax,Unsourced research note [L]; encoded with confidence=low,Read IC 36-12 on iga.in.gov
+state_local_rules,SJR proposal to amend Article 10 sec. 1 (2026) status,Appeared in a search result; not checked,Check iga.in.gov SJ 3 (2026)
+office_types,"Statute citations for the county row offices, mayor, clerk, town offices and school board terms",Citations given at chapter level from general knowledge; not opened,Open each chapter on iga.in.gov and confirm the terms
+office_types,Circuit and superior court judge vacancy rules outside merit counties,Not collected,Read Ind. Const. Art. 7 and IC 33
+office_types,School board term length (4 years) and the number of seats per corporation,Terms came from general knowledge; seat counts are in each edition,Read IC 20-23-4 on iga.in.gov
+office_types,"Duties of the Lieutenant Governor, Attorney General, Secretary of State and Treasurer","Described in general terms from general knowledge, not a primary source; flagged status=secondary",Read the office pages on in.gov
+statewide_terms,Exact inauguration dates for governors 1945-2021 and for current officers other than Braun,Only start years were sourced,Use the Indiana Historical Bureau governor pages and the SOS
+statewide_terms,Whether Katie Jenner is still Secretary of Education,Not verified,Check in.gov/doe
+statewide_terms,Certified 2026 statewide results and exact percentages,All 2026 results are unofficial,Fill in after the SOS certifies results
+statewide_terms,Whether Speaker Todd Huston was re-elected,Capital Chronicle said only that he was trailing with 99% reporting,Check certified HD 88 result
+general_assembly_control,2027 House and Senate seat totals,Wikipedia 54 R / 46 D and 15 D / 34 R figures are inconsistent; Capital Chronicle gives only the supermajority break and at least four Senate seats,Fill in from certified 2026 results and iga.in.gov
+general_assembly_control,Composition tables 2009-2025 not checked against iga.in.gov,From Wikipedia; fact-check says they match established record,Check iga.in.gov historical rosters
+unit_types,"Statute citations for town, library and school corporations",Chapter-level citations from general knowledge,Confirm on iga.in.gov
+handoff,St. Joseph County April 2026 ruling on district-only commissioner elections,County-specific; the research cannot name a court or judge; the underlying suit was filed in Marion County in February 2023,Main session: add to the St. Joseph edition config with appeal status

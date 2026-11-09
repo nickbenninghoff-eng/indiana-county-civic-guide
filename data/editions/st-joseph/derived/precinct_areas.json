@@ -1,0 +1,3342 @@
+{
+ "note": "Township = largest overlap of the Census 2020 VTD with township polygons; place = incorporated place holding at least 50% of the VTD area (grid-sampled). Straddlers have place_share between 0.03 and 0.97. 'excluded' lists precinct/race pairs left out because a check failed.",
+ "areas": {
+  "150005": {
+   "name_vtd": "150005",
+   "township": "Warren",
+   "township_share": 1.0,
+   "place": null,
+   "place_share": 0,
+   "straddles": false,
+   "nv": false
+  },
+  "090507": {
+   "name_vtd": "090507",
+   "township": "Penn",
+   "township_share": 1.0,
+   "place": "Mishawaka",
+   "place_share": 1.0,
+   "straddles": false,
+   "nv": false
+  },
+  "130312": {
+   "name_vtd": "130312",
+   "township": "Portage",
+   "township_share": 1.0,
+   "place": "South Bend",
+   "place_share": 1.0,
+   "straddles": false,
+   "nv": false
+  },
+  "090401": {
+   "name_vtd": "090401",
+   "township": "Penn",
+   "township_share": 1.0,
+   "place": "Mishawaka",
+   "place_share": 1.0,
+   "straddles": false,
+   "nv": false
+  },
+  "030001": {
+   "name_vtd": "030001",
+   "township": "German",
+   "township_share": 1.0,
+   "place": null,
+   "place_share": 0,
+   "straddles": false,
+   "nv": false
+  },
+  "100002": {
+   "name_vtd": "100002",
+   "township": "Olive",
+   "township_share": 1.0,
+   "place": "New Carlisle",
+   "place_share": 1.0,
+   "straddles": false,
+   "nv": false
+  },
+  "110012": {
+   "name_vtd": "110012",
+   "township": "Penn",
+   "township_share": 1.0,
+   "place": null,
+   "place_share": 0,
+   "straddles": false,
+   "nv": false
+  },
+  "130505": {
+   "name_vtd": "130505",
+   "township": "Penn",
+   "township_share": 1.0,
+   "place": "South Bend",
+   "place_share": 1.0,
+   "straddles": false,
+   "nv": false
+  },
+  "120002": {
+   "name_vtd": "120002",
+   "township": "Portage",
+   "township_share": 1.0,
+   "place": null,
+   "place_share": 0,
+   "straddles": false,
+   "nv": false
+  },
+  "150006": {
+   "name_vtd": "150006",
+   "township": "Warren",
+   "township_share": 1.0,
+   "place": null,
+   "place_share": 0,
+   "straddles": false,
+   "nv": false
+  },
+  "020004": {
+   "name_vtd": "020004",
+   "township": "Clay",
+   "township_share": 1.0,
+   "place": null,
+   "place_share": 0,
+   "straddles": false,
+   "nv": false
+  },
+  "090406": {
+   "name_vtd": "090406",
+   "township": "Penn",
+   "township_share": 1.0,
+   "place": "Mishawaka",
+   "place_share": 1.0,
+   "straddles": false,
+   "nv": false
+  },
+  "130304": {
+   "name_vtd": "130304",
+   "township": "Portage",
+   "township_share": 1.0,
+   "place": "South Bend",
+   "place_share": 1.0,
+   "straddles": false,
+   "nv": false
+  },
+  "130605": {
+   "name_vtd": "130605",
+   "township": "Portage",
+   "township_share": 1.0,
+   "place": "South Bend",
+   "place_share": 1.0,
+   "straddles": false,
+   "nv": false
+  },
+  "050009": {
+   "name_vtd": "050009",
+   "township": "Harris",
+   "township_share": 1.0,
+   "place": null,
+   "place_share": 0,
+   "straddles": false,
+   "nv": false
+  },
+  "010001": {
+   "name_vtd": "010001",
+   "township": "Centre",
+   "township_share": 1.0,
+   "place": null,
+   "place_share": 0,
+   "straddles": false,
+   "nv": false
+  },
+  "130404": {
+   "name_vtd": "130404",
+   "township": "Portage",
+   "township_share": 1.0,
+   "place": "South Bend",
+   "place_share": 1.0,
+   "straddles": false,
+   "nv": false
+  },
+  "020015": {
+   "name_vtd": "020015",
+   "township": "Clay",
+   "township_share": 1.0,
+   "place": null,
+   "place_share": 0,
+   "straddles": false,
+   "nv": false
+  },
+  "090101": {
+   "name_vtd": "090101",
+   "township": "Penn",
+   "township_share": 1.0,
+   "place": "Mishawaka",
+   "place_share": 1.0,
+   "straddles": false,
+   "nv": false
+  },
+  "090407": {
+   "name_vtd": "090407",
+   "township": "Penn",
+   "township_share": 1.0,
+   "place": "Mishawaka",
+   "place_share": 1.0,
+   "straddles": false,
+   "nv": false
+  },
+  "130516": {
+   "name_vtd": "130516",
+   "township": "Portage",
+   "township_share": 1.0,
+   "place": "South Bend",
+   "place_share": 1.0,
+   "straddles": false,
+   "nv": false
+  },
+  "050006": {
+   "name_vtd": "050006",
+   "township": "Harris",
+   "township_share": 1.0,
+   "place": null,
+   "place_share": 0,
+   "straddles": false,
+   "nv": false
+  },
+  "130107": {
+   "name_vtd": "130107",
+   "township": "Portage",
+   "township_share": 1.0,
+   "place": "South Bend",
+   "place_share": 1.0,
+   "straddles": false,
+   "nv": false
+  },
+  "020018": {
+   "name_vtd": "020018",
+   "township": "Clay",
+   "township_share": 1.0,
+   "place": null,
+   "place_share": 0,
+   "straddles": false,
+   "nv": false
+  },
+  "050010": {
+   "name_vtd": "050010",
+   "township": "Harris",
+   "township_share": 1.0,
+   "place": null,
+   "place_share": 0,
+   "straddles": false,
+   "nv": false
+  },
+  "120003": {
+   "name_vtd": "120003",
+   "township": "Portage",
+   "township_share": 1.0,
+   "place": null,
+   "place_share": 0,
+   "straddles": false,
+   "nv": false
+  },
+  "090201": {
+   "name_vtd": "090201",
+   "township": "Penn",
+   "township_share": 1.0,
+   "place": "Mishawaka",
+   "place_share": 1.0,
+   "straddles": false,
+   "nv": false
+  },
+  "130203": {
+   "name_vtd": "130203",
+   "township": "Portage",
+   "township_share": 1.0,
+   "place": "South Bend",
+   "place_share": 1.0,
+   "straddles": false,
+   "nv": false
+  },
+  "130313": {
+   "name_vtd": "130313",
+   "township": "Portage",
+   "township_share": 1.0,
+   "place": "South Bend",
+   "place_share": 1.0,
+   "straddles": false,
+   "nv": false
+  },
+  "070002": {
+   "name_vtd": "070002",
+   "township": "Lincoln",
+   "township_share": 1.0,
+   "place": "Walkerton",
+   "place_share": 1.0,
+   "straddles": false,
+   "nv": false
+  },
+  "130608": {
+   "name_vtd": "130608",
+   "township": "Portage",
+   "township_share": 1.0,
+   "place": "South Bend",
+   "place_share": 1.0,
+   "straddles": false,
+   "nv": false
+  },
+  "020006": {
+   "name_vtd": "020006",
+   "township": "Clay",
+   "township_share": 1.0,
+   "place": null,
+   "place_share": 0.054,
+   "straddles": true,
+   "nv": false
+  },
+  "090604": {
+   "name_vtd": "090604",
+   "township": "Clay",
+   "township_share": 1.0,
+   "place": "Mishawaka",
+   "place_share": 1.0,
+   "straddles": false,
+   "nv": false
+  },
+  "090603": {
+   "name_vtd": "090603",
+   "township": "Clay",
+   "township_share": 1.0,
+   "place": "Mishawaka",
+   "place_share": 1.0,
+   "straddles": false,
+   "nv": false
+  },
+  "090302": {
+   "name_vtd": "090302",
+   "township": "Penn",
+   "township_share": 1.0,
+   "place": "Mishawaka",
+   "place_share": 0.993,
+   "straddles": false,
+   "nv": false
+  },
+  "110014": {
+   "name_vtd": "110014",
+   "township": "Penn",
+   "township_share": 1.0,
+   "place": null,
+   "place_share": 0,
+   "straddles": false,
+   "nv": false
+  },
+  "050015": {
+   "name_vtd": "050015",
+   "township": "Harris",
+   "township_share": 1.0,
+   "place": null,
+   "place_share": 0,
+   "straddles": false,
+   "nv": false
+  },
+  "090306": {
+   "name_vtd": "090306",
+   "township": "Penn",
+   "township_share": 1.0,
+   "place": "Mishawaka",
+   "place_share": 1.0,
+   "straddles": false,
+   "nv": false
+  },
+  "130510": {
+   "name_vtd": "130510",
+   "township": "Portage",
+   "township_share": 1.0,
+   "place": "South Bend",
+   "place_share": 1.0,
+   "straddles": false,
+   "nv": false
+  },
+  "090606": {
+   "name_vtd": "090606",
+   "township": "Harris",
+   "township_share": 1.0,
+   "place": "Mishawaka",
+   "place_share": 0.99,
+   "straddles": false,
+   "nv": false
+  },
+  "050002": {
+   "name_vtd": "050002",
+   "township": "Harris",
+   "township_share": 1.0,
+   "place": null,
+   "place_share": 0,
+   "straddles": false,
+   "nv": false
+  },
+  "060002": {
+   "name_vtd": "060002",
+   "township": "Liberty",
+   "township_share": 1.0,
+   "place": null,
+   "place_share": 0,
+   "straddles": false,
+   "nv": false
+  },
+  "070001": {
+   "name_vtd": "070001",
+   "township": "Lincoln",
+   "township_share": 1.0,
+   "place": null,
+   "place_share": 0,
+   "straddles": false,
+   "nv": false
+  },
+  "080001": {
+   "name_vtd": "080001",
+   "township": "Madison",
+   "township_share": 1.0,
+   "place": null,
+   "place_share": 0,
+   "straddles": false,
+   "nv": false
+  },
+  "130410": {
+   "name_vtd": "130410",
+   "township": "Portage",
+   "township_share": 1.0,
+   "place": "South Bend",
+   "place_share": 1.0,
+   "straddles": false,
+   "nv": false
+  },
+  "130209": {
+   "name_vtd": "130209",
+   "township": "Portage",
+   "township_share": 1.0,
+   "place": "South Bend",
+   "place_share": 1.0,
+   "straddles": false,
+   "nv": false
+  },
+  "130612": {
+   "name_vtd": "130612",
+   "township": "Portage",
+   "township_share": 1.0,
+   "place": "South Bend",
+   "place_share": 1.0,
+   "straddles": false,
+   "nv": false
+  },
+  "090607": {
+   "name_vtd": "090607 (NV)",
+   "township": "Clay",
+   "township_share": 1.0,
+   "place": "Mishawaka",
+   "place_share": 1.0,
+   "straddles": false,
+   "nv": true
+  },
+  "100001": {
+   "name_vtd": "100001",
+   "township": "Olive",
+   "township_share": 1.0,
+   "place": null,
+   "place_share": 0,
+   "straddles": false,
+   "nv": false
+  },
+  "050017": {
+   "name_vtd": "050017",
+   "township": "Harris",
+   "township_share": 1.0,
+   "place": null,
+   "place_share": 0,
+   "straddles": false,
+   "nv": false
+  },
+  "040002": {
+   "name_vtd": "040002",
+   "township": "Greene",
+   "township_share": 1.0,
+   "place": null,
+   "place_share": 0,
+   "straddles": false,
+   "nv": false
+  },
+  "090501": {
+   "name_vtd": "090501",
+   "township": "Penn",
+   "township_share": 1.0,
+   "place": "Mishawaka",
+   "place_share": 1.0,
+   "straddles": false,
+   "nv": false
+  },
+  "130403": {
+   "name_vtd": "130403",
+   "township": "Portage",
+   "township_share": 1.0,
+   "place": "South Bend",
+   "place_share": 0.983,
+   "straddles": false,
+   "nv": false
+  },
+  "130111": {
+   "name_vtd": "130111",
+   "township": "Clay",
+   "township_share": 1.0,
+   "place": "South Bend",
+   "place_share": 1.0,
+   "straddles": false,
+   "nv": false
+  },
+  "130512": {
+   "name_vtd": "130512",
+   "township": "Portage",
+   "township_share": 1.0,
+   "place": "South Bend",
+   "place_share": 1.0,
+   "straddles": false,
+   "nv": false
+  },
+  "130405": {
+   "name_vtd": "130405",
+   "township": "Portage",
+   "township_share": 1.0,
+   "place": "South Bend",
+   "place_share": 1.0,
+   "straddles": false,
+   "nv": false
+  },
+  "130202": {
+   "name_vtd": "130202",
+   "township": "Portage",
+   "township_share": 1.0,
+   "place": "South Bend",
+   "place_share": 1.0,
+   "straddles": false,
+   "nv": false
+  },
+  "090304": {
+   "name_vtd": "090304",
+   "township": "Penn",
+   "township_share": 1.0,
+   "place": "Mishawaka",
+   "place_share": 1.0,
+   "straddles": false,
+   "nv": false
+  },
+  "020014": {
+   "name_vtd": "020014",
+   "township": "Clay",
+   "township_share": 1.0,
+   "place": null,
+   "place_share": 0,
+   "straddles": false,
+   "nv": false
+  },
+  "090103": {
+   "name_vtd": "090103",
+   "township": "Penn",
+   "township_share": 1.0,
+   "place": "Mishawaka",
+   "place_share": 1.0,
+   "straddles": false,
+   "nv": false
+  },
+  "020002": {
+   "name_vtd": "020002",
+   "township": "Clay",
+   "township_share": 1.0,
+   "place": null,
+   "place_share": 0,
+   "straddles": false,
+   "nv": false
+  },
+  "090307": {
+   "name_vtd": "090307",
+   "township": "Penn",
+   "township_share": 1.0,
+   "place": "Mishawaka",
+   "place_share": 1.0,
+   "straddles": false,
+   "nv": false
+  },
+  "090301": {
+   "name_vtd": "090301",
+   "township": "Penn",
+   "township_share": 1.0,
+   "place": "Mishawaka",
+   "place_share": 1.0,
+   "straddles": false,
+   "nv": false
+  },
+  "010005": {
+   "name_vtd": "010005",
+   "township": "Centre",
+   "township_share": 1.0,
+   "place": null,
+   "place_share": 0,
+   "straddles": false,
+   "nv": false
+  },
+  "130211": {
+   "name_vtd": "130211",
+   "township": "Portage",
+   "township_share": 1.0,
+   "place": "South Bend",
+   "place_share": 1.0,
+   "straddles": false,
+   "nv": false
+  },
+  "090106": {
+   "name_vtd": "090106",
+   "township": "Penn",
+   "township_share": 1.0,
+   "place": "Mishawaka",
+   "place_share": 1.0,
+   "straddles": false,
+   "nv": false
+  },
+  "110006": {
+   "name_vtd": "110006",
+   "township": "Penn",
+   "township_share": 1.0,
+   "place": null,
+   "place_share": 0,
+   "straddles": false,
+   "nv": false
+  },
+  "090305": {
+   "name_vtd": "090305",
+   "township": "Penn",
+   "township_share": 1.0,
+   "place": "Mishawaka",
+   "place_share": 1.0,
+   "straddles": false,
+   "nv": false
+  },
+  "090601": {
+   "name_vtd": "090601",
+   "township": "Penn",
+   "township_share": 1.0,
+   "place": "Mishawaka",
+   "place_share": 1.0,
+   "straddles": false,
+   "nv": false
+  },
+  "130401": {
+   "name_vtd": "130401",
+   "township": "Portage",
+   "township_share": 1.0,
+   "place": "South Bend",
+   "place_share": 1.0,
+   "straddles": false,
+   "nv": false
+  },
+  "130603": {
+   "name_vtd": "130603",
+   "township": "Portage",
+   "township_share": 1.0,
+   "place": "South Bend",
+   "place_share": 1.0,
+   "straddles": false,
+   "nv": false
+  },
+  "040001": {
+   "name_vtd": "040001",
+   "township": "Greene",
+   "township_share": 1.0,
+   "place": null,
+   "place_share": 0,
+   "straddles": false,
+   "nv": false
+  },
+  "130514": {
+   "name_vtd": "130514",
+   "township": "Penn",
+   "township_share": 1.0,
+   "place": "South Bend",
+   "place_share": 1.0,
+   "straddles": false,
+   "nv": false
+  },
+  "130106": {
+   "name_vtd": "130106",
+   "township": "Portage",
+   "township_share": 1.0,
+   "place": "South Bend",
+   "place_share": 0.988,
+   "straddles": false,
+   "nv": false
+  },
+  "020011": {
+   "name_vtd": "020011",
+   "township": "Clay",
+   "township_share": 1.0,
+   "place": null,
+   "place_share": 0,
+   "straddles": false,
+   "nv": false
+  },
+  "090104": {
+   "name_vtd": "090104",
+   "township": "Penn",
+   "township_share": 1.0,
+   "place": "Mishawaka",
+   "place_share": 1.0,
+   "straddles": false,
+   "nv": false
+  },
+  "110016": {
+   "name_vtd": "110016",
+   "township": "Penn",
+   "township_share": 1.0,
+   "place": null,
+   "place_share": 0,
+   "straddles": false,
+   "nv": false
+  },
+  "090204": {
+   "name_vtd": "090204",
+   "township": "Penn",
+   "township_share": 1.0,
+   "place": "Mishawaka",
+   "place_share": 1.0,
+   "straddles": false,
+   "nv": false
+  },
+  "030004": {
+   "name_vtd": "030004",
+   "township": "German",
+   "township_share": 1.0,
+   "place": null,
+   "place_share": 0,
+   "straddles": false,
+   "nv": false
+  },
+  "150001": {
+   "name_vtd": "150001",
+   "township": "Warren",
+   "township_share": 1.0,
+   "place": null,
+   "place_share": 0,
+   "straddles": false,
+   "nv": false
+  },
+  "130507": {
+   "name_vtd": "130507",
+   "township": "Centre",
+   "township_share": 1.0,
+   "place": "South Bend",
+   "place_share": 1.0,
+   "straddles": false,
+   "nv": false
+  },
+  "130501": {
+   "name_vtd": "130501",
+   "township": "Centre",
+   "township_share": 1.0,
+   "place": "South Bend",
+   "place_share": 1.0,
+   "straddles": false,
+   "nv": false
+  },
+  "150004": {
+   "name_vtd": "150004",
+   "township": "Warren",
+   "township_share": 1.0,
+   "place": null,
+   "place_share": 0,
+   "straddles": false,
+   "nv": false
+  },
+  "130208": {
+   "name_vtd": "130208",
+   "township": "Portage",
+   "township_share": 1.0,
+   "place": "South Bend",
+   "place_share": 1.0,
+   "straddles": false,
+   "nv": false
+  },
+  "110007": {
+   "name_vtd": "110007",
+   "township": "Penn",
+   "township_share": 1.0,
+   "place": null,
+   "place_share": 0.034,
+   "straddles": true,
+   "nv": false
+  },
+  "110011": {
+   "name_vtd": "110011",
+   "township": "Penn",
+   "township_share": 1.0,
+   "place": null,
+   "place_share": 0.024,
+   "straddles": false,
+   "nv": false
+  },
+  "130109": {
+   "name_vtd": "130109",
+   "township": "Portage",
+   "township_share": 1.0,
+   "place": "South Bend",
+   "place_share": 0.986,
+   "straddles": false,
+   "nv": false
+  },
+  "130204": {
+   "name_vtd": "130204",
+   "township": "Portage",
+   "township_share": 1.0,
+   "place": "South Bend",
+   "place_share": 1.0,
+   "straddles": false,
+   "nv": false
+  },
+  "110015": {
+   "name_vtd": "110015",
+   "township": "Penn",
+   "township_share": 1.0,
+   "place": null,
+   "place_share": 0,
+   "straddles": false,
+   "nv": false
+  },
+  "090203": {
+   "name_vtd": "090203",
+   "township": "Penn",
+   "township_share": 1.0,
+   "place": "Mishawaka",
+   "place_share": 1.0,
+   "straddles": false,
+   "nv": false
+  },
+  "130517": {
+   "name_vtd": "130517",
+   "township": "Centre",
+   "township_share": 1.0,
+   "place": "South Bend",
+   "place_share": 1.0,
+   "straddles": false,
+   "nv": false
+  },
+  "130303": {
+   "name_vtd": "130303",
+   "township": "Portage",
+   "township_share": 1.0,
+   "place": "South Bend",
+   "place_share": 1.0,
+   "straddles": false,
+   "nv": false
+  },
+  "130513": {
+   "name_vtd": "130513",
+   "township": "Centre",
+   "township_share": 1.0,
+   "place": "South Bend",
+   "place_share": 1.0,
+   "straddles": false,
+   "nv": false
+  },
+  "020001": {
+   "name_vtd": "020001",
+   "township": "Clay",
+   "township_share": 1.0,
+   "place": "Roseland",
+   "place_share": 1.0,
+   "straddles": false,
+   "nv": false
+  },
+  "120004": {
+   "name_vtd": "120004",
+   "township": "Portage",
+   "township_share": 1.0,
+   "place": null,
+   "place_share": 0.01,
+   "straddles": false,
+   "nv": false
+  },
+  "110010": {
+   "name_vtd": "110010",
+   "township": "Penn",
+   "township_share": 1.0,
+   "place": null,
+   "place_share": 0,
+   "straddles": false,
+   "nv": false
+  },
+  "130408": {
+   "name_vtd": "130408",
+   "township": "Portage",
+   "township_share": 1.0,
+   "place": "South Bend",
+   "place_share": 1.0,
+   "straddles": false,
+   "nv": false
+  },
+  "040003": {
+   "name_vtd": "040003",
+   "township": "Greene",
+   "township_share": 1.0,
+   "place": null,
+   "place_share": 0,
+   "straddles": false,
+   "nv": false
+  },
+  "020019": {
+   "name_vtd": "020019",
+   "township": "Clay",
+   "township_share": 1.0,
+   "place": null,
+   "place_share": 0,
+   "straddles": false,
+   "nv": false
+  },
+  "130503": {
+   "name_vtd": "130503",
+   "township": "Portage",
+   "township_share": 1.0,
+   "place": "South Bend",
+   "place_share": 1.0,
+   "straddles": false,
+   "nv": false
+  },
+  "090404": {
+   "name_vtd": "090404",
+   "township": "Penn",
+   "township_share": 1.0,
+   "place": "Mishawaka",
+   "place_share": 1.0,
+   "straddles": false,
+   "nv": false
+  },
+  "090202": {
+   "name_vtd": "090202",
+   "township": "Penn",
+   "township_share": 1.0,
+   "place": "Mishawaka",
+   "place_share": 1.0,
+   "straddles": false,
+   "nv": false
+  },
+  "050013": {
+   "name_vtd": "050013",
+   "township": "Harris",
+   "township_share": 1.0,
+   "place": null,
+   "place_share": 0,
+   "straddles": false,
+   "nv": false
+  },
+  "090205": {
+   "name_vtd": "090205",
+   "township": "Penn",
+   "township_share": 1.0,
+   "place": "Mishawaka",
+   "place_share": 1.0,
+   "straddles": false,
+   "nv": false
+  },
+  "130115": {
+   "name_vtd": "130115",
+   "township": "Portage",
+   "township_share": 1.0,
+   "place": "South Bend",
+   "place_share": 1.0,
+   "straddles": false,
+   "nv": false
+  },
+  "140003": {
+   "name_vtd": "140003",
+   "township": "Union",
+   "township_share": 1.0,
+   "place": "Lakeville",
+   "place_share": 1.0,
+   "straddles": false,
+   "nv": false
+  },
+  "130113": {
+   "name_vtd": "130113 (NV)",
+   "township": "Warren",
+   "township_share": 1.0,
+   "place": "South Bend",
+   "place_share": 1.0,
+   "straddles": false,
+   "nv": true
+  },
+  "130609": {
+   "name_vtd": "130609",
+   "township": "Portage",
+   "township_share": 1.0,
+   "place": "South Bend",
+   "place_share": 1.0,
+   "straddles": false,
+   "nv": false
+  },
+  "130314": {
+   "name_vtd": "130314",
+   "township": "Portage",
+   "township_share": 1.0,
+   "place": "South Bend",
+   "place_share": 1.0,
+   "straddles": false,
+   "nv": false
+  },
+  "130110": {
+   "name_vtd": "130110",
+   "township": "German",
+   "township_share": 1.0,
+   "place": "South Bend",
+   "place_share": 0.986,
+   "straddles": false,
+   "nv": false
+  },
+  "120005": {
+   "name_vtd": "120005",
+   "township": "Portage",
+   "township_share": 1.0,
+   "place": null,
+   "place_share": 0.071,
+   "straddles": true,
+   "nv": false
+  },
+  "050005": {
+   "name_vtd": "050005",
+   "township": "Harris",
+   "township_share": 1.0,
+   "place": null,
+   "place_share": 0,
+   "straddles": false,
+   "nv": false
+  },
+  "050014": {
+   "name_vtd": "050014",
+   "township": "Harris",
+   "township_share": 1.0,
+   "place": null,
+   "place_share": 0,
+   "straddles": false,
+   "nv": false
+  },
+  "090605": {
+   "name_vtd": "090605",
+   "township": "Harris",
+   "township_share": 1.0,
+   "place": "Mishawaka",
+   "place_share": 1.0,
+   "straddles": false,
+   "nv": false
+  },
+  "140001": {
+   "name_vtd": "140001",
+   "township": "Union",
+   "township_share": 1.0,
+   "place": null,
+   "place_share": 0,
+   "straddles": false,
+   "nv": false
+  },
+  "130210": {
+   "name_vtd": "130210",
+   "township": "Portage",
+   "township_share": 1.0,
+   "place": "South Bend",
+   "place_share": 1.0,
+   "straddles": false,
+   "nv": false
+  },
+  "130604": {
+   "name_vtd": "130604",
+   "township": "Portage",
+   "township_share": 1.0,
+   "place": "South Bend",
+   "place_share": 1.0,
+   "straddles": false,
+   "nv": false
+  },
+  "130511": {
+   "name_vtd": "130511",
+   "township": "Portage",
+   "township_share": 1.0,
+   "place": "South Bend",
+   "place_share": 1.0,
+   "straddles": false,
+   "nv": false
+  },
+  "110009": {
+   "name_vtd": "110009",
+   "township": "Penn",
+   "township_share": 1.0,
+   "place": null,
+   "place_share": 0,
+   "straddles": false,
+   "nv": false
+  },
+  "130509": {
+   "name_vtd": "130509",
+   "township": "Centre",
+   "township_share": 1.0,
+   "place": "South Bend",
+   "place_share": 1.0,
+   "straddles": false,
+   "nv": false
+  },
+  "010002": {
+   "name_vtd": "010002",
+   "township": "Centre",
+   "township_share": 1.0,
+   "place": null,
+   "place_share": 0,
+   "straddles": false,
+   "nv": false
+  },
+  "130114": {
+   "name_vtd": "130114",
+   "township": "German",
+   "township_share": 1.0,
+   "place": "South Bend",
+   "place_share": 1.0,
+   "straddles": false,
+   "nv": false
+  },
+  "130306": {
+   "name_vtd": "130306",
+   "township": "Portage",
+   "township_share": 1.0,
+   "place": "South Bend",
+   "place_share": 1.0,
+   "straddles": false,
+   "nv": false
+  },
+  "130508": {
+   "name_vtd": "130508",
+   "township": "Centre",
+   "township_share": 1.0,
+   "place": "South Bend",
+   "place_share": 1.0,
+   "straddles": false,
+   "nv": false
+  },
+  "020025": {
+   "name_vtd": "020025",
+   "township": "Clay",
+   "township_share": 1.0,
+   "place": null,
+   "place_share": 0,
+   "straddles": false,
+   "nv": false
+  },
+  "020009": {
+   "name_vtd": "020009",
+   "township": "Clay",
+   "township_share": 1.0,
+   "place": null,
+   "place_share": 0,
+   "straddles": false,
+   "nv": false
+  },
+  "130311": {
+   "name_vtd": "130311",
+   "township": "Portage",
+   "township_share": 1.0,
+   "place": "South Bend",
+   "place_share": 1.0,
+   "straddles": false,
+   "nv": false
+  },
+  "090207": {
+   "name_vtd": "090207",
+   "township": "Penn",
+   "township_share": 1.0,
+   "place": "Mishawaka",
+   "place_share": 1.0,
+   "straddles": false,
+   "nv": false
+  },
+  "050008": {
+   "name_vtd": "050008",
+   "township": "Harris",
+   "township_share": 1.0,
+   "place": null,
+   "place_share": 0,
+   "straddles": false,
+   "nv": false
+  },
+  "130606": {
+   "name_vtd": "130606",
+   "township": "Portage",
+   "township_share": 1.0,
+   "place": "South Bend",
+   "place_share": 0.959,
+   "straddles": true,
+   "nv": false
+  },
+  "130104": {
+   "name_vtd": "130104",
+   "township": "Portage",
+   "township_share": 1.0,
+   "place": "South Bend",
+   "place_share": 1.0,
+   "straddles": false,
+   "nv": false
+  },
+  "130416": {
+   "name_vtd": "130416",
+   "township": "Portage",
+   "township_share": 1.0,
+   "place": "South Bend",
+   "place_share": 1.0,
+   "straddles": false,
+   "nv": false
+  },
+  "020010": {
+   "name_vtd": "020010",
+   "township": "Clay",
+   "township_share": 1.0,
+   "place": null,
+   "place_share": 0,
+   "straddles": false,
+   "nv": false
+  },
+  "090102": {
+   "name_vtd": "090102",
+   "township": "Penn",
+   "township_share": 1.0,
+   "place": "Mishawaka",
+   "place_share": 1.0,
+   "straddles": false,
+   "nv": false
+  },
+  "130417": {
+   "name_vtd": "130417",
+   "township": "Clay",
+   "township_share": 1.0,
+   "place": "South Bend",
+   "place_share": 1.0,
+   "straddles": false,
+   "nv": false
+  },
+  "020013": {
+   "name_vtd": "020013",
+   "township": "Clay",
+   "township_share": 1.0,
+   "place": null,
+   "place_share": 0,
+   "straddles": false,
+   "nv": false
+  },
+  "020020": {
+   "name_vtd": "020020",
+   "township": "Clay",
+   "township_share": 1.0,
+   "place": null,
+   "place_share": 0,
+   "straddles": false,
+   "nv": false
+  },
+  "110013": {
+   "name_vtd": "110013",
+   "township": "Penn",
+   "township_share": 1.0,
+   "place": null,
+   "place_share": 0.368,
+   "straddles": true,
+   "nv": false
+  },
+  "110004": {
+   "name_vtd": "110004",
+   "township": "Penn",
+   "township_share": 1.0,
+   "place": "Osceola",
+   "place_share": 0.98,
+   "straddles": false,
+   "nv": false
+  },
+  "130406": {
+   "name_vtd": "130406",
+   "township": "Portage",
+   "township_share": 1.0,
+   "place": "South Bend",
+   "place_share": 1.0,
+   "straddles": false,
+   "nv": false
+  },
+  "130506": {
+   "name_vtd": "130506",
+   "township": "Centre",
+   "township_share": 1.0,
+   "place": "South Bend",
+   "place_share": 1.0,
+   "straddles": false,
+   "nv": false
+  },
+  "090105": {
+   "name_vtd": "090105",
+   "township": "Penn",
+   "township_share": 1.0,
+   "place": "Mishawaka",
+   "place_share": 1.0,
+   "straddles": false,
+   "nv": false
+  },
+  "020023": {
+   "name_vtd": "020023",
+   "township": "Clay",
+   "township_share": 1.0,
+   "place": null,
+   "place_share": 0,
+   "straddles": false,
+   "nv": false
+  },
+  "020021": {
+   "name_vtd": "020021",
+   "township": "Clay",
+   "township_share": 1.0,
+   "place": null,
+   "place_share": 0,
+   "straddles": false,
+   "nv": false
+  },
+  "090504": {
+   "name_vtd": "090504",
+   "township": "Penn",
+   "township_share": 1.0,
+   "place": "Mishawaka",
+   "place_share": 1.0,
+   "straddles": false,
+   "nv": false
+  },
+  "090505": {
+   "name_vtd": "090505",
+   "township": "Penn",
+   "township_share": 1.0,
+   "place": "Mishawaka",
+   "place_share": 1.0,
+   "straddles": false,
+   "nv": false
+  },
+  "130601": {
+   "name_vtd": "130601",
+   "township": "Portage",
+   "township_share": 1.0,
+   "place": "South Bend",
+   "place_share": 1.0,
+   "straddles": false,
+   "nv": false
+  },
+  "070003": {
+   "name_vtd": "070003",
+   "township": "Lincoln",
+   "township_share": 1.0,
+   "place": "Walkerton",
+   "place_share": 1.0,
+   "straddles": false,
+   "nv": false
+  },
+  "130108": {
+   "name_vtd": "130108",
+   "township": "Portage",
+   "township_share": 1.0,
+   "place": "South Bend",
+   "place_share": 1.0,
+   "straddles": false,
+   "nv": false
+  },
+  "130409": {
+   "name_vtd": "130409",
+   "township": "Portage",
+   "township_share": 1.0,
+   "place": "South Bend",
+   "place_share": 1.0,
+   "straddles": false,
+   "nv": false
+  },
+  "020012": {
+   "name_vtd": "020012",
+   "township": "Clay",
+   "township_share": 1.0,
+   "place": null,
+   "place_share": 0,
+   "straddles": false,
+   "nv": false
+  },
+  "090208": {
+   "name_vtd": "090208",
+   "township": "Penn",
+   "township_share": 1.0,
+   "place": "Mishawaka",
+   "place_share": 1.0,
+   "straddles": false,
+   "nv": false
+  },
+  "130207": {
+   "name_vtd": "130207",
+   "township": "Portage",
+   "township_share": 1.0,
+   "place": "South Bend",
+   "place_share": 1.0,
+   "straddles": false,
+   "nv": false
+  },
+  "110001": {
+   "name_vtd": "110001",
+   "township": "Penn",
+   "township_share": 1.0,
+   "place": null,
+   "place_share": 0,
+   "straddles": false,
+   "nv": false
+  },
+  "050001": {
+   "name_vtd": "050001",
+   "township": "Harris",
+   "township_share": 1.0,
+   "place": null,
+   "place_share": 0,
+   "straddles": false,
+   "nv": false
+  },
+  "130415": {
+   "name_vtd": "130415",
+   "township": "Portage",
+   "township_share": 1.0,
+   "place": "South Bend",
+   "place_share": 1.0,
+   "straddles": false,
+   "nv": false
+  },
+  "130504": {
+   "name_vtd": "130504",
+   "township": "Centre",
+   "township_share": 1.0,
+   "place": "South Bend",
+   "place_share": 1.0,
+   "straddles": false,
+   "nv": false
+  },
+  "010003": {
+   "name_vtd": "010003",
+   "township": "Centre",
+   "township_share": 1.0,
+   "place": null,
+   "place_share": 0,
+   "straddles": false,
+   "nv": false
+  },
+  "110003": {
+   "name_vtd": "110003",
+   "township": "Penn",
+   "township_share": 1.0,
+   "place": null,
+   "place_share": 0,
+   "straddles": false,
+   "nv": false
+  },
+  "130309": {
+   "name_vtd": "130309",
+   "township": "Portage",
+   "township_share": 1.0,
+   "place": "South Bend",
+   "place_share": 1.0,
+   "straddles": false,
+   "nv": false
+  },
+  "120001": {
+   "name_vtd": "120001",
+   "township": "Portage",
+   "township_share": 1.0,
+   "place": null,
+   "place_share": 0,
+   "straddles": false,
+   "nv": false
+  },
+  "130610": {
+   "name_vtd": "130610",
+   "township": "Portage",
+   "township_share": 1.0,
+   "place": "South Bend",
+   "place_share": 1.0,
+   "straddles": false,
+   "nv": false
+  },
+  "020022": {
+   "name_vtd": "020022",
+   "township": "Clay",
+   "township_share": 1.0,
+   "place": "Indian Village",
+   "place_share": 1.0,
+   "straddles": false,
+   "nv": false
+  },
+  "020017": {
+   "name_vtd": "020017",
+   "township": "Clay",
+   "township_share": 1.0,
+   "place": null,
+   "place_share": 0.007,
+   "straddles": false,
+   "nv": false
+  },
+  "090608": {
+   "name_vtd": "090608",
+   "township": "Clay",
+   "township_share": 1.0,
+   "place": "Mishawaka",
+   "place_share": 1.0,
+   "straddles": false,
+   "nv": false
+  },
+  "130413": {
+   "name_vtd": "130413",
+   "township": "Clay",
+   "township_share": 1.0,
+   "place": "South Bend",
+   "place_share": 1.0,
+   "straddles": false,
+   "nv": false
+  },
+  "130103": {
+   "name_vtd": "130103",
+   "township": "German",
+   "township_share": 1.0,
+   "place": "South Bend",
+   "place_share": 1.0,
+   "straddles": false,
+   "nv": false
+  },
+  "030002": {
+   "name_vtd": "030002",
+   "township": "German",
+   "township_share": 1.0,
+   "place": null,
+   "place_share": 0.02,
+   "straddles": false,
+   "nv": false
+  },
+  "130302": {
+   "name_vtd": "130302",
+   "township": "Portage",
+   "township_share": 1.0,
+   "place": "South Bend",
+   "place_share": 1.0,
+   "straddles": false,
+   "nv": false
+  },
+  "130412": {
+   "name_vtd": "130412",
+   "township": "Portage",
+   "township_share": 1.0,
+   "place": "South Bend",
+   "place_share": 0.906,
+   "straddles": true,
+   "nv": false
+  },
+  "130414": {
+   "name_vtd": "130414",
+   "township": "Portage",
+   "township_share": 1.0,
+   "place": "South Bend",
+   "place_share": 1.0,
+   "straddles": false,
+   "nv": false
+  },
+  "130301": {
+   "name_vtd": "130301",
+   "township": "Portage",
+   "township_share": 1.0,
+   "place": "South Bend",
+   "place_share": 1.0,
+   "straddles": false,
+   "nv": false
+  },
+  "130411": {
+   "name_vtd": "130411",
+   "township": "Portage",
+   "township_share": 1.0,
+   "place": "South Bend",
+   "place_share": 1.0,
+   "straddles": false,
+   "nv": false
+  },
+  "090403": {
+   "name_vtd": "090403",
+   "township": "Penn",
+   "township_share": 1.0,
+   "place": "Mishawaka",
+   "place_share": 1.0,
+   "straddles": false,
+   "nv": false
+  },
+  "130310": {
+   "name_vtd": "130310",
+   "township": "Portage",
+   "township_share": 1.0,
+   "place": "South Bend",
+   "place_share": 1.0,
+   "straddles": false,
+   "nv": false
+  },
+  "090506": {
+   "name_vtd": "090506",
+   "township": "Penn",
+   "township_share": 1.0,
+   "place": "Mishawaka",
+   "place_share": 1.0,
+   "straddles": false,
+   "nv": false
+  },
+  "050004": {
+   "name_vtd": "050004",
+   "township": "Harris",
+   "township_share": 1.0,
+   "place": null,
+   "place_share": 0.085,
+   "straddles": true,
+   "nv": false
+  },
+  "130205": {
+   "name_vtd": "130205",
+   "township": "Portage",
+   "township_share": 1.0,
+   "place": "South Bend",
+   "place_share": 1.0,
+   "straddles": false,
+   "nv": false
+  },
+  "110005": {
+   "name_vtd": "110005",
+   "township": "Penn",
+   "township_share": 1.0,
+   "place": null,
+   "place_share": 0,
+   "straddles": false,
+   "nv": false
+  },
+  "110002": {
+   "name_vtd": "110002",
+   "township": "Penn",
+   "township_share": 1.0,
+   "place": null,
+   "place_share": 0.02,
+   "straddles": false,
+   "nv": false
+  },
+  "130602": {
+   "name_vtd": "130602",
+   "township": "Portage",
+   "township_share": 1.0,
+   "place": "South Bend",
+   "place_share": 1.0,
+   "straddles": false,
+   "nv": false
+  },
+  "050012": {
+   "name_vtd": "050012",
+   "township": "Harris",
+   "township_share": 1.0,
+   "place": null,
+   "place_share": 0,
+   "straddles": false,
+   "nv": false
+  },
+  "130105": {
+   "name_vtd": "130105",
+   "township": "Portage",
+   "township_share": 1.0,
+   "place": "South Bend",
+   "place_share": 1.0,
+   "straddles": false,
+   "nv": false
+  },
+  "090602": {
+   "name_vtd": "090602",
+   "township": "Penn",
+   "township_share": 1.0,
+   "place": "Mishawaka",
+   "place_share": 1.0,
+   "straddles": false,
+   "nv": false
+  },
+  "130502": {
+   "name_vtd": "130502",
+   "township": "Portage",
+   "township_share": 1.0,
+   "place": "South Bend",
+   "place_share": 1.0,
+   "straddles": false,
+   "nv": false
+  },
+  "050003": {
+   "name_vtd": "050003",
+   "township": "Harris",
+   "township_share": 1.0,
+   "place": null,
+   "place_share": 0,
+   "straddles": false,
+   "nv": false
+  },
+  "150002": {
+   "name_vtd": "150002",
+   "township": "Warren",
+   "township_share": 1.0,
+   "place": null,
+   "place_share": 0,
+   "straddles": false,
+   "nv": false
+  },
+  "030003": {
+   "name_vtd": "030003",
+   "township": "German",
+   "township_share": 1.0,
+   "place": null,
+   "place_share": 0.016,
+   "straddles": false,
+   "nv": false
+  },
+  "090405": {
+   "name_vtd": "090405",
+   "township": "Penn",
+   "township_share": 1.0,
+   "place": "Mishawaka",
+   "place_share": 1.0,
+   "straddles": false,
+   "nv": false
+  },
+  "020024": {
+   "name_vtd": "020024",
+   "township": "Clay",
+   "township_share": 1.0,
+   "place": null,
+   "place_share": 0.014,
+   "straddles": false,
+   "nv": false
+  },
+  "050011": {
+   "name_vtd": "050011",
+   "township": "Harris",
+   "township_share": 1.0,
+   "place": null,
+   "place_share": 0,
+   "straddles": false,
+   "nv": false
+  },
+  "130206": {
+   "name_vtd": "130206",
+   "township": "Portage",
+   "township_share": 1.0,
+   "place": "South Bend",
+   "place_share": 1.0,
+   "straddles": false,
+   "nv": false
+  },
+  "100003": {
+   "name_vtd": "100003",
+   "township": "Olive",
+   "township_share": 1.0,
+   "place": null,
+   "place_share": 0,
+   "straddles": false,
+   "nv": false
+  },
+  "110017": {
+   "name_vtd": "110017",
+   "township": "Penn",
+   "township_share": 1.0,
+   "place": null,
+   "place_share": 0,
+   "straddles": false,
+   "nv": false
+  },
+  "140002": {
+   "name_vtd": "140002",
+   "township": "Union",
+   "township_share": 1.0,
+   "place": null,
+   "place_share": 0,
+   "straddles": false,
+   "nv": false
+  },
+  "150003": {
+   "name_vtd": "150003",
+   "township": "Warren",
+   "township_share": 1.0,
+   "place": null,
+   "place_share": 0,
+   "straddles": false,
+   "nv": false
+  },
+  "060001": {
+   "name_vtd": "060001",
+   "township": "Liberty",
+   "township_share": 1.0,
+   "place": "North Liberty",
+   "place_share": 1.0,
+   "straddles": false,
+   "nv": false
+  },
+  "130102": {
+   "name_vtd": "130102",
+   "township": "Portage",
+   "township_share": 1.0,
+   "place": "South Bend",
+   "place_share": 1.0,
+   "straddles": false,
+   "nv": false
+  },
+  "060003": {
+   "name_vtd": "060003",
+   "township": "Liberty",
+   "township_share": 1.0,
+   "place": null,
+   "place_share": 0,
+   "straddles": false,
+   "nv": false
+  },
+  "090503": {
+   "name_vtd": "090503",
+   "township": "Penn",
+   "township_share": 1.0,
+   "place": "Mishawaka",
+   "place_share": 1.0,
+   "straddles": false,
+   "nv": false
+  },
+  "130611": {
+   "name_vtd": "130611",
+   "township": "Portage",
+   "township_share": 1.0,
+   "place": "South Bend",
+   "place_share": 1.0,
+   "straddles": false,
+   "nv": false
+  },
+  "090303": {
+   "name_vtd": "090303",
+   "township": "Penn",
+   "township_share": 1.0,
+   "place": "Mishawaka",
+   "place_share": 1.0,
+   "straddles": false,
+   "nv": false
+  },
+  "020003": {
+   "name_vtd": "020003",
+   "township": "Clay",
+   "township_share": 1.0,
+   "place": null,
+   "place_share": 0.064,
+   "straddles": true,
+   "nv": false
+  },
+  "020007": {
+   "name_vtd": "020007",
+   "township": "Clay",
+   "township_share": 1.0,
+   "place": null,
+   "place_share": 0,
+   "straddles": false,
+   "nv": false
+  },
+  "090206": {
+   "name_vtd": "090206",
+   "township": "Penn",
+   "township_share": 1.0,
+   "place": "Mishawaka",
+   "place_share": 1.0,
+   "straddles": false,
+   "nv": false
+  },
+  "130607": {
+   "name_vtd": "130607",
+   "township": "Portage",
+   "township_share": 1.0,
+   "place": "South Bend",
+   "place_share": 1.0,
+   "straddles": false,
+   "nv": false
+  },
+  "130101": {
+   "name_vtd": "130101",
+   "township": "Portage",
+   "township_share": 1.0,
+   "place": "South Bend",
+   "place_share": 1.0,
+   "straddles": false,
+   "nv": false
+  },
+  "130307": {
+   "name_vtd": "130307",
+   "township": "Portage",
+   "township_share": 1.0,
+   "place": "South Bend",
+   "place_share": 1.0,
+   "straddles": false,
+   "nv": false
+  },
+  "130515": {
+   "name_vtd": "130515",
+   "township": "Centre",
+   "township_share": 1.0,
+   "place": "South Bend",
+   "place_share": 0.985,
+   "straddles": false,
+   "nv": false
+  },
+  "020005": {
+   "name_vtd": "020005",
+   "township": "Clay",
+   "township_share": 1.0,
+   "place": null,
+   "place_share": 0,
+   "straddles": false,
+   "nv": false
+  },
+  "130201": {
+   "name_vtd": "130201",
+   "township": "Portage",
+   "township_share": 1.0,
+   "place": "South Bend",
+   "place_share": 1.0,
+   "straddles": false,
+   "nv": false
+  },
+  "090402": {
+   "name_vtd": "090402",
+   "township": "Penn",
+   "township_share": 1.0,
+   "place": "Mishawaka",
+   "place_share": 1.0,
+   "straddles": false,
+   "nv": false
+  },
+  "010004": {
+   "name_vtd": "010004",
+   "township": "Centre",
+   "township_share": 1.0,
+   "place": null,
+   "place_share": 0.021,
+   "straddles": false,
+   "nv": false
+  },
+  "130407": {
+   "name_vtd": "130407",
+   "township": "Portage",
+   "township_share": 1.0,
+   "place": "South Bend",
+   "place_share": 1.0,
+   "straddles": false,
+   "nv": false
+  },
+  "050007": {
+   "name_vtd": "050007",
+   "township": "Harris",
+   "township_share": 1.0,
+   "place": null,
+   "place_share": 0,
+   "straddles": false,
+   "nv": false
+  },
+  "090502": {
+   "name_vtd": "090502",
+   "township": "Penn",
+   "township_share": 1.0,
+   "place": "Mishawaka",
+   "place_share": 1.0,
+   "straddles": false,
+   "nv": false
+  },
+  "020008": {
+   "name_vtd": "020008",
+   "township": "Clay",
+   "township_share": 1.0,
+   "place": null,
+   "place_share": 0,
+   "straddles": false,
+   "nv": false
+  },
+  "100004": {
+   "name_vtd": "100004",
+   "township": "Olive",
+   "township_share": 1.0,
+   "place": null,
+   "place_share": 0,
+   "straddles": false,
+   "nv": false
+  },
+  "130112": {
+   "name_vtd": "130112",
+   "township": "German",
+   "township_share": 1.0,
+   "place": "South Bend",
+   "place_share": 1.0,
+   "straddles": false,
+   "nv": false
+  },
+  "050016": {
+   "name_vtd": "050016",
+   "township": "Harris",
+   "township_share": 1.0,
+   "place": null,
+   "place_share": 0,
+   "straddles": false,
+   "nv": false
+  },
+  "130305": {
+   "name_vtd": "130305",
+   "township": "Portage",
+   "township_share": 1.0,
+   "place": "South Bend",
+   "place_share": 1.0,
+   "straddles": false,
+   "nv": false
+  },
+  "130308": {
+   "name_vtd": "130308",
+   "township": "Portage",
+   "township_share": 1.0,
+   "place": "South Bend",
+   "place_share": 1.0,
+   "straddles": false,
+   "nv": false
+  },
+  "130402": {
+   "name_vtd": "130402",
+   "township": "Portage",
+   "township_share": 1.0,
+   "place": "South Bend",
+   "place_share": 1.0,
+   "straddles": false,
+   "nv": false
+  },
+  "020016": {
+   "name_vtd": "020016",
+   "township": "Clay",
+   "township_share": 1.0,
+   "place": null,
+   "place_share": 0,
+   "straddles": false,
+   "nv": false
+  },
+  "110008": {
+   "name_vtd": "110008",
+   "township": "Penn",
+   "township_share": 1.0,
+   "place": null,
+   "place_share": 0.007,
+   "straddles": false,
+   "nv": false
+  }
+ },
+ "excluded": {},
+ "county_check": {
+  "2020g|attorney-general": {
+   "checked_against": [
+    "county canvass in the guide's results data"
+   ],
+   "match": true,
+   "note": "",
+   "district": false,
+   "seats": 1,
+   "winners": [],
+   "winners_from": ""
+  },
+  "2020g|county-commissioner-2": {
+   "checked_against": [
+    "county canvass in the guide's results data"
+   ],
+   "match": true,
+   "note": "",
+   "district": true,
+   "seats": 1,
+   "winners": [],
+   "winners_from": ""
+  },
+  "2020g|county-commissioner-3": {
+   "checked_against": [
+    "county canvass in the guide's results data"
+   ],
+   "match": true,
+   "note": "",
+   "district": true,
+   "seats": 1,
+   "winners": [],
+   "winners_from": ""
+  },
+  "2020g|county-coroner": {
+   "checked_against": [
+    "county canvass in the guide's results data"
+   ],
+   "match": true,
+   "note": "",
+   "district": false,
+   "seats": 1,
+   "winners": [],
+   "winners_from": ""
+  },
+  "2020g|county-council-d": {
+   "checked_against": [
+    "county canvass in the guide's results data"
+   ],
+   "match": true,
+   "note": "",
+   "district": true,
+   "seats": 1,
+   "winners": [],
+   "winners_from": ""
+  },
+  "2020g|county-council-f": {
+   "checked_against": [
+    "county canvass in the guide's results data"
+   ],
+   "match": true,
+   "note": "",
+   "district": true,
+   "seats": 1,
+   "winners": [],
+   "winners_from": ""
+  },
+  "2020g|county-council-g": {
+   "checked_against": [
+    "county canvass in the guide's results data"
+   ],
+   "match": true,
+   "note": "",
+   "district": true,
+   "seats": 1,
+   "winners": [],
+   "winners_from": ""
+  },
+  "2020g|county-council-i": {
+   "checked_against": [
+    "county canvass in the guide's results data"
+   ],
+   "match": true,
+   "note": "",
+   "district": true,
+   "seats": 1,
+   "winners": [],
+   "winners_from": ""
+  },
+  "2020g|county-recorder": {
+   "checked_against": [
+    "county canvass in the guide's results data"
+   ],
+   "match": true,
+   "note": "",
+   "district": false,
+   "seats": 1,
+   "winners": [],
+   "winners_from": ""
+  },
+  "2020g|county-surveyor": {
+   "checked_against": [
+    "county canvass in the guide's results data"
+   ],
+   "match": true,
+   "note": "",
+   "district": false,
+   "seats": 1,
+   "winners": [],
+   "winners_from": ""
+  },
+  "2020g|county-treasurer": {
+   "checked_against": [
+    "county canvass in the guide's results data"
+   ],
+   "match": true,
+   "note": "",
+   "district": false,
+   "seats": 1,
+   "winners": [],
+   "winners_from": ""
+  },
+  "2020g|governor": {
+   "checked_against": [
+    "county canvass in the guide's results data",
+    "county canvass"
+   ],
+   "match": true,
+   "note": "",
+   "district": false,
+   "seats": 1,
+   "winners": [],
+   "winners_from": ""
+  },
+  "2020g|president": {
+   "checked_against": [
+    "county canvass (official summary report)"
+   ],
+   "match": true,
+   "note": "",
+   "district": false,
+   "seats": 1,
+   "winners": [],
+   "winners_from": ""
+  },
+  "2020g|state-house-21": {
+   "checked_against": [
+    "county canvass in the guide's results data"
+   ],
+   "match": true,
+   "note": "",
+   "district": true,
+   "seats": 1,
+   "winners": [],
+   "winners_from": ""
+  },
+  "2020g|state-house-5": {
+   "checked_against": [
+    "county canvass in the guide's results data"
+   ],
+   "match": true,
+   "note": "",
+   "district": true,
+   "seats": 1,
+   "winners": [],
+   "winners_from": ""
+  },
+  "2020g|state-house-6": {
+   "checked_against": [
+    "county canvass in the guide's results data"
+   ],
+   "match": true,
+   "note": "",
+   "district": true,
+   "seats": 1,
+   "winners": [],
+   "winners_from": ""
+  },
+  "2020g|state-house-7": {
+   "checked_against": [
+    "county canvass in the guide's results data"
+   ],
+   "match": true,
+   "note": "",
+   "district": true,
+   "seats": 1,
+   "winners": [],
+   "winners_from": ""
+  },
+  "2020g|state-house-8": {
+   "checked_against": [
+    "county canvass in the guide's results data"
+   ],
+   "match": true,
+   "note": "",
+   "district": true,
+   "seats": 1,
+   "winners": [],
+   "winners_from": ""
+  },
+  "2020g|state-senate-10": {
+   "checked_against": [
+    "county canvass in the guide's results data"
+   ],
+   "match": true,
+   "note": "",
+   "district": true,
+   "seats": 1,
+   "winners": [],
+   "winners_from": ""
+  },
+  "2020g|state-senate-8": {
+   "checked_against": [
+    "county canvass in the guide's results data"
+   ],
+   "match": true,
+   "note": "",
+   "district": true,
+   "seats": 1,
+   "winners": [],
+   "winners_from": ""
+  },
+  "2020g|state-senate-9": {
+   "checked_against": [
+    "county canvass in the guide's results data"
+   ],
+   "match": true,
+   "note": "",
+   "district": true,
+   "seats": 1,
+   "winners": [],
+   "winners_from": ""
+  },
+  "2020g|us-house": {
+   "checked_against": [
+    "county canvass (official summary report)"
+   ],
+   "match": true,
+   "note": "",
+   "district": false,
+   "seats": 1,
+   "winners": [],
+   "winners_from": ""
+  },
+  "2022g|auditor": {
+   "checked_against": [
+    "county canvass in the guide's results data",
+    "county summary pages of the 2022 report"
+   ],
+   "match": true,
+   "note": "",
+   "district": false,
+   "seats": 1,
+   "winners": [],
+   "winners_from": ""
+  },
+  "2022g|county-assessor": {
+   "checked_against": [
+    "county canvass in the guide's results data"
+   ],
+   "match": true,
+   "note": "",
+   "district": false,
+   "seats": 1,
+   "winners": [],
+   "winners_from": ""
+  },
+  "2022g|county-auditor": {
+   "checked_against": [
+    "county canvass in the guide's results data"
+   ],
+   "match": true,
+   "note": "",
+   "district": false,
+   "seats": 1,
+   "winners": [],
+   "winners_from": ""
+  },
+  "2022g|county-circuit-judge": {
+   "checked_against": [
+    "county canvass in the guide's results data"
+   ],
+   "match": true,
+   "note": "",
+   "district": false,
+   "seats": 1,
+   "winners": [],
+   "winners_from": ""
+  },
+  "2022g|county-clerk": {
+   "checked_against": [
+    "county canvass in the guide's results data"
+   ],
+   "match": true,
+   "note": "",
+   "district": false,
+   "seats": 1,
+   "winners": [],
+   "winners_from": ""
+  },
+  "2022g|county-commissioner-1": {
+   "checked_against": [
+    "county canvass in the guide's results data"
+   ],
+   "match": true,
+   "note": "",
+   "district": true,
+   "seats": 1,
+   "winners": [],
+   "winners_from": ""
+  },
+  "2022g|county-council-a": {
+   "checked_against": [
+    "county canvass in the guide's results data"
+   ],
+   "match": true,
+   "note": "",
+   "district": true,
+   "seats": 1,
+   "winners": [],
+   "winners_from": ""
+  },
+  "2022g|county-council-b": {
+   "checked_against": [
+    "county canvass in the guide's results data"
+   ],
+   "match": true,
+   "note": "",
+   "district": true,
+   "seats": 1,
+   "winners": [],
+   "winners_from": ""
+  },
+  "2022g|county-council-c": {
+   "checked_against": [
+    "county canvass in the guide's results data"
+   ],
+   "match": true,
+   "note": "",
+   "district": true,
+   "seats": 1,
+   "winners": [],
+   "winners_from": ""
+  },
+  "2022g|county-council-e": {
+   "checked_against": [
+    "county canvass in the guide's results data"
+   ],
+   "match": true,
+   "note": "",
+   "district": true,
+   "seats": 1,
+   "winners": [],
+   "winners_from": ""
+  },
+  "2022g|county-council-h": {
+   "checked_against": [
+    "county canvass in the guide's results data"
+   ],
+   "match": true,
+   "note": "",
+   "district": true,
+   "seats": 1,
+   "winners": [],
+   "winners_from": ""
+  },
+  "2022g|county-prosecutor": {
+   "checked_against": [
+    "county canvass in the guide's results data"
+   ],
+   "match": true,
+   "note": "",
+   "district": false,
+   "seats": 1,
+   "winners": [],
+   "winners_from": ""
+  },
+  "2022g|county-sheriff": {
+   "checked_against": [
+    "county canvass in the guide's results data"
+   ],
+   "match": true,
+   "note": "",
+   "district": false,
+   "seats": 1,
+   "winners": [],
+   "winners_from": ""
+  },
+  "2022g|secretary-of-state": {
+   "checked_against": [
+    "county canvass in the guide's results data",
+    "county summary pages of the 2022 report"
+   ],
+   "match": true,
+   "note": "",
+   "district": false,
+   "seats": 1,
+   "winners": [],
+   "winners_from": ""
+  },
+  "2022g|state-house-21": {
+   "checked_against": [
+    "county canvass in the guide's results data"
+   ],
+   "match": true,
+   "note": "",
+   "district": true,
+   "seats": 1,
+   "winners": [],
+   "winners_from": ""
+  },
+  "2022g|state-house-5": {
+   "checked_against": [
+    "county canvass in the guide's results data"
+   ],
+   "match": true,
+   "note": "",
+   "district": true,
+   "seats": 1,
+   "winners": [],
+   "winners_from": ""
+  },
+  "2022g|state-house-6": {
+   "checked_against": [
+    "county canvass in the guide's results data"
+   ],
+   "match": true,
+   "note": "",
+   "district": true,
+   "seats": 1,
+   "winners": [],
+   "winners_from": ""
+  },
+  "2022g|state-house-7": {
+   "checked_against": [
+    "county canvass in the guide's results data"
+   ],
+   "match": true,
+   "note": "",
+   "district": true,
+   "seats": 1,
+   "winners": [],
+   "winners_from": ""
+  },
+  "2022g|state-house-8": {
+   "checked_against": [
+    "county canvass in the guide's results data"
+   ],
+   "match": true,
+   "note": "",
+   "district": true,
+   "seats": 1,
+   "winners": [],
+   "winners_from": ""
+  },
+  "2022g|state-senate-11": {
+   "checked_against": [
+    "county canvass in the guide's results data"
+   ],
+   "match": true,
+   "note": "",
+   "district": true,
+   "seats": 1,
+   "winners": [],
+   "winners_from": ""
+  },
+  "2022g|town-council-new-carlisle": {
+   "checked_against": [
+    "summary pages of the 2022 report (official results)"
+   ],
+   "match": true,
+   "note": "",
+   "district": true,
+   "seats": 2,
+   "winners": [
+    [
+     "Marcy Kauffman",
+     "D"
+    ]
+   ],
+   "winners_from": "top 2 by votes on the summary page"
+  },
+  "2022g|town-council-north-liberty": {
+   "checked_against": [
+    "summary pages of the 2022 report (official results)"
+   ],
+   "match": true,
+   "note": "",
+   "district": true,
+   "seats": 2,
+   "winners": [
+    [
+     "Gerry E Brown",
+     "R"
+    ],
+    [
+     "Thomas England",
+     "R"
+    ]
+   ],
+   "winners_from": "top 2 by votes on the summary page"
+  },
+  "2022g|town-council-roseland": {
+   "checked_against": [
+    "county canvass in the guide's results data"
+   ],
+   "match": true,
+   "note": "",
+   "district": true,
+   "seats": 1,
+   "winners": [],
+   "winners_from": ""
+  },
+  "2022g|town-council-walkerton-ward-1": {
+   "checked_against": [
+    "county canvass in the guide's results data"
+   ],
+   "match": true,
+   "note": "",
+   "district": true,
+   "seats": 1,
+   "winners": [],
+   "winners_from": ""
+  },
+  "2022g|town-council-walkerton-ward-2": {
+   "checked_against": [
+    "county canvass in the guide's results data",
+    "summary pages of the 2022 report (official results)"
+   ],
+   "match": true,
+   "note": "",
+   "district": true,
+   "seats": 1,
+   "winners": [],
+   "winners_from": ""
+  },
+  "2022g|township-assessor-penn": {
+   "checked_against": [
+    "county canvass in the guide's results data"
+   ],
+   "match": true,
+   "note": "",
+   "district": true,
+   "seats": 1,
+   "winners": [],
+   "winners_from": ""
+  },
+  "2022g|township-board-centre": {
+   "checked_against": [
+    "county canvass in the guide's results data"
+   ],
+   "match": true,
+   "note": "",
+   "district": true,
+   "seats": 3,
+   "winners": [
+    [
+     "Thomas J Lindenman",
+     "R"
+    ],
+    [
+     "Dave Vandewalle",
+     "R"
+    ],
+    [
+     "Richard J Ziegler Sr",
+     "R"
+    ]
+   ],
+   "winners_from": "the guide's results data"
+  },
+  "2022g|township-board-clay": {
+   "checked_against": [
+    "county canvass in the guide's results data"
+   ],
+   "match": true,
+   "note": "",
+   "district": true,
+   "seats": 3,
+   "winners": [
+    [
+     "Michelle M Shaw",
+     "D"
+    ],
+    [
+     "Mike Dobson",
+     "R"
+    ],
+    [
+     "Rob Thomas",
+     "R"
+    ]
+   ],
+   "winners_from": "the guide's results data"
+  },
+  "2022g|township-board-german": {
+   "checked_against": [
+    "county canvass in the guide's results data"
+   ],
+   "match": true,
+   "note": "",
+   "district": true,
+   "seats": 3,
+   "winners": [
+    [
+     "Kevin McClanahan",
+     "D"
+    ],
+    [
+     "Rudy Monterrosa Jr",
+     "D"
+    ],
+    [
+     "Mary Ellen McNeil",
+     "R"
+    ]
+   ],
+   "winners_from": "the guide's results data"
+  },
+  "2022g|township-board-greene": {
+   "checked_against": [
+    "county canvass in the guide's results data"
+   ],
+   "match": true,
+   "note": "",
+   "district": true,
+   "seats": 3,
+   "winners": [
+    [
+     "Kathryn Jaworski",
+     "R"
+    ],
+    [
+     "Todd Matthys",
+     "R"
+    ],
+    [
+     "Shane Whitmer",
+     "R"
+    ]
+   ],
+   "winners_from": "the guide's results data"
+  },
+  "2022g|township-board-harris": {
+   "checked_against": [
+    "county canvass in the guide's results data"
+   ],
+   "match": true,
+   "note": "",
+   "district": true,
+   "seats": 3,
+   "winners": [
+    [
+     "Bob Fox",
+     "R"
+    ],
+    [
+     "Chuck Sulok",
+     "R"
+    ],
+    [
+     "Karen E Vargo",
+     "R"
+    ]
+   ],
+   "winners_from": "the guide's results data"
+  },
+  "2022g|township-board-liberty": {
+   "checked_against": [
+    "county canvass in the guide's results data"
+   ],
+   "match": true,
+   "note": "",
+   "district": true,
+   "seats": 3,
+   "winners": [
+    [
+     "Bryan L Albright",
+     "R"
+    ],
+    [
+     "Joshua A Albright",
+     "R"
+    ],
+    [
+     "Tom E McCormick",
+     "R"
+    ]
+   ],
+   "winners_from": "the guide's results data"
+  },
+  "2022g|township-board-lincoln": {
+   "checked_against": [
+    "county canvass in the guide's results data"
+   ],
+   "match": true,
+   "note": "",
+   "district": true,
+   "seats": 3,
+   "winners": [
+    [
+     "Ethan Barden",
+     "R"
+    ],
+    [
+     "James R Christie",
+     "R"
+    ],
+    [
+     "Kathleen Fox",
+     "R"
+    ]
+   ],
+   "winners_from": "the guide's results data"
+  },
+  "2022g|township-board-madison": {
+   "checked_against": [
+    "county canvass in the guide's results data"
+   ],
+   "match": true,
+   "note": "",
+   "district": true,
+   "seats": 3,
+   "winners": [
+    [
+     "Terrie L Bickel",
+     "R"
+    ],
+    [
+     "Kurt Laidig",
+     "R"
+    ],
+    [
+     "Richard L Schmidt",
+     "R"
+    ]
+   ],
+   "winners_from": "the guide's results data"
+  },
+  "2022g|township-board-olive": {
+   "checked_against": [
+    "county canvass in the guide's results data"
+   ],
+   "match": true,
+   "note": "",
+   "district": true,
+   "seats": 3,
+   "winners": [
+    [
+     "Robert H Middlebrook",
+     "D"
+    ],
+    [
+     "Keith Batzel",
+     "R"
+    ],
+    [
+     "Tim Creason",
+     "R"
+    ]
+   ],
+   "winners_from": "the guide's results data"
+  },
+  "2022g|township-board-penn": {
+   "checked_against": [
+    "county canvass in the guide's results data"
+   ],
+   "match": true,
+   "note": "",
+   "district": true,
+   "seats": 3,
+   "winners": [
+    [
+     "Kent D Hizer",
+     "R"
+    ],
+    [
+     "Dave Schmidt",
+     "R"
+    ],
+    [
+     "Kris Verash",
+     "R"
+    ]
+   ],
+   "winners_from": "the guide's results data"
+  },
+  "2022g|township-board-portage": {
+   "checked_against": [
+    "county canvass in the guide's results data"
+   ],
+   "match": true,
+   "note": "",
+   "district": true,
+   "seats": 3,
+   "winners": [
+    [
+     "Cheryl L Ashe",
+     "D"
+    ],
+    [
+     "Ryan Hill",
+     "D"
+    ],
+    [
+     "Muhammad A Shabazz II",
+     "D"
+    ]
+   ],
+   "winners_from": "the guide's results data"
+  },
+  "2022g|township-board-union": {
+   "checked_against": [
+    "summary pages of the 2022 report (official results)"
+   ],
+   "match": true,
+   "note": "",
+   "district": true,
+   "seats": 3,
+   "winners": [
+    [
+     "Ryan Schafer",
+     "R"
+    ],
+    [
+     "Trisha N Carrico",
+     "R"
+    ],
+    [
+     "Mike Wozny",
+     "R"
+    ]
+   ],
+   "winners_from": "top 3 by votes on the summary page"
+  },
+  "2022g|township-board-warren": {
+   "checked_against": [
+    "county canvass in the guide's results data"
+   ],
+   "match": true,
+   "note": "",
+   "district": true,
+   "seats": 3,
+   "winners": [
+    [
+     "Eric Griffin",
+     "D"
+    ],
+    [
+     "Anthony Marvel",
+     "D"
+    ],
+    [
+     "Wendy Yuhasz",
+     "D"
+    ]
+   ],
+   "winners_from": "the guide's results data"
+  },
+  "2022g|township-trustee-centre": {
+   "checked_against": [
+    "county canvass in the guide's results data"
+   ],
+   "match": true,
+   "note": "",
+   "district": true,
+   "seats": 1,
+   "winners": [],
+   "winners_from": ""
+  },
+  "2022g|township-trustee-clay": {
+   "checked_against": [
+    "county canvass in the guide's results data"
+   ],
+   "match": true,
+   "note": "",
+   "district": true,
+   "seats": 1,
+   "winners": [],
+   "winners_from": ""
+  },
+  "2022g|township-trustee-german": {
+   "checked_against": [
+    "county canvass in the guide's results data"
+   ],
+   "match": true,
+   "note": "",
+   "district": true,
+   "seats": 1,
+   "winners": [],
+   "winners_from": ""
+  },
+  "2022g|township-trustee-greene": {
+   "checked_against": [
+    "county canvass in the guide's results data"
+   ],
+   "match": true,
+   "note": "",
+   "district": true,
+   "seats": 1,
+   "winners": [],
+   "winners_from": ""
+  },
+  "2022g|township-trustee-harris": {
+   "checked_against": [
+    "county canvass in the guide's results data"
+   ],
+   "match": true,
+   "note": "",
+   "district": true,
+   "seats": 1,
+   "winners": [],
+   "winners_from": ""
+  },
+  "2022g|township-trustee-liberty": {
+   "checked_against": [
+    "county canvass in the guide's results data"
+   ],
+   "match": true,
+   "note": "",
+   "district": true,
+   "seats": 1,
+   "winners": [],
+   "winners_from": ""
+  },
+  "2022g|township-trustee-lincoln": {
+   "checked_against": [
+    "county canvass in the guide's results data"
+   ],
+   "match": true,
+   "note": "",
+   "district": true,
+   "seats": 1,
+   "winners": [],
+   "winners_from": ""
+  },
+  "2022g|township-trustee-madison": {
+   "checked_against": [
+    "county canvass in the guide's results data"
+   ],
+   "match": true,
+   "note": "",
+   "district": true,
+   "seats": 1,
+   "winners": [],
+   "winners_from": ""
+  },
+  "2022g|township-trustee-olive": {
+   "checked_against": [
+    "county canvass in the guide's results data"
+   ],
+   "match": true,
+   "note": "",
+   "district": true,
+   "seats": 1,
+   "winners": [],
+   "winners_from": ""
+  },
+  "2022g|township-trustee-penn": {
+   "checked_against": [
+    "county canvass in the guide's results data"
+   ],
+   "match": true,
+   "note": "",
+   "district": true,
+   "seats": 1,
+   "winners": [],
+   "winners_from": ""
+  },
+  "2022g|township-trustee-portage": {
+   "checked_against": [
+    "county canvass in the guide's results data"
+   ],
+   "match": true,
+   "note": "",
+   "district": true,
+   "seats": 1,
+   "winners": [],
+   "winners_from": ""
+  },
+  "2022g|township-trustee-union": {
+   "checked_against": [
+    "summary pages of the 2022 report (official results)"
+   ],
+   "match": true,
+   "note": "",
+   "district": true,
+   "seats": 1,
+   "winners": [],
+   "winners_from": ""
+  },
+  "2022g|township-trustee-warren": {
+   "checked_against": [
+    "county canvass in the guide's results data"
+   ],
+   "match": true,
+   "note": "",
+   "district": true,
+   "seats": 1,
+   "winners": [],
+   "winners_from": ""
+  },
+  "2022g|treasurer": {
+   "checked_against": [
+    "county canvass in the guide's results data",
+    "county summary pages of the 2022 report"
+   ],
+   "match": true,
+   "note": "",
+   "district": false,
+   "seats": 1,
+   "winners": [],
+   "winners_from": ""
+  },
+  "2022g|us-house": {
+   "checked_against": [
+    "county summary pages of the 2022 report"
+   ],
+   "match": true,
+   "note": "",
+   "district": false,
+   "seats": 1,
+   "winners": [],
+   "winners_from": ""
+  },
+  "2022g|us-house-special": {
+   "checked_against": [
+    "county summary pages of the 2022 report"
+   ],
+   "match": true,
+   "note": "",
+   "district": false,
+   "seats": 1,
+   "winners": [],
+   "winners_from": ""
+  },
+  "2022g|us-senate": {
+   "checked_against": [
+    "county summary pages of the 2022 report"
+   ],
+   "match": true,
+   "note": "",
+   "district": false,
+   "seats": 1,
+   "winners": [],
+   "winners_from": ""
+  },
+  "2024g|attorney-general": {
+   "checked_against": [
+    "county canvass in the guide's results data"
+   ],
+   "match": true,
+   "note": "",
+   "district": false,
+   "seats": 1,
+   "winners": [],
+   "winners_from": ""
+  },
+  "2024g|county-commissioner-2": {
+   "checked_against": [
+    "county canvass in the guide's results data"
+   ],
+   "match": true,
+   "note": "",
+   "district": true,
+   "seats": 1,
+   "winners": [],
+   "winners_from": ""
+  },
+  "2024g|county-commissioner-3": {
+   "checked_against": [
+    "county canvass in the guide's results data"
+   ],
+   "match": true,
+   "note": "",
+   "district": true,
+   "seats": 1,
+   "winners": [],
+   "winners_from": ""
+  },
+  "2024g|county-coroner": {
+   "checked_against": [
+    "county canvass in the guide's results data"
+   ],
+   "match": true,
+   "note": "",
+   "district": false,
+   "seats": 1,
+   "winners": [],
+   "winners_from": ""
+  },
+  "2024g|county-council-d": {
+   "checked_against": [
+    "county canvass in the guide's results data"
+   ],
+   "match": true,
+   "note": "",
+   "district": true,
+   "seats": 1,
+   "winners": [],
+   "winners_from": ""
+  },
+  "2024g|county-council-f": {
+   "checked_against": [
+    "county canvass in the guide's results data"
+   ],
+   "match": true,
+   "note": "",
+   "district": true,
+   "seats": 1,
+   "winners": [],
+   "winners_from": ""
+  },
+  "2024g|county-council-g": {
+   "checked_against": [
+    "county canvass in the guide's results data"
+   ],
+   "match": true,
+   "note": "",
+   "district": true,
+   "seats": 1,
+   "winners": [],
+   "winners_from": ""
+  },
+  "2024g|county-council-i": {
+   "checked_against": [
+    "county canvass in the guide's results data"
+   ],
+   "match": true,
+   "note": "",
+   "district": true,
+   "seats": 1,
+   "winners": [],
+   "winners_from": ""
+  },
+  "2024g|county-probate-judge": {
+   "checked_against": [],
+   "match": false,
+   "note": "the guide's county total for this race (2024g-county-probate-judge) has status from_scan, not official, so it is not used as a check",
+   "district": false,
+   "seats": 1,
+   "winners": [],
+   "winners_from": ""
+  },
+  "2024g|county-recorder": {
+   "checked_against": [
+    "county canvass in the guide's results data"
+   ],
+   "match": true,
+   "note": "",
+   "district": false,
+   "seats": 1,
+   "winners": [],
+   "winners_from": ""
+  },
+  "2024g|county-surveyor": {
+   "checked_against": [
+    "county canvass in the guide's results data"
+   ],
+   "match": true,
+   "note": "",
+   "district": false,
+   "seats": 1,
+   "winners": [],
+   "winners_from": ""
+  },
+  "2024g|county-treasurer": {
+   "checked_against": [
+    "county canvass in the guide's results data"
+   ],
+   "match": true,
+   "note": "",
+   "district": false,
+   "seats": 1,
+   "winners": [],
+   "winners_from": ""
+  },
+  "2024g|governor": {
+   "checked_against": [
+    "county canvass in the guide's results data",
+    "county canvass"
+   ],
+   "match": true,
+   "note": "",
+   "district": false,
+   "seats": 1,
+   "winners": [],
+   "winners_from": ""
+  },
+  "2024g|president": {
+   "checked_against": [
+    "county canvass (official summary report)"
+   ],
+   "match": true,
+   "note": "",
+   "district": false,
+   "seats": 1,
+   "winners": [],
+   "winners_from": ""
+  },
+  "2024g|state-house-21": {
+   "checked_against": [
+    "county canvass in the guide's results data"
+   ],
+   "match": true,
+   "note": "",
+   "district": true,
+   "seats": 1,
+   "winners": [],
+   "winners_from": ""
+  },
+  "2024g|state-house-5": {
+   "checked_against": [
+    "county canvass in the guide's results data"
+   ],
+   "match": true,
+   "note": "",
+   "district": true,
+   "seats": 1,
+   "winners": [],
+   "winners_from": ""
+  },
+  "2024g|state-house-6": {
+   "checked_against": [
+    "county canvass in the guide's results data"
+   ],
+   "match": true,
+   "note": "",
+   "district": true,
+   "seats": 1,
+   "winners": [],
+   "winners_from": ""
+  },
+  "2024g|state-house-7": {
+   "checked_against": [
+    "county canvass in the guide's results data"
+   ],
+   "match": true,
+   "note": "",
+   "district": true,
+   "seats": 1,
+   "winners": [],
+   "winners_from": ""
+  },
+  "2024g|state-house-8": {
+   "checked_against": [
+    "county canvass in the guide's results data"
+   ],
+   "match": true,
+   "note": "",
+   "district": true,
+   "seats": 1,
+   "winners": [],
+   "winners_from": ""
+  },
+  "2024g|state-senate-10": {
+   "checked_against": [
+    "county canvass in the guide's results data"
+   ],
+   "match": true,
+   "note": "",
+   "district": true,
+   "seats": 1,
+   "winners": [],
+   "winners_from": ""
+  },
+  "2024g|state-senate-8": {
+   "checked_against": [
+    "county canvass in the guide's results data"
+   ],
+   "match": true,
+   "note": "",
+   "district": true,
+   "seats": 1,
+   "winners": [],
+   "winners_from": ""
+  },
+  "2024g|state-senate-9": {
+   "checked_against": [
+    "county canvass in the guide's results data"
+   ],
+   "match": true,
+   "note": "",
+   "district": true,
+   "seats": 1,
+   "winners": [],
+   "winners_from": ""
+  },
+  "2024g|us-house": {
+   "checked_against": [
+    "county canvass (official summary report)"
+   ],
+   "match": true,
+   "note": "",
+   "district": false,
+   "seats": 1,
+   "winners": [],
+   "winners_from": ""
+  },
+  "2024g|us-senate": {
+   "checked_against": [
+    "county canvass (official summary report)"
+   ],
+   "match": true,
+   "note": "",
+   "district": false,
+   "seats": 1,
+   "winners": [],
+   "winners_from": ""
+  }
+ }
+}

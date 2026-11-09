@@ -1,0 +1,3 @@
+# keep LF endings in the working tree (data CSVs and builders write LF)
+* text=auto eol=lf
+*.ps1 text eol=crlf

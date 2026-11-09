@@ -1,0 +1,67 @@
+{
+  "series": "Indiana County Civic Guide",
+  "edition": "St. Joseph County Edition",
+  "county": "St. Joseph",
+  "state": "Indiana",
+  "fips": "18141",
+  "state_fips": "18",
+  "county_fips": "141",
+  "seat": "South Bend",
+  "gateway_county_code": "71",
+  "edition_color": {
+    "name": "teal",
+    "light": "#0f766e",
+    "dark": "#2dd4bf"
+  },
+  "data_as_of": "2026-11-07",
+  "version": "1.0-draft",
+  "author": "Nick Benninghoff",
+  "author_disclosure": "I work as an organizer for the St. Joseph County Democratic Party. I researched and built this guide independently, by myself, on my own time. It is not a publication of the party.",
+  "map_precinct_view": true,
+  "author_disclosure_short": "The author works as an organizer for the St. Joseph County Democratic Party. The guide is independent work, made on the author's own time, not a party publication.",
+  "places": {
+    "cities": [
+      "south-bend",
+      "mishawaka"
+    ],
+    "towns": "see units.csv (unit_type = town)",
+    "townships": 13
+  },
+  "variants": {
+    "commissioner_election": {
+      "value": "by_district",
+      "verified": true,
+      "source_ids": "GOV-125;GOV-127;GOV-122;GOV-123",
+      "note": "IC 36-2-2-4(c) (GOV-125): a county of 185,000-300,000 that opts in elects each commissioner from a single-member district; St. Joseph County opted in by Resolution R-16-C-2023 (July 11, 2023, GOV-127), the same record as council_size and legislative_power. Subject to the pending appeal 26S-PL-00156. Commissioners are elected by district (2024 and 2026 canvasses). In Outlaw et al. v. State of Indiana Election Commission (Marion Superior Court 11, 49D11-2302-PL-005795) the court entered final judgment on April 14, 2026 (amended April 21) on challenges to IC 36-2-2-4, 36-2-2-5, 36-2-3-2 and 36-2-3-4; the Election Commission and other defendants appealed to the Indiana Supreme Court (26S-PL-00156), fully briefed October 2, 2026 and pending. The order text is not public on MyCase; news reports describe its scope."
+    },
+    "council_size": {
+      "value": 9,
+      "verified": true,
+      "note": "IC 36-2-3-4(c) (GOV-124): a county of 185,000-300,000 that opts in under IC 36-2-2-4(c) has nine single-member council districts, three inside each commissioner district. St. Joseph County (272,912 in the 2020 Census) opted in: the Board of Commissioners adopted Resolution R-16-C-2023 on July 11, 2023, 3-0 (GOV-127), before the Sept 1, 2023 deadline (GOV-125). These provisions are among those challenged in 49D11-2302-PL-005795 (final judgment Apr 14, 2026; appeal 26S-PL-00156 pending).",
+      "source_ids": "GOV-124;GOV-125;GOV-127;GOV-122;GOV-123"
+    },
+    "legislative_power": {
+      "value": "council_full",
+      "verified": true,
+      "note": "IC 36-2-3.5-3: in covered counties the council is the legislative and fiscal body. IC 36-2-3.5-1(2) covers counties of 185,000-300,000 that opt in under IC 36-2-2-4(c); St. Joseph opted in by Resolution R-16-C-2023 (July 11, 2023, GOV-127). Subject to the pending appeal 26S-PL-00156.",
+      "source_ids": "IND-057;GOV-125;GOV-127"
+    },
+    "superior_court_selection": {
+      "value": "merit_retention",
+      "verified": true,
+      "note": "Fact-check: one of four Indiana counties using merit selection plus retention votes."
+    },
+    "city_classes": {
+      "south-bend": "2",
+      "mishawaka": "2",
+      "verified": false
+    }
+  },
+  "status_banners": [
+    {
+      "id": "2026-unofficial",
+      "text": "2026 general-election figures are UNOFFICIAL (county election-night report, 2026-11-03) until the county certifies results.",
+      "until": "certification"
+    }
+  ]
+}

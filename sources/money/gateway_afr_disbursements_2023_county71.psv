@@ -1,0 +1,611 @@
+year|cnty_description|cnty_cd|budget_unit_type|unit_code|unit_name|sboa_id|afr_unit_type|ent_id|ent_name|Fund_code|disburse_code|disburse_name|department_code|department_name|amount|disburse_class_code|disburse_class_name|unit_fund_name|unit_fund_number|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D101|Salaries and Wages|0001|Clerk Of Circuit Court (County Clerk)|1875568.61|100|Personal Services|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D101|Salaries and Wages|0002|County Auditor|809081.18|100|Personal Services|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D101|Salaries and Wages|0003|County Treasurer|423552.06|100|Personal Services|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D101|Salaries and Wages|0004|County Recorder|116980.00|100|Personal Services|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D101|Salaries and Wages|0005|County Sheriff|10098054.54|100|Personal Services|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D101|Salaries and Wages|0007|County Coroner|184053.43|100|Personal Services|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D101|Salaries and Wages|0008|County Assessor|738342.29|100|Personal Services|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D101|Salaries and Wages|0009|Prosecuting Attorney|3737808.20|100|Personal Services|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D101|Salaries and Wages|0010|Registration Of Voters|46672.26|100|Personal Services|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D101|Salaries and Wages|0011|County Cooperative Extension Service (Agent)|86212.30|100|Personal Services|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D101|Salaries and Wages|0015|_______________Twp Assessor|341917.51|100|Personal Services|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D101|Salaries and Wages|0061|County Council|281795.16|100|Personal Services|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D101|Salaries and Wages|0068|County Commissioners|748522.69|100|Personal Services|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D101|Salaries and Wages|0104|Election Expense|229174.82|100|Personal Services|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D101|Salaries and Wages|0106|Data Processing (Computers)|553723.35|100|Personal Services|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D101|Salaries and Wages|0161|Court House|156188.06|100|Personal Services|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D101|Salaries and Wages|0174|Museum (Arts Commission)|71778.77|100|Personal Services|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D101|Salaries and Wages|0177|Municipal Building (Police/Fire Building)|244395.02|100|Personal Services|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D101|Salaries and Wages|0201|Superior Court #1 (Superior Court)|1294972.44|100|Personal Services|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D101|Salaries and Wages|0232|Circuit Court|499304.14|100|Personal Services|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D101|Salaries and Wages|0233|Probate Court|1250980.49|100|Personal Services|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D101|Salaries and Wages|0235|Probation|1838785.30|100|Personal Services|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D101|Salaries and Wages|0271|Public Defender|1524473.83|100|Personal Services|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D101|Salaries and Wages|0273|Juvenile Probation|1112581.75|100|Personal Services|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D101|Salaries and Wages|0279|Records (Microfilm-Exam. Of Records-Mail-Duplicati|160359.43|100|Personal Services|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D101|Salaries and Wages|0308|Weights & Measures Inspector|79814.98|100|Personal Services|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D101|Salaries and Wages|0313|Building Maintenance (Maint. & Repair - City Inspe|896282.98|100|Personal Services|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D101|Salaries and Wages|0318|Code Enforcement|150759.50|100|Personal Services|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D101|Salaries and Wages|0361|Civil Defense|135999.76|100|Personal Services|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D101|Salaries and Wages|0380|Jail|7811441.01|100|Personal Services|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D101|Salaries and Wages|0381|Detention Center|3495606.56|100|Personal Services|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D101|Salaries and Wages|0500|Public Works Service|1432704.72|100|Personal Services|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D101|Salaries and Wages|0609|Alcohol & Drug (Crisis Center)|521055.89|100|Personal Services|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D101|Salaries and Wages|0660|4-D Program (Child Support)|1635341.44|100|Personal Services|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D101|Salaries and Wages|0750|Soil Conservation (Soil & Water)|112478.90|100|Personal Services|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D101|Salaries and Wages|9600|Home-Rule Department #1|245760.78|100|Personal Services|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D106|Other Personal Services|0005|County Sheriff|306600.73|100|Personal Services|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D106|Other Personal Services|0161|Court House|694.48|100|Personal Services|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D106|Other Personal Services|0177|Municipal Building (Police/Fire Building)|689.91|100|Personal Services|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D106|Other Personal Services|0201|Superior Court #1 (Superior Court)|268878.72|100|Personal Services|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D106|Other Personal Services|0232|Circuit Court|12721.34|100|Personal Services|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D106|Other Personal Services|0308|Weights & Measures Inspector|693.00|100|Personal Services|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D106|Other Personal Services|0313|Building Maintenance (Maint. & Repair - City Inspe|1000.00|100|Personal Services|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D106|Other Personal Services|0380|Jail|39378.30|100|Personal Services|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D106|Other Personal Services|0381|Detention Center|11278.18|100|Personal Services|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D107|Employee Benefits|0104|Election Expense|18300.00|100|Personal Services|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D107|Employee Benefits|0119|Central Services (City Svcs-Municipal Svcs-Svc Ctr|9175395.16|100|Personal Services|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D107|Employee Benefits|0271|Public Defender|803738.12|100|Personal Services|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D107|Employee Benefits|0279|Records (Microfilm-Exam. Of Records-Mail-Duplicati|124785.00|100|Personal Services|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D107|Employee Benefits|0308|Weights & Measures Inspector|45829.69|100|Personal Services|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D107|Employee Benefits|0313|Building Maintenance (Maint. & Repair - City Inspe|519043.20|100|Personal Services|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D107|Employee Benefits|0381|Detention Center|32618.59|100|Personal Services|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D107|Employee Benefits|0660|4-D Program (Child Support)|911035.59|100|Personal Services|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D201|Office Supplies|0001|Clerk Of Circuit Court (County Clerk)|2139.05|200|Supplies|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D201|Office Supplies|0002|County Auditor|4324.91|200|Supplies|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D201|Office Supplies|0003|County Treasurer|8013.25|200|Supplies|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D201|Office Supplies|0005|County Sheriff|20304.58|200|Supplies|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D201|Office Supplies|0007|County Coroner|1577.01|200|Supplies|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D201|Office Supplies|0008|County Assessor|2499.27|200|Supplies|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D201|Office Supplies|0009|Prosecuting Attorney|30873.43|200|Supplies|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D201|Office Supplies|0011|County Cooperative Extension Service (Agent)|2717.76|200|Supplies|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D201|Office Supplies|0015|_______________Twp Assessor|2944.77|200|Supplies|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D201|Office Supplies|0061|County Council|965.17|200|Supplies|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D201|Office Supplies|0068|County Commissioners|67583.48|200|Supplies|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D201|Office Supplies|0104|Election Expense|9380.61|200|Supplies|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D201|Office Supplies|0201|Superior Court #1 (Superior Court)|11251.39|200|Supplies|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D201|Office Supplies|0232|Circuit Court|2788.03|200|Supplies|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D201|Office Supplies|0233|Probate Court|1982.82|200|Supplies|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D201|Office Supplies|0235|Probation|5869.76|200|Supplies|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D201|Office Supplies|0271|Public Defender|696.76|200|Supplies|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D201|Office Supplies|0273|Juvenile Probation|18559.02|200|Supplies|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D201|Office Supplies|0279|Records (Microfilm-Exam. Of Records-Mail-Duplicati|6078.80|200|Supplies|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D201|Office Supplies|0308|Weights & Measures Inspector|490.21|200|Supplies|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D201|Office Supplies|0318|Code Enforcement|1490.25|200|Supplies|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D201|Office Supplies|0361|Civil Defense|915.26|200|Supplies|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D201|Office Supplies|0380|Jail|9117.83|200|Supplies|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D201|Office Supplies|0500|Public Works Service|14669.32|200|Supplies|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D201|Office Supplies|0609|Alcohol & Drug (Crisis Center)|3097.56|200|Supplies|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D201|Office Supplies|0660|4-D Program (Child Support)|9751.00|200|Supplies|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D201|Office Supplies|9600|Home-Rule Department #1|849.36|200|Supplies|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D202|Operating Supplies|0002|County Auditor|1207.37|200|Supplies|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D202|Operating Supplies|0005|County Sheriff|431406.91|200|Supplies|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D202|Operating Supplies|0007|County Coroner|12882.94|200|Supplies|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D202|Operating Supplies|0009|Prosecuting Attorney|27755.82|200|Supplies|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D202|Operating Supplies|0015|_______________Twp Assessor|644.23|200|Supplies|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D202|Operating Supplies|0104|Election Expense|2736.02|200|Supplies|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D202|Operating Supplies|0177|Municipal Building (Police/Fire Building)|77827.04|200|Supplies|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D202|Operating Supplies|0201|Superior Court #1 (Superior Court)|7080.16|200|Supplies|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D202|Operating Supplies|0232|Circuit Court|369.06|200|Supplies|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D202|Operating Supplies|0233|Probate Court|1051.50|200|Supplies|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D202|Operating Supplies|0279|Records (Microfilm-Exam. Of Records-Mail-Duplicati|4651.64|200|Supplies|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D202|Operating Supplies|0308|Weights & Measures Inspector|2946.47|200|Supplies|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D202|Operating Supplies|0318|Code Enforcement|215.01|200|Supplies|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D202|Operating Supplies|0361|Civil Defense|4574.73|200|Supplies|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D202|Operating Supplies|0380|Jail|126582.12|200|Supplies|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D202|Operating Supplies|0381|Detention Center|405793.44|200|Supplies|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D202|Operating Supplies|0500|Public Works Service|8921.73|200|Supplies|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D202|Operating Supplies|0660|4-D Program (Child Support)|8779.47|200|Supplies|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D203|Repair and Maintenance Supplies|0005|County Sheriff|139914.58|200|Supplies|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D203|Repair and Maintenance Supplies|0308|Weights & Measures Inspector|393.05|200|Supplies|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D203|Repair and Maintenance Supplies|0381|Detention Center|27849.71|200|Supplies|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D203|Repair and Maintenance Supplies|0500|Public Works Service|517.80|200|Supplies|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D204|Other Supplies|0005|County Sheriff|69868.64|200|Supplies|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D204|Other Supplies|0068|County Commissioners|715.53|200|Supplies|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D204|Other Supplies|0161|Court House|18134.37|200|Supplies|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D204|Other Supplies|0177|Municipal Building (Police/Fire Building)|64195.90|200|Supplies|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D204|Other Supplies|0313|Building Maintenance (Maint. & Repair - City Inspe|153133.96|200|Supplies|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D204|Other Supplies|0381|Detention Center|2224.74|200|Supplies|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D301|Professional Services|0005|County Sheriff|34200.70|300|Services and Charges|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D301|Professional Services|0007|County Coroner|374583.00|300|Services and Charges|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D301|Professional Services|0009|Prosecuting Attorney|3448.25|300|Services and Charges|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D301|Professional Services|0068|County Commissioners|13505.41|300|Services and Charges|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D301|Professional Services|0104|Election Expense|3592.05|300|Services and Charges|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D301|Professional Services|0119|Central Services (City Svcs-Municipal Svcs-Svc Ctr|2186330.88|300|Services and Charges|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D301|Professional Services|0161|Court House|10303.99|300|Services and Charges|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D301|Professional Services|0177|Municipal Building (Police/Fire Building)|31000.00|300|Services and Charges|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D301|Professional Services|0201|Superior Court #1 (Superior Court)|176552.58|300|Services and Charges|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D301|Professional Services|0232|Circuit Court|12449.50|300|Services and Charges|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D301|Professional Services|0233|Probate Court|9988.27|300|Services and Charges|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D301|Professional Services|0271|Public Defender|326547.19|300|Services and Charges|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D301|Professional Services|0313|Building Maintenance (Maint. & Repair - City Inspe|385856.71|300|Services and Charges|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D301|Professional Services|0318|Code Enforcement|33.00|300|Services and Charges|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D301|Professional Services|0381|Detention Center|66682.65|300|Services and Charges|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D301|Professional Services|0500|Public Works Service|102124.96|300|Services and Charges|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D302|Communication and Transportation|0001|Clerk Of Circuit Court (County Clerk)|337.05|300|Services and Charges|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D302|Communication and Transportation|0003|County Treasurer|49398.00|300|Services and Charges|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D302|Communication and Transportation|0005|County Sheriff|93528.10|300|Services and Charges|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D302|Communication and Transportation|0007|County Coroner|2813.07|300|Services and Charges|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D302|Communication and Transportation|0008|County Assessor|751.22|300|Services and Charges|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D302|Communication and Transportation|0009|Prosecuting Attorney|44525.32|300|Services and Charges|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D302|Communication and Transportation|0011|County Cooperative Extension Service (Agent)|803.04|300|Services and Charges|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D302|Communication and Transportation|0015|_______________Twp Assessor|10129.84|300|Services and Charges|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D302|Communication and Transportation|0061|County Council|1296.24|300|Services and Charges|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D302|Communication and Transportation|0068|County Commissioners|29149.09|300|Services and Charges|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D302|Communication and Transportation|0104|Election Expense|940.38|300|Services and Charges|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D302|Communication and Transportation|0119|Central Services (City Svcs-Municipal Svcs-Svc Ctr|430722.19|300|Services and Charges|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D302|Communication and Transportation|0201|Superior Court #1 (Superior Court)|65.00|300|Services and Charges|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D302|Communication and Transportation|0233|Probate Court|1336.74|300|Services and Charges|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D302|Communication and Transportation|0273|Juvenile Probation|16055.82|300|Services and Charges|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D302|Communication and Transportation|0279|Records (Microfilm-Exam. Of Records-Mail-Duplicati|892.37|300|Services and Charges|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D302|Communication and Transportation|0308|Weights & Measures Inspector|141.08|300|Services and Charges|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D302|Communication and Transportation|0318|Code Enforcement|3108.62|300|Services and Charges|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D302|Communication and Transportation|0361|Civil Defense|1694.59|300|Services and Charges|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D302|Communication and Transportation|0381|Detention Center|1161.83|300|Services and Charges|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D302|Communication and Transportation|0500|Public Works Service|7721.82|300|Services and Charges|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D302|Communication and Transportation|0660|4-D Program (Child Support)|11001.08|300|Services and Charges|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D302|Communication and Transportation|9600|Home-Rule Department #1|4058.38|300|Services and Charges|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D303|Printing and Advertising|0001|Clerk Of Circuit Court (County Clerk)|8079.56|300|Services and Charges|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D303|Printing and Advertising|0061|County Council|251.90|300|Services and Charges|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D303|Printing and Advertising|0104|Election Expense|41685.66|300|Services and Charges|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D303|Printing and Advertising|0119|Central Services (City Svcs-Municipal Svcs-Svc Ctr|42906.53|300|Services and Charges|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D303|Printing and Advertising|0361|Civil Defense|319.47|300|Services and Charges|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D303|Printing and Advertising|0500|Public Works Service|2350.75|300|Services and Charges|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D304|Insurance|0104|Election Expense|1437.00|300|Services and Charges|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D304|Insurance|0119|Central Services (City Svcs-Municipal Svcs-Svc Ctr|1375519.00|300|Services and Charges|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D304|Insurance|0279|Records (Microfilm-Exam. Of Records-Mail-Duplicati|7187.00|300|Services and Charges|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D304|Insurance|0308|Weights & Measures Inspector|2875.00|300|Services and Charges|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D304|Insurance|0313|Building Maintenance (Maint. & Repair - City Inspe|33059.00|300|Services and Charges|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D305|Utility Services|0007|County Coroner|4002.45|300|Services and Charges|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D305|Utility Services|0161|Court House|98000.00|300|Services and Charges|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D305|Utility Services|0177|Municipal Building (Police/Fire Building)|424548.51|300|Services and Charges|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D305|Utility Services|0279|Records (Microfilm-Exam. Of Records-Mail-Duplicati|18702.67|300|Services and Charges|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D305|Utility Services|0313|Building Maintenance (Maint. & Repair - City Inspe|495000.00|300|Services and Charges|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D305|Utility Services|0361|Civil Defense|27614.85|300|Services and Charges|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D305|Utility Services|0381|Detention Center|258307.36|300|Services and Charges|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D306|Repairs and Maintenance|0002|County Auditor|1544.25|300|Services and Charges|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D306|Repairs and Maintenance|0003|County Treasurer|1213.25|300|Services and Charges|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D306|Repairs and Maintenance|0005|County Sheriff|91986.58|300|Services and Charges|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D306|Repairs and Maintenance|0007|County Coroner|2760.00|300|Services and Charges|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D306|Repairs and Maintenance|0009|Prosecuting Attorney|7026.56|300|Services and Charges|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D306|Repairs and Maintenance|0015|_______________Twp Assessor|2977.18|300|Services and Charges|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D306|Repairs and Maintenance|0068|County Commissioners|5056.82|300|Services and Charges|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D306|Repairs and Maintenance|0161|Court House|17106.53|300|Services and Charges|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D306|Repairs and Maintenance|0174|Museum (Arts Commission)|20000.00|300|Services and Charges|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D306|Repairs and Maintenance|0177|Municipal Building (Police/Fire Building)|71419.38|300|Services and Charges|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D306|Repairs and Maintenance|0201|Superior Court #1 (Superior Court)|4702.45|300|Services and Charges|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D306|Repairs and Maintenance|0232|Circuit Court|1069.80|300|Services and Charges|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D306|Repairs and Maintenance|0273|Juvenile Probation|68053.31|300|Services and Charges|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D306|Repairs and Maintenance|0279|Records (Microfilm-Exam. Of Records-Mail-Duplicati|2872.47|300|Services and Charges|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D306|Repairs and Maintenance|0308|Weights & Measures Inspector|1424.95|300|Services and Charges|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D306|Repairs and Maintenance|0313|Building Maintenance (Maint. & Repair - City Inspe|35568.08|300|Services and Charges|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D306|Repairs and Maintenance|0318|Code Enforcement|115610.00|300|Services and Charges|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D306|Repairs and Maintenance|0361|Civil Defense|32378.56|300|Services and Charges|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D306|Repairs and Maintenance|0381|Detention Center|116389.79|300|Services and Charges|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D306|Repairs and Maintenance|0500|Public Works Service|345.00|300|Services and Charges|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D306|Repairs and Maintenance|0609|Alcohol & Drug (Crisis Center)|390.03|300|Services and Charges|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D307|Rentals|0001|Clerk Of Circuit Court (County Clerk)|7610.75|300|Services and Charges|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D307|Rentals|0007|County Coroner|9184.60|300|Services and Charges|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D307|Rentals|0009|Prosecuting Attorney|88922.00|300|Services and Charges|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D307|Rentals|0061|County Council|825.86|300|Services and Charges|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D307|Rentals|0068|County Commissioners|10052.07|300|Services and Charges|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D307|Rentals|0106|Data Processing (Computers)|480.00|300|Services and Charges|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D307|Rentals|0119|Central Services (City Svcs-Municipal Svcs-Svc Ctr|120000.00|300|Services and Charges|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D307|Rentals|0271|Public Defender|285200.00|300|Services and Charges|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D312|Other Services and Charges|0001|Clerk Of Circuit Court (County Clerk)|225.00|300|Services and Charges|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D312|Other Services and Charges|0002|County Auditor|568269.70|300|Services and Charges|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D312|Other Services and Charges|0003|County Treasurer|47093.19|300|Services and Charges|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D312|Other Services and Charges|0005|County Sheriff|282672.05|300|Services and Charges|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D312|Other Services and Charges|0007|County Coroner|148211.68|300|Services and Charges|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D312|Other Services and Charges|0009|Prosecuting Attorney|84174.14|300|Services and Charges|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D312|Other Services and Charges|0011|County Cooperative Extension Service (Agent)|131747.14|300|Services and Charges|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D312|Other Services and Charges|0015|_______________Twp Assessor|28120.00|300|Services and Charges|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D312|Other Services and Charges|0061|County Council|17783.72|300|Services and Charges|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D312|Other Services and Charges|0068|County Commissioners|686914.05|300|Services and Charges|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D312|Other Services and Charges|0104|Election Expense|498376.61|300|Services and Charges|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D312|Other Services and Charges|0106|Data Processing (Computers)|316669.23|300|Services and Charges|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D312|Other Services and Charges|0119|Central Services (City Svcs-Municipal Svcs-Svc Ctr|4663752.40|300|Services and Charges|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D312|Other Services and Charges|0161|Court House|13865.28|300|Services and Charges|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D312|Other Services and Charges|0177|Municipal Building (Police/Fire Building)|52127.82|300|Services and Charges|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D312|Other Services and Charges|0201|Superior Court #1 (Superior Court)|46983.40|300|Services and Charges|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D312|Other Services and Charges|0232|Circuit Court|10462.61|300|Services and Charges|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D312|Other Services and Charges|0233|Probate Court|77306.74|300|Services and Charges|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D312|Other Services and Charges|0271|Public Defender|44250.25|300|Services and Charges|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D312|Other Services and Charges|0273|Juvenile Probation|8723.13|300|Services and Charges|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D312|Other Services and Charges|0279|Records (Microfilm-Exam. Of Records-Mail-Duplicati|8425.08|300|Services and Charges|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D312|Other Services and Charges|0318|Code Enforcement|3041.37|300|Services and Charges|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D312|Other Services and Charges|0361|Civil Defense|1650.00|300|Services and Charges|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D312|Other Services and Charges|0381|Detention Center|258208.34|300|Services and Charges|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D312|Other Services and Charges|0500|Public Works Service|17737.87|300|Services and Charges|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D312|Other Services and Charges|0609|Alcohol & Drug (Crisis Center)|159937.22|300|Services and Charges|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D312|Other Services and Charges|0660|4-D Program (Child Support)|48264.00|300|Services and Charges|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D403|Payments on Bonds and Other Debt Principal|0007|County Coroner|3593.40|500|Debt service - principal and interest|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D403|Payments on Bonds and Other Debt Principal|0009|Prosecuting Attorney|7214.91|500|Debt service - principal and interest|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D403|Payments on Bonds and Other Debt Principal|0106|Data Processing (Computers)|336112.20|500|Debt service - principal and interest|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D403|Payments on Bonds and Other Debt Principal|0318|Code Enforcement|11173.24|500|Debt service - principal and interest|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D403|Payments on Bonds and Other Debt Principal|0361|Civil Defense|12494.12|500|Debt service - principal and interest|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D404|Payments on Bonds and Other Debt Interest|0009|Prosecuting Attorney|566.61|500|Debt service - principal and interest|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D404|Payments on Bonds and Other Debt Interest|0106|Data Processing (Computers)|22834.11|500|Debt service - principal and interest|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D404|Payments on Bonds and Other Debt Interest|0318|Code Enforcement|4281.61|500|Debt service - principal and interest|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D404|Payments on Bonds and Other Debt Interest|0361|Civil Defense|1015.24|500|Debt service - principal and interest|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D503|Buildings|0119|Central Services (City Svcs-Municipal Svcs-Svc Ctr|20600.00|600|Capital Outlays|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D503|Buildings|0174|Museum (Arts Commission)|11750.00|600|Capital Outlays|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D503|Buildings|0279|Records (Microfilm-Exam. Of Records-Mail-Duplicati|41451.86|600|Capital Outlays|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D505|Machinery, Equipment, and Vehicles|0015|_______________Twp Assessor|1276.39|600|Capital Outlays|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D505|Machinery, Equipment, and Vehicles|0279|Records (Microfilm-Exam. Of Records-Mail-Duplicati|19565.09|600|Capital Outlays|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D505|Machinery, Equipment, and Vehicles|0308|Weights & Measures Inspector|89.64|600|Capital Outlays|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D505|Machinery, Equipment, and Vehicles|0318|Code Enforcement|3521.20|600|Capital Outlays|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D505|Machinery, Equipment, and Vehicles|0500|Public Works Service|2825.25|600|Capital Outlays|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D704|Transfer Out - Transferred To Another Fund|0119|Central Services (City Svcs-Municipal Svcs-Svc Ctr|1800000.00|700|Other Disbursements|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D707|Other Disbursements|0002|County Auditor|1566.88|700|Other Disbursements|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101000|D707|Other Disbursements|0068|County Commissioners|3121442.75|700|Other Disbursements|General Fund|1000|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101176|D101|Salaries and Wages|0530|Highway Administration|427264.47|100|Personal Services|County Highway (MVH)|1176|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101176|D101|Salaries and Wages|0531|Maintenance & Repair|2317841.91|100|Personal Services|County Highway (MVH)|1176|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101176|D106|Other Personal Services|0531|Maintenance & Repair|59446.93|100|Personal Services|County Highway (MVH)|1176|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101176|D107|Employee Benefits|0531|Maintenance & Repair|1532538.70|100|Personal Services|County Highway (MVH)|1176|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101176|D201|Office Supplies|0530|Highway Administration|1266.30|200|Supplies|County Highway (MVH)|1176|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101176|D202|Operating Supplies|0530|Highway Administration|1276.76|200|Supplies|County Highway (MVH)|1176|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101176|D202|Operating Supplies|0531|Maintenance & Repair|666597.16|200|Supplies|County Highway (MVH)|1176|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101176|D202|Operating Supplies|0533|General & Undistributed Expense|365949.68|200|Supplies|County Highway (MVH)|1176|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101176|D203|Repair and Maintenance Supplies|0531|Maintenance & Repair|11083.23|200|Supplies|County Highway (MVH)|1176|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101176|D203|Repair and Maintenance Supplies|0533|General & Undistributed Expense|618708.33|200|Supplies|County Highway (MVH)|1176|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101176|D204|Other Supplies|0531|Maintenance & Repair|39436.64|200|Supplies|County Highway (MVH)|1176|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101176|D302|Communication and Transportation|0530|Highway Administration|60439.06|300|Services and Charges|County Highway (MVH)|1176|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101176|D304|Insurance|0533|General & Undistributed Expense|87677.00|300|Services and Charges|County Highway (MVH)|1176|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101176|D305|Utility Services|0530|Highway Administration|153477.36|300|Services and Charges|County Highway (MVH)|1176|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101176|D305|Utility Services|0531|Maintenance & Repair|30199.68|300|Services and Charges|County Highway (MVH)|1176|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101176|D306|Repairs and Maintenance|0530|Highway Administration|34412.84|300|Services and Charges|County Highway (MVH)|1176|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101176|D306|Repairs and Maintenance|0531|Maintenance & Repair|2700.00|300|Services and Charges|County Highway (MVH)|1176|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101176|D306|Repairs and Maintenance|0533|General & Undistributed Expense|233164.71|300|Services and Charges|County Highway (MVH)|1176|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101176|D307|Rentals|0531|Maintenance & Repair|95344.59|300|Services and Charges|County Highway (MVH)|1176|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101176|D312|Other Services and Charges|0530|Highway Administration|5526.45|300|Services and Charges|County Highway (MVH)|1176|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101176|D312|Other Services and Charges|0531|Maintenance & Repair|74152.52|300|Services and Charges|County Highway (MVH)|1176|
+2023|St. Joseph|71|1|0000|ST. JOSEPH COUNTY|71-000.00|1|0|Governmental Activities|101176|D505|Machinery, Equipment, and Vehicles|0533|General & Undistributed Expense|1000.00|600|Capital Outlays|County Highway (MVH)|1176|
+2023|St. Joseph|71|3|0103|SOUTH BEND CIVIL CITY|71-002.00|2|0|Governmental Activities|101001|D101|Salaries and Wages|0040|Administration & Finance|2129595.08|100|Personal Services|General Fund|0000000101|
+2023|St. Joseph|71|3|0103|SOUTH BEND CIVIL CITY|71-002.00|2|0|Governmental Activities|101001|D101|Salaries and Wages|0042|Clerk's Office|274552.08|100|Personal Services|General Fund|0000000101|
+2023|St. Joseph|71|3|0103|SOUTH BEND CIVIL CITY|71-002.00|2|0|Governmental Activities|101001|D101|Salaries and Wages|0044|Mayor's Office|608075.71|100|Personal Services|General Fund|0000000101|
+2023|St. Joseph|71|3|0103|SOUTH BEND CIVIL CITY|71-002.00|2|0|Governmental Activities|101001|D101|Salaries and Wages|0069|Common Council|205664.90|100|Personal Services|General Fund|0000000101|
+2023|St. Joseph|71|3|0103|SOUTH BEND CIVIL CITY|71-002.00|2|0|Governmental Activities|101001|D101|Salaries and Wages|0270|Legal Department|1042113.06|100|Personal Services|General Fund|0000000101|
+2023|St. Joseph|71|3|0103|SOUTH BEND CIVIL CITY|71-002.00|2|0|Governmental Activities|101001|D101|Salaries and Wages|0306|Public Works|1910499.19|100|Personal Services|General Fund|0000000101|
+2023|St. Joseph|71|3|0103|SOUTH BEND CIVIL CITY|71-002.00|2|0|Governmental Activities|101001|D101|Salaries and Wages|0319|Civil Rights|141005.83|100|Personal Services|General Fund|0000000101|
+2023|St. Joseph|71|3|0103|SOUTH BEND CIVIL CITY|71-002.00|2|0|Governmental Activities|101001|D101|Salaries and Wages|0362|Fire Department|17109834.45|100|Personal Services|General Fund|0000000101|
+2023|St. Joseph|71|3|0103|SOUTH BEND CIVIL CITY|71-002.00|2|0|Governmental Activities|101001|D101|Salaries and Wages|0370|Police Department|20490643.05|100|Personal Services|General Fund|0000000101|
+2023|St. Joseph|71|3|0103|SOUTH BEND CIVIL CITY|71-002.00|2|0|Governmental Activities|101001|D107|Employee Benefits|0040|Administration & Finance|722123.59|100|Personal Services|General Fund|0000000101|
+2023|St. Joseph|71|3|0103|SOUTH BEND CIVIL CITY|71-002.00|2|0|Governmental Activities|101001|D107|Employee Benefits|0042|Clerk's Office|79077.86|100|Personal Services|General Fund|0000000101|
+2023|St. Joseph|71|3|0103|SOUTH BEND CIVIL CITY|71-002.00|2|0|Governmental Activities|101001|D107|Employee Benefits|0044|Mayor's Office|204448.08|100|Personal Services|General Fund|0000000101|
+2023|St. Joseph|71|3|0103|SOUTH BEND CIVIL CITY|71-002.00|2|0|Governmental Activities|101001|D107|Employee Benefits|0069|Common Council|115805.01|100|Personal Services|General Fund|0000000101|
+2023|St. Joseph|71|3|0103|SOUTH BEND CIVIL CITY|71-002.00|2|0|Governmental Activities|101001|D107|Employee Benefits|0270|Legal Department|340202.62|100|Personal Services|General Fund|0000000101|
+2023|St. Joseph|71|3|0103|SOUTH BEND CIVIL CITY|71-002.00|2|0|Governmental Activities|101001|D107|Employee Benefits|0306|Public Works|634089.32|100|Personal Services|General Fund|0000000101|
+2023|St. Joseph|71|3|0103|SOUTH BEND CIVIL CITY|71-002.00|2|0|Governmental Activities|101001|D107|Employee Benefits|0319|Civil Rights|46737.22|100|Personal Services|General Fund|0000000101|
+2023|St. Joseph|71|3|0103|SOUTH BEND CIVIL CITY|71-002.00|2|0|Governmental Activities|101001|D107|Employee Benefits|0362|Fire Department|6866143.96|100|Personal Services|General Fund|0000000101|
+2023|St. Joseph|71|3|0103|SOUTH BEND CIVIL CITY|71-002.00|2|0|Governmental Activities|101001|D107|Employee Benefits|0370|Police Department|8103781.28|100|Personal Services|General Fund|0000000101|
+2023|St. Joseph|71|3|0103|SOUTH BEND CIVIL CITY|71-002.00|2|0|Governmental Activities|101001|D201|Office Supplies|0040|Administration & Finance|15397.44|200|Supplies|General Fund|0000000101|
+2023|St. Joseph|71|3|0103|SOUTH BEND CIVIL CITY|71-002.00|2|0|Governmental Activities|101001|D201|Office Supplies|0042|Clerk's Office|9688.75|200|Supplies|General Fund|0000000101|
+2023|St. Joseph|71|3|0103|SOUTH BEND CIVIL CITY|71-002.00|2|0|Governmental Activities|101001|D201|Office Supplies|0044|Mayor's Office|3408.53|200|Supplies|General Fund|0000000101|
+2023|St. Joseph|71|3|0103|SOUTH BEND CIVIL CITY|71-002.00|2|0|Governmental Activities|101001|D201|Office Supplies|0069|Common Council|944.89|200|Supplies|General Fund|0000000101|
+2023|St. Joseph|71|3|0103|SOUTH BEND CIVIL CITY|71-002.00|2|0|Governmental Activities|101001|D201|Office Supplies|0270|Legal Department|3312.40|200|Supplies|General Fund|0000000101|
+2023|St. Joseph|71|3|0103|SOUTH BEND CIVIL CITY|71-002.00|2|0|Governmental Activities|101001|D201|Office Supplies|0306|Public Works|5854.67|200|Supplies|General Fund|0000000101|
+2023|St. Joseph|71|3|0103|SOUTH BEND CIVIL CITY|71-002.00|2|0|Governmental Activities|101001|D201|Office Supplies|0319|Civil Rights|2497.32|200|Supplies|General Fund|0000000101|
+2023|St. Joseph|71|3|0103|SOUTH BEND CIVIL CITY|71-002.00|2|0|Governmental Activities|101001|D201|Office Supplies|0362|Fire Department|4302.34|200|Supplies|General Fund|0000000101|
+2023|St. Joseph|71|3|0103|SOUTH BEND CIVIL CITY|71-002.00|2|0|Governmental Activities|101001|D201|Office Supplies|0370|Police Department|36016.03|200|Supplies|General Fund|0000000101|
+2023|St. Joseph|71|3|0103|SOUTH BEND CIVIL CITY|71-002.00|2|0|Governmental Activities|101001|D202|Operating Supplies|0040|Administration & Finance|6473.65|200|Supplies|General Fund|0000000101|
+2023|St. Joseph|71|3|0103|SOUTH BEND CIVIL CITY|71-002.00|2|0|Governmental Activities|101001|D202|Operating Supplies|0044|Mayor's Office|246.10|200|Supplies|General Fund|0000000101|
+2023|St. Joseph|71|3|0103|SOUTH BEND CIVIL CITY|71-002.00|2|0|Governmental Activities|101001|D202|Operating Supplies|0069|Common Council|947.98|200|Supplies|General Fund|0000000101|
+2023|St. Joseph|71|3|0103|SOUTH BEND CIVIL CITY|71-002.00|2|0|Governmental Activities|101001|D202|Operating Supplies|0306|Public Works|2103.43|200|Supplies|General Fund|0000000101|
+2023|St. Joseph|71|3|0103|SOUTH BEND CIVIL CITY|71-002.00|2|0|Governmental Activities|101001|D202|Operating Supplies|0362|Fire Department|1108571.47|200|Supplies|General Fund|0000000101|
+2023|St. Joseph|71|3|0103|SOUTH BEND CIVIL CITY|71-002.00|2|0|Governmental Activities|101001|D202|Operating Supplies|0370|Police Department|1323851.61|200|Supplies|General Fund|0000000101|
+2023|St. Joseph|71|3|0103|SOUTH BEND CIVIL CITY|71-002.00|2|0|Governmental Activities|101001|D202|Operating Supplies|9602|Venues Parks & Arts|3436.89|200|Supplies|General Fund|0000000101|
+2023|St. Joseph|71|3|0103|SOUTH BEND CIVIL CITY|71-002.00|2|0|Governmental Activities|101001|D203|Repair and Maintenance Supplies|0306|Public Works|133571.01|200|Supplies|General Fund|0000000101|
+2023|St. Joseph|71|3|0103|SOUTH BEND CIVIL CITY|71-002.00|2|0|Governmental Activities|101001|D203|Repair and Maintenance Supplies|0362|Fire Department|29046.60|200|Supplies|General Fund|0000000101|
+2023|St. Joseph|71|3|0103|SOUTH BEND CIVIL CITY|71-002.00|2|0|Governmental Activities|101001|D203|Repair and Maintenance Supplies|0370|Police Department|17723.93|200|Supplies|General Fund|0000000101|
+2023|St. Joseph|71|3|0103|SOUTH BEND CIVIL CITY|71-002.00|2|0|Governmental Activities|101001|D203|Repair and Maintenance Supplies|9602|Venues Parks & Arts|961.68|200|Supplies|General Fund|0000000101|
+2023|St. Joseph|71|3|0103|SOUTH BEND CIVIL CITY|71-002.00|2|0|Governmental Activities|101001|D301|Professional Services|0040|Administration & Finance|397878.33|300|Services and Charges|General Fund|0000000101|
+2023|St. Joseph|71|3|0103|SOUTH BEND CIVIL CITY|71-002.00|2|0|Governmental Activities|101001|D301|Professional Services|0042|Clerk's Office|3762.50|300|Services and Charges|General Fund|0000000101|
+2023|St. Joseph|71|3|0103|SOUTH BEND CIVIL CITY|71-002.00|2|0|Governmental Activities|101001|D301|Professional Services|0044|Mayor's Office|6946.00|300|Services and Charges|General Fund|0000000101|
+2023|St. Joseph|71|3|0103|SOUTH BEND CIVIL CITY|71-002.00|2|0|Governmental Activities|101001|D301|Professional Services|0069|Common Council|230652.91|300|Services and Charges|General Fund|0000000101|
+2023|St. Joseph|71|3|0103|SOUTH BEND CIVIL CITY|71-002.00|2|0|Governmental Activities|101001|D301|Professional Services|0270|Legal Department|914.49|300|Services and Charges|General Fund|0000000101|
+2023|St. Joseph|71|3|0103|SOUTH BEND CIVIL CITY|71-002.00|2|0|Governmental Activities|101001|D301|Professional Services|0306|Public Works|148600.60|300|Services and Charges|General Fund|0000000101|
+2023|St. Joseph|71|3|0103|SOUTH BEND CIVIL CITY|71-002.00|2|0|Governmental Activities|101001|D301|Professional Services|0319|Civil Rights|1079.22|300|Services and Charges|General Fund|0000000101|
+2023|St. Joseph|71|3|0103|SOUTH BEND CIVIL CITY|71-002.00|2|0|Governmental Activities|101001|D301|Professional Services|0362|Fire Department|699640.37|300|Services and Charges|General Fund|0000000101|
+2023|St. Joseph|71|3|0103|SOUTH BEND CIVIL CITY|71-002.00|2|0|Governmental Activities|101001|D301|Professional Services|0370|Police Department|1177704.01|300|Services and Charges|General Fund|0000000101|
+2023|St. Joseph|71|3|0103|SOUTH BEND CIVIL CITY|71-002.00|2|0|Governmental Activities|101001|D302|Communication and Transportation|0040|Administration & Finance|21414.56|300|Services and Charges|General Fund|0000000101|
+2023|St. Joseph|71|3|0103|SOUTH BEND CIVIL CITY|71-002.00|2|0|Governmental Activities|101001|D302|Communication and Transportation|0042|Clerk's Office|4697.46|300|Services and Charges|General Fund|0000000101|
+2023|St. Joseph|71|3|0103|SOUTH BEND CIVIL CITY|71-002.00|2|0|Governmental Activities|101001|D302|Communication and Transportation|0044|Mayor's Office|1860.35|300|Services and Charges|General Fund|0000000101|
+2023|St. Joseph|71|3|0103|SOUTH BEND CIVIL CITY|71-002.00|2|0|Governmental Activities|101001|D302|Communication and Transportation|0069|Common Council|15508.28|300|Services and Charges|General Fund|0000000101|
+2023|St. Joseph|71|3|0103|SOUTH BEND CIVIL CITY|71-002.00|2|0|Governmental Activities|101001|D302|Communication and Transportation|0270|Legal Department|4696.18|300|Services and Charges|General Fund|0000000101|
+2023|St. Joseph|71|3|0103|SOUTH BEND CIVIL CITY|71-002.00|2|0|Governmental Activities|101001|D302|Communication and Transportation|0306|Public Works|10220.97|300|Services and Charges|General Fund|0000000101|
+2023|St. Joseph|71|3|0103|SOUTH BEND CIVIL CITY|71-002.00|2|0|Governmental Activities|101001|D302|Communication and Transportation|0319|Civil Rights|18013.88|300|Services and Charges|General Fund|0000000101|
+2023|St. Joseph|71|3|0103|SOUTH BEND CIVIL CITY|71-002.00|2|0|Governmental Activities|101001|D302|Communication and Transportation|0362|Fire Department|69270.34|300|Services and Charges|General Fund|0000000101|
+2023|St. Joseph|71|3|0103|SOUTH BEND CIVIL CITY|71-002.00|2|0|Governmental Activities|101001|D302|Communication and Transportation|0370|Police Department|198634.37|300|Services and Charges|General Fund|0000000101|
+2023|St. Joseph|71|3|0103|SOUTH BEND CIVIL CITY|71-002.00|2|0|Governmental Activities|101001|D303|Printing and Advertising|0040|Administration & Finance|21180.11|300|Services and Charges|General Fund|0000000101|
+2023|St. Joseph|71|3|0103|SOUTH BEND CIVIL CITY|71-002.00|2|0|Governmental Activities|101001|D303|Printing and Advertising|0042|Clerk's Office|39458.00|300|Services and Charges|General Fund|0000000101|
+2023|St. Joseph|71|3|0103|SOUTH BEND CIVIL CITY|71-002.00|2|0|Governmental Activities|101001|D303|Printing and Advertising|0044|Mayor's Office|42990.77|300|Services and Charges|General Fund|0000000101|
+2023|St. Joseph|71|3|0103|SOUTH BEND CIVIL CITY|71-002.00|2|0|Governmental Activities|101001|D303|Printing and Advertising|0069|Common Council|15405.27|300|Services and Charges|General Fund|0000000101|
+2023|St. Joseph|71|3|0103|SOUTH BEND CIVIL CITY|71-002.00|2|0|Governmental Activities|101001|D303|Printing and Advertising|0306|Public Works|5696.76|300|Services and Charges|General Fund|0000000101|
+2023|St. Joseph|71|3|0103|SOUTH BEND CIVIL CITY|71-002.00|2|0|Governmental Activities|101001|D303|Printing and Advertising|0319|Civil Rights|2740.27|300|Services and Charges|General Fund|0000000101|
+2023|St. Joseph|71|3|0103|SOUTH BEND CIVIL CITY|71-002.00|2|0|Governmental Activities|101001|D303|Printing and Advertising|0362|Fire Department|3128.50|300|Services and Charges|General Fund|0000000101|
+2023|St. Joseph|71|3|0103|SOUTH BEND CIVIL CITY|71-002.00|2|0|Governmental Activities|101001|D303|Printing and Advertising|0370|Police Department|74590.73|300|Services and Charges|General Fund|0000000101|
+2023|St. Joseph|71|3|0103|SOUTH BEND CIVIL CITY|71-002.00|2|0|Governmental Activities|101001|D303|Printing and Advertising|9601|Community Investment|183.75|300|Services and Charges|General Fund|0000000101|
+2023|St. Joseph|71|3|0103|SOUTH BEND CIVIL CITY|71-002.00|2|0|Governmental Activities|101001|D305|Utility Services|0306|Public Works|1314107.76|300|Services and Charges|General Fund|0000000101|
+2023|St. Joseph|71|3|0103|SOUTH BEND CIVIL CITY|71-002.00|2|0|Governmental Activities|101001|D305|Utility Services|0362|Fire Department|292339.53|300|Services and Charges|General Fund|0000000101|
+2023|St. Joseph|71|3|0103|SOUTH BEND CIVIL CITY|71-002.00|2|0|Governmental Activities|101001|D305|Utility Services|0370|Police Department|215909.95|300|Services and Charges|General Fund|0000000101|
+2023|St. Joseph|71|3|0103|SOUTH BEND CIVIL CITY|71-002.00|2|0|Governmental Activities|101001|D305|Utility Services|9602|Venues Parks & Arts|73116.77|300|Services and Charges|General Fund|0000000101|
+2023|St. Joseph|71|3|0103|SOUTH BEND CIVIL CITY|71-002.00|2|0|Governmental Activities|101001|D306|Repairs and Maintenance|0040|Administration & Finance|1093388.85|300|Services and Charges|General Fund|0000000101|
+2023|St. Joseph|71|3|0103|SOUTH BEND CIVIL CITY|71-002.00|2|0|Governmental Activities|101001|D306|Repairs and Maintenance|0042|Clerk's Office|1746.25|300|Services and Charges|General Fund|0000000101|
+2023|St. Joseph|71|3|0103|SOUTH BEND CIVIL CITY|71-002.00|2|0|Governmental Activities|101001|D306|Repairs and Maintenance|0069|Common Council|7240.00|300|Services and Charges|General Fund|0000000101|
+2023|St. Joseph|71|3|0103|SOUTH BEND CIVIL CITY|71-002.00|2|0|Governmental Activities|101001|D306|Repairs and Maintenance|0306|Public Works|4649.09|300|Services and Charges|General Fund|0000000101|
+2023|St. Joseph|71|3|0103|SOUTH BEND CIVIL CITY|71-002.00|2|0|Governmental Activities|101001|D306|Repairs and Maintenance|0319|Civil Rights|6972.06|300|Services and Charges|General Fund|0000000101|
+2023|St. Joseph|71|3|0103|SOUTH BEND CIVIL CITY|71-002.00|2|0|Governmental Activities|101001|D306|Repairs and Maintenance|0362|Fire Department|1224078.35|300|Services and Charges|General Fund|0000000101|
+2023|St. Joseph|71|3|0103|SOUTH BEND CIVIL CITY|71-002.00|2|0|Governmental Activities|101001|D306|Repairs and Maintenance|0370|Police Department|1196026.69|300|Services and Charges|General Fund|0000000101|
+2023|St. Joseph|71|3|0103|SOUTH BEND CIVIL CITY|71-002.00|2|0|Governmental Activities|101001|D306|Repairs and Maintenance|9602|Venues Parks & Arts|97927.77|300|Services and Charges|General Fund|0000000101|
+2023|St. Joseph|71|3|0103|SOUTH BEND CIVIL CITY|71-002.00|2|0|Governmental Activities|101001|D307|Rentals|0040|Administration & Finance|19865.28|300|Services and Charges|General Fund|0000000101|
+2023|St. Joseph|71|3|0103|SOUTH BEND CIVIL CITY|71-002.00|2|0|Governmental Activities|101001|D307|Rentals|0319|Civil Rights|41543.69|300|Services and Charges|General Fund|0000000101|
+2023|St. Joseph|71|3|0103|SOUTH BEND CIVIL CITY|71-002.00|2|0|Governmental Activities|101001|D307|Rentals|0370|Police Department|35000.00|300|Services and Charges|General Fund|0000000101|
+2023|St. Joseph|71|3|0103|SOUTH BEND CIVIL CITY|71-002.00|2|0|Governmental Activities|101001|D312|Other Services and Charges|0040|Administration & Finance|9306948.96|300|Services and Charges|General Fund|0000000101|
+2023|St. Joseph|71|3|0103|SOUTH BEND CIVIL CITY|71-002.00|2|0|Governmental Activities|101001|D312|Other Services and Charges|0042|Clerk's Office|137445.09|300|Services and Charges|General Fund|0000000101|
+2023|St. Joseph|71|3|0103|SOUTH BEND CIVIL CITY|71-002.00|2|0|Governmental Activities|101001|D312|Other Services and Charges|0044|Mayor's Office|161071.09|300|Services and Charges|General Fund|0000000101|
+2023|St. Joseph|71|3|0103|SOUTH BEND CIVIL CITY|71-002.00|2|0|Governmental Activities|101001|D312|Other Services and Charges|0069|Common Council|58798.57|300|Services and Charges|General Fund|0000000101|
+2023|St. Joseph|71|3|0103|SOUTH BEND CIVIL CITY|71-002.00|2|0|Governmental Activities|101001|D312|Other Services and Charges|0270|Legal Department|190204.67|300|Services and Charges|General Fund|0000000101|
+2023|St. Joseph|71|3|0103|SOUTH BEND CIVIL CITY|71-002.00|2|0|Governmental Activities|101001|D312|Other Services and Charges|0306|Public Works|524919.17|300|Services and Charges|General Fund|0000000101|
+2023|St. Joseph|71|3|0103|SOUTH BEND CIVIL CITY|71-002.00|2|0|Governmental Activities|101001|D312|Other Services and Charges|0319|Civil Rights|64664.21|300|Services and Charges|General Fund|0000000101|
+2023|St. Joseph|71|3|0103|SOUTH BEND CIVIL CITY|71-002.00|2|0|Governmental Activities|101001|D312|Other Services and Charges|0362|Fire Department|3216210.58|300|Services and Charges|General Fund|0000000101|
+2023|St. Joseph|71|3|0103|SOUTH BEND CIVIL CITY|71-002.00|2|0|Governmental Activities|101001|D312|Other Services and Charges|0370|Police Department|5268125.82|300|Services and Charges|General Fund|0000000101|
+2023|St. Joseph|71|3|0103|SOUTH BEND CIVIL CITY|71-002.00|2|0|Governmental Activities|101001|D312|Other Services and Charges|9602|Venues Parks & Arts|1946612.83|300|Services and Charges|General Fund|0000000101|
+2023|St. Joseph|71|3|0103|SOUTH BEND CIVIL CITY|71-002.00|2|0|Governmental Activities|101001|D403|Payments on Bonds and Other Debt Principal|0370|Police Department|193178.54|500|Debt service - principal and interest|General Fund|0000000101|
+2023|St. Joseph|71|3|0103|SOUTH BEND CIVIL CITY|71-002.00|2|0|Governmental Activities|101001|D404|Payments on Bonds and Other Debt Interest|0370|Police Department|6511.53|500|Debt service - principal and interest|General Fund|0000000101|
+2023|St. Joseph|71|3|0103|SOUTH BEND CIVIL CITY|71-002.00|2|0|Governmental Activities|101001|D503|Buildings|0040|Administration & Finance|253931.18|600|Capital Outlays|General Fund|0000000101|
+2023|St. Joseph|71|3|0103|SOUTH BEND CIVIL CITY|71-002.00|2|0|Governmental Activities|101001|D505|Machinery, Equipment, and Vehicles|0306|Public Works|29380.25|600|Capital Outlays|General Fund|0000000101|
+2023|St. Joseph|71|3|0103|SOUTH BEND CIVIL CITY|71-002.00|2|0|Governmental Activities|101001|D505|Machinery, Equipment, and Vehicles|0370|Police Department|3287850.50|600|Capital Outlays|General Fund|0000000101|
+2023|St. Joseph|71|3|0103|SOUTH BEND CIVIL CITY|71-002.00|2|0|Governmental Activities|101001|D704|Transfer Out - Transferred To Another Fund|0040|Administration & Finance|868000.00|700|Other Disbursements|General Fund|0000000101|
+2023|St. Joseph|71|3|0103|SOUTH BEND CIVIL CITY|71-002.00|2|0|Governmental Activities|101001|D704|Transfer Out - Transferred To Another Fund|0306|Public Works|4812500.00|700|Other Disbursements|General Fund|0000000101|
+2023|St. Joseph|71|3|0103|SOUTH BEND CIVIL CITY|71-002.00|2|0|Governmental Activities|101001|D704|Transfer Out - Transferred To Another Fund|9602|Venues Parks & Arts|5372562.25|700|Other Disbursements|General Fund|0000000101|
+2023|St. Joseph|71|3|0117|MISHAWAKA CIVIL CITY|71-001.00|2|0|Governmental Activities|101001|D101|Salaries and Wages|0040|Controller|339579.68|100|Personal Services|General|1101|
+2023|St. Joseph|71|3|0117|MISHAWAKA CIVIL CITY|71-001.00|2|0|Governmental Activities|101001|D101|Salaries and Wages|0041|Clerk-Treasurer (City/Town Units Only)|156828.26|100|Personal Services|General|1101|
+2023|St. Joseph|71|3|0117|MISHAWAKA CIVIL CITY|71-001.00|2|0|Governmental Activities|101001|D101|Salaries and Wages|0044|Mayor|178336.08|100|Personal Services|General|1101|
+2023|St. Joseph|71|3|0117|MISHAWAKA CIVIL CITY|71-001.00|2|0|Governmental Activities|101001|D101|Salaries and Wages|0069|City Council/Town Board (Common Council)|144195.98|100|Personal Services|General|1101|
+2023|St. Joseph|71|3|0117|MISHAWAKA CIVIL CITY|71-001.00|2|0|Governmental Activities|101001|D101|Salaries and Wages|0101|Planning & Zoning|319918.05|100|Personal Services|General|1101|
+2023|St. Joseph|71|3|0117|MISHAWAKA CIVIL CITY|71-001.00|2|0|Governmental Activities|101001|D101|Salaries and Wages|0106|Data Processing (Computers)|335392.01|100|Personal Services|General|1101|
+2023|St. Joseph|71|3|0117|MISHAWAKA CIVIL CITY|71-001.00|2|0|Governmental Activities|101001|D101|Salaries and Wages|0119|Central Services (City Svcs-Municipal Svcs-Svc Ctr.)|705331.59|100|Personal Services|General|1101|
+2023|St. Joseph|71|3|0117|MISHAWAKA CIVIL CITY|71-001.00|2|0|Governmental Activities|101001|D101|Salaries and Wages|0277|Law Department|129709.58|100|Personal Services|General|1101|
+2023|St. Joseph|71|3|0117|MISHAWAKA CIVIL CITY|71-001.00|2|0|Governmental Activities|101001|D101|Salaries and Wages|0306|Engineer|434448.72|100|Personal Services|General|1101|
+2023|St. Joseph|71|3|0117|MISHAWAKA CIVIL CITY|71-001.00|2|0|Governmental Activities|101001|D101|Salaries and Wages|0309|Human Relations/Resources (Social Svc-Council On Aging)|67767.47|100|Personal Services|General|1101|
+2023|St. Joseph|71|3|0117|MISHAWAKA CIVIL CITY|71-001.00|2|0|Governmental Activities|101001|D101|Salaries and Wages|0312|Building Department (Jail Const. - Bldg. Comm. - Permits)|244708.36|100|Personal Services|General|1101|
+2023|St. Joseph|71|3|0117|MISHAWAKA CIVIL CITY|71-001.00|2|0|Governmental Activities|101001|D101|Salaries and Wages|0318|Code Enforcement|375574.68|100|Personal Services|General|1101|
+2023|St. Joseph|71|3|0117|MISHAWAKA CIVIL CITY|71-001.00|2|0|Governmental Activities|101001|D101|Salaries and Wages|0362|Fire Department|7787073.32|100|Personal Services|General|1101|
+2023|St. Joseph|71|3|0117|MISHAWAKA CIVIL CITY|71-001.00|2|0|Governmental Activities|101001|D101|Salaries and Wages|0370|Police Department (Town Marshall)|7195722.36|100|Personal Services|General|1101|
+2023|St. Joseph|71|3|0117|MISHAWAKA CIVIL CITY|71-001.00|2|0|Governmental Activities|101001|D101|Salaries and Wages|0701|Redevelopment|168528.85|100|Personal Services|General|1101|
+2023|St. Joseph|71|3|0117|MISHAWAKA CIVIL CITY|71-001.00|2|0|Governmental Activities|101001|D106|Other Personal Services|0040|Controller|42697.10|100|Personal Services|General|1101|
+2023|St. Joseph|71|3|0117|MISHAWAKA CIVIL CITY|71-001.00|2|0|Governmental Activities|101001|D106|Other Personal Services|0041|Clerk-Treasurer (City/Town Units Only)|2750.00|100|Personal Services|General|1101|
+2023|St. Joseph|71|3|0117|MISHAWAKA CIVIL CITY|71-001.00|2|0|Governmental Activities|101001|D106|Other Personal Services|0119|Central Services (City Svcs-Municipal Svcs-Svc Ctr.)|11901.58|100|Personal Services|General|1101|
+2023|St. Joseph|71|3|0117|MISHAWAKA CIVIL CITY|71-001.00|2|0|Governmental Activities|101001|D106|Other Personal Services|0306|Engineer|10000.00|100|Personal Services|General|1101|
+2023|St. Joseph|71|3|0117|MISHAWAKA CIVIL CITY|71-001.00|2|0|Governmental Activities|101001|D106|Other Personal Services|0309|Human Relations/Resources (Social Svc-Council On Aging)|500.00|100|Personal Services|General|1101|
+2023|St. Joseph|71|3|0117|MISHAWAKA CIVIL CITY|71-001.00|2|0|Governmental Activities|101001|D106|Other Personal Services|0362|Fire Department|1519554.29|100|Personal Services|General|1101|
+2023|St. Joseph|71|3|0117|MISHAWAKA CIVIL CITY|71-001.00|2|0|Governmental Activities|101001|D106|Other Personal Services|0370|Police Department (Town Marshall)|1324635.26|100|Personal Services|General|1101|
+2023|St. Joseph|71|3|0117|MISHAWAKA CIVIL CITY|71-001.00|2|0|Governmental Activities|101001|D107|Employee Benefits|0040|Controller|2084263.37|100|Personal Services|General|1101|
+2023|St. Joseph|71|3|0117|MISHAWAKA CIVIL CITY|71-001.00|2|0|Governmental Activities|101001|D107|Employee Benefits|0362|Fire Department|4410184.01|100|Personal Services|General|1101|
+2023|St. Joseph|71|3|0117|MISHAWAKA CIVIL CITY|71-001.00|2|0|Governmental Activities|101001|D107|Employee Benefits|0370|Police Department (Town Marshall)|3731986.34|100|Personal Services|General|1101|
+2023|St. Joseph|71|3|0117|MISHAWAKA CIVIL CITY|71-001.00|2|0|Governmental Activities|101001|D201|Office Supplies|0040|Controller|13636.92|200|Supplies|General|1101|
+2023|St. Joseph|71|3|0117|MISHAWAKA CIVIL CITY|71-001.00|2|0|Governmental Activities|101001|D201|Office Supplies|0041|Clerk-Treasurer (City/Town Units Only)|2074.98|200|Supplies|General|1101|
+2023|St. Joseph|71|3|0117|MISHAWAKA CIVIL CITY|71-001.00|2|0|Governmental Activities|101001|D201|Office Supplies|0044|Mayor|1338.79|200|Supplies|General|1101|
+2023|St. Joseph|71|3|0117|MISHAWAKA CIVIL CITY|71-001.00|2|0|Governmental Activities|101001|D201|Office Supplies|0069|City Council/Town Board (Common Council)|170.18|200|Supplies|General|1101|
+2023|St. Joseph|71|3|0117|MISHAWAKA CIVIL CITY|71-001.00|2|0|Governmental Activities|101001|D201|Office Supplies|0119|Central Services (City Svcs-Municipal Svcs-Svc Ctr.)|1059.97|200|Supplies|General|1101|
+2023|St. Joseph|71|3|0117|MISHAWAKA CIVIL CITY|71-001.00|2|0|Governmental Activities|101001|D201|Office Supplies|0277|Law Department|78.38|200|Supplies|General|1101|
+2023|St. Joseph|71|3|0117|MISHAWAKA CIVIL CITY|71-001.00|2|0|Governmental Activities|101001|D201|Office Supplies|0306|Engineer|5230.82|200|Supplies|General|1101|
+2023|St. Joseph|71|3|0117|MISHAWAKA CIVIL CITY|71-001.00|2|0|Governmental Activities|101001|D201|Office Supplies|0309|Human Relations/Resources (Social Svc-Council On Aging)|741.93|200|Supplies|General|1101|
+2023|St. Joseph|71|3|0117|MISHAWAKA CIVIL CITY|71-001.00|2|0|Governmental Activities|101001|D201|Office Supplies|0362|Fire Department|4117.08|200|Supplies|General|1101|
+2023|St. Joseph|71|3|0117|MISHAWAKA CIVIL CITY|71-001.00|2|0|Governmental Activities|101001|D202|Operating Supplies|0101|Planning & Zoning|1988.61|200|Supplies|General|1101|
+2023|St. Joseph|71|3|0117|MISHAWAKA CIVIL CITY|71-001.00|2|0|Governmental Activities|101001|D202|Operating Supplies|0106|Data Processing (Computers)|6645.05|200|Supplies|General|1101|
+2023|St. Joseph|71|3|0117|MISHAWAKA CIVIL CITY|71-001.00|2|0|Governmental Activities|101001|D202|Operating Supplies|0119|Central Services (City Svcs-Municipal Svcs-Svc Ctr.)|917281.29|200|Supplies|General|1101|
+2023|St. Joseph|71|3|0117|MISHAWAKA CIVIL CITY|71-001.00|2|0|Governmental Activities|101001|D202|Operating Supplies|0312|Building Department (Jail Const. - Bldg. Comm. - Permits)|1257.61|200|Supplies|General|1101|
+2023|St. Joseph|71|3|0117|MISHAWAKA CIVIL CITY|71-001.00|2|0|Governmental Activities|101001|D202|Operating Supplies|0318|Code Enforcement|2126.35|200|Supplies|General|1101|
+2023|St. Joseph|71|3|0117|MISHAWAKA CIVIL CITY|71-001.00|2|0|Governmental Activities|101001|D202|Operating Supplies|0362|Fire Department|337484.74|200|Supplies|General|1101|
+2023|St. Joseph|71|3|0117|MISHAWAKA CIVIL CITY|71-001.00|2|0|Governmental Activities|101001|D202|Operating Supplies|0370|Police Department (Town Marshall)|58460.13|200|Supplies|General|1101|
+2023|St. Joseph|71|3|0117|MISHAWAKA CIVIL CITY|71-001.00|2|0|Governmental Activities|101001|D204|Other Supplies|0119|Central Services (City Svcs-Municipal Svcs-Svc Ctr.)|3700.97|200|Supplies|General|1101|
+2023|St. Joseph|71|3|0117|MISHAWAKA CIVIL CITY|71-001.00|2|0|Governmental Activities|101001|D204|Other Supplies|0362|Fire Department|660.92|200|Supplies|General|1101|
+2023|St. Joseph|71|3|0117|MISHAWAKA CIVIL CITY|71-001.00|2|0|Governmental Activities|101001|D204|Other Supplies|0370|Police Department (Town Marshall)|293.17|200|Supplies|General|1101|
+2023|St. Joseph|71|3|0117|MISHAWAKA CIVIL CITY|71-001.00|2|0|Governmental Activities|101001|D301|Professional Services|0041|Clerk-Treasurer (City/Town Units Only)|8429.65|300|Services and Charges|General|1101|
+2023|St. Joseph|71|3|0117|MISHAWAKA CIVIL CITY|71-001.00|2|0|Governmental Activities|101001|D301|Professional Services|0101|Planning & Zoning|4265.09|300|Services and Charges|General|1101|
+2023|St. Joseph|71|3|0117|MISHAWAKA CIVIL CITY|71-001.00|2|0|Governmental Activities|101001|D301|Professional Services|0119|Central Services (City Svcs-Municipal Svcs-Svc Ctr.)|74.00|300|Services and Charges|General|1101|
+2023|St. Joseph|71|3|0117|MISHAWAKA CIVIL CITY|71-001.00|2|0|Governmental Activities|101001|D301|Professional Services|0277|Law Department|4375.00|300|Services and Charges|General|1101|
+2023|St. Joseph|71|3|0117|MISHAWAKA CIVIL CITY|71-001.00|2|0|Governmental Activities|101001|D301|Professional Services|0306|Engineer|8129.80|300|Services and Charges|General|1101|
+2023|St. Joseph|71|3|0117|MISHAWAKA CIVIL CITY|71-001.00|2|0|Governmental Activities|101001|D301|Professional Services|0309|Human Relations/Resources (Social Svc-Council On Aging)|91916.10|300|Services and Charges|General|1101|
+2023|St. Joseph|71|3|0117|MISHAWAKA CIVIL CITY|71-001.00|2|0|Governmental Activities|101001|D301|Professional Services|0362|Fire Department|251208.72|300|Services and Charges|General|1101|
+2023|St. Joseph|71|3|0117|MISHAWAKA CIVIL CITY|71-001.00|2|0|Governmental Activities|101001|D301|Professional Services|0370|Police Department (Town Marshall)|78762.89|300|Services and Charges|General|1101|
+2023|St. Joseph|71|3|0117|MISHAWAKA CIVIL CITY|71-001.00|2|0|Governmental Activities|101001|D301|Professional Services|0701|Redevelopment|36802.42|300|Services and Charges|General|1101|
+2023|St. Joseph|71|3|0117|MISHAWAKA CIVIL CITY|71-001.00|2|0|Governmental Activities|101001|D302|Communication and Transportation|0040|Controller|72580.36|300|Services and Charges|General|1101|
+2023|St. Joseph|71|3|0117|MISHAWAKA CIVIL CITY|71-001.00|2|0|Governmental Activities|101001|D302|Communication and Transportation|0041|Clerk-Treasurer (City/Town Units Only)|2502.36|300|Services and Charges|General|1101|
+2023|St. Joseph|71|3|0117|MISHAWAKA CIVIL CITY|71-001.00|2|0|Governmental Activities|101001|D302|Communication and Transportation|0044|Mayor|3618.22|300|Services and Charges|General|1101|
+2023|St. Joseph|71|3|0117|MISHAWAKA CIVIL CITY|71-001.00|2|0|Governmental Activities|101001|D302|Communication and Transportation|0069|City Council/Town Board (Common Council)|7423.21|300|Services and Charges|General|1101|
+2023|St. Joseph|71|3|0117|MISHAWAKA CIVIL CITY|71-001.00|2|0|Governmental Activities|101001|D302|Communication and Transportation|0101|Planning & Zoning|800.52|300|Services and Charges|General|1101|
+2023|St. Joseph|71|3|0117|MISHAWAKA CIVIL CITY|71-001.00|2|0|Governmental Activities|101001|D302|Communication and Transportation|0106|Data Processing (Computers)|17793.82|300|Services and Charges|General|1101|
+2023|St. Joseph|71|3|0117|MISHAWAKA CIVIL CITY|71-001.00|2|0|Governmental Activities|101001|D302|Communication and Transportation|0277|Law Department|998.28|300|Services and Charges|General|1101|
+2023|St. Joseph|71|3|0117|MISHAWAKA CIVIL CITY|71-001.00|2|0|Governmental Activities|101001|D302|Communication and Transportation|0306|Engineer|7118.49|300|Services and Charges|General|1101|
+2023|St. Joseph|71|3|0117|MISHAWAKA CIVIL CITY|71-001.00|2|0|Governmental Activities|101001|D302|Communication and Transportation|0309|Human Relations/Resources (Social Svc-Council On Aging)|1904.34|300|Services and Charges|General|1101|
+2023|St. Joseph|71|3|0117|MISHAWAKA CIVIL CITY|71-001.00|2|0|Governmental Activities|101001|D302|Communication and Transportation|0312|Building Department (Jail Const. - Bldg. Comm. - Permits)|2760.58|300|Services and Charges|General|1101|
+2023|St. Joseph|71|3|0117|MISHAWAKA CIVIL CITY|71-001.00|2|0|Governmental Activities|101001|D302|Communication and Transportation|0318|Code Enforcement|2753.72|300|Services and Charges|General|1101|
+2023|St. Joseph|71|3|0117|MISHAWAKA CIVIL CITY|71-001.00|2|0|Governmental Activities|101001|D302|Communication and Transportation|0362|Fire Department|87704.41|300|Services and Charges|General|1101|
+2023|St. Joseph|71|3|0117|MISHAWAKA CIVIL CITY|71-001.00|2|0|Governmental Activities|101001|D302|Communication and Transportation|0370|Police Department (Town Marshall)|1485.47|300|Services and Charges|General|1101|
+2023|St. Joseph|71|3|0117|MISHAWAKA CIVIL CITY|71-001.00|2|0|Governmental Activities|101001|D303|Printing and Advertising|0040|Controller|15682.04|300|Services and Charges|General|1101|
+2023|St. Joseph|71|3|0117|MISHAWAKA CIVIL CITY|71-001.00|2|0|Governmental Activities|101001|D303|Printing and Advertising|0044|Mayor|90.00|300|Services and Charges|General|1101|
+2023|St. Joseph|71|3|0117|MISHAWAKA CIVIL CITY|71-001.00|2|0|Governmental Activities|101001|D303|Printing and Advertising|0370|Police Department (Town Marshall)|544.00|300|Services and Charges|General|1101|
+2023|St. Joseph|71|3|0117|MISHAWAKA CIVIL CITY|71-001.00|2|0|Governmental Activities|101001|D304|Insurance|0040|Controller|997692.53|300|Services and Charges|General|1101|
+2023|St. Joseph|71|3|0117|MISHAWAKA CIVIL CITY|71-001.00|2|0|Governmental Activities|101001|D304|Insurance|0277|Law Department|11827.26|300|Services and Charges|General|1101|
+2023|St. Joseph|71|3|0117|MISHAWAKA CIVIL CITY|71-001.00|2|0|Governmental Activities|101001|D305|Utility Services|0040|Controller|803071.92|300|Services and Charges|General|1101|
+2023|St. Joseph|71|3|0117|MISHAWAKA CIVIL CITY|71-001.00|2|0|Governmental Activities|101001|D306|Repairs and Maintenance|0040|Controller|22520.39|300|Services and Charges|General|1101|
+2023|St. Joseph|71|3|0117|MISHAWAKA CIVIL CITY|71-001.00|2|0|Governmental Activities|101001|D306|Repairs and Maintenance|0119|Central Services (City Svcs-Municipal Svcs-Svc Ctr.)|146956.34|300|Services and Charges|General|1101|
+2023|St. Joseph|71|3|0117|MISHAWAKA CIVIL CITY|71-001.00|2|0|Governmental Activities|101001|D306|Repairs and Maintenance|0362|Fire Department|203580.89|300|Services and Charges|General|1101|
+2023|St. Joseph|71|3|0117|MISHAWAKA CIVIL CITY|71-001.00|2|0|Governmental Activities|101001|D306|Repairs and Maintenance|0370|Police Department (Town Marshall)|415392.59|300|Services and Charges|General|1101|
+2023|St. Joseph|71|3|0117|MISHAWAKA CIVIL CITY|71-001.00|2|0|Governmental Activities|101001|D307|Rentals|0119|Central Services (City Svcs-Municipal Svcs-Svc Ctr.)|4453.70|300|Services and Charges|General|1101|
+2023|St. Joseph|71|3|0117|MISHAWAKA CIVIL CITY|71-001.00|2|0|Governmental Activities|101001|D312|Other Services and Charges|0040|Controller|2269.00|300|Services and Charges|General|1101|
+2023|St. Joseph|71|3|0117|MISHAWAKA CIVIL CITY|71-001.00|2|0|Governmental Activities|101001|D312|Other Services and Charges|0041|Clerk-Treasurer (City/Town Units Only)|2056.05|300|Services and Charges|General|1101|
+2023|St. Joseph|71|3|0117|MISHAWAKA CIVIL CITY|71-001.00|2|0|Governmental Activities|101001|D312|Other Services and Charges|0044|Mayor|12478.47|300|Services and Charges|General|1101|
+2023|St. Joseph|71|3|0117|MISHAWAKA CIVIL CITY|71-001.00|2|0|Governmental Activities|101001|D312|Other Services and Charges|0069|City Council/Town Board (Common Council)|4637.32|300|Services and Charges|General|1101|
+2023|St. Joseph|71|3|0117|MISHAWAKA CIVIL CITY|71-001.00|2|0|Governmental Activities|101001|D312|Other Services and Charges|0101|Planning & Zoning|1049.25|300|Services and Charges|General|1101|
+2023|St. Joseph|71|3|0117|MISHAWAKA CIVIL CITY|71-001.00|2|0|Governmental Activities|101001|D312|Other Services and Charges|0106|Data Processing (Computers)|4309.77|300|Services and Charges|General|1101|
+2023|St. Joseph|71|3|0117|MISHAWAKA CIVIL CITY|71-001.00|2|0|Governmental Activities|101001|D312|Other Services and Charges|0119|Central Services (City Svcs-Municipal Svcs-Svc Ctr.)|1500.00|300|Services and Charges|General|1101|
+2023|St. Joseph|71|3|0117|MISHAWAKA CIVIL CITY|71-001.00|2|0|Governmental Activities|101001|D312|Other Services and Charges|0277|Law Department|3219.73|300|Services and Charges|General|1101|
+2023|St. Joseph|71|3|0117|MISHAWAKA CIVIL CITY|71-001.00|2|0|Governmental Activities|101001|D312|Other Services and Charges|0306|Engineer|200.00|300|Services and Charges|General|1101|
+2023|St. Joseph|71|3|0117|MISHAWAKA CIVIL CITY|71-001.00|2|0|Governmental Activities|101001|D312|Other Services and Charges|0309|Human Relations/Resources (Social Svc-Council On Aging)|1569.64|300|Services and Charges|General|1101|
+2023|St. Joseph|71|3|0117|MISHAWAKA CIVIL CITY|71-001.00|2|0|Governmental Activities|101001|D312|Other Services and Charges|0318|Code Enforcement|26242.63|300|Services and Charges|General|1101|
+2023|St. Joseph|71|3|0117|MISHAWAKA CIVIL CITY|71-001.00|2|0|Governmental Activities|101001|D312|Other Services and Charges|0362|Fire Department|7391.76|300|Services and Charges|General|1101|
+2023|St. Joseph|71|3|0117|MISHAWAKA CIVIL CITY|71-001.00|2|0|Governmental Activities|101001|D312|Other Services and Charges|0370|Police Department (Town Marshall)|8372.28|300|Services and Charges|General|1101|
+2023|St. Joseph|71|3|0117|MISHAWAKA CIVIL CITY|71-001.00|2|0|Governmental Activities|101001|D312|Other Services and Charges|0544|Cemetery|30000.00|300|Services and Charges|General|1101|
+2023|St. Joseph|71|3|0117|MISHAWAKA CIVIL CITY|71-001.00|2|0|Governmental Activities|101001|D508|Other Capital Outlays|0040|Controller|539744.41|600|Capital Outlays|General|1101|
+2023|St. Joseph|71|3|0117|MISHAWAKA CIVIL CITY|71-001.00|2|0|Governmental Activities|101001|D707|Other Disbursements|0040|Controller|25748.22|700|Other Disbursements|General|1101|
+2023|St. Joseph|71|3|0861|INDIAN VILLAGE CIVIL TOWN|71-003.00|3|0|Governmental Activities|101001|D101|Salaries and Wages|0000|No Department|17107.02|100|Personal Services|General Fund|1|
+2023|St. Joseph|71|3|0861|INDIAN VILLAGE CIVIL TOWN|71-003.00|3|0|Governmental Activities|101001|D301|Professional Services|0000|No Department|1200.00|300|Services and Charges|General Fund|1|
+2023|St. Joseph|71|3|0861|INDIAN VILLAGE CIVIL TOWN|71-003.00|3|0|Governmental Activities|101001|D303|Printing and Advertising|0000|No Department|53.62|300|Services and Charges|General Fund|1|
+2023|St. Joseph|71|3|0861|INDIAN VILLAGE CIVIL TOWN|71-003.00|3|0|Governmental Activities|101001|D305|Utility Services|0000|No Department|961.12|300|Services and Charges|General Fund|1|
+2023|St. Joseph|71|3|0861|INDIAN VILLAGE CIVIL TOWN|71-003.00|3|0|Governmental Activities|101001|D306|Repairs and Maintenance|0000|No Department|2715.00|300|Services and Charges|General Fund|1|
+2023|St. Joseph|71|3|0861|INDIAN VILLAGE CIVIL TOWN|71-003.00|3|0|Governmental Activities|101001|D307|Rentals|0000|No Department|343.60|300|Services and Charges|General Fund|1|
+2023|St. Joseph|71|3|0861|INDIAN VILLAGE CIVIL TOWN|71-003.00|3|0|Governmental Activities|101001|D312|Other Services and Charges|0000|No Department|70.00|300|Services and Charges|General Fund|1|
+2023|St. Joseph|71|3|0861|INDIAN VILLAGE CIVIL TOWN|71-003.00|3|0|Governmental Activities|101001|D702|Payment of Taxes and Other Payroll Withholdings|0000|No Department|3176.00|700|Other Disbursements|General Fund|1|
+2023|St. Joseph|71|3|0862|LAKEVILLE CIVIL TOWN|71-004.00|3|0|Governmental Activities|101001|D101|Salaries and Wages|0000|No Department|95719.99|100|Personal Services|GENERAL|1101|
+2023|St. Joseph|71|3|0862|LAKEVILLE CIVIL TOWN|71-004.00|3|0|Governmental Activities|101001|D106|Other Personal Services|0000|No Department|407.00|100|Personal Services|GENERAL|1101|
+2023|St. Joseph|71|3|0862|LAKEVILLE CIVIL TOWN|71-004.00|3|0|Governmental Activities|101001|D107|Employee Benefits|0000|No Department|32807.54|100|Personal Services|GENERAL|1101|
+2023|St. Joseph|71|3|0862|LAKEVILLE CIVIL TOWN|71-004.00|3|0|Governmental Activities|101001|D201|Office Supplies|0000|No Department|2424.55|200|Supplies|GENERAL|1101|
+2023|St. Joseph|71|3|0862|LAKEVILLE CIVIL TOWN|71-004.00|3|0|Governmental Activities|101001|D202|Operating Supplies|0000|No Department|429.16|200|Supplies|GENERAL|1101|
+2023|St. Joseph|71|3|0862|LAKEVILLE CIVIL TOWN|71-004.00|3|0|Governmental Activities|101001|D203|Repair and Maintenance Supplies|0000|No Department|98.09|200|Supplies|GENERAL|1101|
+2023|St. Joseph|71|3|0862|LAKEVILLE CIVIL TOWN|71-004.00|3|0|Governmental Activities|101001|D301|Professional Services|0000|No Department|19112.94|300|Services and Charges|GENERAL|1101|
+2023|St. Joseph|71|3|0862|LAKEVILLE CIVIL TOWN|71-004.00|3|0|Governmental Activities|101001|D302|Communication and Transportation|0000|No Department|11776.96|300|Services and Charges|GENERAL|1101|
+2023|St. Joseph|71|3|0862|LAKEVILLE CIVIL TOWN|71-004.00|3|0|Governmental Activities|101001|D303|Printing and Advertising|0000|No Department|131.07|300|Services and Charges|GENERAL|1101|
+2023|St. Joseph|71|3|0862|LAKEVILLE CIVIL TOWN|71-004.00|3|0|Governmental Activities|101001|D304|Insurance|0000|No Department|12793.24|300|Services and Charges|GENERAL|1101|
+2023|St. Joseph|71|3|0862|LAKEVILLE CIVIL TOWN|71-004.00|3|0|Governmental Activities|101001|D305|Utility Services|0000|No Department|15438.66|300|Services and Charges|GENERAL|1101|
+2023|St. Joseph|71|3|0862|LAKEVILLE CIVIL TOWN|71-004.00|3|0|Governmental Activities|101001|D312|Other Services and Charges|0000|No Department|11248.07|300|Services and Charges|GENERAL|1101|
+2023|St. Joseph|71|3|0862|LAKEVILLE CIVIL TOWN|71-004.00|3|0|Governmental Activities|101001|D505|Machinery, Equipment, and Vehicles|0000|No Department|1333.97|600|Capital Outlays|GENERAL|1101|
+2023|St. Joseph|71|3|0863|NEW CARLISLE CIVIL TOWN|71-005.00|3|0|Governmental Activities|101001|D101|Salaries and Wages|0041|CLERK-TREASURER (CITY/TOWN UNITS ONLY)|42405.88|100|Personal Services|GENERAL FUND|1101|
+2023|St. Joseph|71|3|0863|NEW CARLISLE CIVIL TOWN|71-005.00|3|0|Governmental Activities|101001|D101|Salaries and Wages|0069|CITY COUNCIL/TOWN BOARD (COMMON COUNCIL)|14869.70|100|Personal Services|GENERAL FUND|1101|
+2023|St. Joseph|71|3|0863|NEW CARLISLE CIVIL TOWN|71-005.00|3|0|Governmental Activities|101001|D101|Salaries and Wages|0314|BUILDING INSPECTOR|9741.25|100|Personal Services|GENERAL FUND|1101|
+2023|St. Joseph|71|3|0863|NEW CARLISLE CIVIL TOWN|71-005.00|3|0|Governmental Activities|101001|D101|Salaries and Wages|0370|POLICE DEPARTMENT (TOWN MARSHALL)|409861.50|100|Personal Services|GENERAL FUND|1101|
+2023|St. Joseph|71|3|0863|NEW CARLISLE CIVIL TOWN|71-005.00|3|0|Governmental Activities|101001|D101|Salaries and Wages|0802|PARKS|29334.92|100|Personal Services|GENERAL FUND|1101|
+2023|St. Joseph|71|3|0863|NEW CARLISLE CIVIL TOWN|71-005.00|3|0|Governmental Activities|101001|D106|Other Personal Services|0041|CLERK-TREASURER (CITY/TOWN UNITS ONLY)|514.50|100|Personal Services|GENERAL FUND|1101|
+2023|St. Joseph|71|3|0863|NEW CARLISLE CIVIL TOWN|71-005.00|3|0|Governmental Activities|101001|D106|Other Personal Services|0069|CITY COUNCIL/TOWN BOARD (COMMON COUNCIL)|25.00|100|Personal Services|GENERAL FUND|1101|
+2023|St. Joseph|71|3|0863|NEW CARLISLE CIVIL TOWN|71-005.00|3|0|Governmental Activities|101001|D106|Other Personal Services|0370|POLICE DEPARTMENT (TOWN MARSHALL)|85781.14|100|Personal Services|GENERAL FUND|1101|
+2023|St. Joseph|71|3|0863|NEW CARLISLE CIVIL TOWN|71-005.00|3|0|Governmental Activities|101001|D107|Employee Benefits|0041|CLERK-TREASURER (CITY/TOWN UNITS ONLY)|8709.99|100|Personal Services|GENERAL FUND|1101|
+2023|St. Joseph|71|3|0863|NEW CARLISLE CIVIL TOWN|71-005.00|3|0|Governmental Activities|101001|D107|Employee Benefits|0802|PARKS|4246.88|100|Personal Services|GENERAL FUND|1101|
+2023|St. Joseph|71|3|0863|NEW CARLISLE CIVIL TOWN|71-005.00|3|0|Governmental Activities|101001|D201|Office Supplies|0041|CLERK-TREASURER (CITY/TOWN UNITS ONLY)|632.90|200|Supplies|GENERAL FUND|1101|
+2023|St. Joseph|71|3|0863|NEW CARLISLE CIVIL TOWN|71-005.00|3|0|Governmental Activities|101001|D201|Office Supplies|0370|POLICE DEPARTMENT (TOWN MARSHALL)|742.57|200|Supplies|GENERAL FUND|1101|
+2023|St. Joseph|71|3|0863|NEW CARLISLE CIVIL TOWN|71-005.00|3|0|Governmental Activities|101001|D202|Operating Supplies|0370|POLICE DEPARTMENT (TOWN MARSHALL)|38907.81|200|Supplies|GENERAL FUND|1101|
+2023|St. Joseph|71|3|0863|NEW CARLISLE CIVIL TOWN|71-005.00|3|0|Governmental Activities|101001|D202|Operating Supplies|0802|PARKS|1435.72|200|Supplies|GENERAL FUND|1101|
+2023|St. Joseph|71|3|0863|NEW CARLISLE CIVIL TOWN|71-005.00|3|0|Governmental Activities|101001|D203|Repair and Maintenance Supplies|0041|CLERK-TREASURER (CITY/TOWN UNITS ONLY)|306.01|200|Supplies|GENERAL FUND|1101|
+2023|St. Joseph|71|3|0863|NEW CARLISLE CIVIL TOWN|71-005.00|3|0|Governmental Activities|101001|D203|Repair and Maintenance Supplies|0370|POLICE DEPARTMENT (TOWN MARSHALL)|5624.51|200|Supplies|GENERAL FUND|1101|
+2023|St. Joseph|71|3|0863|NEW CARLISLE CIVIL TOWN|71-005.00|3|0|Governmental Activities|101001|D203|Repair and Maintenance Supplies|0802|PARKS|6756.47|200|Supplies|GENERAL FUND|1101|
+2023|St. Joseph|71|3|0863|NEW CARLISLE CIVIL TOWN|71-005.00|3|0|Governmental Activities|101001|D204|Other Supplies|0041|CLERK-TREASURER (CITY/TOWN UNITS ONLY)|377.67|200|Supplies|GENERAL FUND|1101|
+2023|St. Joseph|71|3|0863|NEW CARLISLE CIVIL TOWN|71-005.00|3|0|Governmental Activities|101001|D204|Other Supplies|0314|BUILDING INSPECTOR|295.47|200|Supplies|GENERAL FUND|1101|
+2023|St. Joseph|71|3|0863|NEW CARLISLE CIVIL TOWN|71-005.00|3|0|Governmental Activities|101001|D204|Other Supplies|0370|POLICE DEPARTMENT (TOWN MARSHALL)|11352.82|200|Supplies|GENERAL FUND|1101|
+2023|St. Joseph|71|3|0863|NEW CARLISLE CIVIL TOWN|71-005.00|3|0|Governmental Activities|101001|D301|Professional Services|0041|CLERK-TREASURER (CITY/TOWN UNITS ONLY)|10710.68|300|Services and Charges|GENERAL FUND|1101|
+2023|St. Joseph|71|3|0863|NEW CARLISLE CIVIL TOWN|71-005.00|3|0|Governmental Activities|101001|D301|Professional Services|0069|CITY COUNCIL/TOWN BOARD (COMMON COUNCIL)|136186.13|300|Services and Charges|GENERAL FUND|1101|
+2023|St. Joseph|71|3|0863|NEW CARLISLE CIVIL TOWN|71-005.00|3|0|Governmental Activities|101001|D301|Professional Services|0370|POLICE DEPARTMENT (TOWN MARSHALL)|38428.97|300|Services and Charges|GENERAL FUND|1101|
+2023|St. Joseph|71|3|0863|NEW CARLISLE CIVIL TOWN|71-005.00|3|0|Governmental Activities|101001|D301|Professional Services|0802|PARKS|2058.60|300|Services and Charges|GENERAL FUND|1101|
+2023|St. Joseph|71|3|0863|NEW CARLISLE CIVIL TOWN|71-005.00|3|0|Governmental Activities|101001|D303|Printing and Advertising|0069|CITY COUNCIL/TOWN BOARD (COMMON COUNCIL)|231.86|300|Services and Charges|GENERAL FUND|1101|
+2023|St. Joseph|71|3|0863|NEW CARLISLE CIVIL TOWN|71-005.00|3|0|Governmental Activities|101001|D303|Printing and Advertising|0370|POLICE DEPARTMENT (TOWN MARSHALL)|1021.39|300|Services and Charges|GENERAL FUND|1101|
+2023|St. Joseph|71|3|0863|NEW CARLISLE CIVIL TOWN|71-005.00|3|0|Governmental Activities|101001|D304|Insurance|0370|POLICE DEPARTMENT (TOWN MARSHALL)|13920.99|300|Services and Charges|GENERAL FUND|1101|
+2023|St. Joseph|71|3|0863|NEW CARLISLE CIVIL TOWN|71-005.00|3|0|Governmental Activities|101001|D305|Utility Services|0041|CLERK-TREASURER (CITY/TOWN UNITS ONLY)|6299.23|300|Services and Charges|GENERAL FUND|1101|
+2023|St. Joseph|71|3|0863|NEW CARLISLE CIVIL TOWN|71-005.00|3|0|Governmental Activities|101001|D305|Utility Services|0069|CITY COUNCIL/TOWN BOARD (COMMON COUNCIL)|11131.68|300|Services and Charges|GENERAL FUND|1101|
+2023|St. Joseph|71|3|0863|NEW CARLISLE CIVIL TOWN|71-005.00|3|0|Governmental Activities|101001|D305|Utility Services|0370|POLICE DEPARTMENT (TOWN MARSHALL)|14330.86|300|Services and Charges|GENERAL FUND|1101|
+2023|St. Joseph|71|3|0863|NEW CARLISLE CIVIL TOWN|71-005.00|3|0|Governmental Activities|101001|D305|Utility Services|0802|PARKS|65582.76|300|Services and Charges|GENERAL FUND|1101|
+2023|St. Joseph|71|3|0863|NEW CARLISLE CIVIL TOWN|71-005.00|3|0|Governmental Activities|101001|D306|Repairs and Maintenance|0041|CLERK-TREASURER (CITY/TOWN UNITS ONLY)|187.26|300|Services and Charges|GENERAL FUND|1101|
+2023|St. Joseph|71|3|0863|NEW CARLISLE CIVIL TOWN|71-005.00|3|0|Governmental Activities|101001|D306|Repairs and Maintenance|0069|CITY COUNCIL/TOWN BOARD (COMMON COUNCIL)|25871.74|300|Services and Charges|GENERAL FUND|1101|
+2023|St. Joseph|71|3|0863|NEW CARLISLE CIVIL TOWN|71-005.00|3|0|Governmental Activities|101001|D306|Repairs and Maintenance|0370|POLICE DEPARTMENT (TOWN MARSHALL)|19445.68|300|Services and Charges|GENERAL FUND|1101|
+2023|St. Joseph|71|3|0863|NEW CARLISLE CIVIL TOWN|71-005.00|3|0|Governmental Activities|101001|D306|Repairs and Maintenance|0802|PARKS|776.24|300|Services and Charges|GENERAL FUND|1101|
+2023|St. Joseph|71|3|0863|NEW CARLISLE CIVIL TOWN|71-005.00|3|0|Governmental Activities|101001|D312|Other Services and Charges|0000|NO DEPARTMENT|971.55|300|Services and Charges|GENERAL FUND|1101|
+2023|St. Joseph|71|3|0863|NEW CARLISLE CIVIL TOWN|71-005.00|3|0|Governmental Activities|101001|D312|Other Services and Charges|0041|CLERK-TREASURER (CITY/TOWN UNITS ONLY)|1001.30|300|Services and Charges|GENERAL FUND|1101|
+2023|St. Joseph|71|3|0863|NEW CARLISLE CIVIL TOWN|71-005.00|3|0|Governmental Activities|101001|D312|Other Services and Charges|0069|CITY COUNCIL/TOWN BOARD (COMMON COUNCIL)|154903.74|300|Services and Charges|GENERAL FUND|1101|
+2023|St. Joseph|71|3|0863|NEW CARLISLE CIVIL TOWN|71-005.00|3|0|Governmental Activities|101001|D312|Other Services and Charges|0370|POLICE DEPARTMENT (TOWN MARSHALL)|11569.56|300|Services and Charges|GENERAL FUND|1101|
+2023|St. Joseph|71|3|0863|NEW CARLISLE CIVIL TOWN|71-005.00|3|0|Governmental Activities|101001|D312|Other Services and Charges|0802|PARKS|10124.99|300|Services and Charges|GENERAL FUND|1101|
+2023|St. Joseph|71|3|0863|NEW CARLISLE CIVIL TOWN|71-005.00|3|0|Governmental Activities|101001|D504|Improvements Other Than Buildings|0802|PARKS|23882.93|600|Capital Outlays|GENERAL FUND|1101|
+2023|St. Joseph|71|3|0863|NEW CARLISLE CIVIL TOWN|71-005.00|3|0|Governmental Activities|101001|D505|Machinery, Equipment, and Vehicles|0041|CLERK-TREASURER (CITY/TOWN UNITS ONLY)|3878.00|600|Capital Outlays|GENERAL FUND|1101|
+2023|St. Joseph|71|3|0863|NEW CARLISLE CIVIL TOWN|71-005.00|3|0|Governmental Activities|101001|D505|Machinery, Equipment, and Vehicles|0370|POLICE DEPARTMENT (TOWN MARSHALL)|13260.00|600|Capital Outlays|GENERAL FUND|1101|
+2023|St. Joseph|71|3|0863|NEW CARLISLE CIVIL TOWN|71-005.00|3|0|Governmental Activities|101001|D508|Other Capital Outlays|0802|PARKS|53268.62|600|Capital Outlays|GENERAL FUND|1101|
+2023|St. Joseph|71|3|0864|NORTH LIBERTY CIVIL TOWN|71-006.00|3|0|Governmental Activities|101001|D101|Salaries and Wages|0000|No Department|317105.93|100|Personal Services|GENERAL FUND|1101|
+2023|St. Joseph|71|3|0864|NORTH LIBERTY CIVIL TOWN|71-006.00|3|0|Governmental Activities|101001|D107|Employee Benefits|0000|No Department|127240.30|100|Personal Services|GENERAL FUND|1101|
+2023|St. Joseph|71|3|0864|NORTH LIBERTY CIVIL TOWN|71-006.00|3|0|Governmental Activities|101001|D107|Employee Benefits|0070|Town Board Of Trustees|3177.84|100|Personal Services|GENERAL FUND|1101|
+2023|St. Joseph|71|3|0864|NORTH LIBERTY CIVIL TOWN|71-006.00|3|0|Governmental Activities|101001|D201|Office Supplies|0000|No Department|751.92|200|Supplies|GENERAL FUND|1101|
+2023|St. Joseph|71|3|0864|NORTH LIBERTY CIVIL TOWN|71-006.00|3|0|Governmental Activities|101001|D202|Operating Supplies|0000|No Department|380.31|200|Supplies|GENERAL FUND|1101|
+2023|St. Joseph|71|3|0864|NORTH LIBERTY CIVIL TOWN|71-006.00|3|0|Governmental Activities|101001|D203|Repair and Maintenance Supplies|0000|No Department|1681.50|200|Supplies|GENERAL FUND|1101|
+2023|St. Joseph|71|3|0864|NORTH LIBERTY CIVIL TOWN|71-006.00|3|0|Governmental Activities|101001|D204|Other Supplies|0000|No Department|243.78|200|Supplies|GENERAL FUND|1101|
+2023|St. Joseph|71|3|0864|NORTH LIBERTY CIVIL TOWN|71-006.00|3|0|Governmental Activities|101001|D301|Professional Services|0000|No Department|64389.79|300|Services and Charges|GENERAL FUND|1101|
+2023|St. Joseph|71|3|0864|NORTH LIBERTY CIVIL TOWN|71-006.00|3|0|Governmental Activities|101001|D302|Communication and Transportation|0000|No Department|294056.05|300|Services and Charges|GENERAL FUND|1101|
+2023|St. Joseph|71|3|0864|NORTH LIBERTY CIVIL TOWN|71-006.00|3|0|Governmental Activities|101001|D303|Printing and Advertising|0000|No Department|228.04|300|Services and Charges|GENERAL FUND|1101|
+2023|St. Joseph|71|3|0864|NORTH LIBERTY CIVIL TOWN|71-006.00|3|0|Governmental Activities|101001|D304|Insurance|0000|No Department|31843.49|300|Services and Charges|GENERAL FUND|1101|
+2023|St. Joseph|71|3|0864|NORTH LIBERTY CIVIL TOWN|71-006.00|3|0|Governmental Activities|101001|D305|Utility Services|0000|No Department|43646.71|300|Services and Charges|GENERAL FUND|1101|
+2023|St. Joseph|71|3|0864|NORTH LIBERTY CIVIL TOWN|71-006.00|3|0|Governmental Activities|101001|D306|Repairs and Maintenance|0000|No Department|11594.69|300|Services and Charges|GENERAL FUND|1101|
+2023|St. Joseph|71|3|0864|NORTH LIBERTY CIVIL TOWN|71-006.00|3|0|Governmental Activities|101001|D312|Other Services and Charges|0000|No Department|146329.18|300|Services and Charges|GENERAL FUND|1101|
+2023|St. Joseph|71|3|0864|NORTH LIBERTY CIVIL TOWN|71-006.00|3|0|Governmental Activities|101001|D501|Land|0000|No Department|1500.00|600|Capital Outlays|GENERAL FUND|1101|
+2023|St. Joseph|71|3|0864|NORTH LIBERTY CIVIL TOWN|71-006.00|3|0|Governmental Activities|101001|D705|Interfund Loan - Loaned To Another Fund|0000|No Department|131000.00|700|Other Disbursements|GENERAL FUND|1101|
+2023|St. Joseph|71|3|0864|NORTH LIBERTY CIVIL TOWN|71-006.00|3|0|Governmental Activities|101001|D707|Other Disbursements|0000|No Department|7500.00|700|Other Disbursements|GENERAL FUND|1101|
+2023|St. Joseph|71|3|0865|OSCEOLA CIVIL TOWN|71-007.00|3|0|Governmental Activities|101001|D101|Salaries and Wages|0000|NO DEPARTMENT|162606.73|100|Personal Services|GENERAL FUND|1101|
+2023|St. Joseph|71|3|0865|OSCEOLA CIVIL TOWN|71-007.00|3|0|Governmental Activities|101001|D107|Employee Benefits|0000|NO DEPARTMENT|12439.34|100|Personal Services|GENERAL FUND|1101|
+2023|St. Joseph|71|3|0865|OSCEOLA CIVIL TOWN|71-007.00|3|0|Governmental Activities|101001|D201|Office Supplies|0000|NO DEPARTMENT|3858.49|200|Supplies|GENERAL FUND|1101|
+2023|St. Joseph|71|3|0865|OSCEOLA CIVIL TOWN|71-007.00|3|0|Governmental Activities|101001|D202|Operating Supplies|0000|NO DEPARTMENT|1298.76|200|Supplies|GENERAL FUND|1101|
+2023|St. Joseph|71|3|0865|OSCEOLA CIVIL TOWN|71-007.00|3|0|Governmental Activities|101001|D204|Other Supplies|0000|NO DEPARTMENT|9183.94|200|Supplies|GENERAL FUND|1101|
+2023|St. Joseph|71|3|0865|OSCEOLA CIVIL TOWN|71-007.00|3|0|Governmental Activities|101001|D301|Professional Services|0000|NO DEPARTMENT|68440.45|300|Services and Charges|GENERAL FUND|1101|
+2023|St. Joseph|71|3|0865|OSCEOLA CIVIL TOWN|71-007.00|3|0|Governmental Activities|101001|D302|Communication and Transportation|0000|NO DEPARTMENT|10129.71|300|Services and Charges|GENERAL FUND|1101|
+2023|St. Joseph|71|3|0865|OSCEOLA CIVIL TOWN|71-007.00|3|0|Governmental Activities|101001|D303|Printing and Advertising|0000|NO DEPARTMENT|1468.82|300|Services and Charges|GENERAL FUND|1101|
+2023|St. Joseph|71|3|0865|OSCEOLA CIVIL TOWN|71-007.00|3|0|Governmental Activities|101001|D304|Insurance|0000|NO DEPARTMENT|19638.50|300|Services and Charges|GENERAL FUND|1101|
+2023|St. Joseph|71|3|0865|OSCEOLA CIVIL TOWN|71-007.00|3|0|Governmental Activities|101001|D305|Utility Services|0000|NO DEPARTMENT|9348.90|300|Services and Charges|GENERAL FUND|1101|
+2023|St. Joseph|71|3|0865|OSCEOLA CIVIL TOWN|71-007.00|3|0|Governmental Activities|101001|D306|Repairs and Maintenance|0000|NO DEPARTMENT|12287.66|300|Services and Charges|GENERAL FUND|1101|
+2023|St. Joseph|71|3|0865|OSCEOLA CIVIL TOWN|71-007.00|3|0|Governmental Activities|101001|D312|Other Services and Charges|0000|NO DEPARTMENT|24426.63|300|Services and Charges|GENERAL FUND|1101|
+2023|St. Joseph|71|3|0865|OSCEOLA CIVIL TOWN|71-007.00|3|0|Governmental Activities|101001|D505|Machinery, Equipment, and Vehicles|0000|NO DEPARTMENT|5784.82|600|Capital Outlays|GENERAL FUND|1101|
+2023|St. Joseph|71|3|0865|OSCEOLA CIVIL TOWN|71-007.00|3|0|Governmental Activities|101001|D508|Other Capital Outlays|0000|NO DEPARTMENT|13.75|600|Capital Outlays|GENERAL FUND|1101|
+2023|St. Joseph|71|3|0866|ROSELAND CIVIL TOWN|71-008.00|3|0|Governmental Activities|101001|D101|Salaries and Wages|0000|No Department|440356.94|100|Personal Services|GENERAL FUND|1101|
+2023|St. Joseph|71|3|0866|ROSELAND CIVIL TOWN|71-008.00|3|0|Governmental Activities|101001|D107|Employee Benefits|0000|No Department|88653.66|100|Personal Services|GENERAL FUND|1101|
+2023|St. Joseph|71|3|0866|ROSELAND CIVIL TOWN|71-008.00|3|0|Governmental Activities|101001|D201|Office Supplies|0000|No Department|2147.03|200|Supplies|GENERAL FUND|1101|
+2023|St. Joseph|71|3|0866|ROSELAND CIVIL TOWN|71-008.00|3|0|Governmental Activities|101001|D202|Operating Supplies|0000|No Department|56955.07|200|Supplies|GENERAL FUND|1101|
+2023|St. Joseph|71|3|0866|ROSELAND CIVIL TOWN|71-008.00|3|0|Governmental Activities|101001|D203|Repair and Maintenance Supplies|0000|No Department|700.91|200|Supplies|GENERAL FUND|1101|
+2023|St. Joseph|71|3|0866|ROSELAND CIVIL TOWN|71-008.00|3|0|Governmental Activities|101001|D301|Professional Services|0000|No Department|9246.60|300|Services and Charges|GENERAL FUND|1101|
+2023|St. Joseph|71|3|0866|ROSELAND CIVIL TOWN|71-008.00|3|0|Governmental Activities|101001|D302|Communication and Transportation|0000|No Department|15991.61|300|Services and Charges|GENERAL FUND|1101|
+2023|St. Joseph|71|3|0866|ROSELAND CIVIL TOWN|71-008.00|3|0|Governmental Activities|101001|D303|Printing and Advertising|0000|No Department|30.00|300|Services and Charges|GENERAL FUND|1101|
+2023|St. Joseph|71|3|0866|ROSELAND CIVIL TOWN|71-008.00|3|0|Governmental Activities|101001|D304|Insurance|0000|No Department|32459.00|300|Services and Charges|GENERAL FUND|1101|
+2023|St. Joseph|71|3|0866|ROSELAND CIVIL TOWN|71-008.00|3|0|Governmental Activities|101001|D305|Utility Services|0000|No Department|19238.72|300|Services and Charges|GENERAL FUND|1101|
+2023|St. Joseph|71|3|0866|ROSELAND CIVIL TOWN|71-008.00|3|0|Governmental Activities|101001|D306|Repairs and Maintenance|0000|No Department|37.00|300|Services and Charges|GENERAL FUND|1101|
+2023|St. Joseph|71|3|0866|ROSELAND CIVIL TOWN|71-008.00|3|0|Governmental Activities|101001|D312|Other Services and Charges|0000|No Department|1760.89|300|Services and Charges|GENERAL FUND|1101|
+2023|St. Joseph|71|3|0866|ROSELAND CIVIL TOWN|71-008.00|3|0|Governmental Activities|101001|D704|Transfer Out - Transferred To Another Fund|0000|No Department|17461.00|700|Other Disbursements|GENERAL FUND|1101|
+2023|St. Joseph|71|3|0866|ROSELAND CIVIL TOWN|71-008.00|3|0|Governmental Activities|101001|D707|Other Disbursements|0000|No Department|775.36|700|Other Disbursements|GENERAL FUND|1101|
+2023|St. Joseph|71|3|0867|WALKERTON CIVIL TOWN|71-009.00|3|0|Governmental Activities|101001|D101|Salaries and Wages|0041|Clerk-Treasurer (City/Town Units Only)|4105.60|100|Personal Services|General|1101|
+2023|St. Joseph|71|3|0867|WALKERTON CIVIL TOWN|71-009.00|3|0|Governmental Activities|101001|D101|Salaries and Wages|0069|City Council/Town Board (Common Council)|4466.34|100|Personal Services|General|1101|
+2023|St. Joseph|71|3|0867|WALKERTON CIVIL TOWN|71-009.00|3|0|Governmental Activities|101001|D101|Salaries and Wages|0079|Plan Commission|3090.68|100|Personal Services|General|1101|
+2023|St. Joseph|71|3|0867|WALKERTON CIVIL TOWN|71-009.00|3|0|Governmental Activities|101001|D101|Salaries and Wages|0248|City/Town Court (City Judge/Judge)|46911.86|100|Personal Services|General|1101|
+2023|St. Joseph|71|3|0867|WALKERTON CIVIL TOWN|71-009.00|3|0|Governmental Activities|101001|D101|Salaries and Wages|0370|Police Department (Town Marshall)|445477.84|100|Personal Services|General|1101|
+2023|St. Joseph|71|3|0867|WALKERTON CIVIL TOWN|71-009.00|3|0|Governmental Activities|101001|D101|Salaries and Wages|0700|Economic Development|53015.93|100|Personal Services|General|1101|
+2023|St. Joseph|71|3|0867|WALKERTON CIVIL TOWN|71-009.00|3|0|Governmental Activities|101001|D106|Other Personal Services|0248|City/Town Court (City Judge/Judge)|23836.28|100|Personal Services|General|1101|
+2023|St. Joseph|71|3|0867|WALKERTON CIVIL TOWN|71-009.00|3|0|Governmental Activities|101001|D107|Employee Benefits|0041|Clerk-Treasurer (City/Town Units Only)|363.20|100|Personal Services|General|1101|
+2023|St. Joseph|71|3|0867|WALKERTON CIVIL TOWN|71-009.00|3|0|Governmental Activities|101001|D107|Employee Benefits|0370|Police Department (Town Marshall)|217798.77|100|Personal Services|General|1101|
+2023|St. Joseph|71|3|0867|WALKERTON CIVIL TOWN|71-009.00|3|0|Governmental Activities|101001|D107|Employee Benefits|0700|Economic Development|7528.27|100|Personal Services|General|1101|
+2023|St. Joseph|71|3|0867|WALKERTON CIVIL TOWN|71-009.00|3|0|Governmental Activities|101001|D201|Office Supplies|0248|City/Town Court (City Judge/Judge)|1352.47|200|Supplies|General|1101|
+2023|St. Joseph|71|3|0867|WALKERTON CIVIL TOWN|71-009.00|3|0|Governmental Activities|101001|D201|Office Supplies|0370|Police Department (Town Marshall)|5452.65|200|Supplies|General|1101|
+2023|St. Joseph|71|3|0867|WALKERTON CIVIL TOWN|71-009.00|3|0|Governmental Activities|101001|D201|Office Supplies|0700|Economic Development|173.57|200|Supplies|General|1101|
+2023|St. Joseph|71|3|0867|WALKERTON CIVIL TOWN|71-009.00|3|0|Governmental Activities|101001|D202|Operating Supplies|0248|City/Town Court (City Judge/Judge)|1076.40|200|Supplies|General|1101|
+2023|St. Joseph|71|3|0867|WALKERTON CIVIL TOWN|71-009.00|3|0|Governmental Activities|101001|D202|Operating Supplies|0370|Police Department (Town Marshall)|16673.55|200|Supplies|General|1101|
+2023|St. Joseph|71|3|0867|WALKERTON CIVIL TOWN|71-009.00|3|0|Governmental Activities|101001|D204|Other Supplies|0370|Police Department (Town Marshall)|11391.89|200|Supplies|General|1101|
+2023|St. Joseph|71|3|0867|WALKERTON CIVIL TOWN|71-009.00|3|0|Governmental Activities|101001|D301|Professional Services|0069|City Council/Town Board (Common Council)|38607.00|300|Services and Charges|General|1101|
+2023|St. Joseph|71|3|0867|WALKERTON CIVIL TOWN|71-009.00|3|0|Governmental Activities|101001|D301|Professional Services|0370|Police Department (Town Marshall)|25694.17|300|Services and Charges|General|1101|
+2023|St. Joseph|71|3|0867|WALKERTON CIVIL TOWN|71-009.00|3|0|Governmental Activities|101001|D301|Professional Services|0700|Economic Development|713.78|300|Services and Charges|General|1101|
+2023|St. Joseph|71|3|0867|WALKERTON CIVIL TOWN|71-009.00|3|0|Governmental Activities|101001|D302|Communication and Transportation|0041|Clerk-Treasurer (City/Town Units Only)|2288.73|300|Services and Charges|General|1101|
+2023|St. Joseph|71|3|0867|WALKERTON CIVIL TOWN|71-009.00|3|0|Governmental Activities|101001|D302|Communication and Transportation|0069|City Council/Town Board (Common Council)|456.15|300|Services and Charges|General|1101|
+2023|St. Joseph|71|3|0867|WALKERTON CIVIL TOWN|71-009.00|3|0|Governmental Activities|101001|D302|Communication and Transportation|0370|Police Department (Town Marshall)|21062.69|300|Services and Charges|General|1101|
+2023|St. Joseph|71|3|0867|WALKERTON CIVIL TOWN|71-009.00|3|0|Governmental Activities|101001|D302|Communication and Transportation|0700|Economic Development|1320.41|300|Services and Charges|General|1101|
+2023|St. Joseph|71|3|0867|WALKERTON CIVIL TOWN|71-009.00|3|0|Governmental Activities|101001|D303|Printing and Advertising|0069|City Council/Town Board (Common Council)|627.53|300|Services and Charges|General|1101|
+2023|St. Joseph|71|3|0867|WALKERTON CIVIL TOWN|71-009.00|3|0|Governmental Activities|101001|D304|Insurance|0041|Clerk-Treasurer (City/Town Units Only)|7000.00|300|Services and Charges|General|1101|
+2023|St. Joseph|71|3|0867|WALKERTON CIVIL TOWN|71-009.00|3|0|Governmental Activities|101001|D304|Insurance|0069|City Council/Town Board (Common Council)|2905.90|300|Services and Charges|General|1101|
+2023|St. Joseph|71|3|0867|WALKERTON CIVIL TOWN|71-009.00|3|0|Governmental Activities|101001|D304|Insurance|0248|City/Town Court (City Judge/Judge)|1700.00|300|Services and Charges|General|1101|
+2023|St. Joseph|71|3|0867|WALKERTON CIVIL TOWN|71-009.00|3|0|Governmental Activities|101001|D304|Insurance|0370|Police Department (Town Marshall)|47.13|300|Services and Charges|General|1101|
+2023|St. Joseph|71|3|0867|WALKERTON CIVIL TOWN|71-009.00|3|0|Governmental Activities|101001|D304|Insurance|0700|Economic Development|500.00|300|Services and Charges|General|1101|
+2023|St. Joseph|71|3|0867|WALKERTON CIVIL TOWN|71-009.00|3|0|Governmental Activities|101001|D305|Utility Services|0248|City/Town Court (City Judge/Judge)|3079.20|300|Services and Charges|General|1101|
+2023|St. Joseph|71|3|0867|WALKERTON CIVIL TOWN|71-009.00|3|0|Governmental Activities|101001|D305|Utility Services|0370|Police Department (Town Marshall)|25748.80|300|Services and Charges|General|1101|
+2023|St. Joseph|71|3|0867|WALKERTON CIVIL TOWN|71-009.00|3|0|Governmental Activities|101001|D305|Utility Services|0700|Economic Development|600.00|300|Services and Charges|General|1101|
+2023|St. Joseph|71|3|0867|WALKERTON CIVIL TOWN|71-009.00|3|0|Governmental Activities|101001|D306|Repairs and Maintenance|0370|Police Department (Town Marshall)|17664.98|300|Services and Charges|General|1101|
+2023|St. Joseph|71|3|0867|WALKERTON CIVIL TOWN|71-009.00|3|0|Governmental Activities|101001|D306|Repairs and Maintenance|0700|Economic Development|40.33|300|Services and Charges|General|1101|
+2023|St. Joseph|71|3|0867|WALKERTON CIVIL TOWN|71-009.00|3|0|Governmental Activities|101001|D312|Other Services and Charges|0370|Police Department (Town Marshall)|11920.69|300|Services and Charges|General|1101|
+2023|St. Joseph|71|3|0867|WALKERTON CIVIL TOWN|71-009.00|3|0|Governmental Activities|101001|D702|Payment of Taxes and Other Payroll Withholdings|0041|Clerk-Treasurer (City/Town Units Only)|301.04|700|Other Disbursements|General|1101|
+2023|St. Joseph|71|3|0867|WALKERTON CIVIL TOWN|71-009.00|3|0|Governmental Activities|101001|D702|Payment of Taxes and Other Payroll Withholdings|0069|City Council/Town Board (Common Council)|341.55|700|Other Disbursements|General|1101|
+2023|St. Joseph|71|3|0867|WALKERTON CIVIL TOWN|71-009.00|3|0|Governmental Activities|101001|D702|Payment of Taxes and Other Payroll Withholdings|0248|City/Town Court (City Judge/Judge)|3249.48|700|Other Disbursements|General|1101|
+2023|St. Joseph|71|3|0867|WALKERTON CIVIL TOWN|71-009.00|3|0|Governmental Activities|101001|D702|Payment of Taxes and Other Payroll Withholdings|0370|Police Department (Town Marshall)|12565.75|700|Other Disbursements|General|1101|
+2023|St. Joseph|71|3|0867|WALKERTON CIVIL TOWN|71-009.00|3|0|Governmental Activities|101001|D702|Payment of Taxes and Other Payroll Withholdings|0700|Economic Development|3918.51|700|Other Disbursements|General|1101|
+2023|St. Joseph|71|3|0867|WALKERTON CIVIL TOWN|71-009.00|3|0|Governmental Activities|101001|D703|Distributions to Other Governmental Entities|0000|No Department|29625.72|700|Other Disbursements|General|1101|
+2023|St. Joseph|71|3|0867|WALKERTON CIVIL TOWN|71-009.00|3|0|Governmental Activities|101001|D707|Other Disbursements|0000|No Department|445.00|700|Other Disbursements|General|1101|
+2023|St. Joseph|71|3|0867|WALKERTON CIVIL TOWN|71-009.00|3|0|Governmental Activities|101001|D707|Other Disbursements|0041|Clerk-Treasurer (City/Town Units Only)|3271.26|700|Other Disbursements|General|1101|
+2023|St. Joseph|71|3|0867|WALKERTON CIVIL TOWN|71-009.00|3|0|Governmental Activities|101001|D707|Other Disbursements|0069|City Council/Town Board (Common Council)|31620.64|700|Other Disbursements|General|1101|
+2023|St. Joseph|71|3|0867|WALKERTON CIVIL TOWN|71-009.00|3|0|Governmental Activities|101001|D707|Other Disbursements|0248|City/Town Court (City Judge/Judge)|250.00|700|Other Disbursements|General|1101|
+2023|St. Joseph|71|3|0867|WALKERTON CIVIL TOWN|71-009.00|3|0|Governmental Activities|101001|D707|Other Disbursements|0700|Economic Development|1256.68|700|Other Disbursements|General|1101|
