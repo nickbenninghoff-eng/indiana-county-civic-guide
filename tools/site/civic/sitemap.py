@@ -48,7 +48,9 @@ def entries(ed) -> list[Entry]:
     county = ed.county_label
     out = [
         _e("index.html", f"Civic Guide · {county}", "Home",
-           "Start here: the governments that cover one address, and five ways in."),
+           # Nick, 2026-11-09: the guide is a central reference for the whole county; the address lookup stays.
+           f"A sourced reference for {county}'s local governments: who holds every seat, election results and "
+           "close races, and the campaign money behind them. Look up the governments that cover your address."),
         # "Your place" (Wave D batch 6; was "Find your governments"): the result for the reader's saved place. The
         # picker and seat diagram are the home page's; this page keeps its URL and its path-stop ids.
         _e("your-governments/index.html", "Your place", "Your place",

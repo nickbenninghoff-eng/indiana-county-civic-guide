@@ -290,6 +290,15 @@ look at the page in the browser); then ask Nick which map pages to build next an
   filtered year is empty. Agent ab44df71ab1d3eeca running (usage-guard list). After it: final full check, Roadmap +
   handoff, morning summary. Batch 9 verified.
 
+## Session 2026-11-09 (night) — pre-release items 1, 3, 5 + watermark (committed and pushed on Nick's "commit and push")
+Nick: "Take care of 1, 3, and 5." (1 = check Run-for-office pages against the official rules; 3 = v1.0-draft stamp +
+old home description; 5 = commit email) and "add my name Nick Benninghoff; Phenomogen LLC as a watermark in the code
+for every page". All done (Roadmap Phase 5). Item 1: one Opus agent checked the run/ pages against the Election
+Division's guides and the statutes (10 fixes; log research/run-pages-check-2026-11-09.md); election office address
+confirmed in Chrome (4th Floor, 227 W. Jefferson); open: re-check when the 2027 Candidate Guide is out. Verified:
+locked build PASSED (113 pages), 418 tests OK, check_gov 0 errors / 23 warnings. Next: Netlify hosting (Nick:
+"let's get started on hosting this on my netlify account").
+
 ## Session 2026-11-09 (late) — canvass re-check + zero-MOE note (DONE, ALL UNCOMMITTED)
 Nick: "Can you try doing these?" = (1) re-check the 2010-2019 county canvasses, (2) explain the missing ± on
 Census-controlled totals. Both done; details in research/canvass-recheck-2010-2019-2026-11-09.md and Roadmap Phase 5.

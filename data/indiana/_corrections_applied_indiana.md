@@ -92,3 +92,47 @@ Source: `planning/qa/gapfill-2026-11-08-A-rules.md` and `-edits.csv` (41 rows). 
 - office_types precinct_committeeperson term_years. The statute sets the election years, not a term length.
 - elections.csv 2016/2018 question text: no matching results rows.
 - The county election board chair note: optional, and the guide does not describe that body.
+
+## 2026-11-09: Run for office pages checked against official sources
+
+Report: `research/run-pages-check-2026-11-09.md`. Sources read: the 2027 Election Calendar brochure (IND-078),
+the 2026 Candidate Guide (IND-079), the 2026 Campaign Finance Manual (IND-080), FindLaw IC 3-10-1-4.5/4.6 (IND-081),
+IC 3-8-2-7 (IND-082) and IC 3-13-11-3, -5, -10 (IND-011 note). election_rules.csv has no notes column, so the
+corrections are logged here.
+
+### Corrected (the source says otherwise)
+- precinct_committeepersons detail: was "elected May 2026, 2030 ... the next election is the May 2030 primary" for all
+  committeemen; IC 3-10-1-4.6 puts Republican committeemen on 2024, 2028, 2032. Now: Republican next May 2028,
+  Democratic next May 2030. IND-072's note gets the "Except as provided in section 4.6" clause. Same fix in the
+  gaps_services precinct-committee row.
+- party_primaries detail: "A candidate's two most recent primary votes must match the party they run under" left out
+  the county chair's certification (IC 3-8-2-7(a)(4)(B)). Now states both routes.
+- partisan_school_board detail: "A candidate's last two primary votes must match any party they list" left out the
+  chair's certification and that a minor-party, independent or no-party choice cannot be challenged on party grounds
+  (Candidate Guide p. 105; IC 3-8-2.5-2.5, -7).
+- independent_petitions detail: CAN-34 (school board) was listed with the June 30 petition deadline; school board has its
+  own window (May 19 to noon June 18 in 2026). CAN-19 is the federal, state, legislative and judicial form.
+- local_vacancy_caucus detail: "precincts that voted for the departing official" is now "precincts whose voters could
+  vote for the departing official at the last election for the office" (IC 3-13-11-5); "selection is by secret ballot"
+  is now "majority vote, by secret ballot when more than one person seeks the seat" (IC 3-13-11-10).
+- school_board_filing: filing office was "county voter registration office"; the Candidate Guide (p. 105) says the
+  county election board of the county holding most of the corporation's population (IC 3-8-2-6). South Bend and
+  Mishawaka boards are under their own statutes (IC 20-23-15, -17), added to the detail and the gap row.
+
+### Upgraded (computed dates now printed by the Election Division; no value changed)
+- municipal_2027_filing: Jan 6, 2027 opening and noon June 30 / July 15 petition dates are printed in the 2027
+  brochure; confidence medium -> high; source IND-078 added.
+- local_candidate_reports: 2027 pre-primary (April 16), pre-election (October 15) and annual (January 19, 2028) dates
+  are printed in the 2027 brochure; IC 3-9-5-9(d) municipal-year rule added from the Campaign Finance Manual.
+
+### Generator text (tools/site/pages/participate.py)
+- run/index eligibility: "The only residence rule in the guide's data is that a township trustee must live in the
+  township" was false (the registration and residency rules have been in the table since 2026-11-08); the page now shows them.
+- run/index campaign finance: "The guide's rules table has no campaign-finance schedule yet" was false; replaced by the
+  2027 report deadlines, the CFA-1 committee rule and the precinct-committee exemption.
+- run/index and run/school-board: the two hard-coded party-test sentences corrected as above.
+- run/school-board: "Candidates reach the ballot through a party primary or by petition" was wrong for school board
+  (no primary); now says every candidate files a petition (CAN-34) and a CAN-12 with the county election board.
+- run/precinct-committeeperson and the run/index card: next elections 2028 (Republican) and 2030 (Democratic) instead
+  of "Confirm"; the LOW badge note no longer calls the four-year cycle unsourced.
+- Filing note: 2027 opening day (Jan 6) added from the 2027 brochure.

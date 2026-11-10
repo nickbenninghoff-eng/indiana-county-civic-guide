@@ -15,7 +15,7 @@ HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))  # -P drops the script dir from sys.path; add it back explicitly
 
 from civic.data import Edition  # noqa: E402
-from civic.shell import Site  # noqa: E402
+from civic.shell import Site, rights_banner  # noqa: E402
 import importlib  # noqa: E402
 import pkgutil  # noqa: E402
 
@@ -69,9 +69,10 @@ def write_assets(ed, out: Path) -> None:
     color = ed.config["edition_color"]
     css = _concat(HERE / "static" / "style.css", HERE / "static" / "css", "*.css")
     css = css.replace("{{edition_light}}", color["light"]).replace("{{edition_dark}}", color["dark"])
-    (assets / "style.css").write_text(css, encoding="utf-8", newline="\n")
+    banner = rights_banner(ed.config)  # ownership watermark, first line of each bundle
+    (assets / "style.css").write_text(banner + css, encoding="utf-8", newline="\n")
     js = _concat(HERE / "static" / "app.js", HERE / "static" / "js", "*.js")
-    (assets / "app.js").write_text(js, encoding="utf-8", newline="\n")
+    (assets / "app.js").write_text(banner + js, encoding="utf-8", newline="\n")
     # Licensed images (portraits, historic photos) ship as published files.
     img_src = repo_root() / "site" / "images"
     if img_src.is_dir():

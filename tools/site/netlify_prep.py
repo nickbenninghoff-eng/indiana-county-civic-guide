@@ -27,7 +27,7 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))  # -P drops the script dir from sys.path; add it back explicitly
 
-from civic.shell import FONTS, LOOK_BOOT  # noqa: E402
+from civic.shell import FONTS, LOOK_BOOT, rights_html  # noqa: E402
 
 NETLIFY = HERE / "netlify"
 DOC_START = ('<!doctype html>\n<html lang="en">\n<meta charset="utf-8">\n'
@@ -63,6 +63,7 @@ def page_404(ed_config: dict) -> str:
     t = (NETLIFY / "404.html").read_text(encoding="utf-8")
     from civic.html import esc
     return (t.replace("{{look_boot}}", LOOK_BOOT).replace("{{fonts}}", str(esc(FONTS)))
+             .replace("{{rights}}", str(rights_html(ed_config)))
              .replace("{{series}}", str(esc(ed_config.get("series", "Civic Guide"))))
              .replace("{{edition}}", str(esc(ed_config.get("edition", "")))))
 

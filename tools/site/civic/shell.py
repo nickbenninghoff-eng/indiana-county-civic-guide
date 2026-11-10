@@ -37,6 +37,32 @@ LOOK_BOOT = ('<script>(function(){var d=document.documentElement,l="ballot",t=nu
              'if(t==="light"||t==="dark")d.setAttribute("data-theme",t);})();</script>')
 
 
+# Ownership watermark (Nick, 2026-11-09: "add my name Nick Benninghoff; Phenomogen LLC as a watermark in the code for
+# every page"). Source-only: an HTML comment plus author/copyright metas in every page's head, and a /*! */ banner
+# at the top of the shared style.css and app.js (the "!" form survives minifiers). The holder and year come from
+# edition.json (rights_holder, rights_year).
+def rights_notice(cfg: dict) -> str:
+    """e.g. 'Copyright 2026 Nick Benninghoff; Phenomogen LLC. Indiana County Civic Guide, St. Joseph County Edition.'"""
+    holder = cfg.get("rights_holder") or cfg.get("author", "")
+    year = cfg.get("rights_year") or str(cfg.get("data_as_of", ""))[:4]
+    text = f"Copyright {year} {holder}. {cfg.get('series', '')}, {cfg.get('edition', '')}."
+    # never let the text close or nest a comment, whichever syntax wraps it
+    return re.sub(r"-{2,}|\*/|/\*|[<>]", " ", text).strip()
+
+
+def rights_html(cfg: dict) -> Markup:
+    """The page watermark: a comment and the author/copyright metas, for the document head."""
+    holder = cfg.get("rights_holder") or cfg.get("author", "")
+    return join([Markup(f"<!-- {rights_notice(cfg)} -->"),
+                 h("meta", {"name": "author", "content": holder}),
+                 h("meta", {"name": "copyright", "content": rights_notice(cfg)})], "\n")
+
+
+def rights_banner(cfg: dict) -> str:
+    """The watermark for the shared CSS and JS bundles."""
+    return f"/*! {rights_notice(cfg)} */\n"
+
+
 def look_switch(ident: str) -> Markup:
     """The Look switcher: three real buttons with aria-pressed (static/js/looks.js wires them).
     Hidden by CSS until the head script has set data-look, so without JS it never shows."""
@@ -187,6 +213,7 @@ class Page:
             # index.html gets no <head>; a charset meta right after <title> keeps local previews
             # correct (the host's skeleton already declares UTF-8).
             Markup('<meta charset="utf-8">') if self.is_root_index else None,
+            rights_html(ed.config),
             Markup('<meta name="claude:viewport-fit-sides" content="cover">'),
             h("meta", {"name": "description", "content": self.description}),
             h("meta", {"property": "og:title", "content": og_title}),

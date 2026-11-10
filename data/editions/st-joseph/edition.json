@@ -14,8 +14,10 @@
     "dark": "#2dd4bf"
   },
   "data_as_of": "2026-11-07",
-  "version": "1.0-draft",
+  "version": "1.0",
   "author": "Nick Benninghoff",
+  "rights_holder": "Nick Benninghoff; Phenomogen LLC",
+  "rights_year": "2026",
   "author_disclosure": "I work as an organizer for the St. Joseph County Democratic Party. I researched and built this guide independently, by myself, on my own time. It is not a publication of the party.",
   "map_precinct_view": true,
   "author_disclosure_short": "The author works as an organizer for the St. Joseph County Democratic Party. The guide is independent work, made on the author's own time, not a party publication.",

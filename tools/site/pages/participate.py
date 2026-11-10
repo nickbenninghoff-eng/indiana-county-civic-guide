@@ -93,8 +93,10 @@ def _filing_note(page, years):
     c = page.cites
     bits = []
     if "2027" in years:
-        bits.append(h("span", None, "2027 city offices: file a declaration by ", h("strong", None, "noon on Friday, Feb 5, 2027"),
-                      " with the county election board", c.cite("SVC-018"), ". Opening day: ", CONFIRM))
+        # Opening day and deadline: Indiana Election Division 2027 calendar brochure (IND-078), checked 2026-11-09.
+        bits.append(h("span", None, "2027 city offices: file a declaration (CAN-42, with a CAN-12) with the county election board "
+                      "from Wednesday, Jan 6, 2027 until ", h("strong", None, "noon on Friday, Feb 5, 2027"),
+                      c.cite("IND-078;SVC-018"), "."))
     other = [y for y in years if y != "2027"]
     if other:
         bits.append(h("span", None, f"{', '.join(other)}: filing window not in the guide's data. ", CONFIRM))
@@ -150,12 +152,25 @@ def _finance(page, ed):
     c = page.cites
     return [
         h("p", None, "Candidates for county, city, township and school board offices report their campaign money to the county, "
-          "not to the state database", c.cite("SVC-021"), ". ", status_badge("secondary", page,
-                                                                         "Research summary; not checked against statute text.")),
+          "not to the state database: they file with the county election board", c.cite("SVC-021;IND-079"), ". ",
+          status_badge("official", page)),
         h("p", None, "The county's Candidate Filings page posts scanned CFA-4 reports (the receipts and spending report) and CFA-11 "
           "notices (large contributions)", c.cite("SVC-019;SVC-020"), ". The reports it has posted include annual, pre-primary, "
           "pre-election and pre-general periods", c.cite("SVC-020"), "."),
-        h("p", None, "Due dates for each report: ", CONFIRM, " The guide's rules table has no campaign-finance schedule yet (see Gaps). ",
+        # 2027 dates: Indiana Election Division 2027 calendar brochure (IND-078); committee rule: 2026 Campaign Finance
+        # Manual pp. 9-10 (IND-080). Checked 2026-11-09; replaces "Confirm" and a stale "no schedule yet" sentence.
+        h("p", None, "2027 report deadlines for city candidates: pre-primary report due ", h("strong", None, "noon April 16, 2027"),
+          " (period ends April 9); pre-election report due ", h("strong", None, "noon October 15, 2027"),
+          " (period ends October 8); annual report for 2027 due noon January 19, 2028. Annual reports for 2026 are due noon "
+          "January 20, 2027", c.cite("IND-078"), ". City and town candidates file the pre-primary and pre-election reports even "
+          "if no primary or election is held for their office", c.cite("IND-080"), ". ", status_badge("official", page)),
+        h("p", None, "For an office paying $5,000 a year or more, the candidate files a committee statement of organization (CFA-1) "
+          "by noon 10 days after becoming a candidate (raising or spending more than $100) or noon 7 days after the filing "
+          "deadline, whichever comes first. For school board, and for local offices paying "
+          "under $5,000 a year, a committee is needed only after raising or spending more than $500", c.cite("IND-080"), ". "
+          "Precinct committeeperson candidates file no campaign-finance reports", c.cite("IND-079;IND-080"), ". ",
+          status_badge("official", page)),
+        h("p", None, "Report due dates for 2028 and later: ", CONFIRM, " ",
           "State-level campaign data covers only state candidates and committees", c.cite("MON-020"), ". ",
           h("a", {"href": page.rel("money/campaigns/index.html#obligations")}, "Campaign-finance obligations")),
     ]
@@ -176,17 +191,38 @@ def _ballot_access(page, ed):
           "Interests", c.cite("SVC-018"), ". Towns under 3,500 people hold a major-party primary only if the town adopted an "
           "ordinance to do so", c.cite("SVC-018"), ". ", status_badge("official", page)),
         h("p", None, r["party_primaries"]["plain_language"], c.cite(r["party_primaries"]["source_ids"]),
-          " A candidate's two most recent primary votes must match the party they run under. ", status_badge(r["party_primaries"]["status"], page)),
+          " ", status_badge(r["party_primaries"]["status"], page)),
+        # IC 3-8-2-7(a)(4), read 2026-11-09 (IND-082; 2026 Candidate Guide p. 11, IND-079). The earlier sentence left out the
+        # county chair's certification.
+        h("p", None, "To run in a party's primary, a candidate's two most recent Indiana primary votes must have been in that "
+          "party's primary, or the party's county chair must certify the candidate as a party member (the certification is "
+          "attached to the declaration)", c.cite("IND-082;IND-079"), ". ", status_badge("official", page)),
         h("h3", None, "Petition (independent and minor-party candidates)"),
         h("p", None, r["independent_petitions"]["plain_language"], c.cite(r["independent_petitions"]["source_ids"]),
-          " Petition forms for 2026: CAN-19 (state and legislative), CAN-21 (local), CAN-34 (school board); in 2026 petitions were due "
-          "at noon on June 30, with the consent form at noon on July 15. For 2027 city and town offices the petition form is CAN-44",
-          c.cite("ELX-007"), ". Deadlines for other years and the number of signatures: ", CONFIRM, " ",
+          " For 2027 city and town offices the petition form is CAN-44", c.cite("ELX-007"),
+          ": file it with the county voter registration office for signature checks from Jan 6 until ",
+          h("strong", None, "noon June 30, 2027"), ", then file the consent and the certified petition by noon July 15, 2027",
+          c.cite("IND-078"), ". The petition needs signatures from voters of the district equal to 2% of the votes cast there "
+          "at the last election for Secretary of State", c.cite("IND-069"), "; the count for each district: ", CONFIRM,
+          " In 2026 the forms were CAN-19 (federal, state and legislative) and CAN-21 (other local offices), due at noon June 30 "
+          "with the consent (CAN-20) at noon July 15; school board petitions (CAN-34) had their own window, May 19 to noon "
+          "June 18, 2026", c.cite("IND-079"), ". Deadlines for 2028 and later: ", CONFIRM, " ",
           status_badge(r["independent_petitions"]["status"], page)),
         h("h3", None, "School board: party label instead of a primary"),
         h("p", None, r["partisan_school_board"]["plain_language"], c.cite(r["partisan_school_board"]["source_ids"]), " ",
-          "A candidate's last two primary votes must match any party they list. ", status_badge(r["partisan_school_board"]["status"], page)),
+          status_badge(r["partisan_school_board"]["status"], page)),
+        _school_party_rule(page),
     ]
+
+
+def _school_party_rule(page):
+    """School board party label rule (2026 Candidate Guide p. 105, IND-079; IC 3-8-2.5-2.5 and -7). Replaces "a candidate's
+    last two primary votes must match any party they list", which left out the county chair's certification and the
+    minor-party, independent and no-party choices (checked 2026-11-09)."""
+    return h("p", None, "To list the Democratic or Republican Party, a school board candidate's two most recent Indiana primary "
+             "votes must have been in that party's primary, or the party's county chair must certify the candidate. Listing a "
+             "minor party, independent or no party cannot be challenged on party grounds", page.cites.cite("IND-079"), ". ",
+             status_badge("official", page))
 
 
 def _vacancies(page, ed):
@@ -273,14 +309,22 @@ def build_office(slug):
         page.add(section("eligibility", 2, "Eligibility and filing", elig, scope="mixed" if False else "indiana", ed=ed))
         r = ed.rules
         shared = run_index_link(page, "ballot-access")
-        ballot = [h("p", None, "Candidates reach the ballot through a party primary or by petition",
-                    c.cite(r["candidate_forms"]["source_ids"] + ";" + r["independent_petitions"]["source_ids"]),
-                    ". The forms, deadlines and party-label rules are the same for every office: ", shared, ".")]
         if slug == "school-board":
-            ballot.append(h("p", None, r["partisan_school_board"]["plain_language"],
-                            c.cite(r["partisan_school_board"]["source_ids"]), " ",
-                            "A candidate's last two primary votes must match any party they list. ",
-                            status_badge(r["partisan_school_board"]["status"], page)))
+            # School board seats have no primary (SEA 287): every candidate files a petition of nomination. 2026 Candidate
+            # Guide pp. 104-105 (IND-079), checked 2026-11-09; the generic "party primary or by petition" line was wrong here.
+            ballot = [h("p", None, "School board candidates do not run in a party primary. Each files a petition of nomination "
+                        "(CAN-34 in 2026) and a CAN-12 Statement of Economic Interests with the county election board of the "
+                        "county holding most of the school corporation's people. In 2026 the window was May 19 to noon June 18",
+                        c.cite("IND-079"), ". The 2028 window is not published yet. ", status_badge("official", page)),
+                      h("p", None, r["partisan_school_board"]["plain_language"],
+                        c.cite(r["partisan_school_board"]["source_ids"]), " ",
+                        status_badge(r["partisan_school_board"]["status"], page)),
+                      _school_party_rule(page),
+                      h("p", None, "More on petitions and party labels: ", shared, ".")]
+        else:
+            ballot = [h("p", None, "Candidates reach the ballot through a party primary or by petition",
+                        c.cite(r["candidate_forms"]["source_ids"] + ";" + r["independent_petitions"]["source_ids"]),
+                        ". The forms, deadlines and party-label rules are the same for every office: ", shared, ".")]
         page.add(section("ballot-access", 3, "How you get on the ballot", ballot, scope="indiana", ed=ed))
         page.add(section("money", 4, "Campaign-finance duties",
                          h("p", None, "Candidates for this office report campaign money to the county, not to the state "
@@ -309,10 +353,17 @@ def _build_pcp(site, page):
     role = [
         h("p", None, ot["what_it_does"], c.cite(ot["source_ids"]), " ", status_badge(ot["status"], page)),
         h("p", None, ed.rules["precinct_committeepersons"]["plain_language"], c.cite(ed.rules["precinct_committeepersons"]["source_ids"]),
-          " ", status_badge("low", page, "The four-year term and the county-chair rule come from an unsourced note.")),
-        h("p", None, "Term length and next election year: ", CONFIRM),
+          " ", status_badge("low", page, "The county-chair rule comes from an unsourced note.")),
+        # IC 3-10-1-4.5 and 4.6 (IND-081) and the 2026 Candidate Guide pp. 3, 133 (IND-079), checked 2026-11-09: the two major
+        # parties elect committeepersons in different years.
+        h("p", None, "Committeepersons are elected at the primary every four years, in different years for each major party: "
+          "Democratic Party committeepersons were elected in May 2026 and are next elected in ", h("strong", None, "May 2030"),
+          "; Republican Party committeepersons were elected in May 2024 and are next elected in ", h("strong", None, "May 2028"),
+          c.cite("IND-081;IND-079"), ". Who may run is set by each party's rules", c.cite("IND-079"), ". ",
+          status_badge("official", page)),
         h("p", None, "Precinct committeepersons run in the party primary and file a separate form, CAN-37 (precinct committee or delegate)",
-          c.cite(ed.rules["candidate_forms"]["source_ids"]), ". The county posts these filings on its Candidate Filings page: "
+          c.cite(ed.rules["candidate_forms"]["source_ids"]), ". They file no Statement of Economic Interests (CAN-12) and no "
+          "campaign-finance reports", c.cite("IND-079"), ". The county posts these filings on its Candidate Filings page: "
           "225 documents for 2026 and 60 for 2024 (document counts, not offices)", c.cite("SVC-019"), "."),
         h("p", None, "Filing window and deadline: ", CONFIRM),
     ]
@@ -346,8 +397,9 @@ def build_run(site):
     for slug in ORDER:
         href = page.rel(f"run/{slug}/index.html")
         if slug == "precinct-committeeperson":
+            # IC 3-10-1-4.5 / 4.6 (IND-081), checked 2026-11-09; the office page cites it.
             facts = [("Seats", "Not in data"), ("Term", "Local party office"),
-                     ("Next", "Confirm with the county election office")]
+                     ("Next", "2028 (Republican), 2030 (Democratic)")]
         else:
             spec = OFFICES[slug]
             ot = ed.office_types[spec["ot"]]
@@ -368,8 +420,13 @@ def build_run(site):
                      scope="county", ed=ed))
     # eligibility
     all_years = sorted({y for s in OFFICES for y in _years(ed, s)})
-    el = [h("p", None, "Age, residence and registration rules differ by office: ", CONFIRM,
-            " The only residence rule in the guide's data is that a township trustee must live in the township", c.cite("IND-013"), "."),
+    # The rules table has had the registration and residency rules since 2026-11-08; the old sentence said the trustee rule
+    # was the only one (checked against the 2026 Candidate Guide pp. 7, 81, 103 and FindLaw IC 3-8-1-21, -26, -27 on 2026-11-09).
+    reg, res = ed.rules["local_candidate_registration"], ed.rules["local_residency_requirements"]
+    el = [h("p", None, reg["plain_language"], c.cite(reg["source_ids"] + ";IND-079"), " ", res["plain_language"],
+            c.cite(res["source_ids"] + ";IND-079"), " A township trustee must live in the township", c.cite("IND-013"), ". ",
+            status_badge("official", page)),
+          h("p", None, "Minimum age and the residence rules for other offices: ", CONFIRM),
           h("ul", None, [h("li", None, b) for b in _filing_note(page, all_years)]),
           h("p", None, "The state sets the municipal calendar: primary and general dates are computed from the calendar rule",
             c.cite(ed.rules["municipal_cycle"]["source_ids"]), ". 2027: ", _dates_text(ed, "2027"), " ",
