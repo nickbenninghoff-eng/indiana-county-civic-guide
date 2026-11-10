@@ -594,7 +594,6 @@ def build_how(site):
            ("adding", "How the guide adds up a campaign"), ("coverage", "How complete the record is"),
            ("delinquent", "Delinquent filers"), ("gaps", "Gaps"), ("sources", "Sources")]
     page.add(h("header", {"class": "page-hero"},
-               crumbs(page),
                h("p", {"class": "eyebrow mono"}, "Reference · Money · Campaign finance"),
                h("h1", None, page.title),
                h("p", {"class": "dek"},
@@ -1145,16 +1144,6 @@ def cf_all(ed) -> dict:
     return got
 
 
-def crumbs(page, *trail) -> Markup:
-    """'Campaign finance › <trail>' breadcrumb back to the campaigns index."""
-    items = [h("a", {"href": page.rel(INDEX_PAGE)}, "Campaign finance")]
-    for label, href in trail:
-        items += [" › ", h("a", {"href": page.rel(href)}, label) if href else h("span", {"aria-current": "page"}, label)]
-    if not trail:
-        items += [" › ", h("span", {"aria-current": "page"}, page.title)]
-    return h("nav", {"class": "cf-crumbs mono", "aria-label": "Breadcrumb"}, items)
-
-
 def doc_link(ed, r: dict) -> Markup:
     url = _doc_url(ed, r)
     label = "doc " + r["doc_ids"].replace(";", ", ")
@@ -1237,7 +1226,6 @@ def build_all(site):
     model = cf["model"]
     toc = [("explorer", "Every filing"), ("large", "Large contributions"), ("gaps", "Gaps"), ("sources", "Sources")]
     page.add(h("header", {"class": "page-hero"},
-               crumbs(page),
                h("p", {"class": "eyebrow mono"}, "Reference · Money · Campaign finance"),
                h("h1", None, page.title),
                h("p", {"class": "dek"}, f"All {len(model['rows'])} local campaign-finance reports the guide read from the "

@@ -2,7 +2,7 @@
 .pcov-strip { list-style: none; display: flex; flex-wrap: wrap; gap: 8px 16px; padding: 0; margin: 14px 0 0; }
 .pcov-strip li { display: flex; align-items: center; gap: 6px; font-size: .85rem; }
 .pcov-name { color: var(--ink-2); }
-.pcov { display: inline-block; font: 600 .68rem/1 var(--f-mono); letter-spacing: .06em; text-transform: uppercase; padding: 3px 6px; border: 1px solid currentColor; }
+.pcov { display: inline-block; font: 600 .68rem/1 var(--f-mono); letter-spacing: .06em; text-transform: uppercase; padding: 3px 6px; border: 1px solid currentColor; border-radius: var(--r-sm); }
 .pcov-covered { color: var(--accent); }
 .pcov-partial { color: var(--unofficial); background: var(--unofficial-wash); border-color: var(--unofficial-line); }
 .pcov-none { color: var(--ink-3); border-style: dashed; }

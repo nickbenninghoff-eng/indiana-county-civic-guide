@@ -498,7 +498,6 @@ def build_area(aid: str, site):
         notes.append(h("p", {"class": "muted"}, "Everything else the guide has about this place: ",
                        h("a", {"href": page.rel(f"places/{aid}/index.html")}, u["name"]), "."))
     page.add(h("header", {"class": "page-hero"},
-               cf.crumbs(page, (a["name"], None)),
                h("p", {"class": "eyebrow mono"}, "Reference · Money · Campaign finance"),
                h("h1", None, page.title),
                h("p", {"class": "dek"}, f"Every race for {a['name']} on the 2023, 2024 and 2026 ballots in the guide's "
@@ -712,7 +711,6 @@ def build_state(site):
     src = ";".join(dict.fromkeys(s for r in st for s in split_ids(r["source_ids"])))
     dists = sorted({r["district"] for r in st}, key=lambda d: (0 if d.startswith("HD") else 1, int(d[2:])))
     page.add(h("header", {"class": "page-hero"},
-               cf.crumbs(page, ("State legislature", None)),
                h("p", {"class": "eyebrow mono"}, "Reference · Money · Campaign finance"),
                h("h1", None, page.title),
                h("p", {"class": "dek"}, "Receipts and spending of the campaign committees of state legislators and 2026 "
@@ -841,7 +839,6 @@ def build_other(site):
     toc = [(g, t) for g, t, _n in OTHER_GROUPS if groups[g]] +         ([("state-filed", "Committees that file with the state")] if ed.table("cf_state_pacs") else []) +         ([("large", "Large contributions")] if large else []) + \
         [("gaps", "Gaps"), ("sources", "Sources")]
     page.add(h("header", {"class": "page-hero"},
-               cf.crumbs(page, ("Party, PAC and other committees", None)),
                h("p", {"class": "eyebrow mono"}, "Reference · Money · Campaign finance"),
                h("h1", None, page.title),
                h("p", {"class": "dek"}, f"{len(rows)} filings that belong to no single race: party, PAC and issue "

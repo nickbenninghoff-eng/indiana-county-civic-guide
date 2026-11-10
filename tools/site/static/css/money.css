@@ -39,7 +39,8 @@
 
 /* ---- headline facts */
 .mn-facts { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 210px), 1fr)); gap: 12px; }
-.mn-fact { background: var(--surface); border: 1px solid var(--line); border-top: 3px solid var(--accent); padding: 12px 14px; min-width: 0; }
+/* each fact is also a .card (pages/money.py), so it takes the look's card frame; only the accent top stays its own */
+.mn-fact { border-top-color: var(--accent); min-width: 0; }
 .mn-fact p { margin: 0; }
 .mn-fact-v { font-size: 1.5rem; font-weight: 600; color: var(--ink); }
 .mn-fact-l { font-size: .86rem; color: var(--ink-2); margin-top: 4px !important; }
@@ -90,3 +91,15 @@
 }
 /* a unit's money in and out line inside its budget item (Wave C batch 7) */
 .mn-flows-line { margin: 10px 0 0; font-size: .88rem; }
+
+/* theme pass A: the money panels follow the look's panel frame (looks.css .chart / .table-wrap): Ballot a 2px rule
+   box, Line map a thin gray rounded box, Wayfinding a 2px rule rounded box. Fieldsets and the no-data note keep their
+   light line and only take the look's corner radius. */
+:root .mn-unitnav, :root .mn-picker, :root .mn-tb { border: 2px solid var(--rule); border-radius: var(--r-lg); }
+:root[data-look="line"] .mn-unitnav, :root[data-look="line"] .mn-picker, :root[data-look="line"] .mn-tb { border: 1px solid var(--line); }
+.mn-unitnav li { max-width: none; }  /* rows run the panel's width (.block li caps list items at the measure) */
+.mn-dollars-toggle, .mn-specials, .mn-nodata { border-radius: var(--r); }
+.mn-tb-key { border-radius: min(var(--r-sm), 3px); }
+/* charts side by side keep their own height: a three-bar chart next to a fifteen-bar one is not stretched */
+.mn-chart-grid { align-items: start; }
+.mn-path-note { margin: 14px 0 0; }

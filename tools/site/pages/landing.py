@@ -153,7 +153,8 @@ def build(site):
                "legislators. ",
                status_badge("computed", page, "Counted from the guide's units and offices tables.")),
              h("p", {"class": "hero-turnout"}, turnout, status_badge("official", page)),
-             h("p", {"class": "hero-cta"}, [[" · " if i else "", x] for i, x in enumerate(jumps)]),
+             h("p", {"class": "hero-cta"}, [[h("span", {"class": "hero-sep", "aria-hidden": "true"}, " · ") if i else "", x]
+                                            for i, x in enumerate(jumps)]),
              h("p", {"class": "hero-cta hero-cta-place"}, "Looking for what covers one address? ",
                h("a", {"href": "#pick"}, "Pick your place"), " or ", h("a", {"href": "#paths"}, "pick where to start"), "."))
     # the per-address counts (here.js fills data-count): moved from the old header to the picker

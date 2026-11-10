@@ -19,7 +19,7 @@ earlier elections say so instead of showing $0. When older filings are added to 
 from __future__ import annotations
 
 import re
-from collections import OrderedDict, defaultdict
+from collections import Counter, OrderedDict, defaultdict
 
 from civic import campaign_money as cm
 from civic.charts import period_money
@@ -38,6 +38,14 @@ TYPE_SHORT = {"Annual": "Annual", "Final": "Final", "Pre-Primary": "Pre-primary"
 # --------------------------------------------------------------------------- where each committee's history lives
 def _slug(s: str) -> str:
     return re.sub(r"[^a-z0-9]+", "-", s.lower()).strip("-") or "committee"
+
+
+def _most_common(values: list):
+    """The most frequent value; a tie goes to the value seen first (rows come sorted by report date and filing id).
+    Replaces max(set(values), key=values.count), whose tie-break followed set order and so changed between builds
+    (string hashing is randomized per process): "Oliver J. Davis" on one build, "Dr. Oliver J. Davis, Jr." on the
+    next (debug pass 2026-11-09)."""
+    return Counter(values).most_common(1)[0][0]
 
 
 def index(ed) -> dict:
@@ -146,7 +154,7 @@ def _parts(ed, key: str) -> list[dict]:
                  "counted": [], "expected": [], "on_file": [], "missing": [], "flags": set()}
             out.append({"cycle": cyc, "spec": None, "s": s, "race": None, "cand": None})
             continue
-        off = max(set(x["office_normalized"] for x in rest), key=[x["office_normalized"] for x in rest].count)
+        off = _most_common([x["office_normalized"] for x in rest])
         s = cm.committee_summary(rest, spec, cm._expected_types(ed, off, rest[0]["unit_id"], cyc), "none")
         out.append({"cycle": cyc, "spec": spec, "s": s, "race": None, "cand": None,
                     "area": ix["other_area"].get(rest[0]["filing_id"])})
@@ -200,8 +208,8 @@ def block(ed, page, key: str) -> Markup:
     label = rs[0]["_label"]
     names = [r["candidate"] for r in rs if r["candidate"]]
     parties = [r["party"] for r in rs if r["party"]]
-    who = name_with_form_party(max(set(names), key=names.count), max(set(parties), key=parties.count) if parties else "",
-                               cf._records_party(ed, max(set(names), key=names.count), "2026")) if names else None
+    who = name_with_form_party(_most_common(names), _most_common(parties) if parties else "",
+                               cf._records_party(ed, _most_common(names), "2026")) if names else None
     parts = _parts(ed, key)
     lines, points, trows = [], [], []
     # the first counted report of each calendar year: its year-to-date columns cover the same span as its period,

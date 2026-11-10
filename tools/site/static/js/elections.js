@@ -292,6 +292,10 @@
     window.addEventListener("hashchange", function () {
       var c = contestOf(window.location.hash);
       if (c) window.setTimeout(function () { showOne(c, true); }, 0);
+      /* Back from #contest-<id> to the plain address: leave the one-contest view, as the "Show every contest" button
+         does (it stayed on the one contest; debug pass 2026-11-09). Any other #anchor (a source link in the card) keeps
+         the view. */
+      else if (single && (window.location.hash || "").length < 2) { widen(); update(); }
     });
 
     /* saved-place preselect: here.js (later in app.js) is ready by DOMContentLoaded. A #contest-<id> or any other

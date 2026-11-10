@@ -200,7 +200,7 @@
     panel.textContent = "";
     panel.appendChild(el("h3", null, nameOf(geo, key)));
     var kind = geo === "precinct" ? "Precinct" : (UD[key] ? UD[key].t : "");
-    panel.appendChild(el("p", "cmap-type", kind + " · " + r.label + (r.uncontested ? " · uncontested" : "")));
+    panel.appendChild(el("p", "cmap-type", kind + " \u00b7 " + r.label + (r.uncontested ? " \u00b7 uncontested" : "")));
     if (!v) {
       if (r.district && existed(geo, key, r))
         panel.appendChild(el("p", "cmap-note", "Not on this ballot: this " + (geo === "precinct" ? "precinct" : "area") +
@@ -264,7 +264,7 @@
   function showAll(geo, key) {
     panel.textContent = "";
     panel.appendChild(el("h3", null, nameOf(geo, key)));
-    panel.appendChild(el("p", "cmap-type", (UD[key] ? UD[key].t + " · " : "") + "every race in " + state.year));
+    panel.appendChild(el("p", "cmap-type", (UD[key] ? UD[key].t + " \u00b7 " : "") + "every race in " + state.year));
     var tbl = el("table", "cmap-vtab");
     tbl.appendChild(el("caption", "visually-hidden", "Every " + state.year + " race in " + nameOf(geo, key) + ": shares by party and margin"));
     var thead = el("thead"), htr = el("tr");
@@ -348,7 +348,7 @@
       var sw = el("span", "cmap-key " + band("precinct", c)); sw.setAttribute("aria-hidden", "true");
       b.appendChild(sw);
       b.appendChild(el("span", "cmap-drill-name", V.precinct[c].n + " (" + c + ")"));
-      b.appendChild(el("span", "cmap-drill-m", v ? marginText(r, v) + " · " + n(total(v)) + " votes"
+      b.appendChild(el("span", "cmap-drill-m", v ? marginText(r, v) + " \u00b7 " + n(total(v)) + " votes"
         : (r.district ? "not on this ballot" : "no results")));
       b.addEventListener("click", function () { state.sel = { geo: "precinct", key: c }; rest(); });
       b.addEventListener("focus", function () { showPanel("precinct", c); hl(findAnchor("precinct", c), true); });
@@ -527,7 +527,12 @@
     state.last = { geo: a.getAttribute("data-vgeo"), key: a.getAttribute("data-vkey") };
     showPanel(state.last.geo, state.last.key); hl(a, true);
   });
-  svg.addEventListener("focusout", function (ev) { if (state.active && V && target(ev)) rest(); });
+  /* focus moving into the panel (its "Show its precincts" button or "Open its page" link) keeps the panel as it is:
+     redrawing it removed the control focus was moving to (debug pass 2026-11-09, as in map.js) */
+  svg.addEventListener("focusout", function (ev) {
+    if (ev.relatedTarget && panel.contains(ev.relatedTarget)) return;
+    if (state.active && V && target(ev)) rest();
+  });
   svg.addEventListener("click", function (ev) {
     if (!state.active) return;
     var a = ev.target.closest && ev.target.closest(".cmap-va");
@@ -571,7 +576,9 @@
     state.active = on;
     state.last = null;
     ctl.hidden = !on;
-    if (on) { if (V) refresh(); else load(); }
+    /* back on this layer after another one: map.js has just written "#votes"; put the chosen race back in the address
+       (a reload or a shared link reopened the default race instead; debug pass 2026-11-09) */
+    if (on) { if (V) { refresh(); writeRaceHash(); } else load(); }
     else { clearHl(); if (drill) drill.hidden = true; }
   }
   root.addEventListener("cmap-layer", function (ev) { activate(ev.detail === "votes"); });

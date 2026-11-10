@@ -61,6 +61,11 @@
 .cmap-mlegend-h { margin: 0; font: 600 .66rem/1.2 var(--f-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); max-width: none; }
 .cmap-lg-n { color: var(--ink-3); }
 .cmap-mcounty { margin: 4px 0 0; padding: 10px 12px; border: 1px solid var(--line); border-left: 3px solid var(--accent); background: var(--surface); max-width: none; font-size: .92rem; }
+/* theme pass A: the county box is a callout, so it takes each look's callout frame (looks.css .callout) */
+:root .cmap-mcounty { border-width: 2px 2px 2px 6px; border-top-color: var(--rule); border-right-color: var(--rule);
+  border-bottom-color: var(--rule); border-radius: 0 var(--r) var(--r) 0; }
+:root[data-look="line"] .cmap-mcounty { border-width: 0 0 0 4px; padding: 12px 16px; }
+:root[data-look="wayfinding"] .cmap-mcounty { border-width: 2px 2px 2px 10px; }
 .cmap-mnote { font-size: .82rem; margin: 12px 0 0; max-width: none; }
 .cmap-mtables { margin-top: 18px; }
 .cmap-mtables h4 { margin: 18px 0 6px; }

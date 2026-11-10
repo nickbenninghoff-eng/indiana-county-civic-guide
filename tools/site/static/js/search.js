@@ -28,7 +28,7 @@
 
   function norm(s) {
     s = String(s || "").toLowerCase();
-    if (s.normalize) s = s.normalize("NFD").replace(/[̀-ͯ]/g, "");
+    if (s.normalize) s = s.normalize("NFD").replace(/[\u0300-\u036f]/g, "");   /* combining marks, escaped: the file stays ASCII */
     return s;
   }
   function words(s) { return norm(s).split(/[^a-z0-9]+/).filter(function (w) { return w; }); }

@@ -83,6 +83,17 @@ def _txt(x, y, s, cls="ct", anchor="start", **kw) -> Markup:
     return h("text", a, s)
 
 
+def _wrap2(s: str, max_w: float) -> list[str]:
+    """A label as one line, or two lines split at the space that best balances them when one line is wider than
+    ``max_w`` (theme pass C, 2026-11-09: hbar labels past the label column were cut off at the SVG edge)."""
+    s = str(s)
+    if text_w(s) <= max_w or " " not in s:
+        return [s]
+    words = s.split(" ")
+    best = min(((max(text_w(" ".join(words[:i])), text_w(" ".join(words[i:]))), i) for i in range(1, len(words))))
+    return [" ".join(words[:best[1]]), " ".join(words[best[1]:])]
+
+
 def figure(fid: str, title: str, subtitle: str | None, svg: Markup, headers: list, rows: list[list],
            note: Markup | str | None = None, numeric: tuple[int, ...] = (), status: str | None = None,
            page=None, legend: Markup | None = None, kind: str = "chart", extra: dict | None = None,
@@ -123,6 +134,10 @@ def hbar(fid: str, title: str, rows: list[dict], subtitle: str | None = None, ma
     ticks = nice_ticks(vmax)
     top = ticks[-1]
     label_w = min(230, max([text_w(r["label"]) for r in rows] + [40]) + 12)
+    # a label wider than the 230 px column wraps onto two lines in a column of up to 300 px (it was cut off)
+    lines = {i: _wrap2(r["label"], 218) for i, r in enumerate(rows)}
+    if any(len(v) > 1 for v in lines.values()):
+        label_w = min(300, max(text_w(x) for v in lines.values() for x in v) + 12)
     value_w = max([text_w(r.get("display") or value_fmt(r["value"]), mono=True) for r in rows if r.get("value") is not None] + [30]) + 14
     W = 620
     plot_w = W - label_w - value_w
@@ -136,6 +151,10 @@ def hbar(fid: str, title: str, rows: list[dict], subtitle: str | None = None, ma
         y0 = pad_t + i * row_h + (row_h - bar_h) / 2
         disp = r.get("display") or (value_fmt(r["value"]) if r.get("value") is not None else "no data")
         lab = _txt(label_w - 8, y0 + bar_h - 4, r["label"], "ct", "end")
+        if len(lines[i]) > 1:
+            lab = h("text", {"x": f"{label_w - 8:.1f}", "y": f"{y0 + 5:.1f}", "class": "ct ct-small", "text-anchor": "end"},
+                    h("tspan", {"x": f"{label_w - 8:.1f}", "y": f"{y0 + 5:.1f}"}, lines[i][0]),
+                    h("tspan", {"x": f"{label_w - 8:.1f}", "y": f"{y0 + 17:.1f}"}, lines[i][1]))
         if r.get("value") is None:
             marks.append(h("g", None, lab, _txt(label_w + 4, y0 + bar_h - 4, "no data", "ct ct-muted")))
             continue
@@ -232,8 +251,12 @@ def line(fid: str, title: str, series: list[dict], subtitle: str | None = None,
     tl = [_txt(plot_l - 6, Y(t) + 4, fmt_tick(t, top, money), "ct ct-axis", "end") for t in ticks]
     n_lab = max(2, int((plot_r - plot_l) // 56))
     step = max(1, math.ceil(len(xs) / n_lab))
-    xl = [_txt(X(v), plot_b + 16, x_fmt(v), "ct ct-axis", "middle") for i, v in enumerate(xs) if i % step == 0 or i == len(xs) - 1]
-    paths, ends = [], []
+    xl_idx = [i for i in range(len(xs)) if i % step == 0 or i == len(xs) - 1]
+    # the last year is always labeled; a stepped label just before it would print on top of it ("20242025")
+    if len(xl_idx) > 1 and X(xs[xl_idx[-1]]) - X(xs[xl_idx[-2]]) < 36:
+        del xl_idx[-2]
+    xl = [_txt(X(xs[i]), plot_b + 16, x_fmt(xs[i]), "ct ct-axis", "middle") for i in xl_idx]
+    paths, ends, end_labels = [], [], []
     for s in series:
         segs, cur = [], []
         for xv, yv in s["points"]:
@@ -251,7 +274,14 @@ def line(fid: str, title: str, series: list[dict], subtitle: str | None = None,
         last = next(((xv, yv) for xv, yv in reversed(s["points"]) if yv is not None), None)
         if last:
             ends.append(h("circle", {"class": f"dot {s.get('mark', 'm-accent')}", "cx": f"{X(last[0]):.1f}", "cy": f"{Y(last[1]):.1f}", "r": 4}))
-            ends.append(_txt(X(last[0]) + 8, Y(last[1]) + 4, value_fmt(last[1]), "ct ct-val"))
+            end_labels.append([Y(last[1]) + 4, X(last[0]) + 8, value_fmt(last[1])])
+    # end values that land close together are spread 12 px apart so they don't print over each other
+    end_labels.sort()
+    for k in range(1, len(end_labels)):
+        end_labels[k][0] = max(end_labels[k][0], end_labels[k - 1][0] + 12)
+    over = (end_labels[-1][0] - (H - 2)) if end_labels else 0
+    for lab in end_labels:
+        ends.append(_txt(lab[1], lab[0] - max(0, over), lab[2], "ct ct-val"))
     payload = {"x": [X(v) for v in xs], "labels": [x_fmt(v) for v in xs],
                "series": [{"name": s["name"], "mark": s.get("mark", "m-accent"),
                            "values": [next((value_fmt(p[1]) for p in s["points"] if p[0] == v and p[1] is not None), "no data") for v in xs]}

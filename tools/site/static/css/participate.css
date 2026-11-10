@@ -42,6 +42,23 @@ a.yp-choice { text-decoration: underline; }
 .yp-choice:hover { border-color: var(--accent); }
 .yp-choice[aria-pressed="true"] { border-color: var(--ink); background: var(--accent-wash); font-weight: 600; }
 .yp-choose-more { margin: 10px 0 0; font-size: .88rem; }
+/* the place choices take the look's own choice language (looks.css .choice): Ballot answer ovals, Line map pills,
+   Wayfinding sign buttons; the box around them follows the look's radius */
+:root button.yp-choice::before { content: ""; display: inline-block; width: 16px; height: 10px; margin-right: 6px;
+  vertical-align: -1px; border-radius: 50%; border: 2px solid currentColor; }
+:root button.yp-choice[aria-pressed="true"]::before { background: currentColor; }
+:root[data-look="line"] .yp-choose { border-radius: 0 var(--r) var(--r) 0; }
+:root[data-look="line"] .yp-choice { border-color: var(--ctl-line); border-radius: 999px; padding: 5px 12px; }
+:root[data-look="line"] .yp-choice:hover { border-color: var(--ink); }
+:root[data-look="line"] button.yp-choice::before { display: none; }
+:root[data-look="line"] .yp-choice[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+:root[data-look="wayfinding"] .yp-choose { border: 2px solid var(--rule); border-left-width: 6px; border-left-color: var(--accent);
+  border-radius: 0 var(--r) var(--r) 0; }
+:root[data-look="wayfinding"] .yp-choice { border: 2px solid var(--ink); border-radius: 6px; font-weight: 700; }
+:root[data-look="wayfinding"] .yp-choice:hover { background: var(--surface-2); border-color: var(--ink); }
+:root[data-look="wayfinding"] button.yp-choice::before { display: none; }
+:root[data-look="wayfinding"] .yp-choice[aria-pressed="true"] { background: var(--nav-bg); color: var(--hl); border-color: var(--nav-bg);
+  box-shadow: 0 0 0 3px var(--hl); }
 .yp-again { margin: 0 0 12px; }
 .yp-group { margin: 0 0 18px; }
 .yp-group-h { margin: 18px 0 4px; font-size: .78rem; font-family: var(--f-mono); letter-spacing: .1em; text-transform: uppercase; color: var(--ink-3); }

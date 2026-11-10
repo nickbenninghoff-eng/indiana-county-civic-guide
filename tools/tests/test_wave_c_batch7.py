@@ -64,6 +64,17 @@ def _enclosing_details(html: str, i: str) -> list[str]:
     return stack
 
 
+
+def _forwarded_here(html: str, old_id: str, ids: set) -> bool:
+    """An id the page dropped on purpose is forwarded by its #moved-anchors map (static/js/moved.js) to an id that is on
+    this same page, e.g. the merged Superior Court 6 office (2026-11-09: #office-superior-court-judge-chapleau ->
+    #office-superior-court-judge-woods). Ids forwarded to another page are not accepted here."""
+    m = re.search(r'id="moved-anchors">(.*?)</script>', html, re.S)
+    if not m:
+        return False
+    dest = json.loads(m.group(1)).get("a", {}).get(old_id, "")
+    return "#" in dest and dest.split("#", 1)[0] in ("", "index.html") and dest.split("#", 1)[1] in ids
+
 class Built(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -85,7 +96,8 @@ class Built(unittest.TestCase):
     # ------------------------------------------------------------ anchors, progressive enhancement
     def test_every_old_anchor_still_on_its_page(self):
         before = json.loads(FIXTURE.read_text(encoding="utf-8"))["ids"]
-        lost = [(p, i) for p, ids in before.items() for i in ids if i not in set(self.ids[p])]
+        lost = [(p, i) for p, ids in before.items() for i in ids
+                if i not in set(self.ids[p]) and not _forwarded_here(self.html[p], i, set(self.ids[p]))]
         self.assertEqual(lost, [])
 
     def test_no_duplicate_ids(self):

@@ -6,12 +6,22 @@
 .disclosure-label { font-size: .78rem; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; margin-bottom: .4em; }
 .disclosure-pending { border-style: dashed; border-left-style: solid; border-left-color: var(--unofficial-line); background: var(--unofficial-wash); }
 .disclosure-pending .disclosure-label { color: var(--unofficial); }
+/* the three looks: the disclosure and the teacher's answer key are callouts, so they take the look's callout frame
+   (looks.css .callout): Ballot a ruled box with a thick accent side, Line map a thin rounded box, Wayfinding a heavy sign edge */
+:root .disclosure, :root .prompt-key { border: 2px solid var(--rule); border-left: 6px solid var(--accent); }
+:root[data-look="line"] .disclosure, :root[data-look="line"] .prompt-key {
+  border: 1px solid var(--line); border-left: 4px solid var(--accent); border-radius: 0 var(--r) var(--r) 0;
+}
+:root[data-look="wayfinding"] .disclosure, :root[data-look="wayfinding"] .prompt-key {
+  border: 2px solid var(--rule); border-left: 10px solid var(--accent); border-radius: 0 var(--r) var(--r) 0;
+}
+:root .disclosure-pending { border-style: dashed; border-left-style: solid; border-left-color: var(--unofficial-line); }
 
 /* ---- about: term lists, swatches, criteria, changelog, source index */
 .term-list { list-style: none; padding: 0; margin: 0 0 1em; display: flex; flex-wrap: wrap; gap: 6px 8px; }
 .term-list li { margin: 0; }
 .term-list code, .code-block, .ids { font-family: var(--f-mono); }
-.term-list code { display: inline-block; padding: 1px 8px; border: 1px solid var(--line); background: var(--surface-2); font-size: .82rem; }
+.term-list code { display: inline-block; padding: 1px 8px; border: 1px solid var(--line); background: var(--surface-2); font-size: .82rem; border-radius: var(--r-sm); }
 .swatch-list { list-style: none; padding: 0; margin: 0 0 1em; display: grid; gap: 6px; }
 .swatch-list li { display: flex; align-items: center; gap: 10px; min-width: 0; }
 .swatch { flex: none; display: inline-block; width: 18px; height: 18px; border-radius: 3px; background: var(--mark, var(--ink-3)); }

@@ -128,6 +128,9 @@
     show(uid); highlight(uid, true);
   });
   svg.addEventListener("focusout", function (ev) {
+    /* Tab from a shape into the panel (its "Open page" link): the panel already shows that area. Redrawing it here
+       removed the link focus was moving to, and focus fell back to the page (debug pass 2026-11-09). */
+    if (ev.relatedTarget && panel.contains(ev.relatedTarget)) return;
     var a = ev.target.closest && ev.target.closest(".cmap-a");
     if (!a || !a.classList.contains("cmap-va")) rest();
   });

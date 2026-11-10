@@ -1,0 +1,8 @@
+/* data_sets.css: the dataset pages (pages/data_sets.py). Existing tokens only.
+   Theme pass B (2026-11-09): the "Pull it yourself" folds stand in one list. Each is a see-all fold with its own top and
+   bottom rule and margins (patterns.css .see-all), which stacked into pairs of lines with gaps between them; adjacent
+   folds now share one rule. */
+.see-all.pull-fold { margin: 0; }
+.see-all.pull-fold:not(.pull-fold + .pull-fold) { margin-top: 12px; }
+.see-all.pull-fold:not(:has(+ .pull-fold)) { margin-bottom: 18px; }
+.see-all.pull-fold + .pull-fold { border-top: 0; }

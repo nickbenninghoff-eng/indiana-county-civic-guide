@@ -75,6 +75,18 @@ def _hero(page, eyebrow, dek, scopes, toc):
                h("ol", None, [h("li", None, h("a", {"href": f"#{a}"}, t)) for a, t in toc])))
 
 
+def _statute_codes(text: str) -> list:
+    """A statute field ("IC 3-11-2-10; 3-11-2-9") as one nowrap span per code (static/css/elections.css .elx-code), so a
+    line breaks between codes, never at the hyphens inside one."""
+    parts = [p.strip() for p in text.split(";") if p.strip()]
+    out = []
+    for i, part in enumerate(parts):
+        out.append(h("span", {"class": "elx-code"}, part + (";" if i < len(parts) - 1 else "")))
+        if i < len(parts) - 1:
+            out.append(" ")
+    return out
+
+
 def _rule_p(page, ed, key, detail=False, extra=None):
     """One Indiana rule as a paragraph: plain language (+ detail), citation, status badge.
     Low-confidence rules return None (they appear only in the flagged table)."""
@@ -87,7 +99,8 @@ def _rule_p(page, ed, key, detail=False, extra=None):
     det = re.sub(r"\s*\(see [a-z_]+\)", "", r["detail"]) if detail and r.get("detail") else None
     return h("p", {"class": "elx-rule"}, r["plain_language"], " ", det,
              extra, page.cites.cite(r["source_ids"]), " ", status_badge(r["status"], page),
-             h("span", {"class": "elx-statute mono"}, f" {r['statute']}") if r.get("statute") else None)
+             " " if r.get("statute") else None,
+             h("span", {"class": "elx-statute mono"}, _statute_codes(r["statute"])) if r.get("statute") else None)
 
 
 def _low_rules_table(page, ed, keys, tid):
@@ -476,7 +489,7 @@ def build_hub(site):
                        h("h3", {"class": "card-title"}, h("a", {"href": page.rel(path)}, e.nav)),
                        h("p", None, what),
                        h("p", {"class": "ehub-fact"}, facts[path]) if path in facts else None))
-    page.add(section("pages", None, "Election pages", h("div", {"class": "card-grid ehub-grid"}, cards),
+    page.add(section("pages", None, "Election pages", h("div", {"class": "card-grid ehub-grid elx-hub-grid"}, cards),
                      h("p", None, "Learning path: ",
                        h("a", {"href": page.rel(PATHS_FIRST["vote-smarter"])}, "Vote smarter"), ". ",
                        "Another path, ", h("a", {"href": page.rel(PATHS_FIRST["elections-by-the-numbers"])},
@@ -855,7 +868,7 @@ def build_calendar(site):
                      h("p", {"class": "here-note", "data-here-note": True, "hidden": True}),
                      h("p", None, "If you live in one of these places, these offices are on your 2027 ballot:",
                        " ", status_badge("computed", page)),
-                     h("div", {"class": "card-grid"}, blocks),
+                     h("div", {"class": "card-grid elx-next-grid"}, blocks),
                      h("p", {"data-here-uninc": True}, f"If you live outside every city and town, your next regular election in the guide's data is "
                                   f"the primary on {fmt_date(p28, long=True)}, then the general on {fmt_date(g28, long=True)}. "
                                   f"Everyone in the county votes then, including on {len(county_28)} county offices.",
@@ -1418,7 +1431,9 @@ def build_judges(site):
     for c in sup:
         cands = {x["name"].upper(): x for x in candidates(c)}
         y, n = cands.get("YES"), cands.get("NO")
-        if not (y and n and y["votes"] is not None and n["votes"] is not None):
+        # no yes or no votes recorded (blank, or 0 and 0): no share to compute (a 0-0 row divided by zero and turned
+        # the whole page into a stub; debug pass 2026-11-09)
+        if not (y and n and y["votes"] is not None and n["votes"] is not None and y["votes"] + n["votes"] > 0):
             continue
         yr = ed.elections[c["election_id"]]["date"][:4]
         who = c["label"].replace("Superior Court retention", "").strip(" :") or "judge not named"

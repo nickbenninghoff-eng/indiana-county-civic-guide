@@ -357,7 +357,9 @@
   function districtName(c) { return districts[c] ? c + " " + districts[c].name : c; }
   function preselect() {
     var slot = doc.querySelector('[data-here-pre="taxbill"]');
-    if (!slot || !window.civicHere || saved) return;
+    /* only a saved choice that was actually restored above wins (an unreadable or outdated one, say a district code
+       no longer in the data, used to block the preselect as well; debug pass 2026-11-09) */
+    if (!slot || !window.civicHere || (saved && districts[saved.district])) return;
     var m = window.civicHere.mine();
     if (!m) return;
     var r = fromPlace(m);

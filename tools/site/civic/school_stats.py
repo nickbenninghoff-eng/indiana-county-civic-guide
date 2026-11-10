@@ -80,7 +80,9 @@ def per_student(ed, uid: str):
     if not rows:
         return None, None
     row = max(rows, key=lambda r: _year_of(r["vintage"]))
-    med = next((m for m in _rows(ed).get("_state", {}).get(MEDIAN, []) if m["vintage"] == row["vintage"]), None)
+    # a median row with a blank value is no median (it crashed the "state median $..." text; debug pass 2026-11-09)
+    med = next((m for m in _rows(ed).get("_state", {}).get(MEDIAN, [])
+                if m["vintage"] == row["vintage"] and _f(m["value"]) is not None), None)
     return row, med
 
 

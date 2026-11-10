@@ -1,0 +1,28 @@
+# Netlify response headers for the civic guide (security review 2026-11-09).
+# Source of truth: tools/site/netlify/_headers. tools/site/netlify_prep.py copies it into the publish
+# directory (site/<edition>/_headers), where Netlify reads it for every deploy method (Git build, CLI, drag-and-drop).
+#
+# Content-Security-Policy, matched to what the pages load:
+#   script-src   our own assets/app.js + the one inline head script (civic/shell.py LOOK_BOOT, which sets the
+#                saved look/theme before paint) by its sha256. The <script type="application/json"> data blocks
+#                are not executed, so CSP does not apply to them. netlify_prep.py refuses to finish if any inline
+#                script in the output is missing from this list, so a change to LOOK_BOOT cannot silently break.
+#   style-src    our own assets/style.css + the Google Fonts stylesheet; no inline <style> elements.
+#   style-src-attr 'unsafe-inline'  ~1,300 style="..." attributes (bar widths, chart positions) written by the build;
+#                every value is escaped by civic/html.py. Inline <style> elements stay blocked.
+#   font-src     Google Fonts files. img-src/connect-src: own files only (portraits, search index, map votes).
+# HSTS without includeSubDomains/preload on purpose: a custom domain's other subdomains are not this site's call.
+/*
+  Content-Security-Policy: default-src 'none'; script-src 'self' 'sha256-M2kWKYP9Ax9jeVF7/jCB1oRQu4IuIK8to1TmlzdLH4g='; style-src 'self' https://fonts.googleapis.com; style-src-attr 'unsafe-inline'; font-src https://fonts.gstatic.com; img-src 'self'; connect-src 'self'; manifest-src 'self'; form-action 'self'; base-uri 'none'; object-src 'none'; frame-ancestors 'none'
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: DENY
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: accelerometer=(), autoplay=(), camera=(), display-capture=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), midi=(), payment=(), usb=(), browsing-topics=()
+  Cross-Origin-Opener-Policy: same-origin
+  Strict-Transport-Security: max-age=31536000
+
+# Portraits and historic photos keep their file names; a day of caching, then revalidate.
+# HTML, assets/app.js, assets/style.css and the JSON files keep Netlify's default (always revalidate), because
+# their names carry no content hash and a new deploy must never pair new HTML with an old script.
+/images/*
+  Cache-Control: public, max-age=86400, stale-while-revalidate=604800

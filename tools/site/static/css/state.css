@@ -7,3 +7,5 @@
 /* a district's committees, one line each (Wave C batch 7) */
 .leg-cf { margin: 6px 0 4px; padding-left: 1.1rem; font-size: .9rem; }
 .leg-cf > li { margin: 2px 0; }
+/* statute codes and the effective date in a rule's meta line: break between them, never at the hyphens inside one (theme pass B) */
+.rule-code { white-space: nowrap; }

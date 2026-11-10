@@ -725,7 +725,10 @@ def _turnout_section(page, ed, els):
 def straight_elections(ed, els) -> list[dict]:
     """General elections whose straight-party share is shown: printed by the county, in a year with a sourced rule."""
     sourced = _straight_party_years(ed)
-    return [e for e in els if e["type"] == "general" and e.get("straight_party_d") and int(e["date"][:4]) in sourced]
+    # the share needs the ballots cast as its base: a blank or zero count is left out (it crashed the page; debug pass
+    # 2026-11-09)
+    return [e for e in els if e["type"] == "general" and e.get("straight_party_d") and int(e["date"][:4]) in sourced
+            and (e.get("ballots_cast") or "").strip().isdigit() and int(e["ballots_cast"]) > 0]
 
 
 def _straight_section(page, ed, els):

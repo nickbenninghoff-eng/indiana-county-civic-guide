@@ -78,9 +78,13 @@ def _rule_block(page, ed, key: str, heading: str | None = None, detail: bool = T
     r = ed.local_rules[key]
     meta = []
     if r.get("statute"):
-        meta.append(f"Statute: {r['statute']}")
+        # one nowrap span per code (static/css/state.css .rule-code): lines break between codes, not at their hyphens
+        codes = [c.strip() for c in r["statute"].split(";") if c.strip()]
+        meta.append(h("span", None, "Statute: ",
+                      join([h("span", {"class": "rule-code"}, c + (";" if i < len(codes) - 1 else ""))
+                            for i, c in enumerate(codes)], " ")))
     if r.get("effective"):
-        meta.append(f"Effective: {fmt_date(r['effective'])}")
+        meta.append(h("span", {"class": "rule-code"}, f"Effective: {fmt_date(r['effective'])}"))
     det = _clean_detail(r.get("detail", "")) if detail else ""
     return h("div", {"class": "rule-block"},
              h("h3", None, heading) if heading else None,
@@ -88,7 +92,7 @@ def _rule_block(page, ed, key: str, heading: str | None = None, detail: bool = T
                status_badge(r["status"], page), " ", status_badge("low", page) if r.get("confidence") == "low" else None),
              h("p", {"class": "muted"}, det) if det else None,
              extra,
-             h("p", {"class": "rule-meta mono muted"}, " · ".join(meta)) if meta else None)
+             h("p", {"class": "rule-meta mono muted"}, join(meta, " · ")) if meta else None)
 
 
 # ============================================================================ state/index.html
@@ -565,8 +569,10 @@ def build_legislators(site):
             m = re.search(r"district-wide[^;]*?\(([\d,]+) to ([\d,]+)\)", t.get("notes", ""))
             if m:
                 wide = (t, m)
+        # a blank vote count says so (it crashed the page; debug pass 2026-11-09)
         tally = h("span", None, join([h("span", None, name_with_party(r["candidate"], r["party"]),
-                                        f" {int(float(r['votes'])):,}") for r in ct["rows"]], "; "))
+                                        f" {int(float(r['votes'])):,}" if (r["votes"] or "").strip() else " (votes not in the data)")
+                                      for r in ct["rows"]], "; "))
         xrows.append([h("a", {"href": f"#{did(key)}"}, o["title"]), tally,
                       (f"{wide[1].group(1)} to {wide[1].group(2)}, led by {wide[0]['person']} (Ballotpedia)"
                        if wide else "Not in the guide's data"),
@@ -596,8 +602,10 @@ def build_legislators(site):
         fig = None
         ct = ed.contests.get(f"2026g-state-{key[0]}-{key[1]}")
         if ct:
-            cands = [{"name": r["candidate"], "party": r["party"], "votes": int(float(r["votes"])),
-                      "pct": float(r["pct"]), "winner": ""} for r in ct["rows"]]
+            # blank votes or share: results_bars prints "votes not recorded" (int(float("")) crashed the page)
+            cands = [{"name": r["candidate"], "party": r["party"],
+                      "votes": int(float(r["votes"])) if (r["votes"] or "").strip() else None,
+                      "pct": float(r["pct"]) if (r["pct"] or "").strip() else None, "winner": ""} for r in ct["rows"]]
             fig = results_bars(f"res26-{key[0]}-{key[1]}", f"{o['title']}, county portion", cands,
                                subtitle="Nov 3, 2026", status="unofficial",
                                note="County portion only unless the table below says the totals match the district. "

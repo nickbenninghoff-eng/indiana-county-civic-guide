@@ -24,7 +24,7 @@
 .search-input:focus-visible { outline: 3px solid var(--focus); outline-offset: 1px; }
 
 .search-pop {
-  position: absolute; top: calc(100% + 6px); right: 0; z-index: 45;
+  position: absolute; top: calc(100% + 6px); left: 0; z-index: 45; /* the box starts the masthead's second row, so the list opens rightward (right: 0 pushed it off the left edge) */
   width: min(34rem, calc(100vw - 32px)); max-height: min(70vh, 34rem); overflow-y: auto;
   background: var(--surface); color: var(--ink); border: 2px solid var(--rule); border-radius: var(--r);
   box-shadow: 0 14px 30px var(--shadow); padding: 6px;
@@ -45,9 +45,17 @@
 
 :root[data-look="line"] .search-input { border: 1px solid var(--ctl-line); border-radius: 999px; }
 :root[data-look="line"] .search-pop { border: 1px solid var(--line); }
+:root[data-look="line"] .search-opt { border-radius: 10px; } /* --r-sm is a full pill in Line map: too round for a list row */
 :root[data-look="wayfinding"] .search-input { font-weight: 600; }
 :root[data-look="wayfinding"] .search-opt.is-active { border-left-color: var(--hl); }
 
+/* above phone widths the box keeps its full 24rem in every look, so the masthead wraps the same way in all three:
+   title and stamp on the first row, search and the Look switcher on the second. (Line map's narrower title used to
+   pull the search up into the first row and drop the Look switcher under the title, so the buttons moved when
+   the reader changed looks.) */
+@media (min-width: 761px) {
+  .site-search { flex-basis: 24rem; }
+}
 @media (max-width: 760px) {
   .site-search { flex-basis: 100%; max-width: none; }
   .search-pop { left: 0; right: 0; width: auto; }

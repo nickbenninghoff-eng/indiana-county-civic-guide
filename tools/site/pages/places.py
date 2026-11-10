@@ -359,13 +359,16 @@ def _context_block(ed, page, unit):
         flags = [status_badge(new["status"], page)]
         if cv is not None and cv > 30:
             flags.append(status_badge("low", page, f"CV {cv:.0f}% (above 30%): treat as unreliable."))
-        rows.append([label, fmt(v), f"±{fmt(moe)}" if moe is not None else "none published",
+        rows.append([label, fmt(v), ("±0 (controlled total or rounds to zero)" if moe == 0 else f"±{fmt(moe)}")
+                     if moe is not None else "none published",
                      new["vintage"], h("span", None, join(flags, " "), page.cites.cite(new["source_ids"]))])
         srcs.append(new["source_ids"])
     # change since 2010 (ACS 2006-2010 -> latest ACS)
     pv = _ind(ed, gid, "pop_total")
     a, b = _earliest_acs(pv), _latest_acs(pv)
-    if a and b and a is not b:
+    # both counts published and the first one non-zero (an unpublished ACS estimate is blank: it is listed above as
+    # "not published"; without this guard a blank crashed the whole place page into a stub; debug pass 2026-11-09)
+    if a and b and a is not b and _num(a["value"]) and _num(b["value"]) is not None:
         x0, x1 = _num(a["value"]), _num(b["value"])
         m = math.sqrt((_num(a["moe"]) or 0) ** 2 + (_num(b["moe"]) or 0) ** 2)
         d = x1 - x0
@@ -378,7 +381,7 @@ def _context_block(ed, page, unit):
         return None
     return [h("p", None, "Fixed set of community indicators from the American Community Survey (ACS) 5-year estimates. "
                          "These are period estimates with a margin of error, not point-in-time counts. Dollar figures are in the vintage's final-year dollars."),
-            h("div", {"class": "card ctx-card"}, data_table(f"context-{unit['unit_id']}", ["Indicator", "Estimate", "Margin of error", "Vintage", "Status"],
+            h("div", {"class": "ctx-card"}, data_table(f"context-{unit['unit_id']}", ["Indicator", "Estimate", "Margin of error", "Vintage", "Status"],
                                                            rows, caption=f"Community context: {unit['name']}", numeric=(1, 2), min_width="40rem"))]
 
 
@@ -1483,7 +1486,7 @@ def _residency_evidence(ed, uid) -> list[dict]:
             if names and len(names) == 1:
                 pop = _township_pop(ed, names[0])
                 seats = int(o["seats"]) if o["seats"].isdigit() else 1
-                if pop and votes / seats > float(pop["value"]):
+                if pop and _num(pop["value"]) is not None and votes / seats > float(pop["value"]):
                     out.append({"office_id": o["office_id"], "sources": srcs + ";" + pop["source_ids"],
                                 "text": f"the {names[0]} Township seat drew {votes:,.0f} votes in {year}"
                                         + (f" for {seats} seats" if seats > 1 else "")

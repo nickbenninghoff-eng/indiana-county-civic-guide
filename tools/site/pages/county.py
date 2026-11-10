@@ -459,6 +459,10 @@ def build(site):
                                             + (f": {digest}" if digest else ""), hint="Charts · tables"),
                          scope="county", ed=ed))
 
+    # Superior Court 6 was two offices (named for Chapleau, then Woods) until 2026-11-09, which counted the seat twice;
+    # it is one office now, so an old link to the Chapleau seat goes to it (static/js/moved.js)
+    page.add(json_script("moved-anchors", {"a": {"office-superior-court-judge-chapleau":
+                                                 page.rel("county/index.html#office-superior-court-judge-woods")}}))
     gaps = ed.gaps(files=["gaps_gov", "gaps_results"], pattern=GAP_PATTERN)
     page.finish(gaps=gaps)
     return page

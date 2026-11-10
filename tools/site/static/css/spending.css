@@ -10,7 +10,9 @@
 @media (min-width: 760px) {
   .sp-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
-.sp-pass { margin-top: 22px; padding: 4px 14px 14px; border: 1px dashed var(--line); background: var(--surface-2); min-width: 0; }
+.sp-pass { margin-top: 22px; padding: 4px 14px 14px; border: 1px dashed var(--line); background: var(--surface-2); min-width: 0;
+  border-radius: var(--r-lg); }  /* theme pass A: the look's panel corners */
+.sp-grid { align-items: start; }  /* theme pass A: two charts side by side keep their own height */
 .sp-pass .sp-sub { margin-top: 12px; }
 .sp-pass > p { max-width: var(--measure); font-size: .9rem; }
 .sp-pass .chart { margin: 14px 0 0; }

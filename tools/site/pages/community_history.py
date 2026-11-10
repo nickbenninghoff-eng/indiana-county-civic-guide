@@ -195,6 +195,13 @@ def fmt_value(ind, v) -> str:
     return f"{v:.1f}%"
 
 
+# A published margin of 0 (added 2026-11-09): the Census Bureau gives no sampling error for totals it controls to its
+# official population estimates (county, state and U.S. total population and Hispanic or Latino origin), and a few
+# national and state shares have margins that round to zero. Shown as "± 0" with this explanation, not left blank.
+ZERO_MOE = ("No sampling error published: the Census Bureau controls this total to its official population estimates "
+            "(county, state and U.S. population and Hispanic or Latino origin), or the margin rounds to zero.")
+
+
 def fmt_moe(ind, m) -> str:
     if ind in MONEY:
         return f"${m:,.0f}"
@@ -208,10 +215,14 @@ def est_cell(ind, row) -> Markup:
     if not row or _f(row.get("value")) is None:
         return h("span", {"class": "muted"}, "not in data")
     v, m = _f(row["value"]), _f(row.get("moe"))
-    moe = h("span", {"class": "moe"}, f" ± {fmt_moe(ind, m)}") if m is not None and m > 0 else None
+    moe = (h("span", {"class": "moe"}, f" ± {fmt_moe(ind, m)}") if m is not None and m > 0 else
+           h("span", {"class": "moe moe-zero", "title": ZERO_MOE}, " ± 0", h("sup", {"class": "cv-mark"}, "‡"))
+           if m == 0 else None)
     if unreliable(row):
         c = cv_of(row)
-        cvs = "undefined (estimate is zero)" if c == float("inf") else f"{c * 100:.0f}%"
+        # c is None when the row is flagged only by its notes ("CV>30%") and no margin of error is published
+        cvs = ("undefined (estimate is zero)" if c == float("inf") else
+               "not computable (no margin of error published; the source notes flag it)" if c is None else f"{c * 100:.0f}%")
         return h("span", {"class": "est est-unreliable",
                           "title": f"Coefficient of variation {cvs}: above 30%, so treat as unreliable."},
                  fmt_value(ind, v), moe, h("sup", {"class": "cv-mark", "aria-label": "unreliable estimate"}, "†"))
@@ -231,7 +242,8 @@ def cv_legend() -> Markup:
              h("span", {"class": "est est-unreliable"}, "Grey", h("sup", {"class": "cv-mark"}, "†")),
              " = the margin of error is large compared with the estimate (coefficient of variation above 30%, "
              "computed as MOE ÷ 1.645 ÷ estimate). Treat it as unreliable. Such estimates are never used in "
-             "headings or charts. ± is the published 90% margin of error.")
+             "headings or charts. ± is the published 90% margin of error. ",
+             h("sup", {"class": "cv-mark"}, "‡"), " ± 0 = ", ZERO_MOE[0].lower() + ZERO_MOE[1:])
 
 
 def matrix_table(page, iv, tid, caption, geos, inds, vintage, geo_header="Place", min_width=None):
@@ -306,10 +318,12 @@ def _fact_text(ind, row) -> str:
     if not row or _f(row.get("value")) is None:
         return "not in data"
     v, m = _f(row["value"]), _f(row.get("moe"))
-    s = fmt_value(ind, v) + (f" ± {fmt_moe(ind, m)}" if m is not None and m > 0 else "")
+    s = fmt_value(ind, v) + (f" ± {fmt_moe(ind, m)}" if m is not None and m > 0 else
+                             " ± 0 (controlled total or rounds to zero)" if m == 0 else "")
     if unreliable(row):
         c = cv_of(row)
-        cvs = "undefined, the estimate is zero" if c == float("inf") else f"CV {c * 100:.0f}%"
+        cvs = ("undefined, the estimate is zero" if c == float("inf") else
+               "flagged in the source notes" if c is None else f"CV {c * 100:.0f}%")
         s += f" (unreliable: margin of error large compared with the estimate, {cvs}; not shaded)"
     return s
 
@@ -632,7 +646,9 @@ def build_people(site):
         r = iv.get(iv.county, ind, now)
         if r and _f(r["value"]) is not None and not unreliable(r):
             bar_rows.append({"label": iv.label(ind).split(" (percent")[0], "value": _f(r["value"]),
-                             "display": fmt_value(ind, _f(r["value"])), "tip": f"± {fmt_moe(ind, _f(r['moe']) or 0)} points"})
+                             "display": fmt_value(ind, _f(r["value"])),
+                             "tip": (f"± {fmt_moe(ind, _f(r['moe']))} points" if _f(r["moe"]) else
+                                     "± 0: controlled total or rounds to zero")})
     race_fig = hbar("race-county", f"{iv.short_name(iv.county)}: race and Hispanic or Latino origin", bar_rows,
                     subtitle=f"{now}; percent of total population; Census table order",
                     value_fmt=lambda v: f"{v:.1f}%", status="computed", page=page,
@@ -1258,7 +1274,8 @@ def build_history(site):
     pop_fig, pr = None, []
     if sb:
         for r in iv.rows:
-            if r["geo_id"] == sb and r["indicator_id"] == "pop_total" and re.fullmatch(r"Decennial census \d{4}", r["vintage"]):
+            if (r["geo_id"] == sb and r["indicator_id"] == "pop_total" and re.fullmatch(r"Decennial census \d{4}", r["vintage"])
+                    and _f(r["value"]) is not None):   # a blank count is no column (it crashed the label; debug pass 2026-11-09)
                 pr.append(r)
         pr.sort(key=lambda r: r["vintage"])
         pop_fig = columns("history-sb-pop", f"South Bend population, {pr[0]['vintage'][-4:]} to {pr[-1]['vintage'][-4:]}",

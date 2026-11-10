@@ -97,7 +97,7 @@ E.append(["AM General (UAW Local 5 bargaining unit only)", "Vehicle manufacturin
           "About 400 UAW members at the Mishawaka complex; this is the bargaining unit, not total plant employment."])
 sel_h = "Rank order in the Data Axle-licensed Hoosiers by the Numbers directory; counts not shown"
 for nm in ["Notre Dame Alumni Assn", "University of Notre Dame", "University-Notre Dame-Harper", "St Joseph County", "AM General Mfg Campus (Mishawaka)",
-           "Honeywell Aerospace", "Performance Plus", "South Bend Tribune", "Central Blood Bank", "ITR Concession Co LLC (Granger)"]:
+           "South Bend Tribune", "I/N Tek I/N Kote (New Carlisle)", "Central Blood Bank", "Performance Plus", "ITR Concession Co LLC (Granger)"]:
     E.append([nm, "Not stated in source", "", "2026", sel_h, "secondary", "COM-010", "Commercial directory; not a reliable ordering of employers. Data year not shown."])
 wcsv(ED + r"\employers.csv", "name,sector,employees,as_of,selection_rule,status,source_ids,notes".split(","), E)
 

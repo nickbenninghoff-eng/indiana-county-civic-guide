@@ -13,7 +13,8 @@
 table.cf-coverage td.cov { white-space: nowrap; font-family: var(--f-mono); font-size: .82rem; }
 .cov-k { display: block; font-weight: 600; color: var(--ink); }
 .cov-sub { display: block; font-size: .72rem; color: var(--ink-3); }
-.cov-all { background: var(--accent-wash); }
+/* theme pass A: --accent-wash (9%) barely separates "all" from "some" (surface-2) on the dark surfaces; 16% does */
+.cov-all { background: color-mix(in srgb, var(--accent) 16%, var(--surface)); }
 .cov-some { background: var(--surface-2); }
 .cov-none .cov-k { color: var(--ink-2); }
 .cov-na { color: var(--ink-3); text-align: center; }
@@ -57,21 +58,44 @@ table.cf-table td.cf-status { min-width: 12ch; }
 .cf-types { display: inline-flex; flex-wrap: wrap; border: 1px solid var(--line); border-radius: 3px; overflow: hidden; background: var(--surface); }
 .cf-type { font: 600 .84rem/1.2 var(--f-sans); padding: 9px 14px; min-height: 40px; border: 0; border-right: 1px solid var(--line); background: var(--surface); color: var(--ink-2); cursor: pointer; }
 .cf-type:last-child { border-right: 0; }
-.cf-type[aria-pressed="true"] { background: var(--accent); color: var(--surface); }
+.cf-type[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); }
 .cf-type:focus-visible { outline: 3px solid var(--focus); outline-offset: -3px; }
+/* theme pass A: the race-type row is a segmented control like the map tabs under it (looks.css .cmap-tabs), so it
+   takes each look's treatment; the chosen type keeps the edition colour (Wayfinding: a black sign, yellow text) */
+:root .cf-types { border: 2px solid var(--rule); border-radius: var(--r-btn); }
+:root .cf-type { border-right: 2px solid var(--rule); min-height: 44px; color: var(--ink); }
+:root .cf-type:last-child { border-right: 0; }
+:root .cf-type[aria-pressed="true"] { color: var(--accent-ink); }
+:root[data-look="line"] .cf-types { border: 0; background: var(--surface-2); border-radius: 12px; padding: 3px; gap: 2px; }
+:root[data-look="line"] .cf-type { border: 0; border-radius: 9px; background: transparent; }
+:root[data-look="line"] .cf-type:hover { background: var(--surface); }
+:root[data-look="line"] .cf-type[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); font-weight: 700; }
+:root[data-look="wayfinding"] .cf-types { border: 2px solid var(--ink); border-radius: 8px; }
+:root[data-look="wayfinding"] .cf-type { border-right: 2px solid var(--ink); font-weight: 700; }
+:root[data-look="wayfinding"] .cf-type:last-child { border-right: 0; }
+:root[data-look="wayfinding"] .cf-type:hover { background: var(--surface-2); }
+:root[data-look="wayfinding"] .cf-type[aria-pressed="true"] { background: var(--nav-bg); color: var(--hl); font-weight: 800;
+  box-shadow: inset 0 -4px 0 var(--hl); }
+@media (max-width: 760px) {
+  :root .cf-types:not([hidden]) { display: flex; width: 100%; box-sizing: border-box; }
+  .cf-type { flex: 1 1 auto; padding-inline: 8px; font-size: .8rem; }
+}
 .cf-map .cmap-tab[hidden] { display: none; }
 .cf-map .cmap-tabs.cf-tabs-one { display: none; }
-.cf-map .cmap-tab[aria-pressed="true"] { background: var(--surface-2); color: var(--ink); box-shadow: inset 0 -3px 0 var(--accent); }
 .cf-plain { fill: var(--cm-township); }
 .cmap-dot.cf-plain { stroke: var(--ink); }
 .cf-dlabel { font-size: 9px; font-weight: 700; }
 .cf-legend-note { margin: 6px 0 0; font-size: .8rem; color: var(--ink-3); max-width: 60ch; }
 .cf-lg-inner .cmap-legend { margin-top: 4px; }
 .cf-quick { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 10px 0 0; }
-.cf-crumbs { font-size: .78rem; color: var(--ink-3); margin: 0 0 8px; }
-.cf-crumbs a { color: var(--ink-2); }
-.cf-summary { margin: 12px 0 0; padding: 12px 16px; background: var(--surface); border: 1px solid var(--line);
+.cf-summary { margin: 12px 0; padding: 12px 16px; background: var(--surface); border: 1px solid var(--line);
   border-left: 4px solid var(--accent); max-width: calc(var(--measure) + 40px); }
+/* theme pass A: the accent-bar boxes (race summary, explorer totals) are callouts, so they take each look's callout
+   frame (looks.css .callout); money_map.css does the same for the budgets map's county box */
+:root .cf-summary, :root .cf-totals { border-width: 2px 2px 2px 6px; border-top-color: var(--rule); border-right-color: var(--rule);
+  border-bottom-color: var(--rule); border-radius: 0 var(--r) var(--r) 0; }
+:root[data-look="line"] .cf-summary, :root[data-look="line"] .cf-totals { border-width: 0 0 0 4px; padding: 14px 18px; }
+:root[data-look="wayfinding"] .cf-summary, :root[data-look="wayfinding"] .cf-totals { border-width: 2px 2px 2px 10px; }
 .cf-summary p { margin: 0 0 6px; }
 .cf-summary p:last-child { margin-bottom: 0; }
 .cf-group[hidden] { display: none; }
@@ -100,6 +124,10 @@ table.cf-table td.cf-status { min-width: 12ch; }
 
 /* all-filings: one row per committee (built by static/js/campaigns.js) */
 .cf-comm-list { margin: 6px 0 0; }
+/* theme pass A: the group band and office heading run the full width of the rows under them (.block li caps list
+   items at the text measure); the band takes half the look's corner radius */
+.cf-comm-list > li { max-width: none; }
+.cf-comm-list > .cf-list-group { border-radius: calc(var(--r) / 2); }
 .cf-comm-list > .cf-list-group { margin: 18px 0 0; padding: 6px 10px; background: var(--surface-2); font: 600 .72rem/1.2 var(--f-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--ink-2); }
 .cf-comm-list > .cf-list-office { margin: 10px 0 0; padding: 4px 0 2px; font-weight: 700; border-bottom: 1px solid var(--line); }
 .cf-comm-list > .cf-list-empty { padding: 8px 0; color: var(--ink-2); }
@@ -128,8 +156,28 @@ table.cf-table td.cf-status { min-width: 12ch; }
 .line.m-cash { stroke-dasharray: 5 4; }
 .dot-ring { fill: var(--surface); stroke: var(--mark); stroke-width: 2; }
 .key-line.m-cash { background: none; border-top: 2px dashed var(--ink); height: 0; }
-.cf-history, .cf-seat-history { margin: 10px 0; border: 1px solid var(--line); background: var(--surface); }
+.cf-history, .cf-seat-history { margin: 10px 0; border: 1px solid var(--line); background: var(--surface); border-radius: var(--r); }
 .cf-history > summary, .cf-seat-history > summary { cursor: pointer; padding: 8px 12px; font-weight: 600; }
+/* theme pass A: these folds use the site's fold chevron (sections_fold.css .fold-toggle) instead of the browser's
+   triangle: at the right of a boxed fold, before the label of an inline one. Summaries hold mixed inline content,
+   so the chevron is positioned, not a flex item. */
+.cf-history > summary, .cf-seat-history > summary, .cf-reports > summary, .cf-details > summary, .cf-note-details > summary {
+  list-style: none; position: relative; }
+.cf-history > summary::-webkit-details-marker, .cf-seat-history > summary::-webkit-details-marker,
+.cf-reports > summary::-webkit-details-marker, .cf-details > summary::-webkit-details-marker,
+.cf-note-details > summary::-webkit-details-marker { display: none; }
+.cf-history > summary, .cf-seat-history > summary { padding: 11px 36px 11px 12px; }
+.cf-history > summary::after, .cf-seat-history > summary::after {
+  content: ""; position: absolute; right: 14px; top: 50%; width: 9px; height: 9px; margin-top: -7px;
+  border-right: 2px solid var(--ink-3); border-bottom: 2px solid var(--ink-3); transform: rotate(45deg); }
+.cf-history[open] > summary::after, .cf-seat-history[open] > summary::after { margin-top: -2px; transform: rotate(-135deg); }
+.cf-reports > summary::before, .cf-details > summary::before, .cf-note-details > summary::before {
+  content: ""; display: inline-block; width: 6px; height: 6px; margin: 0 9px 0 2px; vertical-align: .18em;
+  border-right: 2px solid var(--ink-3); border-bottom: 2px solid var(--ink-3); transform: rotate(-45deg); }
+.cf-reports[open] > summary::before, .cf-details[open] > summary::before, .cf-note-details[open] > summary::before {
+  vertical-align: .3em; transform: rotate(45deg); }
+.cf-history > summary:hover::after, .cf-seat-history > summary:hover::after, .cf-reports > summary:hover::before,
+.cf-details > summary:hover::before, .cf-note-details > summary:hover::before { border-color: var(--ink); }
 .cf-history[open] > summary, .cf-seat-history[open] > summary { border-bottom: 1px solid var(--line); }
 .cf-history-body, .cf-seat-history > .table-wrap, .cf-seat-history > p { padding: 0 12px; }
 .cf-history-body { padding-top: 8px; padding-bottom: 4px; }

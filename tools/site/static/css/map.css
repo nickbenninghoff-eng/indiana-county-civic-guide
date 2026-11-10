@@ -88,6 +88,15 @@
 .cmap-list { margin-top: 26px; }
 .cmap-js .cmap-list:not(.is-on) { display: none; }
 .cmap-caveat { margin-top: 14px; }
+/* the map and its panel share one frame per look (theme pass C, 2026-11-09): Line map draws both as thin rounded
+   boxes (the map had no edge, only a rounded background); Wayfinding gives both the heavy sign edge */
+:root[data-look="line"] .cmap-svg { border: 1px solid var(--line); }
+:root[data-look="wayfinding"] .cmap-svg { border: 2px solid var(--rule); }
+:root[data-look="wayfinding"] .cmap-panel { border: 2px solid var(--rule); border-top: 4px solid var(--accent); }
+/* the "every area" tables: long column heads wrap instead of squeezing the population and budget cells into
+   one-word lines; those cells keep a readable width and the table scrolls sideways when it needs to */
+.cmap-list table.data thead th { white-space: normal; min-width: 8ch; }
+.cmap-list table.data tr > :nth-child(3), .cmap-list table.data tr > :nth-child(7) { min-width: 17ch; }
 @media (max-width: 760px) {
   .cmap-grid { grid-template-columns: minmax(0, 1fr); }
   .cmap-panel { position: static; min-height: 0; }

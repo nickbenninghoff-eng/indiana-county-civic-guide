@@ -659,7 +659,7 @@ def build_budgets(site):
                                  one_fold(anchor, mo.label(mid),
                                           one_summary("h4", mo.label(mid), _unit_digest(mo, mid)),
                                           [h("header", {"class": "mn-unit-head"}, head_bits[1:]) if head_bits[1:] else None,
-                                           h("div", {"class": "chart-grid"}, charts) if charts else
+                                           h("div", {"class": "chart-grid mn-chart-grid"}, charts) if charts else
                                            h("p", {"class": "mn-nodata"}, "No budget data for this unit in the guide's data."
                                              if not mo.has_budget(mid) else
                                              "No adopted multi-year series for this unit in the guide's data."),
@@ -699,7 +699,9 @@ def build_budgets(site):
             if not s or not pop:
                 continue
             r = next((r for r in s["rows"] if int(r["year"]) == year), None)
-            if not r:
+            # a blank amount or a blank / zero population has no per-resident figure (a blank crashed the page; debug
+            # pass 2026-11-09)
+            if not r or not (r["amount"] or "").strip() or not ((pop.get("value") or "").strip() and float(pop["value"]) > 0):
                 continue
             v = float(r["amount"]) / float(pop["value"])
             rows.append({"label": re.sub(r" \(state data: .*\)$", "", mo.label(mid)), "value": v, "display": f"${v:,.0f}",
@@ -728,7 +730,7 @@ def build_budgets(site):
                      h("p", None, "Units differ in size, so totals alone don't compare well. These charts divide each unit's "
                                   f"{pr_year} adopted budget by its population. Each chart uses one basis."
                                   + (f" The last chart divides each unit's {av_year} tax base the same way." if av_rows else "")),
-                     h("div", {"class": "chart-grid"},
+                     h("div", {"class": "chart-grid mn-chart-grid"},
                        hbar("perres-gf", f"General fund per resident, {pr_year}", gf_rows, subtitle="County and the two cities",
                             money=True, value_fmt=lambda v: f"${v:,.0f}", status="computed", page=page,
                             note=pop_note + " The county's figure is divided by the whole county's population, which includes city residents.",
@@ -1061,7 +1063,7 @@ def _breakdown_block(mo: Money, page, mid: str) -> Markup:
         figs.append(hbar(f"brk-{mid}-{basis.replace('_', '-')}", t, hr, subtitle=f"File total {usd(total)}",
                          money=True, value_fmt=usd_short, status=status, page=page, headers=["Category", "Amount"],
                          note=note, cite=c.cite(union_sources(rows))))
-    out.append(h("div", {"class": "chart-grid"}, figs))
+    out.append(h("div", {"class": "chart-grid mn-chart-grid"}, figs))
     out += tables
     own = _flows_target(mo, page, mid)
     if own:
@@ -1183,8 +1185,8 @@ def _assessed_value_block(mo: Money, page) -> Markup | None:
                             "cities. Nominal dollars."),
                       cite=c.cite(union_sources(srcs))) if series else None)
     return h("div", None, h("h3", None, "The tax base: certified assessed value"), lead,
-             h("div", {"class": "chart-grid chart-grid-wide"}, over_time) if over_time else None,
-             h("div", {"class": "chart-grid"}, figs) if figs else None, est)
+             h("div", {"class": "chart-grid chart-grid-wide mn-chart-grid"}, over_time) if over_time else None,
+             h("div", {"class": "chart-grid mn-chart-grid"}, figs) if figs else None, est)
 
 
 def _tax_base(mo: Money, page) -> Markup:
@@ -1906,7 +1908,7 @@ def build_hub(site):
 
     def fact(value, label, row_or_src, status):
         src = row_or_src if isinstance(row_or_src, str) else row_or_src["source_ids"]
-        facts.append(h("div", {"class": "mn-fact"},
+        facts.append(h("div", {"class": "card mn-fact"},
                        h("p", {"class": "mn-fact-v mono"}, value),
                        h("p", {"class": "mn-fact-l"}, label, c.cite(src)),
                        h("p", {"class": "mn-fact-b"}, status_badge(status, page))))
@@ -1962,7 +1964,7 @@ def build_hub(site):
                      h("div", {"class": "card-grid"},
                        [h("article", {"class": "card"}, h("h3", {"class": "card-title"}, h("a", {"href": page.rel(p)}, t)),
                           h("p", None, d)) for p, t, d in cards]),
-                     h("p", None, "Learning path: ", h("a", {"href": page.rel("money/what-is-a-budget/index.html#path-follow-the-money-1")},
+                     h("p", {"class": "mn-path-note"}, "Learning path: ", h("a", {"href": page.rel("money/what-is-a-budget/index.html#path-follow-the-money-1")},
                                                        "Follow the money"), ", five stops, about 35 minutes.")))
     page.finish(gaps=money_gaps(ed, r"South Bend 2026|tax-district|assessed|Circuit|Debt before") + cpi_gaps(mo),
                 gaps_intro="The largest gaps in the money data. Each money page lists the gaps that affect it.")

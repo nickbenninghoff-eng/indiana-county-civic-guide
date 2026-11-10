@@ -290,6 +290,29 @@ look at the page in the browser); then ask Nick which map pages to build next an
   filtered year is empty. Agent ab44df71ab1d3eeca running (usage-guard list). After it: final full check, Roadmap +
   handoff, morning summary. Batch 9 verified.
 
+## Session 2026-11-09 (late) — canvass re-check + zero-MOE note (DONE, ALL UNCOMMITTED)
+Nick: "Can you try doing these?" = (1) re-check the 2010-2019 county canvasses, (2) explain the missing ± on
+Census-controlled totals. Both done; details in research/canvass-recheck-2010-2019-2026-11-09.md and Roadmap Phase 5.
+(1) 17 county PDFs downloaded through Chrome (sources/results/county-browser-2026-11-09/), Tesseract OCR of ~650
+pages, all 1,398 rows checked; 18 vote/name corrections + 2 added 2018 primary candidates + terms.csv Castellon
+2011-2014 (2010 Penn Twp Assessor winner was wrong). (2) "± 0 ‡" + explanation in community_history.py / places.py.
+Verified: locked build PASSED, 409 tests OK, check_gov 0 errors, check_results only its known IND/GOV/ELX false alarms.
+Waiting on Nick: "commit"/"push" (everything since 3bd39a7, which is itself unpushed), plus the open decisions in the
+Roadmap (2022 tax-rate source, commit email, fonts, images for Git deploys, Pillow/pypdf, sitemap description).
+
+## Session 2026-11-09 (evening) — 10-agent sweep (ALL UNCOMMITTED after 3bd39a7)
+Committed (Nick: "Do a commit while we wait for them"): 3bd39a7 = money history, older/state data, home header, saved
+place on money/margins. NOT pushed. Then Nick asked for, all in parallel: a theme-consistency pass on every page (3 Opus
+agents, fix everything), fact-checking (5 Sonnet agents, sampled, fix directly), debugging + security (2 Opus, fix
+everything); "we'll be uploading this to Netlify after we're all done with the first version" (config written, nothing
+connected). All finished; results and open items are in Roadmap Phase 5 (theme pass, fact-check pass, security, debug
+entries) and research/{fact-check-2026-11-09-*,security-review-2026-11-09,debug-pass-2026-11-09}.md. Main session then
+merged the duplicated Superior Court 6 office (offices.csv, terms.csv, county.py moved-anchors, 2 anchor tests accept a
+same-page forward), reworded the employers.csv update notes. Verified: locked build PASSED (113 pages), 409 tests OK,
+check_gov 0 errors, check_money OK. Helpers: build_locked.sh / shoot.py live in the session scratchpad (theme/).
+Waiting on Nick: commit/push of this sweep; the decisions listed in the Roadmap (tax-rate source, commit email, fonts,
+images for Git deploys, Pillow/pypdf upgrades); meta description in civic/sitemap.py.
+
 ## Session 2026-11-09 (afternoon) — campaign money history (state at compaction, ALL UNCOMMITTED)
 Pushed: main = origin = 1a181ed. Everything below is in the working tree; Nick has not said "commit".
 

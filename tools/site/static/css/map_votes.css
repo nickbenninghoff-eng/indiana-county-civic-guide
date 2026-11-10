@@ -47,7 +47,7 @@
 .cmap-select { font: 500 .9rem/1.2 var(--f-sans); color: var(--ink); background: var(--surface); border: 1px solid var(--ink-3); border-radius: var(--r, 2px); padding: 8px 10px; min-height: 40px; width: 100%; min-width: 0; max-width: 100%; }
 .cmap-select:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
 .cmap-chip { font: 600 .8rem/1.2 var(--f-sans); padding: 8px 11px; min-height: 40px; border: 1px solid var(--line); border-radius: var(--r-btn, 3px); background: var(--surface); color: var(--ink-2); cursor: pointer; }
-.cmap-chip[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--surface); }
+.cmap-chip[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
 .cmap-chip:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
 .cmap-tag { font: 500 .66rem/1 var(--f-mono); letter-spacing: .04em; text-transform: uppercase; opacity: .85; }
 .cmap-vrule { font-size: .8rem; margin: 0; max-width: none; }
@@ -69,7 +69,7 @@
 .cmap-drill-top { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 6px 12px; }
 .cmap-drill-top h3 { margin: 0; font-size: 1.02rem; }
 .cmap-drill-list { list-style: none; margin: 8px 0 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(15rem, 100%), 1fr)); gap: 4px 12px; }
-.cmap-drill-btn { display: grid; grid-template-columns: auto 1fr; gap: 0 8px; align-items: center; width: 100%; text-align: left; padding: 6px 8px; min-height: 40px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); cursor: pointer; font: inherit; font-size: .84rem; }
+.cmap-drill-btn { display: grid; grid-template-columns: auto 1fr; gap: 0 8px; align-items: center; width: 100%; text-align: left; padding: 6px 8px; min-height: 40px; border: 1px solid var(--line); border-radius: var(--r); background: var(--surface); color: var(--ink); cursor: pointer; font: inherit; font-size: .84rem; }
 .cmap-drill-btn:focus-visible { outline: 3px solid var(--focus); outline-offset: 1px; }
 .cmap-drill-m { grid-column: 2; color: var(--ink-3); font-size: .78rem; }
 .cmap-vd { margin: 10px 0; }
@@ -82,3 +82,22 @@
   .cmap-vf-district { flex: 1 1 100%; }
   .cmap-chip { padding: 8px 9px; font-size: .78rem; }
 }
+
+/* ---- Theme pass B (2026-11-09): the race picker's controls follow each look like the map tabs above them and the
+   filter fields (looks.css .cmap-tab, .btn[aria-pressed], .field select / label). Ballot: boxed, the chosen chip is an ink
+   fill; Line map: thin pills, the chosen chip in the edition color (the base rule above); Wayfinding: heavy outline, ink
+   fill. The labels use each look's field-label type. Also used by the community pages' "Shade by" select. */
+:root .cmap-chip { border: 2px solid var(--rule); color: var(--ink); }
+:root .cmap-chip:hover { background: var(--surface-2); }
+:root .cmap-chip[aria-pressed="true"] { background: var(--ink); border-color: var(--ink); color: var(--surface); }
+:root .cmap-select { border: 2px solid var(--ink); }
+:root .cmap-chips-l { font: 700 .74rem/1.2 var(--f-display); letter-spacing: .08em; color: var(--ink-2); }
+:root[data-look="line"] .cmap-chip { border: 1px solid var(--ctl-line); }
+:root[data-look="line"] .cmap-chip:hover { border-color: var(--ink); background: var(--surface); }
+:root[data-look="line"] .cmap-chip[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+:root[data-look="line"] .cmap-select { border: 1px solid var(--ctl-line); }
+:root[data-look="line"] .cmap-chips-l { font: 600 .74rem/1.2 var(--f-sans); text-transform: none; letter-spacing: 0; }
+:root[data-look="wayfinding"] .cmap-chip { border: 2px solid var(--ink); font-weight: 700; }
+:root[data-look="wayfinding"] .cmap-chip[aria-pressed="true"] { background: var(--ink); border-color: var(--ink); color: var(--bg); font-weight: 800; }
+:root[data-look="wayfinding"] .cmap-select { border: 2px solid var(--ink); border-radius: 6px; font-weight: 700; }
+:root[data-look="wayfinding"] .cmap-chips-l { font: 800 .74rem/1.2 var(--f-sans); letter-spacing: .08em; }

@@ -2,10 +2,12 @@
    Text boxes in .field copy the select rules of style.css and of each look in looks.css. */
 .tf { margin: 14px 0 8px; align-items: flex-end; }
 .tf .field { flex: 1 1 160px; max-width: 240px; }
-.tf .field-search { flex-basis: 220px; max-width: 320px; }
+.tf .field-search { flex-basis: 220px; max-width: 380px; }
+/* a long label (Wayfinding sets labels in heavy caps) may wrap: give the second line room (theme pass B) */
+.tf .field > label { line-height: 1.25; }
 .tf .tf-reset { align-self: flex-end; min-height: 40px; }
 .tf-count { margin-top: 4px; color: var(--ink-2); }
-.tf-empty { margin: 8px 0; padding: 10px 12px; border: 1px dashed var(--ink-3); }
+.tf-empty { margin: 8px 0; padding: 10px 12px; border: 1px dashed var(--ink-3); border-radius: var(--r); }
 .field input[type="search"] {
   font: 500 .95rem/1.2 var(--f-sans); color: var(--ink); background: var(--surface);
   border: 1px solid var(--ink-3); border-radius: 2px; padding: 8px 10px; width: 100%; min-width: 0;

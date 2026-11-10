@@ -48,13 +48,16 @@
       if (/^(src-|sources-)/.test(id)) dest = "sources/index.html";
     } else if (map && map.a) {
       dest = (Object.prototype.hasOwnProperty.call(map.a, id) ? map.a[id] : "") ||
-             (page === "data/index.html" && map.src && id.indexOf("src-") === 0 ? map.src[id.slice(4)] : "") || "";
+             (page === "data/index.html" && map.src && id.indexOf("src-") === 0 &&
+              Object.prototype.hasOwnProperty.call(map.src, id.slice(4)) ? map.src[id.slice(4)] : "") || "";
       if (!dest && map.p) {
         Object.keys(map.p).forEach(function (pre) {
           if (!dest && pre && id.indexOf(pre) === 0) dest = map.p[pre];
         });
       }
     }
+    /* only a relative path from the page's own map (no scheme, no //host): never a redirect off the site */
+    if (typeof dest !== "string" || /^\s*([a-z][a-z0-9+.-]*:|\/\/|\\)/i.test(dest)) dest = "";
     if (dest) window.location.replace(dest.indexOf("#") >= 0 ? dest : dest + "#" + id);
   }
   go();

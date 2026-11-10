@@ -82,7 +82,15 @@
         for (var i = 0; i < spec.length; i++) {
           var s = spec[i];
           var x = a.getAttribute(s.attr) || "", y = b.getAttribute(s.attr) || "";
-          if (s.num) { x = parseFloat(x); y = parseFloat(y); if (isNaN(x)) x = Infinity; if (isNaN(y)) y = Infinity; }
+          if (s.num) {
+            x = parseFloat(x); y = parseFloat(y);
+            /* a row with no number goes last in both directions (as Infinity it came first in a descending sort;
+               debug pass 2026-11-09; campaigns.js sorts the same way) */
+            if (isNaN(x) || isNaN(y)) {
+              if (isNaN(x) && isNaN(y)) continue;
+              return isNaN(x) ? 1 : -1;
+            }
+          }
           if (x !== y) return (x < y ? -1 : 1) * s.dir;
         }
         return a._tfIndex - b._tfIndex;
