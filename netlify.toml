@@ -3,12 +3,12 @@
 # happens only on Nick's explicit deploy trigger.
 #
 # Publish directory: site/st-joseph (the St. Joseph County edition, served at the domain root).
-# site/ is git-ignored, so a Git-connected deploy must run the build. Before relying on a Git deploy:
-#   - site/images/ (portraits, historic photos) is NOT in git either; a Git build would publish pages whose
-#     images 404. Either track those licensed files somewhere the build copies from, or deploy from a local build:
-#         python -P -E tools/site/build.py --edition st-joseph --check
-#         python -P -E tools/site/netlify_prep.py site/st-joseph
-#     then upload/deploy the site/st-joseph folder (drag-and-drop or `netlify deploy --dir site/st-joseph`).
+# Deploy method (Nick, 2026-11-09): Git-connected auto-deploy. Netlify's PRODUCTION BRANCH IS `production`, not
+# main (same as Nick's other projects): a push to main never goes live; updating `production` is the deploy, done
+# only on Nick's explicit deploy trigger. site/ is git-ignored except the 11 images the pages show
+# (site/images/thumb_*.jpg + Hiler's portrait; see .gitignore), so the build below runs from a clean clone; tested
+# 2026-11-09 from a fresh clone: --check PASSED, netlify_prep CSP check passed, 25 MB published.
+# Fallback (no Git): build locally with the two commands below, then `netlify deploy --dir site/st-joseph`.
 #
 # Headers (security headers + Content-Security-Policy, caching) live in tools/site/netlify/_headers and are copied
 # into the publish directory by netlify_prep.py, because a _headers file in the published folder is honored by every

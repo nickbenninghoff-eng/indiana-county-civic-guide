@@ -1,6 +1,15 @@
 # build output (regenerate with tools/site/build.py). Anchored to the repo root: an unanchored
 # "site/" also matched tools/site/ and kept the whole generator out of git.
-/site/
+/site/*
+# ...except the images the pages actually show, so a Netlify build from git publishes them (2026-11-09). All are
+# Wikimedia Commons files (public domain, CC0, CC BY or CC BY-SA; credits and licenses in
+# data/editions/<ed>/images.csv). Only the 320x400 thumbnails the people page uses are tracked, plus Hiler's
+# portrait, which is already small and has no thumbnail. The large originals stay local. A new photo needs its
+# thumb_<image_id>.jpg here, or the build's --check fails on the missing file (that is the safety net).
+!/site/images/
+/site/images/*
+!/site/images/thumb_*.jpg
+!/site/images/Congressman_John_P._Hiler.png
 
 # browser-test logs
 .playwright-mcp/
