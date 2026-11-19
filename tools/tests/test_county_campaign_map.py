@@ -31,7 +31,8 @@ from civic.data import Edition  # noqa: E402
 from civic.shell import Site  # noqa: E402
 
 COUNTY = "money/campaigns/county/index.html"
-INDEX = "money/campaigns/index.html"
+# phase 6 step 5 (2026-11-18): the main campaigns map moved from the index to the browser's By place view, unchanged
+INDEX = "money/campaigns/by-place/index.html"
 JS = SITE_DIR / "static" / "js" / "campaigns_map.js"
 ID_RE = re.compile(r'\sid="([^"]+)"')
 
@@ -75,7 +76,9 @@ class Built(unittest.TestCase):
     def test_section_and_toc(self):
         html = self.html[COUNTY]
         self.assertIn('id="map"', html)
-        self.assertRegex(html, r'<nav class="toc"[^>]*>.*?href="#map"', )
+        # phase 6 step 5: the page opens on its offices' totals; the map is the first of the folded detail (no toc)
+        self.assertRegex(html, r'<details class="fold-details see-all" id="map-fold"[^>]*>.*?id="map"')
+        self.assertLess(html.index('id="offices"'), html.index('id="map"'))
         self.assertLess(html.index('id="map"'), html.index('id="e-2026g"'))
 
     def test_types_and_default(self):
@@ -146,7 +149,10 @@ class AreaPages(unittest.TestCase):
     """Every campaigns location page: a map when the area has a race and an outline, links that land on the page."""
 
     SKIP = {"money/campaigns/index.html", "money/campaigns/all-filings/index.html",
-            "money/campaigns/how-it-works/index.html", "money/campaigns/other-committees/index.html"}
+            "money/campaigns/how-it-works/index.html", "money/campaigns/other-committees/index.html",
+            # phase 6 step 5: the browser's other views (By place carries the main map, tested in Built)
+            "money/campaigns/by-election/index.html", "money/campaigns/by-candidate/index.html",
+            "money/campaigns/by-place/index.html"}
 
     @classmethod
     def setUpClass(cls):

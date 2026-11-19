@@ -103,3 +103,11 @@
   .cmap-tab { flex: 1 1 auto; padding-inline: 8px; font-size: .8rem; }
   .cmap-tabs { display: flex; width: 100%; }
 }
+
+/* State and Federal layers (2026-11-18): the county outline is the area, labelled; never a map of Indiana or the U.S. */
+.cmap-level { fill: var(--accent-wash); stroke: var(--accent); stroke-width: 2.5px; }
+.cmap-a:hover .cmap-level, .cmap-a:focus-visible .cmap-level { fill: var(--surface-2); }
+.cmap-level-label { font-size: 17px; font-weight: 700; }
+.cmap-level-sub { font-size: 13px; font-weight: 600; fill: var(--ink-2); }
+.cmap-level-note { display: none; margin: 6px 0 0; font-size: .9rem; color: var(--ink-2); max-width: var(--measure); }
+.cmap-level-note.is-on { display: block; }

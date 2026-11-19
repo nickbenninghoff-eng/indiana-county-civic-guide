@@ -23,7 +23,7 @@ from collections import Counter, OrderedDict, defaultdict
 
 from civic import campaign_money as cm
 from civic.charts import period_money
-from civic.components import data_table, name_with_form_party, name_with_party, status_badge
+from civic.components import data_table, figure_mark, name_with_form_party, name_with_party, status_badge
 from civic.data import fmt_date
 from civic.html import Markup, h
 
@@ -389,8 +389,9 @@ def seat_block(ed, page, race: dict) -> Markup | None:
             el = title
         if r and r["spent"] is not None:
             n_money += 1
-            money = (f"{cm.usd(r['spent'])} spent, {cm.usd(r['raised'])} raised by all candidates"
-                     + ("" if r["complete"] else " (incomplete: a floor)"))
+            # 2026-11-18 ("About these figures"): an incomplete total carries the * mark; the note says it is a floor
+            money = h("span", None, f"{cm.usd(r['spent'])} spent, {cm.usd(r['raised'])} raised",
+                      None if r["complete"] else figure_mark("incomplete"), " by all candidates")
         elif r:
             money = "No reports on file for any candidate (not the same as $0)"
         elif c["contest_id"] in news:
@@ -496,9 +497,11 @@ def legislator_href(ed, page, person: str) -> str | None:
     return ("" if page.path == STATE_PAGE else page.rel(STATE_PAGE)) + "#" + p["anchor"]
 
 
-def legislator_block(ed, page, p: dict) -> Markup:
-    by_year: dict[int, dict] = OrderedDict()
-    trows = []
+def legislator_years(p: dict) -> "OrderedDict[int, dict]":
+    """One person's receipts and expenditures summed by filing year over all of their committees' rows (cents):
+    {year: {"r": receipts, "e": expenditures, "re": any receipts figure, "ee": any expenditures figure}}. Added
+    2026-11-16 (phase 6 step 1) so the office pages use the same sums as legislator_block."""
+    by_year: OrderedDict = OrderedDict()
     for r in p["rows"]:
         y = int(r["year"])
         d = by_year.setdefault(y, {"r": 0, "e": 0, "re": False, "ee": False})
@@ -509,6 +512,15 @@ def legislator_block(ed, page, p: dict) -> Markup:
         if ec is not None:
             d["e"] += ec
             d["ee"] = True
+    return by_year
+
+
+def legislator_block(ed, page, p: dict) -> Markup:
+    by_year = legislator_years(p)
+    trows = []
+    for r in p["rows"]:
+        y = int(r["year"])
+        rc, ec = cm.cents(r["receipts"]), cm.cents(r["expenditures"])
         trows.append([str(y), r["committee"], cm.usd(rc), cm.usd(ec, "not in the data"),
                       "cf_state.csv" if r["_file"] == "cf_state" else "cf_state_history.csv",
                       status_badge(r["status"], page)])

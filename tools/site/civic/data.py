@@ -178,6 +178,38 @@ def _board_aliases() -> dict[str, str]:
     out["new-prairie-schools-board-2-hudson-wills-townships"] = "new-prairie-board-d2"
     for stem in ("mishawaka-schools-board", "mishawaka-schools-board-at-large", "mishawaka-schools-board-board-of-school-trustees"):
         out[stem] = "school-city-mishawaka-board"  # the elected seats
+    out.update(_state_aliases())
+    return out
+
+
+def _state_aliases() -> dict[str, str]:
+    """Statewide offices, appellate courts and the two 2026 county retentions the canvass prints under a state line
+    (added 2026-11-18, gap-fill round 2). Each stem is listed by hand from offices.csv notes ("Covers contests ..." /
+    "Retention contests: ..."); a retention whose court the canvass did not print (2010 Brown, May, Robb, Chamblee;
+    2016 Crone, Riley, Hostetler, Hurley) stays unlinked, and so does the Auditor of State (no office row)."""
+    out = {"state-treasurer-of-state": "state-treasurer",
+           # 2026 retentions of St. Joseph Superior Court judges (county voters only; owner decision 2026-11-18)
+           "state-retention-christopher-c-fronk": "superior-court-judge-reagan",
+           "state-retention-david-l-francisco": "superior-court-judge-marnocha"}
+    justices = ("state-retention-supreme-court-justice-david", "state-retention-supreme-court-justice-rucker",
+                "state-retention-supreme-court-justice-massa", "state-retention-supreme-court-justice-rush",
+                "state-retention-supreme-court-geoffrey-g-slaughter",
+                "state-retention-justice-of-the-supreme-court-of-indiana",
+                "state-retention-justice-derek-read-molter", "state-retention-justice-loretta-h-rush",
+                "state-retention-justice-mark-s-massa")
+    appeals = ("state-retention-court-of-appeals-judge-barnes", "state-retention-court-of-appeals-judge-mathias",
+               "state-retention-court-of-appeals-judge-vaidik", "state-retention-court-of-appeals-judge-pyle",
+               "state-retention-court-of-appeals-dist-2-robert-r-bob-altice-jr",
+               "state-retention-court-of-appeals-district-3", "state-retention-court-of-appeals-district-4",
+               "state-retention-court-of-appeals-label-as-printed-district-5-first-listing",
+               "state-retention-court-of-appeals-label-as-printed-district-5-second-listing",
+               "state-retention-court-of-appeals-3rd-district", "state-retention-court-of-appeals-5th-district",
+               "state-retention-judge-rudolph-reginald-pyle-iii-court-of-appeals",
+               "state-retention-mary-deboer", "state-retention-paul-a-felix")
+    tax = ("state-retention-tax-court-judge-wentworth", "state-retention-justin-l-mcadam")
+    for stems, oid in ((justices, "in-supreme-court-justice"), (appeals, "in-court-of-appeals-judge"),
+                       (tax, "in-tax-court-judge")):
+        out.update({s: oid for s in stems})
     return out
 
 

@@ -23,6 +23,8 @@
    the bar. static/js/preselect.js uses it for the saved-place preselect ("Showing: your governments").
    A group marked data-tf-keep (part 2: the calendar's year sections, link targets) is never hidden: while none of
    its rows is shown, its [data-tf-group-empty] note shows instead.
+   Tokens (added 2026-11-16): a select with data-tf-tokens matches a row whose data-tf-KEY lists the value among
+   space-separated values.
    ASCII only. */
 (function () {
   "use strict";
@@ -99,13 +101,16 @@
 
     function apply() {
       var words = q ? q.value.toLowerCase().split(/\s+/).filter(Boolean) : [];
-      var want = selects.map(function (s) { return [s.getAttribute("data-tf-key"), s.value]; })
+      var want = selects.map(function (s) { return [s.getAttribute("data-tf-key"), s.value, s.hasAttribute("data-tf-tokens")]; })
                         .filter(function (p) { return p[1] !== ""; });
       var shown = 0;
       rows.forEach(function (r, i) {
         var ok = true;
         for (var k = 0; ok && k < want.length; k++) {
-          if (r.getAttribute("data-tf-" + want[k][0]) !== want[k][1]) ok = false;
+          var v = r.getAttribute("data-tf-" + want[k][0]);
+          /* a select marked data-tf-tokens matches one of the row's space-separated values (added 2026-11-16 for
+             the People hub: a person can hold offices at several levels) */
+          if (want[k][2] ? (" " + (v || "") + " ").indexOf(" " + want[k][1] + " ") < 0 : v !== want[k][1]) ok = false;
         }
         for (var w = 0; ok && w < words.length; w++) {
           if (texts[i].indexOf(words[w]) < 0) ok = false;

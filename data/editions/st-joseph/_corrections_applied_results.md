@@ -79,3 +79,36 @@ Source: `planning/qa/gapfill-2026-11-08-F-canvass.md` and `-edits.csv` (104 rows
 ### A (results rows)
 - Applied: 2010g-state-public-question label -> "Public Question #1: property tax caps in the state constitution (Art. 10, Sec. 1)", from the Election Division's prescribed ballot text (new RES-046).
 - Skipped: elections.csv 2016 and 2018 question text. The county results have no 2016 or 2018 statewide question rows to attach it to.
+
+## 2026-11-18: gap-fill round 2
+
+Source: `planning/gapfill/MERGE-PLAN.md`, applied by `planning/gapfill/merge/merge.py` (manifest `planning/gapfill/merge/manifest.csv`, one line per changed cell or added row). Inputs frozen by checksum (`planning/gapfill/FROZEN-SHA256.txt`): the staged rows, `review-people-verdicts.csv` and `review-numbers-verdicts.csv` after the appeal ruling, and `canvass2/agreed-official.csv`. Only PASS and PASS-WITH-EDIT rows were merged, with the edit applied; REJECT and UNVERIFIABLE rows were not. Rows whose edit was prose, or whose stored value did not match the old value the staged note named, went to `planning/gapfill/merge/needs-human.csv` and were not merged. Switches: CROSS_COUNTY_SCHOOLS_MULTICOUNTY=on, FRONK_FRANCISCO_COUNTY_ONLY=on, ADD_FEDERAL_UNITS=on, ADD_IN_STATE_UNIT=on, ADD_CANVASS_EXTRA_ROWS=on, BUMP_DATA_AS_OF=on, FIX_KARMAN_EASH=on, EXTRA_17_OFFICIAL_ROWS=off, RECONSTRUCT_2020P_Q2_WORDING=off.
+
+- `results.csv`: 960 cells changed, 4 rows added, 0 rows removed.
+- `elections.csv`: 7 cells changed, 0 rows added, 0 rows removed.
+- `sources_results.csv`: 1 cell changed, 7 rows added, 0 rows removed.
+- `gaps_results.csv`: 3 cells changed, 0 rows added, 0 rows removed.
+- `ballot_questions.csv`: 0 cells changed, 11 rows added, 0 rows removed.
+- `gaps_elections.csv`: 0 cells changed, 0 rows added, 2 rows removed.
+
+### Applied
+- 2026 general: every one of the 162 rows now carries the official county canvass figure of 11/13/2026 (RES-048; two independent readings agree; 108 vote figures changed, by +1 to +26); pct recomputed per contest; winner flags unchanged (re-checked under the official figures). Status: official 124 rows in 56 contests; unofficial-state 23 rows in 10 contests; unofficial-recount 5 rows in 2 contests; unofficial-cross-county 10 rows in 7 contests. RES-029 is annotated as superseded. elections.csv 2026g: ballots 77,946, turnout 40.19, status official.
+- 41 older rows (2012g, 2012p, 2014p, 2015g, 2015p, 2024p) set official from the state historical portal (RES-047); 12 vote figures corrected; pct recomputed.
+- Seat counts (vote_for) and 56 winner flags from `contests-rows.csv`; 28 winner flags held on the John Glenn, Union-North/LaVille and New Prairie contests (multi-county).
+- Public-question labels (14 contests) and the new `ballot_questions.csv` (11 questions, official wording); the 2020 Question Two wording is held.
+- Gaps: `gaps_results` 2026 canvass and question-wording rows narrowed; `gaps_elections` rows for the 2016/2018 statewide wording and the 2026 article numbers removed as resolved.
+- Fronk and Francisco 2026 retentions (owner 2026-11-18: county-only): status official, relabelled "Superior Court retention: <name>", citing the state ENR referendum record (RES-049).
+- Added from the official canvass (owner 2026-11-18), status unofficial: Andrew Delano (declared write-in, 7) in the Secretary of State contest; new contest `2026g-us-house-2`, the county part of U.S. House District 2 (Decio 45,697, Yakym 29,781, Henry 1,507; winner blank, decided across the district).
+- 2018 Union-North: "Karman Leash" corrected to "Karman L Eash" (printed "KARMAN L EASH"); the matching terms.csv person corrected too.
+- Notes made stale by the canvass rewritten from `canvass2/second-read.csv`: New Carlisle, North Liberty and Roseland at-large (seat count now as printed, "Vote For N"); Beebe and Moody party-label notes (label as printed on the official canvass). The 2016 and 2018 statewide question wordings start at "Shall" (the record's "Public Question #1" heading is not part of the wording).
+- Not merged: the reviewer's 17 extra 2014p/2024p rows (held for a separate review); the 2011 Mishawaka question (stored label differs from the one the staged row names); the 2020 South Bend Question Two wording (official text read only in fragments).
+
+### Second merge: overall results, the 17 older rows, owner decisions (merge2.py)
+
+Source: `planning/gapfill/overall/review-overall-review.md` and `review-overall-verdicts.csv`, applied by `planning/gapfill/overall/merge2/merge2.py` (manifest `merge2/manifest.csv`; per staged row `planning/gapfill/overall/applied2-dispositions.csv`). Inputs frozen by checksum (`planning/gapfill/overall/FROZEN-SHA256.txt`). Only PASS and PASS-WITH-EDIT rows were merged, with the edit applied; REJECT rows were not; the OWNER-DECISION rows follow the owner's decisions of 2026-11-18. Switches: PQ1_2024_STATEWIDE_OUTCOME=on, WHOLLY_IN_COUNTY_NO_OVERALL=on.
+
+- New `overall_results.csv`: 295 rows in 167 contests (statewide offices and questions, retentions, State House and Senate districts that extend beyond the county, cross-county school boards 2018-2024). Status official: official results as reported to the Secretary of State (Indiana Election Division historical results portal; RES-047 reused for the election and referendum exports, new RES-054 for the candidate export). Percent, winner and total are computed and listed in `derived`.
+- results.csv: 17 of the 17 older 2014p/2024p rows set official from the state portal (8 vote figures corrected; pct recomputed in two contests as the review gave it); 2024 statewide public question 1: county winner flags cleared and the note made the same as the 2010, 2016 and 2018 statewide questions (owner 2026-11-18); its overall rows show "Statewide: Yes (ratified)"; 2026 primary House 5 (Wait) and House 8 (Dvorak): no overall row (district wholly in the county) and a note giving the county figure and the different figure reported to the Secretary of State, difference unresolved (owner 2026-11-18).
+- Wholly in the county (owner 2026-11-18): no overall row for 69 contests whose district or electorate lies wholly in St. Joseph County, each established by a stored results.csv note or the review (list and evidence in `planning/gapfill/overall/merge2/wholly-in-county.csv`); held, not established: 2010p-state-house-6-d; 2010p-state-house-7-d; 2010p-state-house-8-d; 2010p-state-house-6-r; 2010p-state-house-7-r; 2010p-state-house-8-r; 2010g-state-house-6; 2010g-state-house-7; 2010g-state-house-8.
+- `gaps_results.csv`: 4 rows added (2026 general overall totals; school boards 2010-2016; 2010 Brown and Robb; write-in totals) and 2 rows narrowed. `sources_results.csv`: RES-054 added.
+- Not merged: 2010 Brown and Robb (review: double counted at the source), 2010 Chamblee and 2016 Hostetler and Hurley (county retentions), 2018 Altice (not on the St. Joseph ballot). Open items are in `planning/gapfill/overall/merge2/needs-human.csv`.

@@ -42,7 +42,13 @@ class Built(unittest.TestCase):
 
     def test_every_old_id_still_resolves(self):
         before = json.loads(FIXTURE.read_text(encoding="utf-8"))["ids"][PAGE]
-        self.assertEqual([i for i in before if i not in self.ids], [])
+        gone = [i for i in before if i not in self.ids]
+        # 2026-11-18: a source the page no longer cites (ELX-003/ELX-004, the old wording sources; RES-029, superseded
+        # by the official canvass RES-048) is forwarded by #moved-anchors to the sources index, which has the same id
+        m = re.search(r'id="moved-anchors">(.*?)</script>', self.html)
+        prefixes = json.loads(m.group(1).replace("<\\/", "</")).get("p", {}) if m else {}
+        self.assertEqual([i for i in gone if not (i.startswith("src-") and "src-" in prefixes)], [])
+        self.assertTrue(all(i.startswith("src-") for i in gone))
 
     def test_every_question_is_a_row_with_its_wording_or_gap_and_figure(self):
         qs = [c for c in self.ed.contests.values() if E.classify(c)[0] == "Public questions"]
@@ -67,7 +73,8 @@ class Built(unittest.TestCase):
         for t in ("retention-table", "state-retention-table"):
             self.assertRegex(self.html, rf'<details[^>]*id="{t}-all"[^>]*data-fold="see-all"')
             self.assertIn(f'id="{t}"', self.html)
-        self.assertIn("results/index.html#contest-", self.html)
+        # phase 6 step 4 (2026-11-16): each result links to its contest on its election's page
+        self.assertRegex(self.html, r'href="\.\./[0-9]{4}[a-z]/contests/index\.html#contest-')
 
     def test_explainer_first_and_nonpartisan(self):
         self.assertLess(self.html.index('id="how"'), self.html.index('id="retention"'))

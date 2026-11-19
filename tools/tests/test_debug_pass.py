@@ -9,8 +9,8 @@
     place pages, schools, budgets, community and history pages; a 2026 state legislative result with blank votes;
     a retention vote recorded 0 yes / 0 no; an election with straight-party counts and a blank ballots_cast.
 - static/js stays ASCII (README rule; map_votes.js and search.js had literal middle dots and combining marks).
-- Browser checks (skipped without Playwright): Back from #contest-<id> on the results explorer leaves the one-contest
-  view; the map's "How areas voted" layer keeps #race-<id> in the address after a trip to another layer.
+- Browser checks (skipped without Playwright): an old results #contest-<id> link lands on that contest on its
+  election's page (phase 6 step 4 replaced the explorer's one-contest view, which this used to check); the map's "How areas voted" layer keeps #race-<id> in the address after a trip to another layer.
 
 Run:  python -P -E -m unittest discover -s tools/tests -p "test_debug_pass.py"
 """
@@ -186,7 +186,7 @@ class _Quiet(http.server.SimpleHTTPRequestHandler):
 
 @unittest.skipIf(sync_playwright is None, "Playwright is not installed")
 class BrowserRegressions(unittest.TestCase):
-    PAGES = ["elections/results/index.html", "map/index.html"]
+    PAGES = ["elections/results/index.html", "map/index.html", "elections/2023g/contests/index.html"]
 
     @classmethod
     def setUpClass(cls):
@@ -224,20 +224,20 @@ class BrowserRegressions(unittest.TestCase):
         cls.httpd.shutdown()
         cls.tmp.cleanup()
 
-    def test_back_from_one_contest_shows_the_list(self):
+    def test_old_contest_link_lands_on_the_election_page(self):
+        """Phase 6 step 4 (2026-11-16): the explorer's one-contest view is gone. An old results #contest-<id> link is
+        forwarded (location.replace) to that contest on its election's page, open; Back skips the forwarding page."""
         p = self.browser.new_page()
         errors = []
         p.on("pageerror", lambda e: errors.append(str(e)))
-        p.goto(self.base + "elections/results/index.html")
-        p.wait_for_timeout(300)
-        p.query_selector_all("#elx-results .elx-permalink a")[1].click()
-        p.wait_for_timeout(300)
-        self.assertIn("Showing one contest", p.text_content("#elx-count"))
+        p.goto(self.base + "map/index.html")
+        p.goto(self.base + "elections/results/index.html#contest-2023g-south-bend-mayor")
+        p.wait_for_timeout(500)
+        self.assertTrue(p.url.endswith("elections/2023g/contests/index.html#contest-2023g-south-bend-mayor"), p.url)
+        self.assertTrue(p.evaluate("document.querySelector('#contest-2023g-south-bend-mayor details.ep-fold').open"))
         p.go_back()
         p.wait_for_timeout(300)
-        self.assertNotIn("#contest-", p.url)
-        self.assertNotIn("Showing one contest", p.text_content("#elx-count"))
-        self.assertGreater(len(p.query_selector_all("#elx-results [data-contest]")), 1)
+        self.assertIn("map/index.html", p.url)
         self.assertEqual(errors, [])
         p.close()
 

@@ -1,0 +1,40 @@
+/* "About these figures" (2026-11-18, phase 6): one small symbol right after an exception figure (components.figure_mark)
+   and one note at the bottom of the page (components.figure_notes, added by shell.Page.render). The normal case has no
+   mark. Colors come only from the look tokens, never party colors; the same marks in every look, light and dark. */
+.fmark {
+  display: inline-block; white-space: nowrap; text-decoration: none;
+  font: 700 .88em/1 var(--f-sans); vertical-align: .38em; margin: 0 .04em 0 .06em; padding: 0 .1em;
+  color: var(--ink-2); border-radius: var(--r-sm);
+}
+.fmark:hover { color: var(--ink); text-decoration: underline; text-underline-offset: 2px; }
+.fmark:focus-visible { outline: 2px solid var(--focus); outline-offset: 1px; color: var(--ink); }
+.fmark-unofficial { color: var(--unofficial); }
+/* a symbol in a legend (Sources tab key, About) */
+.fmark-sym { display: inline-block; min-width: 1.1em; text-align: center; font: 600 .95em/1 var(--f-sans); color: var(--ink-2); }
+.fmark-sym.fmark-unofficial { color: var(--unofficial); }
+/* a section-wide status, said once in its caption line */
+.fscope-line { margin: 4px 0 10px; font-size: .9rem; color: var(--ink-2); }
+.fscope-line strong { color: var(--ink); }
+.fscope-unofficial { padding: 6px 10px; border-left: 3px solid var(--unofficial-line); background: var(--unofficial-wash);
+                     color: var(--ink); }
+
+/* the page-bottom note */
+.fnotes { margin: 36px 0 8px; padding-top: 14px; border-top: 1px solid var(--line); font-size: .88rem; color: var(--ink-2);
+          max-width: 46rem; }
+.fnotes .fnotes-h { font: 600 .78rem/1.3 var(--f-mono); letter-spacing: .06em; text-transform: uppercase; color: var(--ink-2);
+                    margin: 0 0 8px; border: 0; padding: 0; }
+.fnotes-list { list-style: none; margin: 0; padding: 0; }
+.fnotes-list li { margin: 0 0 6px; padding-left: 1.6em; text-indent: -1.6em; scroll-margin-top: 80px; }
+.fnotes-list li:target { background: var(--accent-wash); outline: 2px solid var(--accent); outline-offset: 2px; }
+.fnote-sym { display: inline-block; width: 1.6em; text-indent: 0; text-align: center; font-weight: 700; color: var(--ink); }
+.fnotes-list strong { color: var(--ink); }
+.fnotes-more { margin: 8px 0 0; }
+
+@media print {
+  .fmark { color: inherit; text-decoration: none; }
+  .fnotes { break-inside: avoid; }
+}
+/* the word beside a results heading or row whose figures are unofficial (components.status_heading) */
+.fword { font: 600 .7em/1 var(--f-mono); letter-spacing: .06em; text-transform: uppercase; white-space: nowrap;
+         padding: 2px 5px; border-radius: var(--r-sm); vertical-align: .15em; }
+.fword-unofficial { color: var(--unofficial); background: var(--unofficial-wash); border: 1px solid var(--unofficial-line); }

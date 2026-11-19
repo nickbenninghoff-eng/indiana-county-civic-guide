@@ -1,0 +1,58 @@
+/* people.css: person pages and the People hub (pages/people.py; phase 6, 2026-11-16). Tokens only; every look
+   (ballot, line, wayfinding) and light/dark come from looks.css and the token block. */
+
+/* a name linked to a person's page (civic/people.py link_names): the party tag after it is unchanged */
+.person-link { color: inherit; text-decoration-thickness: 1px; text-underline-offset: 2px; }
+.person-link:hover { color: var(--accent-ink); }
+
+/* Overview */
+.pp-facts dd { min-width: 0; }
+.pp-off { display: inline; }
+.pp-parties { margin: 4px 0 0; padding-left: 1.2em; }
+.pp-terms { list-style: none; margin: 0; padding: 0; max-width: var(--measure); }
+.pp-term { display: flex; flex-wrap: wrap; gap: 2px 10px; align-items: baseline; margin: 0; padding: 7px 0;
+  border-top: 1px solid var(--grid); }
+.pp-term-office { font-weight: 600; }
+.pp-term-meta { font-size: .9rem; color: var(--ink-2); }
+.pp-card { display: grid; grid-template-columns: minmax(0, 12rem) minmax(0, 1fr); gap: 12px 24px; align-items: start;
+  max-width: 60rem; }
+.pp-card .person-photo { margin: 0; }
+.pp-card .person-photo img { width: 100%; height: auto; }
+.pp-card .holder-badges { grid-column: 1 / -1; margin: 0; }
+.pp-rules { margin: 0; padding-left: 1.1em; }
+.pp-rules li { margin: 0 0 4px; }
+.pp-names { margin: 6px 0 0; padding-left: 1.2em; max-width: var(--measure); }
+.pp-name { font-weight: 600; }
+.pp-maybe { max-width: var(--measure); padding: 8px 12px; border-left: 3px solid var(--rule); background: var(--surface-2); }
+.pp-money-list { margin: 0; padding-left: 1.2em; max-width: 64rem; }
+.pp-money-list li { margin: 0 0 8px; }
+
+/* People hub */
+.pph-letters ul { list-style: none; display: flex; flex-wrap: wrap; gap: 4px 6px; margin: 10px 0 0; padding: 0; }
+.pph-letters a { display: inline-block; min-width: 2em; padding: 3px 6px; text-align: center; font-family: var(--f-mono);
+  border: 1px solid var(--grid); border-radius: var(--r-btn); text-decoration: none; color: var(--ink); }
+.pph-letters a:hover { border-color: var(--accent); }
+.pph-letters a:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+.pph-all { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 13rem), 1fr)); gap: 0 24px; }
+.pph-letter { margin: 0; border-top: 1px solid var(--grid); min-width: 0; }
+.pph-letter[open] { grid-column: 1 / -1; padding-bottom: 8px; }
+.pph-letter[hidden] { display: none; }
+.pph-letter-sum { cursor: pointer; padding: 8px 0; display: flex; align-items: baseline; gap: 10px; }
+.pph-letter-sum:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+.pph-letter-k { font-family: var(--f-display); font-weight: var(--display-wt); font-size: 1.25rem; min-width: 1.2em; }
+.pph-letter-n { font-size: .84rem; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+.pph-list { list-style: none; margin: 0; padding: 0; columns: 3 18rem; column-gap: 24px; }
+.pph-row { break-inside: avoid; margin: 0; padding: 4px 0; border-top: 1px solid var(--grid); }
+.pph-row[hidden] { display: none; }
+.pph-name { font-weight: 600; }
+.pph-sub { display: block; font-size: .84rem; color: var(--ink-2); }
+.pph-below-list { columns: 2 22rem; column-gap: 24px; margin: 8px 0 0; padding-left: 1.1em; }
+.pph-below-list li { break-inside: avoid; margin: 0 0 4px; }
+.pph-rules { max-width: var(--measure); padding-left: 1.3em; }
+.pph-rules li { margin: 0 0 6px; }
+.notable-hub-link { max-width: var(--measure); }
+
+@media (max-width: 760px) {
+  .pp-card { grid-template-columns: minmax(0, 1fr); }
+  .pp-card .person-photo { max-width: 12rem; }
+}

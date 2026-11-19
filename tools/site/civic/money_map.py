@@ -103,10 +103,11 @@ def per_resident(amount, residents) -> float | None:
 
 # ------------------------------------------------------------------------------ the whole map
 def _target(uid: str, unit: dict | None, has_money: bool) -> str:
-    """Site-relative link for an area: its Money in and money out block (civic/spending.py id money-<uid>)."""
-    if unit and unit["unit_type"] == "school_corporation":
-        return f"schools/index.html#{'money-' + uid if has_money else uid}"
-    return f"places/{uid}/index.html" + (f"#money-{uid}" if has_money else "")
+    """Site-relative link for an area: its Money in and money out block (civic/spending.py id money-<uid>) on its
+    government page's Money tab (phase 6 step 3, civic/governments.py), else its government page."""
+    if has_money:
+        return f"governments/{uid}/money/index.html#money-{uid}"
+    return f"governments/{uid}/index.html"
 
 
 def county_population(ed) -> int | None:
@@ -206,10 +207,14 @@ def money_map_data(ed, shapes: dict) -> dict:
         if kind == "county":
             rec["residents"] = county_population(ed)
             rec["per_resident"] = per_resident(summ["spending"], rec["residents"])
-            rec["target"] = f"county/index.html#{rec['anchor']}"
+            rec["target"] = f"governments/county/money/index.html#{rec['anchor']}"
             county = rec
         else:
-            rec["target"] = f"money/budgets/index.html#{rec['anchor']}"
+            # a library or special unit (no boundary): its government page's Money tab (phase 6 step 5; the budgets
+            # page no longer carries each unit's block)
+            from .governments import gov_for_money_id, path as gov_path
+            g = gov_for_money_id(ed, mid)
+            rec["target"] = (gov_path(g.gid, "money") + f"#{rec['anchor']}") if g else "money/budgets/index.html"
         others.append(rec)
     return {"layers": layers, "county": county, "others": others}
 

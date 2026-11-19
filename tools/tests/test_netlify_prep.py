@@ -111,6 +111,24 @@ class Prep(unittest.TestCase):
         d = self._site('<!doctype html><script type="application/json" id="x">{"onload=":"<b>"}</script>')
         self.assertEqual(self._quiet(lambda: N.prepare(d)), 0)
 
+    def test_forwarding_pages_get_forced_301s(self):
+        # phase 6 step 3 (2026-11-16): a page with <meta name="civic-moved-to"> gets both forms of a forced 301;
+        # a target the build did not write, or one outside the site, gets none
+        d = self._site()
+        for old, meta in (("places/x", "governments/x/index.html"), ("places/y", "governments/missing/index.html"),
+                          ("places/z", "../evil/index.html")):
+            (d / old).mkdir(parents=True)
+            (d / old / "index.html").write_text(
+                f'<!doctype html><meta name="civic-moved-to" content="{meta}"><p>moved</p>', encoding="utf-8")
+        (d / "governments" / "x").mkdir(parents=True)
+        (d / "governments" / "x" / "index.html").write_text("<!doctype html><p>x</p>", encoding="utf-8")
+        self.assertEqual(self._quiet(lambda: N.prepare(d)), 0)
+        red = (d / "_redirects").read_text(encoding="utf-8")
+        self.assertIn("/places/x/index.html  /governments/x/index.html  301!", red)
+        self.assertIn("/places/x/  /governments/x/  301!", red)
+        self.assertNotIn("missing", red)
+        self.assertNotIn("evil", red)
+
 
 if __name__ == "__main__":
     unittest.main()

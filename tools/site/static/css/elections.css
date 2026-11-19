@@ -191,3 +191,140 @@
 
 /* statute citations: break between codes, never inside one (IC 3-11-2-10 stays on one line) */
 .elx-code { white-space: nowrap; }
+
+/* ======================================================================== phase 6 step 4 (2026-11-16)
+   Election pages (pages/election_pages.py; the tab template's header and sections come from tabs.css), the Elections
+   hub's next ballot and timeline, Find a result, Compare's header. Calm and almanac-like: rows separated by hairlines,
+   no boxes, numbers tabular. Existing tokens only, so the three looks and both themes follow. */
+
+/* ---- election Overview */
+.ep-big { margin: 0 0 6px; font-size: 1.02rem; }
+.ep-fig { font-family: var(--f-display); font-weight: var(--display-wt); font-size: 2.1rem; line-height: 1;
+  margin-right: 4px; font-variant-numeric: tabular-nums; }
+.ep-more { font-size: .9rem; margin: 8px 0 0; }
+.ep-levels { list-style: none; margin: 6px 0 12px; padding: 0; display: flex; flex-wrap: wrap; gap: 4px 18px;
+  font-size: .92rem; }
+.ep-closest { margin: 0; padding-left: 1.4em; max-width: var(--measure); }
+.ep-close { margin: 0 0 10px; }
+.ep-close-h { margin: 0; font-weight: 600; }
+.ep-close-pts { font-weight: 400; font-family: var(--f-mono); font-size: .84rem; color: var(--ink-2);
+  font-variant-numeric: tabular-nums; }
+.ep-close-who { margin: 2px 0 0; font-size: .9rem; color: var(--ink-2); }
+.ep-around { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+.ep-nb-k { color: var(--ink-3); }
+.ep-notes { margin-top: 26px; max-width: var(--measure); font-size: .9rem; }
+
+/* ---- election Contests: one hairline row per contest, every candidate in a fold */
+.ep-party { margin-top: 26px; }
+.tsec.ep-party > .ep-party-h, .ep-levels-all > .ep-level > .ep-level-h {
+  font: var(--display-wt) 1.35rem/1.1 var(--f-display); letter-spacing: var(--display-track); text-transform: none;
+  color: var(--ink); margin: 26px 0 6px; }
+.ep-level { margin: 0; }
+.ep-party .ep-level-h { font-size: 1rem; margin: 18px 0 4px; }
+.ep-level-n { font: 400 .8rem/1 var(--f-mono); letter-spacing: 0; color: var(--ink-3); }
+.ep-list { list-style: none; margin: 0; padding: 0; }
+.ep-contest { margin: 0; padding: 8px 0; border-top: 1px solid var(--grid); }
+.ep-contest:first-child { border-top: 0; }
+.ep-line { display: grid; grid-template-columns: minmax(12rem, 22rem) minmax(0, 1fr) minmax(8rem, max-content) auto;
+  gap: 2px 16px; align-items: baseline; }
+.ep-what { font-size: .95rem; font-weight: 600; margin: 0; min-width: 0; overflow-wrap: anywhere; }
+.ep-result { min-width: 0; font-size: .94rem; }
+.ep-out { color: var(--ink-3); font-size: .86rem; }
+.ep-cand { white-space: normal; }
+.ep-margin { font-family: var(--f-mono); font-size: .82rem; color: var(--ink-2); font-variant-numeric: tabular-nums;
+  text-align: right; }
+.ep-fold { margin: 2px 0 0; }
+.ep-fold > .ep-fold-sum { cursor: pointer; font-size: .82rem; color: var(--ink-2); width: max-content;
+  text-decoration: underline; text-decoration-color: var(--line); min-height: 28px; display: list-item; }
+.ep-fold > .ep-fold-sum:hover { color: var(--accent); }
+.ep-fold[open] > .ep-fold-sum { color: var(--ink); }
+.ep-fold .chart { max-width: 40rem; }
+.ep-links { font-size: .86rem; margin: 0 0 6px; }
+.thing-page .ep-fold .chart { margin: 6px 0 8px; }
+
+/* ---- Elections hub: next ballot, timeline */
+.ehub-next-sec { margin-top: 18px; }
+.ehub-next-sec > .ehub-next { margin-top: 0; }
+.ehub-next-sec > p { max-width: var(--measure); }
+.ehub-govs { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 15rem), 1fr)); gap: 4px 24px;
+  margin: 8px 0 10px; }
+.ehub-gov { min-width: 0; padding: 6px 0; border-top: 1px solid var(--line); }
+.ehub-gov[hidden] { display: none; }
+.ehub-gov-h { font-size: .98rem; margin: 0 0 2px; }
+.ehub-gov-list { list-style: none; margin: 0; padding: 0; font-size: .88rem; }
+.ehub-gov-list li { margin: 1px 0; }
+.ehub-ballot-fold { margin: 6px 0 4px; }
+.ehub-ballot-sum { font-weight: 600; }
+.ehub-ballot-places { font-weight: 400; color: var(--ink-2); }
+.ehub-uninc { font-size: .9rem; color: var(--ink-2); }
+.ehub-cal { font-size: .9rem; }
+.ehub-timeline { margin-top: 6px; }
+.ehub-year { display: grid; grid-template-columns: 4.5rem minmax(0, 1fr); gap: 0 12px; align-items: baseline;
+  border-top: 1px solid var(--line); padding: 6px 0; }
+.ehub-year-h { margin: 0; font: var(--display-wt) 1.3rem/1.2 var(--f-display); letter-spacing: var(--display-track);
+  font-variant-numeric: tabular-nums; }
+.ehub-els { list-style: none; margin: 0; padding: 0; }
+.ehub-el { display: grid; grid-template-columns: 14rem 6.5rem 9.5rem 7rem auto;
+  gap: 2px 12px; align-items: baseline; padding: 3px 0; margin: 0; }
+.ehub-el-what { font-weight: 600; }
+.ehub-el-when, .ehub-el-to, .ehub-el-n { font-size: .88rem; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+.ehub-older { margin-top: 4px; }
+.ep-tables { margin-top: 18px; }
+.ehub-older-sum { font-weight: 600; }
+
+/* ---- Find a result */
+.fr-years { list-style: none; margin: 6px 0 0; padding: 0; columns: 2; column-gap: 32px; }
+.fr-year { margin: 0; padding: 3px 0; break-inside: avoid; }
+.fr-y { display: inline-block; min-width: 3.2rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+.fr-level { margin-top: 12px; }
+.fr-level-h { font-size: 1rem; margin: 0 0 4px; }
+.fr-govs { list-style: none; margin: 0; padding: 0; font-size: .9rem; }
+.fr-gov { margin: 0; padding: 3px 0; border-top: 1px solid var(--grid); }
+.fr-gov-n { font-weight: 600; }
+
+/* ---- Compare: the tab template's header above each moved page's own lead and contents */
+.cmp-hero { padding-top: 12px; }
+.cmp-hero .dek { margin-top: 0; }
+.moved-hero .dek a { font-weight: 700; }
+
+@media (max-width: 760px) {
+  .ep-line { grid-template-columns: minmax(0, 1fr) auto; }
+  .ep-what, .ep-result { grid-column: 1 / -1; }
+  .ep-margin { text-align: left; }
+  .ehub-year { grid-template-columns: minmax(0, 1fr); }
+  .ehub-el { grid-template-columns: minmax(0, 1fr) auto; }
+  .ehub-el-what { grid-column: 1 / -1; }
+  .fr-years { columns: 1; }
+}
+@media (min-width: 761px) and (max-width: 1099px) {
+  .ehub-el { grid-template-columns: minmax(0, 1fr) 6.5rem 9.5rem auto; }
+  .ehub-el-n { display: none; }
+}
+
+/* Compare: Close races, shorter (2026-11-16): each level is one fold in a grid, like the Offices hub's governments;
+   an open level takes the full row. The by-level bars sit two to a row on a wide screen. */
+.mg-find { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 19rem), 1fr)); gap: 0 24px; }
+.mg-find > .mg-level { margin: 0; min-width: 0; border-top: 1px solid var(--grid); }
+.mg-find > .mg-level:has(> details[open]) { grid-column: 1 / -1; }
+.mg-level-sum { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 10px; }
+.mg-level-sum .mg-level-h { margin: 0; }
+@media (min-width: 900px) {
+  #margin-levels .shb-rows { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 32px; }
+}
+
+/* county vote beside the overall result (civic/overall.py, 2026-11-18): accent bar for the county, ink for the
+   overall; never party colors */
+.cvo { margin: 10px 0 14px; max-width: 46rem; }
+.cvo-cap { font-weight: 600; font-size: .92rem; margin: 0 0 6px; }
+.cvo-scroll { overflow-x: auto; }
+.cvo-table { border-collapse: collapse; width: 100%; font-size: .9rem; }
+.cvo-table th, .cvo-table td { text-align: left; padding: 5px 8px 5px 0; border-top: 1px solid var(--grid); vertical-align: top; }
+.cvo-table thead th { border-top: 0; color: var(--ink-3); font-weight: 600; font-size: .82rem; }
+.cvo-table th[scope="row"] { font-weight: 600; min-width: 9rem; }
+.cvo-v { display: inline-block; min-width: 11rem; font-variant-numeric: tabular-nums; }
+.cvo-bar { display: block; height: 6px; width: var(--w); max-width: 100%; margin: 2px 0 3px; border-radius: 1px; }
+.cvo-bar-c { background: var(--accent); }
+.cvo-bar-o { background: var(--ink-2); }
+.cvo-won { font-weight: 700; }
+.cvo-note { margin: 6px 0 0; font-size: .86rem; }
+.cvo-basis { margin: 6px 0 0; font-size: .88rem; color: var(--ink-2); }

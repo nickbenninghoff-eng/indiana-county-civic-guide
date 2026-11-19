@@ -1,0 +1,87 @@
+/* tabs.css: the tab template (civic/tabs.py; phase 6 step 1, 2026-11-16) shared by office pages now and by
+   government, election and person pages later. Calm, almanac-like: the title in the display face at about half the
+   old hero size and never forced to capitals; sections separated by space and a small label, not boxes or heavy
+   rules; charts unboxed; status as one small mark. Every color is an existing token, so all three looks and both
+   themes follow. The thing's pages carry body class "thing-page" (#site.thing-page). */
+
+/* ---------------------------------------------------------------- shared header */
+.thing-head { padding-block: 22px 0; }
+.thing-head .crumbs { margin: 0 0 8px; }
+:root .thing-title {
+  font-family: var(--f-display); font-weight: var(--display-wt); letter-spacing: var(--display-track);
+  text-transform: none; font-size: clamp(1.7rem, 3.4vw, 2.35rem); line-height: 1.08; margin: 0 0 8px;
+  max-width: 34ch;
+}
+.thing-facts { margin: 0; color: var(--ink-2); font-size: .98rem; display: flex; flex-wrap: wrap; gap: 2px 0; }
+.thing-fact { white-space: normal; }
+.facts-sep { color: var(--ink-3); white-space: pre; }
+.thing-note { margin: 6px 0 0; font-size: .9rem; color: var(--ink-3); }
+
+/* ---------------------------------------------------------------- tab bar: scrolls inside itself, never the page */
+.tabs { margin: 18px 0 0; border-bottom: 1px solid var(--line); overflow-x: auto; overflow-y: hidden;
+  scrollbar-width: thin; -webkit-overflow-scrolling: touch; max-width: 100%; }
+.tab-list { display: flex; flex-wrap: nowrap; gap: 2px; list-style: none; margin: 0; padding: 0; min-width: max-content; }
+.tab { margin: 0; flex: none; }
+.tab-link { display: inline-flex; align-items: center; min-height: 44px; padding: 8px 14px; color: var(--ink-2);
+  font-weight: 600; text-decoration: none; border-bottom: 3px solid transparent; margin-bottom: -1px; white-space: nowrap; }
+.tab-link:hover { color: var(--ink); border-bottom-color: var(--line); }
+.tab-link[aria-current="page"] { color: var(--ink); border-bottom-color: var(--accent); font-weight: 700; }
+.tab-link:focus-visible { outline-offset: -3px; }
+:root[data-look="line"] .tabs { border-bottom: 0; }
+:root[data-look="line"] .tab-list { gap: 4px; padding: 3px; background: var(--surface-2); border-radius: 12px; }
+:root[data-look="line"] .tab-link { border: 0; margin: 0; min-height: 40px; border-radius: 10px; font-weight: 500; }
+:root[data-look="line"] .tab-link:hover { background: var(--surface); }
+:root[data-look="line"] .tab-link[aria-current="page"] { background: var(--surface); font-weight: 700;
+  box-shadow: 0 0 0 1.5px var(--ink-3), 0 1px 3px var(--shadow); }
+:root[data-look="wayfinding"] .tabs { border-bottom: 4px solid var(--rule); }
+:root[data-look="wayfinding"] .tab-link { font-weight: 800; border-bottom-width: 5px; margin-bottom: -4px; }
+:root[data-look="wayfinding"] .tab-link[aria-current="page"] { background: var(--nav-bg); color: var(--nav-ink);
+  border-bottom-color: var(--hl); border-radius: 6px 6px 0 0; }
+
+/* ---------------------------------------------------------------- sections: space and a small label */
+.tsec { margin-block: 30px 0; }
+.tsec > .tsec-h { font: 700 .78rem/1.2 var(--f-label); letter-spacing: .09em; text-transform: uppercase;
+  color: var(--ink-3); margin: 0 0 10px; }
+:root[data-look="line"] .tsec > .tsec-h { text-transform: none; letter-spacing: 0; font-size: .92rem; color: var(--ink-2); }
+:root[data-look="wayfinding"] .tsec > .tsec-h { font-weight: 800; color: var(--ink-2); }
+.tsec-lead { color: var(--ink-2); max-width: var(--measure); margin: 0 0 12px; }
+.thing-page main > .tsec-lead { margin-top: 18px; }
+.tnote { font-size: .84rem; color: var(--ink-3); max-width: var(--measure); margin-top: 28px; }
+.tnotes { padding-left: 1.1em; max-width: var(--measure); }
+.tnotes li { margin-bottom: 6px; }
+
+/* charts on tab pages are not boxed */
+:root .thing-page .chart { border: 0; padding: 0; background: none; border-radius: 0; margin: 10px 0 18px; }
+:root .thing-page .chart-title { font-size: .98rem; }
+
+/* ---------------------------------------------------------------- status marks: one small glyph, wording on hover/focus */
+.smark { display: inline-flex; align-items: center; gap: 4px; vertical-align: baseline; text-decoration: none;
+  color: var(--ink-3); line-height: 1; }
+a.smark:hover { color: var(--ink); }
+.smark-glyph { display: inline-block; width: 9px; height: 9px; border-radius: 50%; border: 1.5px solid currentColor;
+  flex: none; transform: translateY(1px); }
+.smark-official { background: currentColor; }
+.smark-computed { border-color: var(--accent); }
+.smark-from_scan { border-style: dashed; }
+.smark-secondary, .smark-single_source { border-radius: 1px; }
+.smark-single_source { border-style: dashed; }
+.smark-low { border-style: dotted; }
+.smark-unofficial { border-color: var(--unofficial-line); background: var(--unofficial-wash); }
+.smark-unverified { border-color: var(--unofficial-line); border-style: dashed; border-radius: 1px; }
+.smark-word { font: 600 .66rem/1 var(--f-mono); letter-spacing: .06em; text-transform: uppercase; color: var(--unofficial); }
+.marks-key { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; max-width: var(--measure); }
+.marks-key li { margin: 0; font-size: .92rem; }
+
+/* ---------------------------------------------------------------- the Sources tab */
+.thing-page .source-list { padding-left: 1.6em; }
+@media (min-width: 1100px) { .thing-page .source-list { columns: 2; column-gap: 40px; } .thing-page .source-list li { break-inside: avoid; } }
+.thing-page .source-list li { margin-bottom: 6px; }
+.thing-page .gaps-list { max-width: var(--measure); }
+
+@media (max-width: 760px) {
+  .thing-head { padding-top: 14px; }
+  .tab-link { padding-inline: 11px; }
+}
+@media print {
+  .tabs { display: none; }
+}

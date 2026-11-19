@@ -13,7 +13,7 @@
     "light": "#0f766e",
     "dark": "#2dd4bf"
   },
-  "data_as_of": "2026-11-07",
+  "data_as_of": "2026-11-18",
   "version": "1.0",
   "author": "Nick Benninghoff",
   "rights_holder": "Nick Benninghoff; Phenomogen LLC",
@@ -62,7 +62,7 @@
   "status_banners": [
     {
       "id": "2026-unofficial",
-      "text": "2026 general-election figures are UNOFFICIAL (county election-night report, 2026-11-03) until the county certifies results.",
+      "text": "2026 results: official county canvass; multi-county and statewide contests await state certification.",
       "until": "certification"
     }
   ]

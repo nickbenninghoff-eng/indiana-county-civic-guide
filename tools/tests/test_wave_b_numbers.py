@@ -6,6 +6,11 @@ Pins every id the old pages had (tools/tests/fixtures/anchors_before_wave_b2.jso
 the batch): each is still on its page or forwarded by the page's #moved-anchors map (static/js/moved.js) to a page
 that has the target id.
 
+Phase 6 step 4 (2026-11-16): the three pages became the tabs of Compare elections (elections/compare/, turnout/,
+overview/) with their content and ids unchanged; the old addresses are forwarding pages whose #moved-anchors map sends
+every id to the tab that has it, so the old fixture ids are checked through those maps. LAND, MARG and TURN below are
+the Compare tabs; OLD_* the forwarding pages. tools/tests/test_phase6_elections.py covers the new pages.
+
 Run:  python -P -E -m unittest discover -s tools/tests
 """
 from __future__ import annotations
@@ -33,10 +38,12 @@ from pages import elections_numbers as N  # noqa: E402
 FIXTURE = Path(__file__).parent / "fixtures" / "anchors_before_wave_b2.json"
 ID_RE = re.compile(r'\sid="([^"]+)"')
 HREF_RE = re.compile(r'<a\b[^>]*\shref="([^"]+)"')
-LAND, MARG, TURN, OFF, CAL, RES = ("elections/landscape/index.html", "elections/margins/index.html",
-                                   "elections/turnout/index.html", "officeholders/index.html",
+LAND, MARG, TURN, OFF, CAL, RES = ("elections/compare/overview/index.html", "elections/compare/index.html",
+                                   "elections/compare/turnout/index.html", "officeholders/index.html",
                                    "elections/calendar/index.html", "elections/results/index.html")
-PAGES = [LAND, MARG, TURN, OFF, CAL, RES]
+OLD_LAND, OLD_MARG, OLD_TURN = ("elections/landscape/index.html", "elections/margins/index.html",
+                                "elections/turnout/index.html")
+PAGES = [LAND, MARG, TURN, OFF, CAL, RES, OLD_LAND, OLD_MARG, OLD_TURN]
 
 
 def moved_map(page_html: str) -> dict:
@@ -47,6 +54,17 @@ def moved_map(page_html: str) -> dict:
 def resolve(page: str, rel: str) -> tuple[str, str]:
     path, _, frag = rel.partition("#")
     return posixpath.normpath(posixpath.join(posixpath.dirname(page), path)), frag
+
+
+def banner_left(anchor: str, page_html: str) -> bool:
+    """Phase 6 step 1 (2026-11-16): the 2026 UNOFFICIAL banner now shows only on pages that display unofficial 2026
+    figures (civic/shell.py shows_unofficial), so its id may leave a page that has none. True only for a banner id on
+    such a page; every other old id must still be there."""
+    from civic.shell import shows_unofficial
+    if not anchor.startswith("banner-"):
+        return False
+    main = page_html[page_html.index("<main"):page_html.index("</main>")]
+    return not shows_unofficial(main, anchor[len("banner-"):][:4])
 
 
 class Built(unittest.TestCase):
@@ -76,7 +94,7 @@ class Built(unittest.TestCase):
         for page, ids in before.items():
             moved = moved_map(self.html[page])
             for i in ids:
-                if i in self.ids[page]:
+                if i in self.ids[page] or banner_left(i, self.html[page]):
                     continue
                 dest = moved.get(i)
                 if dest:
@@ -87,7 +105,7 @@ class Built(unittest.TestCase):
         self.assertEqual(lost, [])
 
     def test_moved_maps_point_at_real_ids_only(self):
-        for page in (LAND, RES):
+        for page in (LAND, RES, OLD_LAND, OLD_MARG, OLD_TURN):
             moved = moved_map(self.html[page])
             self.assertTrue(moved, page)
             for old, dest in moved.items():
@@ -129,7 +147,7 @@ class Built(unittest.TestCase):
         contested = len(self.races) - n["unc"] - n["nc"]
         lede = re.search(r'<p class="mg-lede">(.*?)</p>', h, re.S).group(1)
         self.assertIn(f"{n['unc']:,} of the {len(self.races):,} races", html.unescape(re.sub(r"<[^>]+>", "", lede)))
-        self.assertIn("badge-computed", lede)                          # COMPUTED badge beside the first fact
+        self.assertIn('data-fmark="computed"', lede)                   # the computed mark beside the first fact
         self.assertLess(h.index('class="mg-lede"'), h.index('id="by-level"'))
         self.assertIn(f"{len(self.races):,} = {n['unc']:,} uncontested + {contested:,} contested + {n['nc']:,} not measurable",
                       html.unescape(h))
@@ -140,10 +158,11 @@ class Built(unittest.TestCase):
     def test_every_race_is_in_the_find_list_and_links_to_its_result(self):
         h = self.html[MARG]
         find = h[h.index('id="mg-find"'):h.index('id="all-races"')]
-        linked = set(re.findall(r'href="\.\./results/index\.html#contest-([A-Za-z0-9-]+)"', find))
-        self.assertEqual(linked, {r["c"]["contest_id"] for r in self.races})
-        for cid in linked:
-            self.assertIn(f"contest-{cid}", self.ids[RES])
+        # phase 6 step 4: each race links to its contest on its election's page (elections/<id>/contests/)
+        linked = set(re.findall(r'href="\.\./([0-9]{4}[a-z])/contests/index\.html#contest-([A-Za-z0-9-]+)"', find))
+        self.assertEqual({cid for _, cid in linked}, {r["c"]["contest_id"] for r in self.races})
+        for eid, cid in linked:
+            self.assertTrue(cid.startswith(eid + "-") or self.ed.contests[cid]["election_id"] == eid, cid)
 
     def test_map_areas_link_to_open_folds(self):
         h = self.html[MARG]
@@ -199,11 +218,13 @@ class Built(unittest.TestCase):
                 self.assertIn(f'id="straight-{e["election_id"]}"', h)
 
     def test_results_turnout_points_to_turnout_page(self):
+        """Phase 6 step 4: the results page lost its turnout chart too; its old ids go to Compare: Turnout."""
         h = self.html[RES]
-        sec = h[h.index('id="turnout"'):h.index('id="by-office"')]
         self.assertNotIn('id="turnout-table"', h)
-        self.assertIn("../turnout/index.html", sec)
-        self.assertIn('id="turnout-general"', sec)
+        self.assertNotIn('id="turnout"', h)
+        moved = moved_map(h)
+        for i in ("turnout", "turnout-general", "turnout-table"):
+            self.assertTrue(moved[i].startswith("../compare/turnout/index.html"), (i, moved[i]))
 
     def test_officeholders_page(self):
         h = self.html[OFF]

@@ -1,7 +1,10 @@
 """Places (cities, towns, townships) and school corporations.
 
-Pages: places/index.html, places/<unit_id>/index.html (one template per unit type; a new
-edition gets its pages from its own units.csv), schools/index.html.
+Since 2026-11-16 (phase 6 step 3) their pages are government pages with tabs, governments/<unit_id>/ (civic/governments.py,
+pages/governments.py): this module renders the tabs of a city, town, township (place_renderers) and of a school
+corporation (school_renderers). The old pages places/index.html, places/<unit_id>/index.html and schools/index.html
+are forwarding pages: a title, one line, a plain link, a canonical link, and #moved-anchors sending every old #anchor
+to the tab that now holds it (static/js/moved.js); Netlify 301s the path-level moves (tools/site/netlify_prep.py).
 
 Optional edition data in derived/: township_places.csv (which places lie in which township),
 place_conflicts.csv (offices whose sources disagree; shown as conflicts, never resolved).
@@ -15,10 +18,11 @@ from pathlib import Path
 
 from civic.charts import columns, line, party_timeline, results_bars
 from civic.components import (APPOINTED_NOTE, BODY_OF, as_of_note, bodies_block, body_state, body_with_breakdown, name_with_party, data_table,
-                              officeholder_card, party_label, scope_badge, section, see_all_fold, status_badge, callout)
+                              officeholder_card, party_label, scope_badge, section, see_all_fold, status_badge, status_heading, status_label, callout)
 from civic.data import fmt_date, fmt_int, parse_date, split_ids
 from civic.answers import answer_box, place_budget_row
 from civic.related import RelatedLink, contest_href, latest_contest, related_items, related_links, related_rail, seat_items
+from civic import results_status as RS
 from civic.html import Markup, h, join
 from civic.spending import money_id_for, money_in_out
 from civic.tax_base import money_id as tax_base_id, tax_base_line
@@ -29,6 +33,9 @@ from civic.preselect import here_slot
 from civic.district_map import district_map, district_set, load_district_shapes
 from civic.holder_rows import holder_row, holder_state, seat_row
 from civic.campaign_map import SET_NOTES
+from civic import governments as gm
+from civic import offices as om
+from civic import tabs as T
 
 from .county import CONTROL_METHOD, _contest_figure, ballot_order_note, control_by_year
 
@@ -85,10 +92,13 @@ def _geo(ed, unit):
     if idx is None:
         idx = {}
         for r in ed.table("indicator_values"):
-            if r["geo_type"] in ("place", "town", "county_subdivision"):
+            if r["geo_type"] in ("place", "town", "county_subdivision", "county"):
                 idx[r["geo_id"]] = (r["geo_type"], r["geo_name"].lower())
         _cache(ed)["geo"] = idx
-    if unit["unit_type"] == "township":
+    if unit["unit_type"] == "county":
+        # the county itself (added 2026-11-16, phase 6 step 3): its geography row in indicator_values
+        want, typ = f"{ed.county.lower()} county", "county"
+    elif unit["unit_type"] == "township":
         base = re.sub(r" Township$", "", unit["name"]).lower()
         want, typ = f"{base} township", "county_subdivision"
     else:
@@ -232,7 +242,7 @@ def _offices_table(ed, page, unit, offices):
                      o["seats"] or "not stated in sources",
                      f"{o['term_years']} years" if o.get("term_years") else "",
                      o.get("next_election") or "not in sources",
-                     h("span", None, status_badge(o["status"], page), page.cites.cite(o["source_ids"]))])
+                     h("span", None, status_label(o["status"], page), page.cites.cite(o["source_ids"]))])
     return data_table(f"offices-{unit['unit_id']}", ["Office", "What it does", "Seats", "Term", "Next regular election", "Status"],
                       rows, caption=f"Elected offices of {unit['name']}", numeric=(2,), min_width="48rem")
 
@@ -272,10 +282,15 @@ def _control_chart(ed, page, offices, title, fid):
                           note=method, page=page, cite=page.cites.cite_compact(src)), None
 
 
+def _mayor_block_contests(ed, uid) -> list[dict]:
+    """The mayoral general-election contests of a city, oldest first (the mayoral results history)."""
+    cs = [c for c in ed.contests.values() if not c["party_primary"] and c["contest_id"] == f"{c['election_id']}-{uid}-mayor"]
+    return sorted(cs, key=lambda c: ed.elections[c["election_id"]]["date"])
+
+
 def _mayor_block(ed, page, unit):
     uid = unit["unit_id"]
-    cs = [c for c in ed.contests.values() if not c["party_primary"] and c["contest_id"] == f"{c['election_id']}-{uid}-mayor"]
-    cs.sort(key=lambda c: ed.elections[c["election_id"]]["date"])
+    cs = _mayor_block_contests(ed, uid)
     if not cs:
         return None
     pts, rows, statuses = [], [], []
@@ -296,7 +311,7 @@ def _mayor_block(ed, page, unit):
                      fmt_int(win["votes"]) if win and win["votes"] else "not in source",
                      f"{pct:.1f}%" if pct is not None else "not in source",
                      cands,
-                     h("span", None, status_badge(st, page), page.cites.cite(";".join(dict.fromkeys(s for r in c["rows"] for s in split_ids(r["source_ids"])))))])
+                     h("span", None, status_label(st, page), page.cites.cite(";".join(dict.fromkeys(s for r in c["rows"] for s in split_ids(r["source_ids"])))))])
     breaks = [{"after": i, "label": "Source changes", "tip": "The data source changes here (secondary source before, county canvass after)."}
               for i in range(len(cs) - 1) if statuses[i] != statuses[i + 1] and "secondary" in (statuses[i], statuses[i + 1])]
     miss = [p["x"] for p in pts if p["value"] is None]
@@ -313,6 +328,7 @@ def _mayor_block(ed, page, unit):
 
 
 def _boards_block(ed, page, unit):
+    from . import gov_parts as P
     uid = unit["unit_id"]
     kids = {u["unit_id"] for u in ed.units.values() if uid in split_ids(u["parent_unit_ids"].replace(",", ";"))}
     own = [b for b in ed.boards if b["unit_id"] in kids | {uid}]
@@ -324,45 +340,57 @@ def _boards_block(ed, page, unit):
     def table(bs, tid, cap):
         rows = [[b["name"], b["what_it_decides"], b["seats"] or "not in sources",
                  b["appointing_authorities"] or "not in sources",
-                 h("span", None, status_badge(b["status"], page), page.cites.cite(b["source_ids"]))] for b in bs]
+                 h("span", None, status_label(b["status"], page), page.cites.cite(b["source_ids"]))] for b in bs]
         return data_table(tid, ["Board", "What it decides", "Seats", "Who appoints", "Status"], rows, caption=cap, min_width="44rem")
     parts = [h("p", None, "These bodies make decisions but their members are appointed, not elected. "
                           "Where the sources do not say who appoints, the table says so.")]
+    # each table sits in a fold (closed with JavaScript on, so the Overview stays short; a link to a table opens it)
     if own:
-        parts += [h("h3", None, f"Boards of {name} and its units"), table(own, f"boards-{uid}", f"Appointed boards: {name}")]
+        parts += [h("h3", None, f"Boards of {name} and its units"),
+                  see_all_fold(f"boards-{uid}-all", len(own), table(own, f"boards-{uid}", f"Appointed boards: {name}"),
+                               noun="board", label=f"Show the {len(own)} board{'s' if len(own) != 1 else ''}")]
+        # who serves (appointed_board_members.csv, 2026-11-18): one fold per board with members on file
+        parts += P.board_rosters(ed, page, own, f"Who serves on the boards of {name}")
     if other:
-        parts += [h("h3", None, f"Other boards where {name} officials appoint a seat"), table(other, f"boards-other-{uid}", f"Other boards with seats appointed by {name} officials")]
+        parts += [h("h3", None, f"Other boards where {name} officials appoint a seat"),
+                  see_all_fold(f"boards-other-{uid}-all", len(other),
+                               table(other, f"boards-other-{uid}", f"Other boards with seats appointed by {name} officials"),
+                               noun="board", label=f"Show the {len(other)} board{'s' if len(other) != 1 else ''}")]
     return parts
 
 
-def _context_block(ed, page, unit):
+def _context_rows(ed, unit) -> list[dict]:
+    """The fixed community indicators for a unit (CONTEXT_IDS, latest ACS 5-year vintage) and the population change
+    since 2010, as plain rows: {label, value, moe_text, vintage, marks [(status, note)], source_ids, tail}. Shared by
+    the table (_context_block) and the government Overview's community strip (pages/gov_parts.py), so both show the
+    same figures. Split out of _context_block 2026-11-16 (phase 6 step 3); the figures are unchanged."""
     gid = _geo(ed, unit)
     if not gid:
-        return None
-    rows, srcs = [], []
+        return []
+    rows = []
+    labels = {r["indicator_id"]: r["label"] for r in ed.table("indicators")}
     for iid in CONTEXT_IDS:
         vals = _ind(ed, gid, iid)
         new = _latest_acs(vals)
         if not new:
             continue
-        label = ed.table("indicators") and next((r["label"] for r in ed.table("indicators") if r["indicator_id"] == iid), iid)
+        label = labels.get(iid, iid)
         v, moe = _num(new["value"]), _num(new["moe"])
         if v is None:
-            rows.append([label, "not published", "none published", new["vintage"],
-                         h("span", None, status_badge("low", page, "The Census Bureau did not publish a usable estimate (insufficient sample)."),
-                           page.cites.cite(new["source_ids"]))])
-            srcs.append(new["source_ids"])
+            rows.append({"label": label, "value": "not published", "moe_text": "none published", "vintage": new["vintage"],
+                         "marks": [("low", "The Census Bureau did not publish a usable estimate (insufficient sample).")],
+                         "source_ids": new["source_ids"], "tail": ""})
             continue
         money = iid == "median_hh_income"
         fmt = (lambda x: f"${x:,.0f}") if money else (lambda x: f"{x:,.0f}") if iid == "pop_total" else (lambda x: f"{x:.1f}%")
         cv = (moe / 1.645 / v * 100) if (v and moe is not None) else None
-        flags = [status_badge(new["status"], page)]
+        marks = [(new["status"], None)]
         if cv is not None and cv > 30:
-            flags.append(status_badge("low", page, f"CV {cv:.0f}% (above 30%): treat as unreliable."))
-        rows.append([label, fmt(v), ("±0 (controlled total or rounds to zero)" if moe == 0 else f"±{fmt(moe)}")
+            marks.append(("low", f"CV {cv:.0f}% (above 30%): treat as unreliable."))
+        rows.append({"label": label, "value": fmt(v),
+                     "moe_text": ("±0 (controlled total or rounds to zero)" if moe == 0 else f"±{fmt(moe)}")
                      if moe is not None else "none published",
-                     new["vintage"], h("span", None, join(flags, " "), page.cites.cite(new["source_ids"]))])
-        srcs.append(new["source_ids"])
+                     "vintage": new["vintage"], "marks": marks, "source_ids": new["source_ids"], "tail": ""})
     # change since 2010 (ACS 2006-2010 -> latest ACS)
     pv = _ind(ed, gid, "pop_total")
     a, b = _earliest_acs(pv), _latest_acs(pv)
@@ -373,10 +401,20 @@ def _context_block(ed, page, unit):
         m = math.sqrt((_num(a["moe"]) or 0) ** 2 + (_num(b["moe"]) or 0) ** 2)
         d = x1 - x0
         inside = abs(d) <= m
-        rows.append(["Population change since 2010", f"{d:+,.0f} people ({d / x0 * 100:+.1f}%)", f"±{m:,.0f} people",
-                     f"{a['vintage']} to {b['vintage']}",
-                     h("span", None, status_badge("computed", page, "Difference of two ACS period estimates; margin of error combines both."),
-                       " within margin of error" if inside else "", page.cites.cite(f"{a['source_ids']};{b['source_ids']}"))])
+        rows.append({"label": "Population change since 2010", "value": f"{d:+,.0f} people ({d / x0 * 100:+.1f}%)",
+                     "moe_text": f"±{m:,.0f} people", "vintage": f"{a['vintage']} to {b['vintage']}",
+                     "marks": [("computed", "Difference of two ACS period estimates; margin of error combines both.")],
+                     "source_ids": f"{a['source_ids']};{b['source_ids']}",
+                     "tail": " within margin of error" if inside else ""})
+    return rows
+
+
+def _context_block(ed, page, unit):
+    rows = []
+    for r in _context_rows(ed, unit):
+        rows.append([r["label"], r["value"], r["moe_text"], r["vintage"],
+                     h("span", None, join([status_label(st, page, n) for st, n in r["marks"]], " "), r["tail"],
+                       page.cites.cite(r["source_ids"]))])
     if not rows:
         return None
     return [h("p", None, "Fixed set of community indicators from the American Community Survey (ACS) 5-year estimates. "
@@ -566,7 +604,7 @@ def _org_table(ed, page, unit, offices) -> list:
                      _seats_text(os_),
                      ", ".join(f"{t} years" for t in terms),
                      _next_text(os_),
-                     h("span", None, join([status_badge(s, page) for s in statuses], " "), c.cite(_union(os_)))])
+                     h("span", None, join([status_label(s, page) for s in statuses], " "), c.cite(_union(os_)))])
     n = len(offices)
     return [data_table(f"bodies-{unit['unit_id']}", ["Office or body", "What it does", "Seats", "Term",
                                                      "Next regular election", "Status"],
@@ -701,10 +739,11 @@ def _result_cell(c) -> Markup:
     return h("span", None, join(bits, "; "), h("span", {"class": "muted"}, " Uncontested.") if len(c["rows"]) == 1 else None)
 
 
-def _results_section(ed, page, unit, latest_only=False):
+def _results_section(ed, page, unit, latest_only=False, contests=None):
     """Recent results: one row per race (candidates in ballot order with votes and share, status, links to the chart,
-    the results explorer and the map), then every race's chart in a 'See all' fold. Returns (content, contest ids)."""
-    cs = _place_contests(ed, unit["unit_id"])
+    the office's Elections tab, the results explorer and the map), then every race's chart in a 'See all' fold.
+    ``contests`` (school boards) replaces the place's own general-election contests. Returns (content, contest ids)."""
+    cs = _place_contests(ed, unit["unit_id"]) if contests is None else contests
     by = {}
     for c in cs:
         by.setdefault(c["election_id"], []).append(c)
@@ -725,6 +764,9 @@ def _results_section(ed, page, unit, latest_only=False):
         for c in by[e]:
             shown.append(c["contest_id"])
             links = [h("a", {"href": f"#res-{c['contest_id']}"}, "Chart")]
+            oh = om.href(page, c.get("office_id") or "", "elections")
+            if oh:
+                links.append(h("a", {"href": oh}, "Office"))
             ex = contest_href(page, c["contest_id"])
             if ex:
                 links.append(h("a", {"href": ex}, "Explorer"))
@@ -733,14 +775,15 @@ def _results_section(ed, page, unit, latest_only=False):
             srcs = ";".join(dict.fromkeys(s for r in c["rows"] for s in split_ids(r["source_ids"])))
             sts = list(dict.fromkeys(r["status"] for r in c["rows"]))
             rows.append([fmt_date(el["date"]), c["label"], _result_cell(c),
-                         h("span", None, join([status_badge(s, page) for s in sts], " "), page.cites.cite(srcs)),
+                         h("span", None, join([status_label(s, page) for s in sts], " "), page.cites.cite(srcs)),
                          join(links, " · ")])
         blocks.append(h("div", {"class": "results-year"},
-                        h("h3", None, f"{fmt_date(el['date'], long=True)} general election ", status_badge(el["status"], page)),
+                        h("h3", None, f"{fmt_date(el['date'], long=True)} general election ", status_heading(el["status"], page)),
                         h("div", {"class": "chart-grid"}, [_contest_figure(ed, page, c) for c in by[e]])))
     uid, n = unit["unit_id"], len(shown)
     body = [h("p", None, ballot_order_note(ed, page, eids), "Candidates appear in the order the source lists them. "
-                         "Winners marked 'computed' in the data are the top vote-getters for the seats up. ",
+                         "Winners marked 'computed' in the data are the top vote-getters for the seats up. Each race's "
+                         "Office link opens every election for that office, primaries included. ",
               h("a", {"href": page.rel("elections/results/index.html")}, "All results, 2010 to 2026")),
             data_table(f"results-summary-{uid}", ["Election", "Race", "Candidates (ballot order)", "Status", "Full result"],
                        rows, caption=f"Recent general-election races for {_short(unit)}, one row each", min_width="46rem"),
@@ -790,50 +833,177 @@ def _place_order(present) -> list[str]:
     return ids + ["context"]   # nothing neutral on the page to put between them
 
 
-def build_place(uid, site):
-    ed = site.ed
-    unit = ed.units[uid]
-    kind = unit["unit_type"]
-    page = site.page(f"places/{uid}/index.html", banners=True)
+# ----------------------------------------------------------------------------- government tabs (phase 6 step 3)
+# Since 2026-11-16 a city, town or township has its home at governments/<unit_id>/ with real-URL tabs
+# (civic/governments.py, pages/governments.py); places/<unit_id>/ is a forwarding page. The tabs below reuse the old
+# page's blocks and keep their ids, so old #anchors land on them (pages/governments.py moved maps):
+#   Overview   At a glance, where it is, how it's organized, offices and who holds them (council district map), appointed
+#              boards, contact, the community strip (Context), the "More about" rail
+#   Elections  recent results (one row per race, charts in a fold, each race linked to its office's Elections tab),
+#              the mayoral results history
+#   Money      budget over time (the budgets page's charts), money in and out, tax base and rate, debt, state audits
+#   History    party control over time, holders over time (links to each office's History tab)
+#   Sources    every citation and gap
+# The community strip is the Overview's last section after the neutral Contact section, so it never sits beside the
+# officeholder lines (party labels), results or party-control charts (neutrality review F6); results and party control
+# are on other tabs.
+
+def _structure_parts(ed, page, unit, offices) -> list:
+    c = page.cites
+    uid, kind, short = unit["unit_id"], unit["unit_type"], _short(unit)
+    ut = ed.unit_types.get(kind, {})
+    parts = []
+    if offices:
+        cls = (ed.config.get("variants", {}).get("city_classes") or {}).get(uid)
+        cls_verified = (ed.config.get("variants", {}).get("city_classes") or {}).get("verified", False)
+        if kind == "township":
+            tr = ed.office_types.get("township_trustee", {})
+            tb_ = ed.office_types.get("township_board_member", {})
+            parts.append(h("div", {"class": "sub-block", "id": "what-townships-do"},
+                           h("h3", {"id": "what-townships-do-h"}, "What townships do"),
+                           h("div", {"class": "generic"}, scope_badge("indiana", ed), " ", ut.get("what_it_does", ""), c.cite(ut.get("source_ids"))),
+                           h("ul", None, h("li", None, h("strong", None, "Trustee. "), tr.get("what_it_does", ""), c.cite(tr.get("source_ids"))),
+                             h("li", None, h("strong", None, "Board. "), tb_.get("what_it_does", ""), c.cite(tb_.get("source_ids"))))))
+        else:
+            parts.append(h("div", {"class": "generic"}, scope_badge("indiana", ed), " ", ut.get("what_it_does", ""), c.cite(ut.get("source_ids"))))
+        parts.append(h("p", None, f"In {short}, the guide's data lists {_seat_phrase(offices)}{_office_summary(offices)}.", c.cite_compact(_union(offices))))
+        if cls and kind == "city":
+            parts.append(h("p", None, f"City class on file: {'second' if cls == '2' else cls}. ",
+                           None if cls_verified else status_badge("unverified", page, "Class is not yet confirmed against a city source.")))
+        # one row per body (the offices themselves are listed under Offices below), folded: the Overview stays short
+        parts.append(see_all_fold(f"bodies-{uid}-all", 0, _org_table(ed, page, unit, offices)[0],
+                                  label="Show the table: each elected office or body, its term and next election"))
+    return parts
+
+
+def _where_parts(ed, page, unit) -> list:
+    """Where it is: the cities and towns inside a township, or the townships a city or town lies in (the old page's
+    'places-inside' and 'townships' sub-blocks, same ids)."""
     c = page.cites
     short = _short(unit)
-    ut = ed.unit_types.get(kind, {})
+    out = []
+    if unit["unit_type"] == "township":
+        inside = _township_places(ed, unit)
+        if inside:
+            items = []
+            for r in inside:
+                href = gm.unit_href(page, r["place_unit_id"]) if r["place_unit_id"] in ed.units else None
+                nm = h("a", {"href": href}, r["place_name"]) if href else r["place_name"]
+                items.append(h("li", None, nm, f" ({'census-designated place, not a government' if r['place_kind'] == 'cdp' else r['place_kind']}; "
+                               f"{'part of it lies in this township' if r['coverage'] == 'partial' else 'listed for this township'}) ",
+                               status_badge(r["status"], page), c.cite(r["source_ids"])))
+            out.append(h("div", {"class": "sub-block", "id": "places-inside"},
+                         h("h3", {"id": "places-inside-h"}, "Cities and towns in this township"),
+                         h("ul", None, items),
+                         h("p", {"class": "muted"}, "Cities can cross township lines. This list is from a secondary source and has not been checked against county GIS.")))
+    else:
+        inn = _in_townships(ed, unit)
+        if inn:
+            out.append(h("div", {"class": "sub-block", "id": "townships"},
+                         h("h3", {"id": "townships-h"}, "Township location"),
+                         h("ul", None, [
+                             h("li", None, h("a", {"href": gm.unit_href(page, r["township_unit_id"])}, ed.units[r["township_unit_id"]]["name"]),
+                               f" ({'part of ' + short + ' lies here' if r['coverage'] == 'partial' else 'listed for this township'}) ",
+                               status_badge(r["status"], page), c.cite(r["source_ids"])) for r in inn])))
+    return out
+
+
+def place_gaps(ed, unit) -> list[dict]:
+    """What the guide looked for and did not find for a place (the old page's hidden blocks), then the gap rows whose
+    wording names it."""
+    from civic.spending import money_id_for as _mid
+    uid, kind, short = unit["unit_id"], unit["unit_type"], _short(unit)
+    offices = ed.offices_for(uid)
+    out = []
+    if kind == "city" and not _mayor_block_contests(ed, uid):
+        out.append(_gap(f"{short}: mayoral results", "No mayoral general-election results are in results.csv.", ""))
+    if not _place_contests(ed, uid):
+        out.append(_gap(f"{short}: election results", "No general-election contests for this place are in results.csv.", ""))
+    if offices and not any(ed.terms_for(o["office_id"]) for o in offices):
+        out.append(_gap(f"{short}: current officeholders", "Offices are listed but no terms are recorded for them.", "Add terms from the canvass."))
+    if not offices:
+        out.append(_gap(f"{short}: elected offices and structure", "No offices are recorded for this place in offices.csv.",
+                        "Research the town's officers on the Indiana Gateway or county canvass."))
+    if kind == "township" and not _township_places(ed, unit):
+        out.append(_gap(f"{short}: cities and towns inside", "No municipality is listed for this township in the guide's data.", "Check county GIS."))
+    if kind != "township" and not _boards_rows(ed, unit):
+        out.append(_gap(f"{short}: appointed boards", "No appointed boards are recorded for this place.", "Check the place's website."))
+    councils = [o for o in offices if o["office_type"] in COUNCIL_TYPES]
+    if councils:
+        why = _control_why(ed, councils)
+        if why:
+            out.append(_gap(f"{short}: party composition over time", f"Not charted: {why}.", "Collect seat counts and officeholders by year."))
+    if not _budget_rows(ed, uid):
+        out.append(_gap(f"{short}: budget", "No budget rows map to this place in budgets.csv.", ""))
+    if not _context_rows(ed, unit):
+        out.append(_gap(f"{short}: community context (population, income, poverty, homeownership, education)",
+                        "No census figures for this place are in indicator_values.csv.", "Pull ACS place-level tables."))
+    pat = rf"{re.escape(short)}|Township trustees and boards|place-to-township|Township-level" if kind == "township" else \
+          rf"{re.escape(short)}|Town officeholders" if kind == "town" else rf"{re.escape(short)}"
+    return out + ed.gaps(files=["gaps_gov", "gaps_results", "gaps_money", "gaps_community_people"], pattern=pat)
+
+
+COUNCIL_TYPES = ("city_council_district", "city_council_at_large", "town_council_ward", "town_council_at_large",
+                 "township_board_member")
+
+
+def _control_why(ed, offices) -> str | None:
+    """Why a body's party-control chart cannot be drawn (the same tests as _control_chart), or None."""
+    if not offices or any(not o["seats"].isdigit() for o in offices):
+        return "seat counts not stated in sources"
+    if len(control_by_year(ed, offices)) < 2:
+        return "fewer than two years of officeholder data"
+    return None
+
+
+def _boards_rows(ed, unit) -> list[dict]:
+    uid = unit["unit_id"]
+    kids = {u["unit_id"] for u in ed.units.values() if uid in split_ids(u["parent_unit_ids"].replace(",", ";"))}
+    own = [b for b in ed.boards if b["unit_id"] in kids | {uid}]
+    name = _short(unit)
+    other = [b for b in ed.boards if b not in own and unit["unit_type"] == "city" and re.search(re.escape(name), b["appointing_authorities"], re.I)]
+    return own + other
+
+
+def place_overview(ed, page, g):
+    from . import gov_parts as P
+    unit = ed.units[g.unit_id]
+    uid, kind, short = unit["unit_id"], unit["unit_type"], _short(unit)
+    c = page.cites
     offices = ed.offices_for(uid)
     conflicts = _conflicts(ed)
-    gaps_extra = []
-    sections = {}   # id -> (title, [content], scope)
+    keys = gm.gov_tabs(ed, g.gid)
+    ctx = _context_rows(ed, unit)
+    page.add(answer_box(ed, page, unit, offices, links={
+        "who": "#officeholders" if offices else None,
+        "spend": (gm.path(g.gid, "money"), "Budget, money in and out, debt") if "money" in keys else
+                 ("money/your-tax-bill/index.html#all-rates", "Every unit's tax rate"),
+        "vote": "#officeholders" if offices else ("elections/calendar/index.html#by-year", "Election calendar"),
+        "people": "#context" if ctx else None},
+        # same row as the Money tab's latest line, so the two never disagree
+        budget_row=place_budget_row(ed, uid)))
 
-    # ---- results first: the officeholder lines link to the contests this page shows
-    rb, shown = _results_section(ed, page, unit, latest_only=(kind == "city"))
-    mayor = _mayor_sub(ed, page, unit) if kind == "city" else None
-    if kind == "city" and not mayor:
-        gaps_extra.append(_gap(f"{short}: mayoral results", "No mayoral general-election results are in results.csv.", ""))
-    if rb or mayor:
-        sections["results"] = ("Recent results", (rb or []) + ([mayor] if mayor else []), "county")
-    if not rb:
-        gaps_extra.append(_gap(f"{short}: election results", "No general-election contests for this place are in results.csv.", ""))
+    # where it is: the locator map, the township location or the places inside
+    loc = P.locator_map(page, ed, g)
+    where = _where_parts(ed, page, unit)
+    if loc or where:
+        page.add(T.tab_section("where", "Where it is", h("div", {"class": "gov-where"}, loc, h("div", None, where))))
 
-    # ---- officeholders
-    has_terms = any(ed.terms_for(o["office_id"]) for o in offices)
-    races = _campaign_races(ed, uid) if offices else set()
-    seat_links = {o["office_id"]: seat_items(page, o["office_id"], campaign_races=races, on_page=shown) for o in offices}
-    if offices and has_terms:
+    # how it's organized
+    sp = _structure_parts(ed, page, unit, offices)
+    if sp:
+        page.add(T.tab_section("structure", "How it's organized", sp))
+
+    # offices and who holds them
+    if offices:
         n_inc = sum(len(ed.incoming_terms(o["office_id"])) for o in offices)
+        seat_links = {o["office_id"]: seat_items(page, o["office_id"], campaign_races=_campaign_races(ed, uid))
+                      for o in offices}
         dmap = _place_map(ed, page, unit, offices, seat_links)
-        parts = [h("p", None, f"From the guide's terms data, as of {fmt_date(ed.as_of, long=True)}. One line per office, in "
-                              "the order of the data (by office and district, never by party): who holds it, since when "
-                              "and the next election. Open a line for the details, the sources and links to the seat's "
-                              "latest result and campaign money. ",
-                   f"{n_inc} people elected on Nov 3, 2026 are shown as incoming; they take office Jan 1, 2027, and "
-                   "those results are unofficial until certified." if n_inc else "")]
-        if kind == "city":
-            parts.append(h("p", None, "Only the current mayor appears here. ",
-                           h("a", {"href": page.rel("history/index.html#mayors")}, "The full mayors timeline is on the history page"), "."))
+        parts = [P.offices_lead(ed)]
+        if n_inc:
+            parts.append(h("p", None, RS.incoming_note(ed, [o["office_id"] for o in offices])))
         parts += (dmap or []) + (_no_shapes_note(ed, page, unit) or [])
-        parts.append(one_bar("office", "offices",
-                             "Pick a district on the map, or open any office below." if dmap else
-                             "Open any office below for its holders, dates and sources."))
-        notes = {k: _seat_note(v) for k, v in seat_links.items()}
         for title, offs in _groups(offices):
             if title is None:
                 parts.append(h("h3", None, f"{KINDS[kind]} officers"))
@@ -841,155 +1011,109 @@ def build_place(uid, site):
                 terms, seats = body_state(ed, offs)
                 parts.append(h("h3", None, body_with_breakdown(title, terms, seats),
                                h("span", {"class": "body-seats"}, f" · {seats} seats" if seats else " · seat count not stated")))
-            parts.append(_holder_rows(ed, page, offs, conflicts, notes))
+            parts.append(P.office_list(ed, page, offs, conflicts={o["office_id"]: conflicts[o["office_id"]]
+                                                                  for o in offs if o["office_id"] in conflicts}))
         if any(t is not None for t, _ in _groups(offices)):
             parts.append(as_of_note(ed))
         own_boards = [b for b in ed.boards if b["unit_id"] == uid]
         if own_boards and kind == "township":   # cities and towns list their boards under "Unelected but powerful"
             parts += [h("h3", None, "Appointed boards"), bodies_block(ed, [], boards=own_boards)]
-        elif own_boards:
-            parts.append(h("p", {"class": "party-asof muted"},
-                           f"{_short(unit)} also has {len(own_boards)} appointed board{'s' if len(own_boards) != 1 else ''}, "
-                           "listed with their seats and who appoints them under ",
-                           h("a", {"href": "#unelected"}, "Unelected but powerful"), ". ", APPOINTED_NOTE))
         parts += [_conflict_panel(ed, page, conflicts[o["office_id"]]) for o in offices if o["office_id"] in conflicts]
-        sections["officeholders"] = ("Who holds office now", parts, "county")
-    elif offices:
-        gaps_extra.append(_gap(f"{short}: current officeholders", "Offices are listed but no terms are recorded for them.", "Add terms from the canvass."))
+        page.add(T.tab_section("officeholders", "Offices and who holds them", parts))
 
-    # ---- structure: one explainer per page; the location lists sit inside
-    parts = []
-    if offices:
-        cls = (ed.config.get("variants", {}).get("city_classes") or {}).get(uid)
-        cls_verified = (ed.config.get("variants", {}).get("city_classes") or {}).get("verified", False)
-        if kind == "township":
-            tr = ed.office_types.get("township_trustee", {})
-            tb = ed.office_types.get("township_board_member", {})
-            parts.append(h("div", {"class": "sub-block", "id": "what-townships-do"},
-                           h("h3", {"id": "what-townships-do-h"}, "What townships do"),
-                           h("div", {"class": "generic"}, scope_badge("indiana", ed), " ", ut.get("what_it_does", ""), c.cite(ut.get("source_ids"))),
-                           h("ul", None, h("li", None, h("strong", None, "Trustee. "), tr.get("what_it_does", ""), c.cite(tr.get("source_ids"))),
-                             h("li", None, h("strong", None, "Board. "), tb.get("what_it_does", ""), c.cite(tb.get("source_ids"))))))
-            parts.append(h("h3", None, f"{short}'s offices"))
-        else:
-            parts.append(h("div", {"class": "generic"}, scope_badge("indiana", ed), " ", ut.get("what_it_does", ""), c.cite(ut.get("source_ids"))))
-        parts.append(h("p", None, f"In {short}, the guide's data lists {_seat_phrase(offices)}{_office_summary(offices)}.", c.cite_compact(_union(offices))))
-        if cls and kind == "city":
-            parts.append(h("p", None, f"City class on file: {'second' if cls == '2' else cls}. ",
-                           None if cls_verified else status_badge("unverified", page, "Class is not yet confirmed against a city source.")))
-        parts += _org_table(ed, page, unit, offices)
-    else:
-        gaps_extra.append(_gap(f"{short}: elected offices and structure", "No offices are recorded for this place in offices.csv.",
-                               "Research the town's officers on the Indiana Gateway or county canvass."))
-    if kind == "township":
-        inside = _township_places(ed, unit)
-        if inside:
-            items = []
-            for r in inside:
-                nm = (h("a", {"href": page.rel(f"places/{r['place_unit_id']}/index.html")}, r["place_name"])
-                      if r["place_unit_id"] in ed.units else r["place_name"])
-                items.append(h("li", None, nm, f" ({'census-designated place, not a government' if r['place_kind'] == 'cdp' else r['place_kind']}; "
-                               f"{'part of it lies in this township' if r['coverage'] == 'partial' else 'listed for this township'}) ",
-                               status_badge(r["status"], page), c.cite(r["source_ids"])))
-            parts.append(h("div", {"class": "sub-block", "id": "places-inside"},
-                           h("h3", {"id": "places-inside-h"}, "Cities and towns in this township"),
-                           h("ul", None, items),
-                           h("p", {"class": "muted"}, "Cities can cross township lines. This list is from a secondary source and has not been checked against county GIS.")))
-        else:
-            gaps_extra.append(_gap(f"{short}: cities and towns inside", "No municipality is listed for this township in the guide's data.", "Check county GIS."))
-    else:
-        inn = _in_townships(ed, unit)
-        if inn:
-            parts.append(h("div", {"class": "sub-block", "id": "townships"},
-                           h("h3", {"id": "townships-h"}, "Township location"),
-                           h("ul", None, [
-                               h("li", None, h("a", {"href": page.rel(f"places/{r['township_unit_id']}/index.html")}, ed.units[r["township_unit_id"]]["name"]),
-                                 f" ({'part of ' + short + ' lies here' if r['coverage'] == 'partial' else 'listed for this township'}) ",
-                                 status_badge(r["status"], page), c.cite(r["source_ids"])) for r in inn])))
-    if parts:
-        sections["structure"] = ("How it's organized", parts, "county")
-
-    # ---- appointed boards
+    # appointed boards
     bb = _boards_block(ed, page, unit) if kind != "township" else None
     if bb:
-        sections["unelected"] = ("Unelected but powerful", bb, "county")
-    elif kind != "township":
-        gaps_extra.append(_gap(f"{short}: appointed boards", "No appointed boards are recorded for this place.", "Check the place's website."))
+        page.add(T.tab_section("unelected", "Unelected but powerful: appointed boards", bb))
 
-    # ---- party control
-    councils = [o for o in offices if o["office_type"] in ("city_council_district", "city_council_at_large", "town_council_ward",
-                                                         "town_council_at_large", "township_board_member")]
+    page.add(P.contact_section(ed, page, unit))
+    # the community strip: last, after the neutral Contact section (F6)
+    page.add(P.community_strip(ed, page, ctx, _community_target(ed, unit), uid))
+    page.add(related_links(page, uid, exclude=("place", "budget")))
+
+
+def _community_target(ed, unit):
+    from civic.related import _community
+    return _community(ed, unit)
+
+
+def place_elections(ed, page, g):
+    unit = ed.units[g.unit_id]
+    rb, _shown = _results_section(ed, page, unit, latest_only=(unit["unit_type"] == "city"))
+    mayor = _mayor_sub(ed, page, unit) if unit["unit_type"] == "city" else None
+    page.add(T.tab_section("results", "Recent results", rb or [h("p", {"class": "muted"},
+                                                                  "No general-election contests for this place are in the guide's results.")],
+                           mayor))
+
+
+def _budget_latest(ed, page, unit) -> Markup | None:
+    """The old Budget section's first line: how many budget-year rows the guide has and the latest one (the same row
+    the At a glance box shows, answers.place_budget_row)."""
+    rows = _budget_rows(ed, unit["unit_id"])
+    if not rows:
+        return None
+    last = rows[-1]
+    short = _short(unit)
+    return h("p", {"class": "gov-latest"},
+             f"The guide has {len(rows)} budget-year rows for {short}, {rows[0]['year']} to {rows[-1]['year']}. "
+             f"Latest: {_money(last['amount'])} for {last['year']} ({last['adopted_or_actual']}, "
+             f"{BASIS.get(last['basis'], last['basis'])}). ", status_badge(last["status"], page),
+             page.cites.cite(last["source_ids"]),
+             " Reporting bases differ between series, so compare only within one basis.")
+
+
+def place_money(ed, page, g):
+    from . import gov_parts as P
+    unit = ed.units[g.unit_id]
+    ab = _audits_block(ed, page, unit)
+    P.money_tab(ed, page, g, latest=_budget_latest(ed, page, unit),
+                after=[T.tab_section("audits", "State audits", ab) if ab else None])
+
+
+def place_history(ed, page, g):
+    from . import gov_parts as P
+    unit = ed.units[g.unit_id]
+    uid, kind, short = unit["unit_id"], unit["unit_type"], _short(unit)
+    offices = ed.offices_for(uid)
+    councils = [o for o in offices if o["office_type"] in COUNCIL_TYPES]
     if councils:
         ttl = "Township board seats by party" if kind == "township" else "Council seats by party"
-        chart, why = _control_chart(ed, page, councils, f"{short}: {ttl.lower()}", f"control-{uid}")
+        chart, _why = _control_chart(ed, page, councils, f"{short}: {ttl.lower()}", f"control-{uid}")
         if chart:
-            sections["control"] = ("Party control over time",
-                                   [chart, h("p", {"class": "muted"}, "The chart covers the full range of the guide's data. Earlier years are listed under Gaps.")], "county")
-        else:
-            gaps_extra.append(_gap(f"{short}: party composition over time", f"Not charted: {why}.", "Collect seat counts and officeholders by year."))
+            page.add(T.tab_section("control", "Party control over time", chart,
+                                   h("p", {"class": "muted"}, "The chart covers the full range of the guide's data. "
+                                                              "Earlier years are listed under Gaps on the Sources tab. ",
+                                     h("a", {"href": page.rel("history/index.html#control")},
+                                       "Party control of every local body"), ".")))
+    lead = None
+    if kind == "city":
+        lead = "Every holder in the guide's records is on each office's History tab; the mayor's has every mayor."
+    page.add(P.holders_section(ed, page, offices, lead=lead))
 
-    # ---- budget, state audits (State Board of Accounts reports; only when audits.csv has rows for this unit)
-    bg = _budget_block(ed, page, unit)
-    if bg:
-        sections["budget"] = ("Budget", bg, "county")
-    else:
-        gaps_extra.append(_gap(f"{short}: budget", "No budget rows map to this place in budgets.csv.", ""))
-    ab = _audits_block(ed, page, unit)
-    if ab:
-        sections["audits"] = ("State audits", ab, "county")
 
-    # ---- context (placed by _place_order: never next to results or party-control visuals)
-    cb = _context_block(ed, page, unit)
-    if cb:
-        sections["context"] = ("Context", cb, "county")
-    else:
-        gaps_extra.append(_gap(f"{short}: community context (population, income, poverty, homeownership, education)",
-                               "No census figures for this place are in indicator_values.csv.", "Pull ACS place-level tables."))
-    blocks = [(sid, *sections[sid]) for sid in _place_order(sections)]
+def place_sources(ed, page, g):
+    unit = ed.units[g.unit_id]
+    notes = []
+    if "elections" in gm.gov_tabs(ed, g.gid):
+        notes.append(h("span", None, "Results are as the county's canvass or the cited source prints them; every result "
+                                     "chart uses the same 0 to 100% scale. "))
+    if "history" in gm.gov_tabs(ed, g.gid):
+        notes.append(h("span", None, "Party control: ", CONTROL_METHOD))
+    page.add(*T.sources_body(page, place_gaps(ed, unit), notes=notes, title=unit["name"]))
 
-    # ---- coverage strip
-    cur_n = sum(1 for o in offices if ed.current_terms(o["office_id"]))
-    lvl = "none" if not offices or not has_terms else ("covered" if cur_n == len(offices) else "partial")
-    present = set(sections)
-    cov = [("Officeholders", lvl, f"{cur_n} of {len(offices)} offices have a current holder" if offices else None),
-           ("Results", "covered" if rb else "none", None),
-           ("Appointed boards", "covered" if "unelected" in present else ("none" if kind != "township" else None), None),
-           ("Context", "covered" if "context" in present else "none", None),
-           ("Budget", "covered" if "budget" in present else "none", None)]
-    strip = h("ul", {"class": "pcov-strip", "aria-label": "What the guide covers for this place"},
-              [h("li", None, h("span", {"class": "pcov-name"}, n), _cov(l, t if t and l != "none" else None)) for n, l, t in cov if l])
 
-    # ---- assemble
-    toc = [(b[0], b[1]) for b in blocks] + [("gaps", "Gaps"), ("sources", "Sources")]
-    desc_bits = [f"The guide's data lists {_seat_phrase(offices)} for {short}." if offices else
-                 f"The guide has no election data for {short} yet."]
-    page.add(h("header", {"class": "page-hero"},
-               h("p", {"class": "eyebrow mono"}, f"Places · {KINDS[kind]}"),
-               h("h1", None, unit["name"]),
-               h("p", {"class": "dek"}, " ".join(desc_bits), c.cite(unit["source_ids"]), " ", status_badge(unit["status"], page)),
-               answer_box(ed, page, unit, offices, links={
-                   "who": "#officeholders" if "officeholders" in present else ("#structure" if "structure" in present else None),
-                   "spend": "#budget" if "budget" in present else ("money/your-tax-bill/index.html#all-rates", "Every unit's tax rate"),
-                   "vote": "#structure" if "structure" in present else ("elections/calendar/index.html#by-year", "Election calendar"),
-                   "people": "#context" if "context" in present else None},
-                   # same row as this page's Budget section ("Latest: ..."), so the two never disagree
-                   budget_row=place_budget_row(ed, uid)),
-               # "More about" rail (civic/related.py, review pattern P1): results, map, campaign money, budget, tax
-               # rate, community, run for office, calendar; only pages and ids the build writes
-               related_links(page, uid),
-               h("p", {"class": "hero-badges"}, scope_badge("county", ed), " ", scope_badge("indiana", ed),
-                 h("span", {"class": "muted"}, " marks rules that apply in every county.")),
-               strip,
-               h("nav", {"class": "toc", "aria-label": "On this page"},
-                 h("ol", None, [h("li", None, h("a", {"href": f"#{a}"}, t)) for a, t in toc]))))
-    for i, (sid, title, content, scope) in enumerate(blocks, 1):
-        page.add(section(sid, i, title, *content, scope=scope, ed=ed))
+def place_renderers(ed, g) -> dict:
+    """{tab: fn(page)} for civic/tabs.py build_tabs."""
+    return {k: partial(fn, ed, g=g) for k, fn in (("overview", place_overview), ("elections", place_elections),
+                                                  ("money", place_money), ("history", place_history),
+                                                  ("sources", place_sources))}
 
-    pat = rf"{re.escape(short)}|Township trustees and boards|place-to-township|Township-level" if kind == "township" else \
-          rf"{re.escape(short)}|Town officeholders" if kind == "town" else rf"{re.escape(short)}"
-    gaps = ed.gaps(files=["gaps_gov", "gaps_results", "gaps_money", "gaps_community_people"], pattern=pat)
-    page.finish(gaps=gaps_extra + gaps, gaps_intro="Blocks with no data are hidden and listed here, with what the guide looked for and did not find.")
-    return page
+
+def build_place(uid, site):
+    """places/<unit_id>/: a forwarding page to governments/<unit_id>/ (phase 6 step 3). Every id the old page had is
+    sent to the tab that now holds it (pages/governments.py forward_gov)."""
+    from .governments import forward_gov
+    return forward_gov(site, f"places/{uid}/index.html", uid)
 
 
 def _seat_total(offices):
@@ -1041,59 +1165,10 @@ def _serving(ed, unit):
 
 
 def build_index(site):
-    ed = site.ed
-    page = site.page("places/index.html", banners=False)
-    c = page.cites
-    units = {k: sorted([u for u in ed.units.values() if u["unit_type"] == k], key=lambda u: _short(u).lower()) for k in KINDS}
-    toc = ([("map", "Map")] if load_shapes(ed) is not None else []) + \
-          [(f"{k}s", PLURAL[k]) for k in KINDS if units[k]] + [("gaps", "Gaps"), ("sources", "Sources")]
-    page.add(h("header", {"class": "page-hero"},
-               h("p", {"class": "eyebrow mono"}, "Reference · Places"),
-               h("h1", None, page.title),
-               h("p", {"class": "dek"}, f"{ed.county_label} has {len(units['city'])} cities, {len(units['town'])} towns and "
-                                        f"{len(units['township'])} townships in the guide's data. Each page shows who is elected, how, and what the guide does not know yet.",
-                 c.cite_compact(_union(*[units[k] for k in KINDS]))),
-               h("p", None, h("a", {"href": page.rel("map/index.html")}, "See every city, town, township and school corporation on the map")),
-               h("p", {"class": "hero-badges"}, scope_badge("county", ed)),
-               h("nav", {"class": "toc", "aria-label": "On this page"}, h("ol", None, [h("li", None, h("a", {"href": f"#{a}"}, t)) for a, t in toc]))))
-    shapes = load_shapes(ed)
-    if shapes is not None:
-        page.add(section("map", None, "On the map",
-                         embedded_map(page, ed, shapes, ("cities", "townships"), "cities",
-                                      label=f"Map of the cities, towns and townships of {ed.county_label}. Every area is a "
-                                            "link to its page; the same places are listed below."),
-                         h("p", {"class": "muted cmap-embed-note"},
-                           "Color shows the type of government only, never party. Townships cover the whole county, so "
-                           "every city and town also lies in a township. ",
-                           h("a", {"href": page.rel("map/index.html")}, "Full map with school corporations and past votes"),
-                           ".", c.cite_compact("MAP-001;MAP-002;MAP-003;MAP-004")),
-                         scope="county", ed=ed))
-    n = 0
-    for kind in KINDS:
-        if not units[kind]:
-            continue
-        cards = []
-        for u in units[kind]:
-            offs = ed.offices_for(u["unit_id"])
-            cur = sum(1 for o in offs if ed.current_terms(o["office_id"]))
-            lvl = "none" if not offs or not any(ed.terms_for(o["office_id"]) for o in offs) else ("covered" if cur == len(offs) else "partial")
-            pop = _population(ed, u)
-            popline = (f"{fmt_int(pop['value'])} (±{fmt_int(pop['moe'])}), {pop['vintage']}" if pop and pop["moe"] else
-                       f"{fmt_int(pop['value'])}, {pop['vintage']}" if pop else "Not in the guide's data yet")
-            cards.append(h("article", {"class": "card place-card", "id": u["unit_id"]},
-                           h("h3", {"class": "card-title"}, h("a", {"href": page.rel(f"places/{u['unit_id']}/index.html")}, u["name"])),
-                           h("dl", {"class": "place-dl"},
-                             h("dt", None, "Population"), h("dd", None, popline, c.cite(pop["source_ids"]) if pop else None),
-                             h("dt", None, "Governments that serve it"),
-                             h("dd", None, h("ul", {"class": "plain"}, [h("li", None, f"{k}: {v}") for k, v in _serving(ed, u)]), c.cite(u["source_ids"])),
-                             h("dt", None, "Elected offices"), h("dd", None, f"{len(offs)} in the guide's data " if offs else "None recorded ", _cov(lvl)))))
-            n += 1
-        page.add(section(f"{kind}s", list(KINDS).index(kind) + 1, PLURAL[kind], h("div", {"class": "card-grid"}, cards),
-                         h("p", {"class": "muted"}, "Alphabetical. Population is an ACS 5-year estimate with its margin of error; "
-                                                    "governments listed come from the guide's units, township and school-board data."), scope="county", ed=ed))
-    gaps = ed.gaps(files=["gaps_gov", "gaps_community_people"], pattern=r"Town officeholders|Indian Village|place-to-township|Township trustees and boards before")
-    page.finish(gaps=gaps)
-    return page
+    """places/index.html: a forwarding page to the Governments hub (phase 6 step 3), which leads with the same map and
+    lists every city, town and township (its rows keep the old cards' ids)."""
+    from .governments import forward_hub
+    return forward_hub(site, "places/index.html")
 
 
 # ----------------------------------------------------------------------------- schools
@@ -1185,88 +1260,100 @@ def _school_map_area(ed):
     return area
 
 
-def build_schools(site):
-    ed = site.ed
-    page = site.page("schools/index.html", banners=True)
+# ----------------------------------------------------------------------------- school corporation tabs (phase 6 step 3)
+# Since 2026-11-16 each school corporation has its home at governments/<unit_id>/ (it was one item on schools/,
+# which is now a forwarding page). Overview: at a glance, where it is, how the board is organized (with the state's
+# school-board rules), board seats and members, appointed boards, students and spending per student, contact, the
+# "More about" rail. Elections: the board results of the last two general elections and the referenda. Money: the
+# budgets page's charts, money in and out, tax base, debt. History: the seats' holders over time. Sources.
+
+# words that name each corporation in the gap files (the old Schools page listed every school gap on one page)
+SCHOOL_GAP_NAMES = {"sbcsc": r"SBCSC|South Bend Community School", "phm": r"PHM|Penn-Harris-Madison",
+                    "school-city-mishawaka": r"School City of Mishawaka|Mishawaka school",
+                    "john-glenn": r"John Glenn", "union-north": r"LaVille|Union-North", "new-prairie": r"New Prairie"}
+SCHOOL_GAP_ALL = r"School|SBCSC|LaVille|Union-North|New Prairie|PHM|enrollment|school"
+
+
+def _school_names_rx(ed, uid) -> str:
+    return SCHOOL_GAP_NAMES.get(uid) or re.escape(re.sub(r" School Corporation$| Community Schools.*$", "", ed.units[uid]["name"]))
+
+
+def school_gaps(ed, uid) -> list[dict]:
+    """Gaps for one corporation: those that name it, and the school gaps that name no corporation (they apply to every
+    corporation); a gap about another corporation is left to its page."""
+    mine = re.compile(_school_names_rx(ed, uid), re.I)
+    others = [re.compile(_school_names_rx(ed, u["unit_id"]), re.I) for u in ed.units.values()
+              if u["unit_type"] == "school_corporation" and u["unit_id"] != uid]
+    out = [_gap(f"Superintendent of {ed.units[uid]['name']}", "No superintendent data is in the guide.",
+                "Add from the district's website or IDOE.")]
+    if _residency_evidence(ed, uid):
+        out.append(_gap("Who votes for the named board seats",
+                        "The guide infers from its own vote counts that these seats are voted on across the whole "
+                        "corporation, with the member required to live in the township or district the seat is named "
+                        "for. The statute sections and the corporation's board plan were not read.",
+                        "Read the corporation's plan under IC 20-23-4 (or its own statute) and the county election "
+                        "board's ballot instructions."))
+    for g in ed.gaps(files=["gaps_gov", "gaps_money", "gaps_results"], pattern=SCHOOL_GAP_ALL):
+        text = f"{g.get('item', '')} {g.get('why_missing', '')}"
+        if mine.search(text) or not any(o.search(text) for o in others):
+            out.append(g)
+    return out
+
+
+def _school_rules(ed, page) -> Markup:
+    """The state's rules for school boards (the old Schools page's first section, id "rules"): party labels on the
+    ballot (SEA 287), ballot order, vacancies."""
     c = page.cites
-    corps = [u for u in ed.units.values() if u["unit_type"] == "school_corporation"]
-    conflicts = _conflicts(ed)
-    ut = ed.unit_types.get("school_corporation", {})
-    sbt = ed.office_types.get("school_board_member", {})
     rule = ed.rules.get("partisan_school_board", {})
     order = ed.rules.get("school_board_ballot_order", {})
     vac = ed.rules.get("local_vacancy_caucus", {})
-    toc = [("rules", "State rules for school boards"), ("overview", "Corporations at a glance")] + \
-          [(u["unit_id"], re.sub(r" School Corporation$", "", u["name"])) for u in corps] + [("gaps", "Gaps"), ("sources", "Sources")]
-    page.add(h("header", {"class": "page-hero"},
-               h("p", {"class": "eyebrow mono"}, "Reference · Schools"),
-               h("h1", None, page.title),
-               h("p", {"class": "dek"}, f"{len(corps)} school corporations appear in the guide's data for {ed.county_label}. "
-                                        "Each has a board; most seats are elected, some are appointed.", c.cite_compact(_union(corps))),
-               h("p", {"class": "hero-badges"}, scope_badge("indiana", ed), " ", scope_badge("county", ed)),
-               h("nav", {"class": "toc", "aria-label": "On this page"}, h("ol", None, [h("li", None, h("a", {"href": f"#{a}"}, t)) for a, t in toc]))))
+    return h("div", {"class": "sub-block", "id": "rules"},
+             h("h3", {"id": "rules-h"}, "State rules for school boards"),
+             h("p", None, scope_badge("indiana", ed), " ", h("strong", None, "Party labels on school board ballots (SEA 287). "),
+               rule.get("plain_language", ""), c.cite(rule.get("source_ids"))),
+             h("p", None, rule.get("detail", "")) if rule.get("detail") else None,
+             h("p", None, order.get("plain_language", ""), c.cite(order.get("source_ids"))) if order else None,
+             h("p", None, vac.get("plain_language", ""), c.cite(vac.get("source_ids"))) if vac else None)
 
-    all_2026 = {}
-    for u in corps:
-        for k, v in _label_counts(ed, u["unit_id"], "2026").items():
-            all_2026[k] = all_2026.get(k, 0) + v
-    lab = ", ".join(f"{party_label(k) if k != 'none listed' else 'no party listed'}: {v}" for k, v in sorted(all_2026.items()))
-    page.add(section("rules", 1, "State rules for school boards",
-                     h("div", {"class": "generic"}, scope_badge("indiana", ed), " ", ut.get("what_it_does", ""), c.cite(ut.get("source_ids"))),
-                     h("h3", None, "Party labels on school board ballots (SEA 287)"),
-                     h("p", None, rule.get("plain_language", ""), c.cite(rule.get("source_ids"))),
-                     h("p", None, rule.get("detail", "")),
-                     h("p", None, order.get("plain_language", ""), c.cite(order.get("source_ids"))) if order else None,
-                     h("p", None, vac.get("plain_language", ""), c.cite(vac.get("source_ids"))) if vac else None,
-                     h("h3", None, "What the guide's 2026 results show"),
-                     h("p", None, f"Candidate lines in the 2026 school board contests in this guide, by party label as printed: {lab}. ",
-                       status_badge("unofficial", page), c.cite("GOV-001")) if all_2026 else
-                     h("p", None, "No 2026 school board results are in the guide's data."),
-                     scope="indiana", ed=ed,
-                     lead="The state sets how school boards work. The county's boards are listed below."))
 
-    # overview
-    rows = []
-    for u in corps:
-        offs = ed.offices_for(u["unit_id"])
-        seats = [o["seats"] for o in offs]
-        total = sum(int(s) for s in seats if s.isdigit())
-        known = all(s.isdigit() for s in seats) and bool(seats)
-        n_cur = sum(len(ed.current_terms(o["office_id"])) for o in offs)
-        rows.append([h("a", {"href": f"#{u['unit_id']}"}, u["name"]), f"{total}{'' if known else '+ (not all stated)'}" if offs else "not in sources",
-                     f"{sum(1 for o in offs if o['office_type'] != 'school_board_appointed' and not o['district'].lower().startswith('at-large'))} district, "
-                     f"{sum(1 for o in offs if o['district'].lower().startswith('at-large'))} at-large seat group(s)" if offs else "",
-                     str(n_cur) if offs else "0", ", ".join(sorted({o["next_election"] for o in offs if o["next_election"]})) or "not in sources"])
-    shapes = load_shapes(ed)
-    smap = None
-    if shapes is not None:
-        smap = [embedded_map(page, ed, shapes, ("schools",), "schools", area=_school_map_area(ed),
-                             label=f"Map of the school corporations in {ed.county_label}. Every district is a link to its "
-                                   "section on this page.",
-                             hint="Hover, focus or tap a district to see its board here. Select it again, or use the link, "
-                                  "to go to its section below."),
-                h("p", {"class": "muted cmap-embed-note"},
-                  "Shading only separates neighboring districts. Districts that extend past the county line are cut at it. "
-                  "Board figures are the same as the table below.", c.cite_compact("MAP-001;MAP-002;MAP-003;MAP-004"))]
-    page.add(section("overview", 2, "Corporations at a glance",
-                     smap,
-                     data_table("schools-overview", ["Corporation", "Board seats stated", "Seat groups", "Current members in data", "Next elections"], rows,
-                                caption="School corporations", numeric=(1, 3), min_width="42rem"),
-                     here_slot("one", "overview", extra={"data-here-keys": "school", "data-here-undo": "Show all corporations",
-                                                         "data-here-apply": "Open it"}),
-                     one_bar("corporation", "corporations", "Pick a corporation on the map or in the table to show its board, "
-                                                            "budget and results. Each corporation is listed below; open any of them."),
-                     scope="county", ed=ed))
+def school_overview(ed, page, g):
+    from . import gov_parts as P
+    uid = g.unit_id
+    u = ed.units[uid]
+    c = page.cites
+    offs = ed.offices_for(uid)
+    conflicts = _conflicts(ed)
+    ut = ed.unit_types.get("school_corporation", {})
+    sbt = ed.office_types.get("school_board_member", {})
+    # at a glance: the board facts the Schools map panel showed (same counts), then the latest budget
+    facts = _school_board_facts(ed, uid)
+    page.add(T.tab_section("glance", "At a glance",
+                           h("dl", {"class": "gov-glance"}, [[h("dt", None, k), h("dd", None, v)] for k, v in facts]),
+                           h("p", {"class": "tnote"}, "Board figures from the guide's list of offices and its terms "
+                                                      "records", c.cite_compact(P.union(offs)) if offs else None,
+                             "; enrollment and spending per student under Students below.")))
+    loc = P.locator_map(page, ed, g)
+    area = h("p", None, (f"Area: {u['places_covered']}. " if u["places_covered"] else "Area served: not stated in the guide's data. "),
+             c.cite(u["source_ids"]), " ", status_badge(u["status"], page))
+    page.add(T.tab_section("where", "Where it is", h("div", {"class": "gov-where"}, loc, h("div", None, area))))
 
-    for i, u in enumerate(corps, 3):
-        uid = u["unit_id"]
-        offs = ed.offices_for(uid)
-        parts = []
-        meta = [u["places_covered"]] if u["places_covered"] else []
-        parts.append(h("p", None, (f"Area: {u['places_covered']}. " if u["places_covered"] else "Area served: not stated in the guide's data. "),
-                       h("a", {"href": u["website"], "target": "_blank", "rel": "noopener"}, "District website") if u["website"] else "",
-                       c.cite(u["source_ids"]), " ", status_badge(u["status"], page)))
-        # conflicts
+    ev = _residency_evidence(ed, uid)
+    total = (str(sum(int(o["seats"]) for o in offs)) if offs and all(o["seats"].isdigit() for o in offs)
+             else "not fully stated in sources")
+    struct = [h("div", {"class": "generic"}, scope_badge("indiana", ed), " ", ut.get("what_it_does", ""), c.cite(ut.get("source_ids"))),
+              h("p", None, sbt.get("what_it_does", ""), c.cite(sbt.get("source_ids")), f" Total seats: {total}.") if offs else None,
+              _seat_basis_note(ed, page, uid, offs, ev) if offs else None,
+              bodies_block(ed, offs, appointed_offices=[o for o in offs if o["office_type"] == "school_board_appointed"]) if offs else None,
+              _school_rules(ed, page)]
+    page.add(T.tab_section("structure", "How the board is organized", struct))
+
+    parts = []
+    if offs:
+        parts.append(P.offices_lead(ed))
+        parts.append(P.office_list(ed, page, offs,
+                                   titles={o["office_id"]: f"{_seat_title(o, with_count=True)}" for o in offs},
+                                   extras={o["office_id"]: _who_votes(ed, uid, o, ev) for o in offs},
+                                   conflicts={o["office_id"]: conflicts[o["office_id"]] for o in offs if o["office_id"] in conflicts}))
         for o in offs:
             if o["office_id"] in conflicts:
                 ats = []
@@ -1274,85 +1361,78 @@ def build_schools(site):
                     if cc["district"].lower().startswith("at-large") and "question" not in cc["contest_id"]:
                         ats.append([ed.elections[cc["election_id"]]["date"][:4], cc["vote_for"] or "not stated",
                                     str(sum(1 for r in cc["rows"] if r["winner"] == "Y")) if any(r["winner"] for r in cc["rows"]) else "not marked",
-                                    h("span", None, status_badge(cc["rows"][0]["status"], page), c.cite(cc["rows"][0]["source_ids"]))])
+                                    h("span", None, status_label(cc["rows"][0]["status"], page), c.cite(cc["rows"][0]["source_ids"]))])
                 tbl = data_table(f"atlarge-{uid}", ["Year", "Vote for (per canvass)", "Marked elected", "Status"], ats,
                                  caption="At-large contests as recorded in results.csv", numeric=(1, 2)) if ats else None
                 parts.append(_conflict_panel(ed, page, conflicts[o["office_id"]], tbl))
-        parts.append(_school_rail(ed, page, uid))
-        # seats: one line per seat (seat · who votes · holder · term end), each opening to the member's card; the
-        # seats table (the old one, same id) is in a See-all fold
-        if offs:
-            ev = _residency_evidence(ed, uid)
-            seat_rows = []
-            for o in offs:
-                seat_rows.append([_seat_title(o), _who_votes(ed, uid, o, ev), o["seats"] or "not stated in sources",
-                                  f"{o['term_years']} years" if o["term_years"] else "",
-                                  o["next_election"] or "not in sources",
-                                  h("span", None, status_badge(o["status"], page), c.cite(o["source_ids"]))])
-            total = (str(sum(int(o["seats"]) for o in offs)) if all(o["seats"].isdigit() for o in offs)
-                     else "not fully stated in sources")
-            bb = bodies_block(ed, offs, appointed_offices=[o for o in offs if o["office_type"] == "school_board_appointed"])
-            parts += [h("h3", {"id": f"seats-{uid}-h"}, "Board seats and members"),
-                      h("p", None, sbt.get("what_it_does", ""), c.cite(sbt.get("source_ids")), " ", f"Total seats: {total}. "
-                        "One line per seat: who votes for it, who holds it now (with the party label as printed) and when "
-                        "the term ends. Open a line for the member's details and sources."),
-                      _seat_basis_note(ed, page, uid, offs, ev)]
-            parts += [bb] if bb else []
-            parts.append(h("div", {"class": "one-list holder-rows school-seats"},
-                           [_cards(ed, page, [o], conflicts) if o["office_id"] in conflicts else
-                            seat_row(ed, page, o, ed.current_terms(o["office_id"]), ed.incoming_terms(o["office_id"]),
-                                     title=_seat_title(o, with_count=True), votes=_who_votes(ed, uid, o, ev))
-                            for o in offs]))
-            parts.append(see_all_fold(f"seats-{uid}-all", len(seat_rows),
-                                      data_table(f"seats-{uid}", ["Seat", "Who votes", "Seats", "Term", "Next election", "Status"],
-                                                 seat_rows, caption=f"Board seats: {u['name']}", numeric=(2,), min_width="44rem"),
-                                      noun="seat group", label=f"See all {len(seat_rows)} seat groups as a table",
-                                      hint="Term · status · Copy CSV"))
-            tally = _label_counts(ed, uid, "2026")
-            if tally:
-                parts.append(h("p", None, "2026 candidate lines by party label: ",
-                               ", ".join(f"{party_label(k) if k != 'none listed' else 'no party listed'}: {v}" for k, v in sorted(tally.items())),
-                               ". ", status_badge("unofficial", page), c.cite("GOV-001")))
-        else:
-            parts.append(h("p", None, _cov("none"), " No board seats are recorded for this corporation in offices.csv."))
-        ab = [b for b in ed.boards if b["unit_id"] == uid]
-        for b in ab:
-            parts.append(h("p", None, h("strong", None, b["name"] + ": "), b["what_it_decides"], " Appointed by: ", b["appointing_authorities"], ". ",
-                           status_badge(b["status"], page), c.cite(b["source_ids"])))
-        stat_items, enroll_fig = _school_stats_block(ed, page, uid)
-        smid = money_id_for(ed, uid)
-        parts += [h("h3", None, "Superintendent, budget and enrollment"),
-                  h("ul", None,
-                    h("li", None, h("strong", None, "Superintendent: "), _cov("none", "Not in the guide's data yet")),
-                    *stat_items,
-                    h("li", None, h("strong", None, "Budget: "), *(_sch_budget(ed, page, uid)))),
-                  tax_base_line(ed, page, smid or tax_base_id(ed, uid), county_label=ed.county_label),
-                  enroll_fig]
-        sflows = money_in_out(ed, page, smid, level=3) if smid else None
-        if sflows:
-            # the state report's income and spending charts open from one line, as on the place pages
-            parts.append(see_all_fold(f"money-flows-{uid}", 0, sflows,
-                                      label="Money in and money out, from the annual report to the state: where the "
-                                            "money comes from and what it pays for", hint="Charts · tables"))
-        refs = [cc for cc in _school_contests(ed, uid) if "question" in cc["contest_id"] or "referend" in cc["contest_id"]]
-        if refs:
-            parts += [h("h3", None, "Referenda and public questions"), h("div", {"class": "chart-grid"}, [_contest_figure(ed, page, cc, question=True) for cc in refs])]
-        else:
-            parts.append(h("p", {"class": "muted"}, "No referendum or public-question results for this corporation are in results.csv."))
-        page.add(one_section(uid, i, u["name"], uid, _school_digest(ed, uid), *parts, scope_badge=scope_badge("county", ed)))
+    else:
+        parts.append(h("p", None, _cov("none"), " No board seats are recorded for this corporation in offices.csv."))
+    page.add(T.tab_section("officeholders", "Board seats and members", parts))
 
-    gaps = ed.gaps(files=["gaps_gov", "gaps_money"], pattern=r"School|SBCSC|LaVille|Union-North|New Prairie|PHM|enrollment|school")
-    res = [re.sub(r" School Corporation$| Community Schools.*$", "", u["name"]) for u in corps if _residency_evidence(ed, u["unit_id"])]
-    extra = [_gap("Superintendents of every school corporation", "No superintendent data is in the guide.", "Add from each district's website or IDOE.")]
-    if res:
-        extra.append(_gap(f"Who votes for the named board seats ({', '.join(res)})",
-                          "The guide infers from its own vote counts that these seats are voted on across the whole "
-                          "corporation, with the member required to live in the township or district the seat is named "
-                          "for. The statute sections and the corporations' board plans were not read.",
-                          "Read each corporation's plan under IC 20-23-4 (or its own statute) and the county election "
-                          "board's ballot instructions."))
-    page.finish(gaps=extra + gaps)
-    return page
+    ab = [b for b in ed.boards if b["unit_id"] == uid]
+    if ab:
+        page.add(T.tab_section("unelected", "Appointed boards",
+                               [h("p", None, h("strong", None, b["name"] + ": "), b["what_it_decides"], " Appointed by: ",
+                                  b["appointing_authorities"], ". ", status_badge(b["status"], page), c.cite(b["source_ids"]))
+                                for b in ab] + P.board_rosters(ed, page, ab, None)))
+    stat_items, enroll_fig = _school_stats_block(ed, page, uid)
+    page.add(T.tab_section("students", "Students and spending per student",
+                           h("ul", None, h("li", None, h("strong", None, "Superintendent: "), _cov("none", "Not in the guide's data yet")),
+                             *stat_items), enroll_fig))
+    page.add(P.contact_section(ed, page, u))
+    page.add(_school_rail(ed, page, uid))
+
+
+def school_elections(ed, page, g):
+    uid = g.unit_id
+    unit = ed.units[uid]
+    c = page.cites
+    cs = [cc for cc in _school_contests(ed, uid, general_only=True)
+          if "question" not in cc["contest_id"] and "referend" not in cc["contest_id"]]
+    rb, _shown = _results_section(ed, page, unit, contests=cs)
+    tally = _label_counts(ed, uid, "2026")
+    labels = (h("p", {"id": "labels"}, "2026 candidate lines by party label (SEA 287 put party labels on the school "
+                                       "board ballot from 2026): ",
+                ", ".join(f"{party_label(k) if k != 'none listed' else 'no party listed'}: {v}" for k, v in sorted(tally.items())),
+                ". ", status_badge("unofficial", page), c.cite("GOV-001")) if tally else None)
+    page.add(T.tab_section("results", "Recent board results",
+                           rb or [h("p", {"class": "muted"}, "No board contests for this corporation are in the guide's results.")],
+                           labels))
+    refs = [cc for cc in _school_contests(ed, uid) if "question" in cc["contest_id"] or "referend" in cc["contest_id"]]
+    if refs:
+        page.add(T.tab_section("referenda", "Referenda and public questions",
+                               h("div", {"class": "chart-grid"}, [_contest_figure(ed, page, cc, question=True) for cc in refs])))
+
+
+def school_money(ed, page, g):
+    from . import gov_parts as P
+    unit = ed.units[g.unit_id]
+    P.money_tab(ed, page, g, latest=_budget_latest(ed, page, unit))
+
+
+def school_history(ed, page, g):
+    from . import gov_parts as P
+    page.add(P.holders_section(ed, page, ed.offices_for(g.unit_id)))
+
+
+def school_sources(ed, page, g):
+    unit = ed.units[g.unit_id]
+    notes = [h("span", None, "Results are as the county's canvass or the cited source prints them; every result chart "
+                             "uses the same 0 to 100% scale.")] if "elections" in gm.gov_tabs(ed, g.gid) else []
+    page.add(*T.sources_body(page, school_gaps(ed, g.unit_id), notes=notes, title=unit["name"]))
+
+
+def school_renderers(ed, g) -> dict:
+    return {k: partial(fn, ed, g=g) for k, fn in (("overview", school_overview), ("elections", school_elections),
+                                                  ("money", school_money), ("history", school_history),
+                                                  ("sources", school_sources))}
+
+
+def build_schools(site):
+    """schools/: a forwarding page (phase 6 step 3). Its six corporations each have a government page; every old id
+    goes to the corporation page that holds it (pages/governments.py forward_schools)."""
+    from .governments import forward_schools
+    return forward_schools(site)
 
 
 def _school_digest(ed, uid) -> str:

@@ -1,0 +1,199 @@
+/* offices.css: the office pages and the Offices hub (pages/offices.py; phase 6 step 1, 2026-11-16). The tab
+   template's parts are in tabs.css. Tokens only; numbers right-aligned and tabular; no boxes except clickable rows. */
+
+/* ---------------------------------------------------------------- Overview */
+.ovw-holders { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.ovw-holder { margin: 0; }
+.ovw-name { font-size: 1.12rem; font-weight: 700; }
+.ovw-meta { display: block; font-size: .88rem; color: var(--ink-2); margin-top: 2px; }
+.ovw-incoming .ovw-name { font-weight: 600; }
+.ovw-facts { display: grid; grid-template-columns: minmax(9rem, max-content) minmax(0, 1fr); gap: 6px 18px; margin: 0;
+  max-width: var(--measure); }
+.ovw-facts dt { color: var(--ink-3); font-size: .9rem; }
+.ovw-facts dd { margin: 0; }
+.ovw-src { font-size: .84rem; color: var(--ink-3); margin-top: 10px; }
+.ovw-links { list-style: none; margin: 0; padding: 0; columns: 2 18rem; column-gap: 28px; }
+.ovw-links li { margin: 0 0 6px; break-inside: avoid; }
+.ovw-notes { margin-top: 30px; max-width: var(--measure); font-size: .92rem; }
+.ovw-notes > summary { cursor: pointer; font-weight: 600; color: var(--ink-2); }
+.ovw-notes > p { margin-top: 8px; }
+
+/* ---------------------------------------------------------------- Elections */
+.tsec.er-year > .tsec-h, .tsec.mt-year > .tsec-h { font: var(--display-wt) 1.35rem/1.1 var(--f-display); letter-spacing: var(--display-track);
+  text-transform: none; color: var(--ink); }
+:root[data-look="line"] .tsec.er-year > .tsec-h, :root[data-look="line"] .tsec.mt-year > .tsec-h { font-size: 1.3rem; color: var(--ink); }
+.er-list { list-style: none; margin: 0; padding: 0; }
+.er-item { margin: 0; padding: 10px 0; border-top: 1px solid var(--grid); }
+.er-item:first-child { border-top: 0; padding-top: 0; }
+.er-line { display: grid; grid-template-columns: minmax(12rem, 16rem) minmax(0, 1fr) minmax(8rem, max-content) auto;
+  gap: 4px 16px; align-items: baseline; }
+.er-what { font-size: .95rem; font-weight: 600; margin: 0; }
+.er-result { min-width: 0; }
+.er-margin { font-family: var(--f-mono); font-size: .82rem; color: var(--ink-2); font-variant-numeric: tabular-nums;
+  text-align: right; }
+
+.er-more { font-size: .86rem; margin: 0 0 4px; }
+
+/* ---------------------------------------------------------------- Money */
+.mt-key { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 20px; margin-top: 18px; }
+.mt-key .legend { margin: 0; }
+.mt-key .tsec-lead { margin: 0; flex: 1 1 28rem; }
+.mt-total { margin: 0 0 4px; }
+.mt-total-figs { font-family: var(--f-mono); font-size: .92em; font-variant-numeric: tabular-nums; }
+.mt-complete { color: var(--ink-3); font-size: .88rem; }
+.mt-links, .mt-status { font-size: .86rem; color: var(--ink-2); margin: 0 0 14px; }
+.mt-none { padding-left: 1.1em; max-width: var(--measure); }
+.mt-none li { margin-bottom: 4px; }
+.mt-basis { max-width: calc(var(--measure) + 40px); }
+
+/* ---------------------------------------------------------------- the Offices hub (map + collapsed groups) */
+.hub-head .thing-facts { max-width: var(--measure); display: block; }
+.ofh-all { margin-top: 6px; }
+.ofh-lead { max-width: var(--measure); }
+.tsec.ofh-level > .tsec-h { font: var(--display-wt) 1.25rem/1.1 var(--f-display); letter-spacing: var(--display-track);
+  text-transform: none; color: var(--ink); }
+.tsec.ofh-level { margin-top: 18px; }
+/* one line per government, several to a row on a wide screen; an open group takes the whole row */
+.ofh-govs { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 19rem), 1fr)); gap: 0 24px; }
+.ofh-gov { margin: 0; border-top: 1px solid var(--grid); min-width: 0; }
+.ofh-gov[open] { grid-column: 1 / -1; padding-bottom: 8px; }
+.ofh-gov[hidden] { display: none; }
+.ofh-gov-sum { cursor: pointer; padding: 8px 0; display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 10px; }
+.ofh-gov-sum:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+.ofh-gov-name { font-weight: 700; }
+.ofh-gov-n { font-size: .84rem; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+.ofh-gov-link { font-size: .84rem; margin: 0 0 6px; }
+.ofh-nodraw { color: var(--ink-3); }
+.ofh-pre { margin: 6px 0 0; }
+.ofh-list { list-style: none; margin: 0; padding: 0; }
+
+/* the hub map's panel: the selected area's offices (static/js/offices.js copies the list in) */
+.ofm .cmap-svg { max-height: 58vh; }
+.ofm-key { max-width: var(--measure); }
+.ofm-block { margin: 6px 0 12px; }
+.ofm-count { font-size: .84rem; color: var(--ink-3); margin: 0 0 4px; }
+.ofm-list { list-style: none; margin: 0; padding: 0; max-height: 46vh; overflow-y: auto; }
+.ofm-item { margin: 0; padding: 5px 0; border-top: 1px solid var(--grid); line-height: 1.35; }
+.ofm-office { display: block; font-weight: 600; }
+.ofm-who { font-size: .88rem; }
+.ofm-next { font-size: .8rem; color: var(--ink-2); white-space: nowrap; }
+.ofm-next::before { content: " \B7  "; }
+.ofm-where { display: block; font-size: .8rem; color: var(--ink-2); }
+.ofm-nodraw { color: var(--ink-3); font-style: italic; }
+.ofh-row { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1.4fr) minmax(9rem, .7fr); gap: 2px 16px;
+  align-items: baseline; margin: 0; padding: 7px 0; border-top: 1px solid var(--grid); }
+.ofh-office { font-weight: 600; }
+.ofh-who { min-width: 0; }
+.ofh-next { font-size: .86rem; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+
+@media (max-width: 760px) {
+  .er-line { grid-template-columns: minmax(0, 1fr) auto; }
+  .er-what { grid-column: 1 / -1; }
+  .er-margin { text-align: left; }
+  .ofh-row { grid-template-columns: minmax(0, 1fr); gap: 0; }
+  .ovw-facts { grid-template-columns: minmax(0, 1fr); gap: 0; }
+  .ovw-facts dd { margin-bottom: 8px; }
+}
+
+/* an older contest: the row is the fold's summary; "Chart" opens its result */
+.er-fold { margin: 0; }
+.er-fold > summary.er-line { cursor: pointer; list-style: none; grid-template-columns: minmax(12rem, 16rem) minmax(0, 1fr) minmax(8rem, max-content) auto 4.5rem; }
+.er-fold > summary.er-line::-webkit-details-marker { display: none; }
+.er-toggle { font-size: .82rem; color: var(--ink-2); text-decoration: underline; text-decoration-color: var(--line);
+  text-underline-offset: 3px; justify-self: end; }
+.er-fold > summary.er-line:hover .er-toggle { color: var(--accent); }
+.er-fold[open] > summary.er-line { margin-bottom: 8px; }
+.er-fold[open] .er-toggle { color: var(--ink); font-weight: 600; }
+.tsec.er-year { margin-top: 22px; }
+.er-year .er-item { padding: 6px 0; }
+@media (max-width: 760px) {
+  .er-fold > summary.er-line { grid-template-columns: minmax(0, 1fr) auto auto; }
+}
+
+/* ---------------------------------------------------------------- Money: the HTML bar chart (charts.money_rows)
+   Bars take the whole width beside the names (the SVG chart stopped at its drawn width, about half the column at
+   1280 px); each figure's text sits right after its bar inside a reserved strip, so it is never cut off. Phones:
+   the name above its bars. Raised: a filled accent bar; spent: an ink outline; never party colors. */
+.mrw { --mrw-val: 10.5rem; margin-top: 4px; }
+.mrw-list { list-style: none; margin: 0; padding: 0; }
+.mrw-row { display: grid; grid-template-columns: minmax(9rem, 15rem) minmax(0, 1fr); gap: 2px 14px; align-items: center;
+  margin: 0; padding: 6px 0; border-top: 1px solid var(--grid); }
+.mrw-row:first-child { border-top: 0; }
+.mrw-row[hidden] { display: none; }
+.mrw-who { text-align: right; min-width: 0; }
+.mrw-name { display: block; font-weight: 600; font-size: .92rem; line-height: 1.25; }
+.mrw-sub { display: block; font-family: var(--f-mono); font-size: .74rem; color: var(--ink-2); }
+.mrw-bars { display: grid; gap: 3px; min-width: 0; border-left: 1px solid var(--line); }
+.mrw-line { display: flex; align-items: center; min-height: 15px; padding-right: var(--mrw-val); }
+.mrw-bar { display: block; height: 11px; flex: none; border-radius: 0 3px 3px 0; background: var(--mark); }
+.mrw-bar.m-spent { background: var(--surface); border: 1.5px solid var(--mark); border-left-width: 0; box-sizing: border-box; }
+.mrw-v { font-family: var(--f-mono); font-size: .76rem; font-weight: 600; color: var(--ink); white-space: nowrap;
+  margin-left: 6px; margin-right: calc(-1 * var(--mrw-val)); font-variant-numeric: tabular-nums; }
+.mrw-v.mrw-none { font-weight: 400; color: var(--ink-3); white-space: normal; margin-left: 4px; margin-right: 0; }
+.mrw-axis { display: grid; grid-template-columns: minmax(9rem, 15rem) minmax(0, 1fr); gap: 0 14px; margin-top: 2px;
+  font-family: var(--f-mono); font-size: .7rem; color: var(--ink-3); }
+.mrw-axis-scale { display: flex; justify-content: space-between; margin-right: var(--mrw-val); border-top: 1px solid var(--line);
+  padding-top: 2px; }
+.chart-money-rows[hidden] { display: none; }
+@media (max-width: 640px) {
+  .mrw { --mrw-val: 7.5rem; }
+  .mrw-row { grid-template-columns: minmax(0, 1fr); }
+  .mrw-who { text-align: left; }
+  .mrw-axis { grid-template-columns: minmax(0, 1fr); }
+  .mrw-axis-spacer { display: none; }
+}
+
+/* ---------------------------------------------------------------- Money: Both / Primary / General and the party filter
+   Neutral controls: the chosen button takes the edition accent (as the map's race-type row), never a party color. */
+.mt-ctl { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 10px 24px; margin: 18px 0 4px; }
+.mt-ctl[hidden] { display: none; }
+.mt-ctl-f { display: flex; flex-direction: column; gap: 4px; }
+.mt-ctl-l { font: 600 .66rem/1.2 var(--f-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); }
+.mt-seg { display: inline-flex; flex-wrap: wrap; border: 2px solid var(--rule); border-radius: var(--r-btn); overflow: hidden;
+  background: var(--surface); }
+.mt-seg-b { font: 600 .84rem/1.2 var(--f-sans); padding: 9px 14px; min-height: 44px; border: 0;
+  border-right: 2px solid var(--rule); background: var(--surface); color: var(--ink); cursor: pointer; }
+.mt-seg-b:last-child { border-right: 0; }
+.mt-seg-b[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); }
+.mt-seg-b:focus-visible { outline: 3px solid var(--focus); outline-offset: -3px; }
+:root[data-look="line"] .mt-seg { border: 0; background: var(--surface-2); border-radius: 12px; padding: 3px; gap: 2px; }
+:root[data-look="line"] .mt-seg-b { border: 0; border-radius: 9px; background: transparent; }
+:root[data-look="line"] .mt-seg-b[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); font-weight: 700; }
+:root[data-look="wayfinding"] .mt-seg { border: 2px solid var(--ink); border-radius: 8px; }
+:root[data-look="wayfinding"] .mt-seg-b { border-right: 2px solid var(--ink); font-weight: 700; }
+:root[data-look="wayfinding"] .mt-seg-b:last-child { border-right: 0; }
+:root[data-look="wayfinding"] .mt-seg-b[aria-pressed="true"] { background: var(--nav-bg); color: var(--hl); font-weight: 800;
+  box-shadow: inset 0 -4px 0 var(--hl); }
+.mt-party { min-height: 44px; font: inherit; font-size: .9rem; padding: 6px 10px; border: 2px solid var(--rule);
+  border-radius: var(--r-btn); background: var(--surface); color: var(--ink); max-width: 100%; }
+.mt-ctl-state { flex: 1 1 100%; margin: 0; font-size: .88rem; color: var(--ink-2); max-width: var(--measure); }
+.mt-ctl-state[hidden] { display: none; }
+.mt-year[hidden], .mt-person[hidden], .mt-total[hidden] { display: none; }
+.mt-nosplit, .mt-split-hint { font-size: .86rem; color: var(--ink-2); margin: 4px 0 10px; max-width: var(--measure); }
+
+/* state legislators: one chart per candidate, two to a row on a wide screen */
+@media (min-width: 1100px) {
+  .mt-people { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 36px; }
+}
+.mt-people > .tsec.mt-person { margin-top: 24px; }
+
+/* ---------------------------------------------------------------- Elections: the HTML result bars (charts.results_rows)
+   Shares on a fixed 0 to 100% scale across the content width; party marks only beside their text label. The
+   faint lines mark 25, 50 and 75%. */
+.rrw-row { display: grid; grid-template-columns: minmax(9rem, 15rem) minmax(0, 1fr); gap: 2px 14px; align-items: center;
+  margin: 0; padding: 5px 0; }
+.rrw-track { min-width: 0; border-left: 1px solid var(--line); padding-right: var(--mrw-val);
+  background-image: linear-gradient(to right, transparent calc(25% - 1px), var(--grid) calc(25% - 1px), var(--grid) 25%, transparent 25%,
+    transparent calc(50% - 1px), var(--grid) calc(50% - 1px), var(--grid) 50%, transparent 50%,
+    transparent calc(75% - 1px), var(--grid) calc(75% - 1px), var(--grid) 75%, transparent 75%);
+  background-origin: content-box; background-clip: content-box; }
+.rrw-line { display: flex; align-items: center; min-height: 26px; }
+.rrw-bar { display: block; height: 14px; flex: none; border-radius: 0 4px 4px 0; background: var(--mark); }
+.rrw-v { font-family: var(--f-mono); font-size: .78rem; font-weight: 600; color: var(--ink); white-space: nowrap;
+  margin-left: 6px; margin-right: calc(-1 * var(--mrw-val)); font-variant-numeric: tabular-nums; }
+.rrw-v.rrw-none { font-weight: 400; color: var(--ink-3); margin-right: 0; }
+.rrw-axis-scale { display: flex; justify-content: space-between; margin-right: var(--mrw-val); border-top: 1px solid var(--line);
+  padding-top: 2px; }
+@media (max-width: 640px) {
+  .rrw-row { grid-template-columns: minmax(0, 1fr); }
+}

@@ -103,3 +103,39 @@
 /* charts side by side keep their own height: a three-bar chart next to a fifteen-bar one is not stretched */
 .mn-chart-grid { align-items: start; }
 .mn-path-note { margin: 14px 0 0; }
+
+/* ---- budget column charts drawn as HTML (pages/money.py flag_columns, phase 6 step 5, 2026-11-18): the columns use
+   the whole width of the column they sit in (the old SVG stopped at 760 px); labels stay real text at their size */
+.fcol { --fcol-axis: 3.6rem; --fcol-h: 210px; position: relative; margin: 6px 0 0; min-width: 0; }
+.fcol-plot { padding: 26px 0 0 var(--fcol-axis); }
+.fcol-area { position: relative; height: var(--fcol-h); }
+.fcol-grid { position: absolute; left: 0; right: 0; height: 0; border-top: 1px solid var(--grid); }
+.fcol-grid.fcol-base { border-top-color: var(--line); }
+.fcol-tick { position: absolute; right: calc(100% + 8px); top: -.6em; font: 400 .66rem/1.2 var(--f-mono); color: var(--ink-3);
+  white-space: nowrap; font-variant-numeric: tabular-nums; }
+.fcol-cols { position: absolute; inset: 0; display: flex; align-items: stretch; }
+.fcol-c { position: relative; flex: 1 1 0; min-width: 0; display: block; outline-offset: 2px; }
+.fcol-c:focus-visible { outline: 2px solid var(--accent); }
+.fcol-bar { position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); width: min(62%, 40px); min-width: 4px;
+  background: var(--mark); border-radius: 3px 3px 0 0; }
+.fcol-c.mark:hover .fcol-bar, .fcol-c.mark:focus-visible .fcol-bar { filter: brightness(1.12); }
+.fcol-v { position: absolute; left: 50%; transform: translate(-50%, -4px); font: 600 .72rem/1.1 var(--f-mono); color: var(--ink);
+  white-space: nowrap; padding-bottom: 2px; }
+.fcol-flag { position: absolute; top: -22px; left: 50%; margin: 0 0 0 -7px; }
+.fcol-flagline { position: absolute; left: 50%; top: -6px; width: 0; border-left: 1px dashed var(--ink-3); margin-bottom: 4px; }
+.fcol-break { position: absolute; top: -26px; bottom: 0; width: 0; border-left: 1.5px dashed var(--ink-3); }
+.fcol-break-l { position: absolute; top: 0; left: 4px; font-size: .68rem; color: var(--ink-3); white-space: nowrap; }
+.fcol-break-r .fcol-break-l { left: auto; right: 4px; }
+.fcol-x { display: flex; padding: 4px 0 0 var(--fcol-axis); }
+.fcol-xl { flex: 1 1 0; min-width: 0; text-align: center; font: 400 .66rem/1.2 var(--f-mono); color: var(--ink-3); overflow: hidden; }
+@media (max-width: 640px) {
+  .fcol { --fcol-axis: 3rem; --fcol-h: 180px; }
+  .fcol-xl-odd { visibility: hidden; }
+  .fcol-v { font-size: .64rem; }
+}
+
+/* debt notes and the whole-corporation note (2026-11-18, gap-fill round 2) */
+.mn-debt-notes { margin: 10px 0 0; font-size: .86rem; color: var(--ink-2); max-width: var(--measure); }
+.mn-debt-notes-h { margin: 0 0 2px; font-weight: 600; }
+.mn-debt-notes ul { margin: 0; padding-left: 1.1rem; }
+.mn-whole-corp ul { margin: 4px 0 0; padding-left: 1.1rem; }

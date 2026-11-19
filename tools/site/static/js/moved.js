@@ -11,7 +11,11 @@
    A map may also carry {"p": {id prefix: "relative/path/index.html"}} (added 2026-11-09, Wave D batch 6: the
    elections explainer moved from elections/index.html to elections/how-it-works/, so every old #src-<id> citation goes
    there with the same id). An exact "a" entry wins over a prefix.
-   Runs only when the id is not on the page. ASCII only. */
+   Runs only when the id is not on the page. ASCII only.
+   A forwarding page's map carries {"to": "relative/path/index.html"} (added 2026-11-16, phase 6 step 3: places/<id>/,
+   county/, places/index.html and schools/ moved to governments/): the page as a whole moved there, so every visit goes
+   on, with or without an #anchor, and every id (even one the small forwarding page has itself, such as #main) goes
+   to its "a" or "p" destination when it has one, else to "to" (keeping the id unless "to" names its own). */
 (function () {
   "use strict";
   var doc = document;
@@ -36,13 +40,19 @@
     return stop && stop.page !== page ? root + stop.page : "";
   }
 
+  /* only a relative path from the page's own map (no scheme, no //host): never a redirect off the site */
+  function offSite(dest) {
+    return typeof dest !== "string" || /^\s*([a-z][a-z0-9+.-]*:|\/\/|\\)/i.test(dest);
+  }
+
   function go() {
     var id = (window.location.hash || "").slice(1);
-    if (!id) return;
+    var to = map && typeof map.to === "string" && map.to && !offSite(map.to) ? map.to : "";
+    if (!id) { if (to) window.location.replace(to); return; }
     try { id = decodeURIComponent(id); } catch (e) { /* keep raw */ }
     var stopPage = pathStop(id);
     if (stopPage) { window.location.replace(stopPage + "#" + id); return; }
-    if (doc.getElementById(id)) return;
+    if (!to && doc.getElementById(id)) return;
     var dest = "";
     if (page === "about/index.html") {
       if (/^(src-|sources-)/.test(id)) dest = "sources/index.html";
@@ -56,8 +66,8 @@
         });
       }
     }
-    /* only a relative path from the page's own map (no scheme, no //host): never a redirect off the site */
-    if (typeof dest !== "string" || /^\s*([a-z][a-z0-9+.-]*:|\/\/|\\)/i.test(dest)) dest = "";
+    if (!dest && to) dest = to;
+    if (offSite(dest)) dest = "";
     if (dest) window.location.replace(dest.indexOf("#") >= 0 ? dest : dest + "#" + id);
   }
   go();

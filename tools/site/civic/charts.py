@@ -15,7 +15,7 @@ from __future__ import annotations
 import json
 import math
 
-from .components import data_table, party_label, status_badge
+from .components import data_table, party_label, scope_attrs, scope_mark, status_badge  # noqa: F401
 from .html import Markup, esc, h, join
 
 FONT = 12          # px, chart text
@@ -102,10 +102,13 @@ def figure(fid: str, title: str, subtitle: str | None, svg: Markup, headers: lis
     a = {"class": f"chart chart-{kind}", "id": fid, "data-chart": kind}
     if extra:
         a.update(extra)
+    # 2026-11-18 ("About these figures"): the caption's mark speaks for the whole chart and its table (scope), so rows
+    # of the same status carry no mark of their own (shell.Page.render, components.drop_scoped)
+    a.update(scope_attrs(status) if status else {})
     return h("figure", a,
              h("figcaption", {"class": "chart-cap"},
-               h("span", {"class": "chart-title"}, title, cite),
-               status_badge(status, page) if status else None,
+               # the mark inside the title span: the caption is a flex row, and a separate item could wrap away
+               h("span", {"class": "chart-title"}, title, cite, scope_mark(status) if status else None),
                h("span", {"class": "chart-sub"}, subtitle) if subtitle else None),
              legend,
              h("div", {"class": "chart-body" + (" chart-scroll" if scroll else "")}, svg),
@@ -677,3 +680,181 @@ def period_money(fid: str, title: str, points: list[dict], subtitle: str | None 
                                            for p in points]
     return figure(fid, title, subtitle, svg, hdr, trows, note=note, numeric=numeric or tuple(range(1, len(hdr))),
                   status=status, page=page, legend=leg, kind="period-money", cite=cite)
+
+
+# ------------------------------------------------------------------ money by candidate (added 2026-11-16, phase 6)
+
+def money_pairs(fid: str, title: str, rows: list[dict], vmax: int | None = None, subtitle: str | None = None,
+                note=None, status=None, page=None, headers: list | None = None, table_rows: list[list] | None = None,
+                numeric: tuple = (1, 2), cite=None, words: dict | None = None, show_legend: bool = True,
+                label_w: float | None = None, plot_w: int = 400) -> Markup:
+    """Campaign money per candidate as paired horizontal bars: raised (filled accent) above spent (an ink outline), so
+    the pair differs by shape as well as tone, the same convention as period_money. Never party colors: the party is
+    text in the label line.
+
+    rows: ``[{name, sub, raised, spent (cents or None), raised_text, spent_text (the words printed by the bar; a
+    news-reported rounded figure keeps its own wording, "nearly $245,000"), tip}]`` in the order given (callers keep
+    ballot order). ``label_w`` (px) sets a minimum label column so several charts on a page line up their bars.
+    ``vmax`` (cents) fixes the scale so charts of several elections share it; default: this chart's
+    largest value. A None value draws no bar and prints its text ("not on file"). headers/table_rows: the table view
+    (default: one row per candidate)."""
+    w = {"raised": "Raised", "spent": "Spent", "missing": "not on file"}
+    w.update(words or {})
+
+    def d(c):
+        return None if c is None else c / 100.0
+    vals = [d(r.get(k)) for r in rows for k in ("raised", "spent") if r.get(k) is not None]
+    top_v = (vmax / 100.0) if vmax else max(vals, default=1)
+    ticks = nice_ticks(max(top_v, 1), 4)
+    top = ticks[-1]
+    lab_w = max([text_w(r["name"], 12) for r in rows] + [text_w(r.get("sub", ""), 10.5, mono=True) for r in rows] + [60]) + 14
+    lab_w = max(lab_w, label_w or 0)
+    texts = [r.get("raised_text") or "" for r in rows] + [r.get("spent_text") or "" for r in rows]
+    val_w = max([text_w(t, 12, mono=True) for t in texts] + [70]) + 14
+    W = lab_w + plot_w + val_w
+    row_h, bh, gap, pad_t = 46, 11, 3, 4
+    H = pad_t + row_h * max(len(rows), 1) + 22
+    X = lambda v: lab_w + plot_w * (v / (top or 1))
+    grid = [h("line", {"class": "grid" if t else "axis", "x1": f"{X(t):.1f}", "x2": f"{X(t):.1f}", "y1": pad_t,
+                       "y2": H - 18}) for t in ticks]
+    tl = [_txt(X(t), H - 5, fmt_tick(t, top, True), "ct ct-axis", "middle") for t in (ticks[0], ticks[-1])]
+    marks = []
+    for i, r in enumerate(rows):
+        y = pad_t + i * row_h
+        name_line = _txt(lab_w - 10, y + 17, r["name"], "ct ct-strong", "end")
+        sub_line = _txt(lab_w - 10, y + 32, r.get("sub", ""), "ct ct-mono ct-small", "end") if r.get("sub") else None
+        parts = [h("rect", {"class": "hit", "x": 0, "y": y, "width": W, "height": row_h}), name_line, sub_line]
+        tv = []
+        for j, (key, mark) in enumerate((("raised", "m-accent"), ("spent", "m-spent"))):
+            yb = y + 9 + j * (bh + gap)
+            v = d(r.get(key))
+            label = r.get(f"{key}_text") or (w["missing"] if v is None else f"${v:,.2f}")
+            tv.append(f"{w[key]} {label}")
+            if v is None or v <= 0:
+                parts.append(_txt(lab_w + 4, yb + bh - 1, label, "ct ct-muted ct-small"))
+                continue
+            x1 = max(X(min(v, top)), lab_w + 2)
+            parts.append(h("path", {"class": f"bar {mark}", "d": bar_path(lab_w, yb, x1, yb + bh, "right", r=3)}))
+            parts.append(_txt(x1 + 6, yb + bh - 1, label, "ct ct-val ct-small"))
+        marks.append(h("g", {"class": "mark", "tabindex": "0", "data-tv": " · ".join(tv),
+                             "data-tl": r.get("tip") or r["name"]}, parts))
+    svg = _svg(W, H, f"{title}. Bars for money raised and money spent by each candidate, on one scale; the figures "
+                     "are in the table view.", grid, tl, marks)
+    leg = h("ul", {"class": "legend"},
+            h("li", None, h("span", {"class": "key key-rect m-accent", "aria-hidden": "true"}), w["raised"]),
+            h("li", None, h("span", {"class": "key key-rect m-spent", "aria-hidden": "true"}), w["spent"]))
+    hdr = headers or ["Candidate", w["raised"], w["spent"]]
+    trows = table_rows if table_rows is not None else [
+        [r["name"] + (f" ({r['sub']})" if r.get("sub") else ""),
+         r.get("raised_text") or (w["missing"] if r.get("raised") is None else f"${r['raised'] / 100:,.2f}"),
+         r.get("spent_text") or (w["missing"] if r.get("spent") is None else f"${r['spent'] / 100:,.2f}")]
+        for r in rows]
+    return figure(fid, title, subtitle, svg, hdr, trows, note=note, numeric=numeric, status=status, page=page,
+                  legend=leg if show_legend else None, kind="money-pairs", cite=cite)
+
+
+# ------------------------------------------------------------------ money rows (HTML bars; added 2026-11-16, phase 6)
+def money_rows(fid: str, title: str, rows: list[dict], vmax: int | None = None, subtitle: str | None = None,
+               note=None, status=None, page=None, headers: list | None = None, table_rows: list[list] | None = None,
+               numeric: tuple = (1, 2), cite=None, words: dict | None = None, extra: dict | None = None) -> Markup:
+    """money_pairs drawn as HTML instead of SVG, so the bars use the whole content width at any screen size and the
+    labels are real text (never cut off, never scaled down). Same rules: raised is a filled accent bar, spent an ink
+    outline (shape and tone differ), never party colors, one shared scale (``vmax``, cents) so charts compare, rows
+    in the order given (callers keep ballot order), a None value draws no bar and prints its words.
+
+    rows: ``[{name, sub, raised, spent, raised_text, spent_text, tip, attrs}]``; ``attrs`` (optional) are extra
+    attributes for the row element (the office Money tab's party filter reads ``data-party``). Bar widths are
+    percentages of the bar column (inline style widths, allowed by the site's CSP for bar widths). Each row is a list
+    item carrying its own words, so the figure reads in order without the table; the <details> table view is the
+    same as money_pairs'."""
+    w = {"raised": "Raised", "spent": "Spent", "missing": "not on file"}
+    w.update(words or {})
+    vals = [r.get(k) / 100.0 for r in rows for k in ("raised", "spent") if r.get(k) is not None]
+    top_v = (vmax / 100.0) if vmax else max(vals, default=1)
+    ticks = nice_ticks(max(top_v, 1), 4)
+    top = ticks[-1] or 1
+    items = []
+    for r in rows:
+        lines = []
+        for key, mark in (("raised", "m-accent"), ("spent", "m-spent")):
+            c = r.get(key)
+            v = None if c is None else c / 100.0
+            label = r.get(f"{key}_text") or (w["missing"] if v is None else f"${v:,.2f}")
+            kids = [h("span", {"class": "visually-hidden"}, f"{w[key]}: ")]
+            if v is not None and v > 0:
+                pct = max(0.4, min(100.0, 100.0 * v / top))
+                kids.append(h("span", {"class": f"mrw-bar {mark}", "style": f"width:{pct:.2f}%", "aria-hidden": "true"}))
+                kids.append(h("span", {"class": "mrw-v"}, label))
+            else:
+                kids.append(h("span", {"class": "mrw-v mrw-none"}, label))
+            lines.append(h("span", {"class": f"mrw-line mrw-{key}"}, kids))
+        a = {"class": "mrw-row", "title": r.get("tip") or None}
+        a.update(r.get("attrs") or {})
+        items.append(h("li", a,
+                       h("span", {"class": "mrw-who"}, h("span", {"class": "mrw-name"}, r["name"]),
+                         h("span", {"class": "mrw-sub"}, r.get("sub")) if r.get("sub") else None),
+                       h("span", {"class": "mrw-bars"}, lines)))
+    axis = h("div", {"class": "mrw-axis", "aria-hidden": "true"},
+             h("span", {"class": "mrw-axis-spacer"}),
+             h("span", {"class": "mrw-axis-scale"},
+               h("span", None, "$0"), h("span", None, fmt_tick(top, top, True))))
+    body = h("div", {"class": "mrw"},
+             h("ul", {"class": "mrw-list", "aria-label": f"{title}: {w['raised'].lower()} and {w['spent'].lower()} by "
+                                                          "candidate, bars on one scale"}, items), axis)
+    hdr = headers or ["Candidate", w["raised"], w["spent"]]
+    # (2026-11-18) join, not +: a sub label that is markup (a status mark) stays markup in the table view
+    trows = table_rows if table_rows is not None else [
+        [join([r["name"], " (", r["sub"], ")"]) if r.get("sub") else r["name"],
+         r.get("raised_text") or (w["missing"] if r.get("raised") is None else f"${r['raised'] / 100:,.2f}"),
+         r.get("spent_text") or (w["missing"] if r.get("spent") is None else f"${r['spent'] / 100:,.2f}")]
+        for r in rows]
+    return figure(fid, title, subtitle, body, hdr, trows, note=note, numeric=numeric, status=status, page=page,
+                  legend=None, kind="money-rows", extra=extra, scroll=False, cite=cite)
+
+
+def results_rows(fid: str, title: str, candidates: list[dict], subtitle: str | None = None, status: str | None = None,
+                 note=None, page=None, question: bool = False, cite=None) -> Markup:
+    """results_bars drawn as HTML (added 2026-11-16, phase 6), so a contest's bars use the content width instead of
+    the SVG's fixed 200 px plot, and names never shrink or clip. Same rules: candidates in ballot order (never
+    re-sorted), fixed 0 to 100% scale so contests compare, party marks only with a text label beside them
+    (questions: ink). Same table view as results_bars."""
+    items = []
+    for c in candidates:
+        pct = c.get("pct")
+        party = c.get("party") or ""
+        mark = "m-ink" if question else party_mark(party) if party else "m-party-other"
+        sub = ("" if question else party_label(party) if party else "No party listed")
+        if c.get("winner") == "Y":
+            sub = (sub + " · " if sub else "") + ("Majority" if question else "Elected")
+        votes = c.get("votes")
+        if pct is None:
+            line = h("span", {"class": "rrw-line"}, h("span", {"class": "rrw-v rrw-none"}, "votes not recorded"))
+        else:
+            disp = f"{pct:.1f}%" + (f" · {votes:,}" if votes is not None else "")
+            w = max(0.4, min(100.0, pct))
+            line = h("span", {"class": "rrw-line"},
+                     h("span", {"class": f"rrw-bar {mark}", "style": f"width:{w:.2f}%", "aria-hidden": "true"}),
+                     h("span", {"class": "rrw-v"}, disp))
+        items.append(h("li", {"class": "rrw-row"},
+                       h("span", {"class": "mrw-who"}, h("span", {"class": "mrw-name"}, c["name"]),
+                         h("span", {"class": "mrw-sub"}, sub) if sub else None),
+                       h("span", {"class": "rrw-track"}, line)))
+    axis = h("div", {"class": "mrw-axis", "aria-hidden": "true"}, h("span", {"class": "mrw-axis-spacer"}),
+             h("span", {"class": "rrw-axis-scale"}, h("span", None, "0%"), h("span", None, "50%"), h("span", None, "100%")))
+    body = h("div", {"class": "mrw rrw"},
+             h("ul", {"class": "mrw-list", "aria-label": f"{title}: share of votes for each "
+                                                          f"{'option' if question else 'candidate'}, 0 to 100%"},
+               items), axis)
+    hdr = ["Option" if question else "Candidate"] + ([] if question else ["Party"]) + ["Votes", "Share", "Result"]
+    trows = []
+    for c in candidates:
+        row = [c["name"]]
+        if not question:
+            row.append(party_label(c.get("party")) if c.get("party") else "No party listed")
+        row += [f"{c['votes']:,}" if c.get("votes") is not None else "not recorded",
+                f"{c['pct']:.2f}%" if c.get("pct") is not None else "",
+                ("Majority" if question else "Elected") if c.get("winner") == "Y" else ""]
+        trows.append(row)
+    nums = (1, 2) if question else (2, 3)
+    return figure(fid, title, subtitle, body, hdr, trows, note=note, numeric=nums, status=status, page=page,
+                  kind="results-rows", scroll=False, cite=cite)

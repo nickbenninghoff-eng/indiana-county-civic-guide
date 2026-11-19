@@ -107,3 +107,17 @@ Approved by Nick 2026-11-08. Full report: `planning/qa/held-money-data-2026-11-0
 - `python -P -E -m unittest discover -s tools/tests`: 49 tests OK (8 new).
 - `python -P -E tools/check_gov.py`: errors=0, warnings=23 (unchanged).
 - `tools/check_money.py` (known stale): 613 errors, against 611 before. The 2 new errors are the RDC row's basis `amended_all_funds` and kind `amended`, which the checker does not know.
+
+## 2026-11-18: gap-fill round 2
+
+Source: `planning/gapfill/MERGE-PLAN.md`, applied by `planning/gapfill/merge/merge.py` (manifest `planning/gapfill/merge/manifest.csv`, one line per changed cell or added row). Inputs frozen by checksum (`planning/gapfill/FROZEN-SHA256.txt`): the staged rows, `review-people-verdicts.csv` and `review-numbers-verdicts.csv` after the appeal ruling, and `canvass2/agreed-official.csv`. Only PASS and PASS-WITH-EDIT rows were merged, with the edit applied; REJECT and UNVERIFIABLE rows were not. Rows whose edit was prose, or whose stored value did not match the old value the staged note named, went to `planning/gapfill/merge/needs-human.csv` and were not merged. Switches: CROSS_COUNTY_SCHOOLS_MULTICOUNTY=on, FRONK_FRANCISCO_COUNTY_ONLY=on, ADD_FEDERAL_UNITS=on, ADD_IN_STATE_UNIT=on, ADD_CANVASS_EXTRA_ROWS=on, BUMP_DATA_AS_OF=on, FIX_KARMAN_EASH=on, EXTRA_17_OFFICIAL_ROWS=off, RECONSTRUCT_2020P_Q2_WORDING=off.
+
+- `budgets.csv`: 0 cells changed, 28 rows added, 0 rows removed.
+- `debt.csv`: 6 cells changed, 299 rows added, 0 rows removed.
+- `sources_money.csv`: 0 cells changed, 6 rows added, 0 rows removed.
+- `gaps_money.csv`: 3 cells changed, 1 row added, 0 rows removed.
+
+### Applied
+- budgets.csv: 28 whole-corporation rows for school-new-prairie (LaPorte, Gateway county 46) and school-union-north (Marshall, Gateway county 50), series `school-…-gateway-advertised-funds`; each note starts with the fixed phrase "Whole corporation (principal county: …)". New gaps_money row for the Union-North 2018-2019 jump.
+- debt.csv: AFR debt for 2022, 2023 and 2025 (296 rows) and New Prairie 2024 (3 rows); the county rows staged twice were loaded once. Mishawaka totals carry the utility-debt note; the county and Redevelopment Authority totals for 2024 and 2025 carry the never-sum note; the county 2025 total notes the missing Project Honeysuckle line. gaps_money "Debt before 2024" narrowed to "before 2022".
+- These files are hand-maintained since 2026-11-08: `tools/build_money.py` is stale and must not be re-run (it would drop these rows).

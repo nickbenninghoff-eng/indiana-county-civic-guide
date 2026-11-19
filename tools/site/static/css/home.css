@@ -1,0 +1,166 @@
+/* home.css: the home page (pages/landing.py, static/js/home.js; phase 6, 2026-11-18). A calm almanac page: the
+   county counted in the display face, one search box, the map as the way in, then five doors. Space and small labels
+   separate the parts; the only boxes are the map panel and things you click. Existing tokens only (looks.css,
+   map.css), so all three looks and both themes follow; no literal colors. */
+
+/* ---------------------------------------------------------------- what the guide is, and search */
+.home-intro { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr); gap: 10px 48px;
+  align-items: end; padding-block: 26px 4px; }
+:root .home-h1 {
+  font-family: var(--f-display); font-weight: var(--display-wt); letter-spacing: var(--display-track);
+  text-transform: none; font-size: clamp(2rem, 4.4vw, 3.3rem); line-height: 1.02; margin: 0; }
+.home-h1 .hl-line:nth-child(n+2) { color: var(--ink-2); }
+.home-h1 { grid-column: 1; grid-row: 1 / span 3; align-self: center; }
+.home-dek, .home-count, .home-search { grid-column: 2; }
+.home-count { margin: -8px 0 14px; font-size: .86rem; color: var(--ink-3); max-width: 60ch; }
+.home-dek { margin: 0 0 14px; color: var(--ink-2); font-size: 1.04rem; max-width: 60ch; }
+.home-search { position: relative; z-index: 40; }
+/* the results list opens over the map tabs below: the intro sits above the later sections */
+.home-intro { position: relative; z-index: 20; }
+.home-search .search-nojs { font-size: .9rem; margin: 0; }
+.home-search .home-search-form:not([hidden]) { display: block; }
+.home-search-label { display: block; font: 700 .74rem/1.2 var(--f-label, var(--f-sans)); letter-spacing: .09em;
+  text-transform: uppercase; color: var(--ink-3); margin: 0 0 6px; }
+.home-search-field { position: relative; display: flex; align-items: center; }
+.home-search .search-input { min-height: 52px; font-size: 1.08rem; padding-left: 40px; }
+.home-search .search-icon { left: 15px; }
+.home-search .search-pop { width: 100%; }
+
+/* ---------------------------------------------------------------- your governments */
+.home-mine { margin-top: 18px; padding-block: 8px; border-block: 1px solid var(--line); }
+.home-mine-line { margin: 0; max-width: none; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px;
+  font-size: .95rem; color: var(--ink-2); }
+.home-mine-k { font: 700 .72rem/1.2 var(--f-label, var(--f-sans)); letter-spacing: .09em; text-transform: uppercase;
+  color: var(--ink-3); }
+#home-mine-text { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.home-mine-btn { font: 600 .88rem/1.2 var(--f-sans); min-height: 34px; padding: 5px 12px; cursor: pointer;
+  color: var(--ink); background: var(--surface); border: 1px solid var(--ctl-line, var(--line));
+  border-radius: var(--r-btn, 3px); }
+.home-mine-btn:hover { border-color: var(--ink); }
+.home-mine-btn:focus-visible { outline: 3px solid var(--focus); outline-offset: 1px; }
+.home-mine-note { color: var(--ink-3); }
+.home-pick { margin: 0; }
+.home-pick > summary { cursor: pointer; font-size: .9rem; color: var(--ink-2); padding: 6px 0 2px; width: fit-content; }
+.home-pick > summary:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+.home-pick[open] > summary { margin-bottom: 10px; }
+.home-pick .pick-lists { max-width: 72rem; }
+
+/* ---------------------------------------------------------------- section labels */
+.home-sec { margin-top: 30px; }
+.home-sec-h { font: 700 .78rem/1.2 var(--f-label, var(--f-sans)); letter-spacing: .09em; text-transform: uppercase;
+  color: var(--ink-3); margin: 0 0 10px; }
+:root[data-look="line"] .home-sec-h { text-transform: none; letter-spacing: 0; font-size: .95rem; color: var(--ink-2); }
+:root[data-look="wayfinding"] .home-sec-h { font-weight: 800; color: var(--ink-2); }
+.home-lead { margin: -4px 0 10px; font-size: .92rem; }
+
+/* ---------------------------------------------------------------- the map */
+.home-map-sec { margin-top: 22px; }
+.hm.cmap { margin-top: 0; }
+.hm .cmap-svg { max-height: 64vh; }
+/* the layer tabs come in two labelled groups; each group is the looks' segmented control (looks.css .cmap-tabs), and
+   the outer bar (the .cmap-tabs element map.js drives) is only a row */
+:root .hm .hm-tabs-bar.cmap-tabs:not([hidden]) { display: flex; flex-wrap: wrap; gap: 8px 22px; border: 0;
+  background: none; border-radius: 0; overflow: visible; padding: 0; }
+.hm-tabgroup { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; min-width: 0; }
+.hm-tg-h { font: 600 .68rem/1.2 var(--f-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); }
+.hm-seg { display: inline-flex; flex-wrap: wrap; overflow: hidden; background: var(--surface);
+  border: 2px solid var(--rule); border-radius: var(--r-btn, 3px); }
+:root[data-look="line"] .hm-seg { border: 0; background: var(--surface-2); border-radius: 12px; padding: 3px; gap: 2px; }
+:root[data-look="wayfinding"] .hm-seg { border: 2px solid var(--ink); border-radius: 8px; }
+.hm .cmap-tab { min-height: 38px; padding: 8px 12px; }
+.hm .cmap-grid { grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); margin-top: 12px; }
+.hm-key { font-size: .8rem; margin: 8px 0 0; max-width: 62ch; }
+.hm-panel { min-height: 12rem; }
+.hm-panel h3 { outline: none; }
+.hm-panel h3:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+.hm-block { margin: 2px 0 6px; font-size: .9rem; }
+.hm-row { margin: 6px 0 0; max-width: none; color: var(--ink-2); }
+.hm-k { font: 600 .66rem/1.2 var(--f-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); }
+.hm-tabs a { font-weight: 600; }
+.hm-sub { display: block; margin: 12px 0 4px; }
+.hm-offices { list-style: none; margin: 0; padding: 0; max-height: 40vh; overflow-y: auto; }
+.hm-office { padding: 5px 0; border-top: 1px solid var(--grid); line-height: 1.35; }
+.hm-office > a:first-child, .hm-office > span:first-child { font-weight: 600; }
+.hm-who { color: var(--ink-2); font-size: .86rem; }
+
+
+.hm-note { font-size: .84rem; }
+.hm-layer-btn { margin: 4px 4px 0 0; }
+
+/* ---------------------------------------------------------------- doors */
+.doors { list-style: none; margin: 0; padding: 0; display: grid; gap: 18px 24px;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 190px), 1fr)); }
+.door { border-top: 3px solid var(--accent); padding-top: 10px; min-width: 0; }
+:root[data-look="wayfinding"] .door { border-top-width: 5px; }
+.door-h { margin: 0 0 4px; font-size: 1.15rem; }
+.door-h a { text-decoration: none; }
+.door-h a:hover { text-decoration: underline; }
+.door-line { margin: 0 0 8px; font-size: .9rem; color: var(--ink-2); }
+.door-ex { list-style: none; margin: 0; padding: 0; font-size: .88rem; }
+.door-ex li { padding: 3px 0; }
+
+/* ---------------------------------------------------------------- next on the ballot */
+.home-next { margin-top: 30px; padding-block: 12px; border-block: 1px solid var(--line); }
+.home-next p { margin: 4px 0 0; max-width: none; }
+.home-next .ehub-next-who { font-size: .9rem; color: var(--ink-2); }
+.home-next-link { font-size: .9rem; }
+
+/* ---------------------------------------------------------------- learning paths */
+.home-paths { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px 28px;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr)); }
+.hp-item { font-size: .92rem; line-height: 1.35; }
+.hp-item a { font-weight: 600; }
+.hp-num { color: var(--ink-3); font-weight: 600; }
+.hp-meta { font-size: .86rem; }
+
+/* ---------------------------------------------------------------- every government, as a list */
+.home-list { margin-top: 30px; border-top: 1px solid var(--line); padding-top: 10px; }
+.home-list-sum { cursor: pointer; font-weight: 600; width: fit-content; }
+.home-list-sum:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+.hl-cols { columns: 3 18rem; column-gap: 32px; margin-top: 10px; }
+.hl-group { break-inside: avoid; margin: 0 0 16px; }
+.hl-h { font: 600 .68rem/1.2 var(--f-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3);
+  margin: 0 0 4px; }
+.hl-list { list-style: none; margin: 0; padding: 0; font-size: .9rem; }
+.hl-row { padding: 2px 0; }
+.hl-tabs { font-size: .8rem; color: var(--ink-3); }
+.hl-inline li { padding: 2px 0; }
+
+@media (max-width: 900px) {
+  .home-intro { grid-template-columns: minmax(0, 1fr); align-items: start; }
+  .home-h1, .home-dek, .home-count, .home-search { grid-column: 1; grid-row: auto; }
+}
+@media (max-width: 760px) {
+  .hm .cmap-grid { grid-template-columns: minmax(0, 1fr); }
+  .hm-tabgroup, .hm-seg { width: 100%; }
+  .hm-seg .cmap-tab { flex: 1 1 auto; }
+  .hm .cmap-svg { max-height: none; }
+  .hm-offices { max-height: none; }
+}
+@media print {
+  .home-search, .home-pick, .hm-tabs-bar { display: none !important; }
+}
+/* a district layer's map note (which official map it is), shown under the map while that layer is on (map.js
+   toggles .is-on on every [data-layer] element) */
+.hm-layer-note { display: none; font-size: .8rem; margin: 6px 0 0; max-width: 62ch; }
+.hm-layer-note.is-on { display: block; }
+.home-mine-yp { margin-left: auto; font-size: .88rem; }
+
+/* the county above the map (it covers every address, so it is not a map layer; 2026-11-18) */
+.hm-county-row { margin: 0 0 12px; max-width: none; font-size: .92rem; color: var(--ink-2); }
+.hm-county-name { font-weight: 700; }
+.hm-county-links a { font-weight: 600; }
+.hm-county-links::before { content: " \B7  "; color: var(--ink-3); }
+.hm-county-note { display: block; font-size: .82rem; margin-top: 2px; }
+/* the panel before an area is chosen: how to use the map, then the shown layer's areas (home.js shows the right one) */
+.hm-start { color: var(--ink-2); }
+.hm-start-hint { margin: 0 0 10px; font-size: .9rem; color: var(--ink-3); max-width: none; }
+.hm-start-list { display: none; }
+.hm-start-list.is-on { display: block; }
+.hm-start-h { margin: 0 0 4px; }
+.hm-start-ul { list-style: none; margin: 0; padding: 0; columns: 2 10rem; column-gap: 20px; font-size: .9rem; }
+.hm-start-ul li { padding: 3px 0; break-inside: avoid; }
+.home-mine-link { text-decoration: none; display: inline-flex; align-items: center; }
+/* the State and Federal layers' line under the map says which view is shown (2026-11-18) */
+.hm-layer-note-level { font-size: .95rem; color: var(--ink); font-weight: 600; }
+.hm-level-note { font-weight: 600; }

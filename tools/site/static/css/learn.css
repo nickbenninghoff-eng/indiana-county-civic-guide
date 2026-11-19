@@ -1,0 +1,23 @@
+/* Learn hub (pages/learn.py). Existing tokens only; no literal colors. Cards only for things you click: the whole card
+   is the link (the title link stretches over it), the run page's office links sit above that layer. */
+.learn-page .hub-head .thing-facts { max-width: var(--measure); display: block; }
+.learn-group { margin: 0 0 22px; }
+.learn-group-h { font-size: .74rem; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-3); margin: 0 0 8px; }
+.learn-grid { gap: 12px; }
+.learn-card { position: relative; display: flex; flex-direction: column; gap: 4px; }
+.learn-card:hover { background: var(--accent-wash); }
+.learn-card .card-title { margin: 0; font-size: 1.02rem; }
+.learn-card .card-title a { text-decoration: none; color: var(--ink); }
+.learn-card .card-title a::after { content: ""; position: absolute; inset: 0; }
+.learn-card .card-title a:focus-visible { outline: none; }
+.learn-card:focus-within { outline: 2px solid var(--accent); outline-offset: 2px; }
+.learn-desc { margin: 0; font-size: .9rem; color: var(--ink-2); }
+.learn-sub { margin: 6px 0 0; font-size: .85rem; color: var(--ink-2); position: relative; z-index: 1; }
+.learn-paths-lead { max-width: var(--measure); margin: 0 0 10px; }
+.learn-paths { list-style: none; margin: 0; padding: 0; display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 19rem), 1fr)); gap: 0 28px; }
+.learn-path { display: grid; gap: 2px; padding: 10px 0; border-top: 1px solid var(--line); min-width: 0; }
+.learn-path-title { font-weight: 700; }
+.learn-path-meta { font-size: .72rem; color: var(--ink-3); }
+.learn-path-blurb { font-size: .9rem; color: var(--ink-2); }
+@media (max-width: 480px) { .learn-grid { gap: 10px; } }

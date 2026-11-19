@@ -20,8 +20,10 @@ from collections import Counter, OrderedDict
 
 from civic.charts import (_svg, _txt, bar_path, columns, figure, hbar, legend, line,
                           party_mark, party_timeline)
-from civic.components import (callout, data_table, entity_list, name_with_party, party_label, section, see_all_fold, see_all_table, status_badge)
+from civic.components import (callout, data_table, entity_list, figure_mark, name_with_party, party_label, section,
+                              see_all_fold, see_all_table, status_badge, status_label)
 from civic.data import PARTY_LABELS, SELECTED_BY_LABELS, fmt_date, parse_date, split_ids
+from civic import results_status as RS
 from civic.html import Markup, h, join, json_script
 from civic.pick_one import one_bar
 from civic.preselect import here_slot
@@ -216,7 +218,7 @@ def est_cell(ind, row) -> Markup:
         return h("span", {"class": "muted"}, "not in data")
     v, m = _f(row["value"]), _f(row.get("moe"))
     moe = (h("span", {"class": "moe"}, f" ± {fmt_moe(ind, m)}") if m is not None and m > 0 else
-           h("span", {"class": "moe moe-zero", "title": ZERO_MOE}, " ± 0", h("sup", {"class": "cv-mark"}, "‡"))
+           h("span", {"class": "moe moe-zero"}, " ± 0", figure_mark("zero_moe"))
            if m == 0 else None)
     if unreliable(row):
         c = cv_of(row)
@@ -225,7 +227,7 @@ def est_cell(ind, row) -> Markup:
                "not computable (no margin of error published; the source notes flag it)" if c is None else f"{c * 100:.0f}%")
         return h("span", {"class": "est est-unreliable",
                           "title": f"Coefficient of variation {cvs}: above 30%, so treat as unreliable."},
-                 fmt_value(ind, v), moe, h("sup", {"class": "cv-mark", "aria-label": "unreliable estimate"}, "†"))
+                 fmt_value(ind, v), moe, figure_mark("unreliable", f"Coefficient of variation {cvs}."))
     return h("span", {"class": "est"}, fmt_value(ind, v), moe)
 
 
@@ -238,12 +240,11 @@ def status_badges(rows, page):
 
 
 def cv_legend() -> Markup:
-    return h("p", {"class": "cv-legend muted"},
-             h("span", {"class": "est est-unreliable"}, "Grey", h("sup", {"class": "cv-mark"}, "†")),
-             " = the margin of error is large compared with the estimate (coefficient of variation above 30%, "
-             "computed as MOE ÷ 1.645 ÷ estimate). Treat it as unreliable. Such estimates are never used in "
-             "headings or charts. ± is the published 90% margin of error. ",
-             h("sup", {"class": "cv-mark"}, "‡"), " ± 0 = ", ZERO_MOE[0].lower() + ZERO_MOE[1:])
+    """One short line under a table of estimates. Changed 2026-11-18 ("About these figures"): the meaning of the grey
+    unreliable estimates (≈) and of ± 0 (°) is said once, in the note at the bottom of the page, not under every
+    table; the symbols are the site's (components.FIGURE_MARKS)."""
+    return h("p", {"class": "cv-legend muted"}, "± is the published 90% margin of error. An estimate in grey, marked ≈, "
+                                                "is unreliable.")
 
 
 def matrix_table(page, iv, tid, caption, geos, inds, vintage, geo_header="Place", min_width=None):
@@ -375,7 +376,8 @@ def indicator_map_section(page, ed, iv, inds, vintage, sid, num, title):
         g = geo_of[uid][2]
         rows = [iv.get(g, ind, vintage) if g else None for ind in inds]
         facts = [[labels[ind], _fact_text(ind, r)] for ind, r in zip(inds, rows)]
-        href = page.rel(f"places/{uid}/index.html#context")
+        # the community strip on the government page's Overview (phase 6 step 3; the place page forwards there)
+        href = page.rel(f"governments/{uid}/index.html#context")
         tl = TYPE_LABEL.get(unit["unit_type"], unit["unit_type"])
         entry = {"n": unit["name"], "t": tl, "f": facts, "fk": list(inds),
                  "note": (f"American Community Survey {vintage} estimates for the Census area "
@@ -896,7 +898,7 @@ def build_income_work(site):
     if singles:
         srows = [[r["name"], r["sector"], fmt_value("qcew_x", _f(r["employees"])) if r["employees"] else "not stated",
                   fmt_date(r["as_of"]), r["selection_rule"], r["notes"],
-                  h("span", None, status_badge(r["status"], page), c.cite(r["source_ids"]))] for r in singles]
+                  h("span", None, status_label(r["status"], page), c.cite(r["source_ids"]))] for r in singles]
         blocks.append(h("div", {"class": "employer-list"},
                         h("h3", None, "Single counts published by one organization"),
                         h("p", None, "Each of these is one organization's own figure for itself, not part of a list. "
@@ -970,7 +972,7 @@ def build_housing(site):
                      h("p", {"class": "muted"}, f"How the {then} figure was built: {note_then}") if note_then else None,
                      h("p", {"class": "muted"}, "Other attainment levels (high school, some college) are not in the "
                                                 "guide's data yet. Each school corporation's enrollment and spending per "
-                                                "student are on the ", h("a", {"href": page.rel("schools/index.html")}, "Schools page"), "."),
+                                                "student are on each corporation's page, under ", h("a", {"href": page.rel("governments/index.html#schools")}, "Governments"), "."),
                      scope="county", ed=ed))
     tt, tu = matrix_table(page, iv, "townships-housing", "Townships: housing and degrees", iv.townships,
                           hinds + ["bachelors_plus_pct"], now, "Township", "64rem")
@@ -1137,9 +1139,9 @@ def _mayor_table(ed, page, office_id, tid):
             left = "In office"
         else:
             left = ""
-        badges = [status_badge(t["status"], page)]
+        badges = [status_label(t["status"], page)]          # the table's Status column keeps its words
         if t.get("confidence") == "low":
-            badges.append(status_badge("low", page))
+            badges.append(status_label("low", page))
         rows.append([str(i), t["person"], party_label(t["party"]) if t["party"] else "Party not in sources",
                      fmt_date(t["start"]) or "not in sources", left or "not in sources",
                      SELECTED_BY_LABELS.get(t.get("first_selected_by", ""), t.get("first_selected_by")),
@@ -1199,8 +1201,10 @@ def build_history(site):
         if rows:
             ga_figs.append(_chamber_chart(f"control-ga-{chamber.lower()}", f"Indiana {chamber} seats by party", rows,
                                           page, cite=c.cite(_union(src)),
-                                          note="Seat counts at the start of each two-year period. * The 2027 seat totals "
-                                               "are not in the guide's data; 2026 results are unofficial. Two-thirds is "
+                                          note="Seat counts at the start of each two-year period. "
+                                               + ("* marks a period whose seat counts are unofficial in the source. "
+                                                  if any(r["unofficial"] for r in rows) else "")
+                                               + "The 2027 seat totals are not in the guide's data. Two-thirds is "
                                                "the quorum threshold in the Indiana Constitution (Art. 4 sec. 11), per "
                                                "the source notes."))
     page.add(section("control", 1, "Party control over time",
@@ -1469,16 +1473,24 @@ def people_pool(ed):
     at least one rule, and each timeline event with the people named in its title."""
     now_year = ed.as_of.year
     people = [dict(p) for p in ed.table("people")]
+    # who is who comes from civic/people.py identity (2026-11-16, person pages), the site's one answer, so a term is
+    # credited to the same person here as on the person pages. Before, this list keyed people by _name_key, which drops
+    # suffixes: Schuyler Colfax III's mayor term was credited to his father Schuyler Colfax.
+    from civic.people import identity
+    who = identity(ed)
+
+    def key_of(name):
+        return who.pid_for(name) or _name_key(name)
     by_key = {}
     for p in people:
         p["_terms"] = []
-        by_key.setdefault(_name_key(p["name"]), p)
+        by_key.setdefault(key_of(p["name"]), p)
     offices = ed.offices
     for t in ed.table("terms"):
         o = offices.get(t["office_id"], {})
         if o.get("elected") != "yes" or t.get("status") == "unofficial":
             continue
-        k = _name_key(t["person"])
+        k = key_of(t["person"])
         p = by_key.get(k)
         if p is None:
             p = {"person_id": "", "name": t["person"], "offices_summary": "", "parties": "", "criteria": "",
@@ -1546,6 +1558,24 @@ def people_pool(ed):
     return pool, tp_map
 
 
+def is_pending(p) -> bool:
+    """A person whose only qualifying claim is a 'first' recorded with low confidence: listed under Gaps as pending
+    verification, never shown as a card (build_history_people)."""
+    return p.get("confidence") == "low" and set(p["_crit"]) <= {"FIRST"}
+
+
+def notable_rows(ed) -> list:
+    """Added 2026-11-16 (person pages): the people the published rules picked whose card or low-confidence row the
+    notable-people list shows (people_pool without those pending verification), cached on the edition. Each row keeps
+    people_pool's fields (``_crit``, ``_terms``)."""
+    got = ed.__dict__.get("_notable_rows")
+    if got is None:
+        pool, _tp = people_pool(ed)
+        got = [p for p in pool if not is_pending(p)]
+        ed.__dict__["_notable_rows"] = got
+    return got
+
+
 def _fill_from_terms(ed, p):
     """Card fields for someone who is in the officeholder records but has no research profile."""
     terms = sorted(p["_terms"], key=lambda t: parse_date(t["start"]) or parse_date("1800"))
@@ -1579,8 +1609,12 @@ def _card_summary(p) -> str:
 
 
 def build_history_people(site):
+    """The notable-people list. Since 2026-11-16 (person pages) it is people/notable/ (civic/people.py NOTABLE), a
+    view of the People hub; history/people/ forwards here (pages/people.py). Every card's name links to the person's
+    page (civic/people.py link_names); the card ids (person-<id>) and section ids are unchanged."""
+    from civic.people import HUB as PEOPLE_HUB, NOTABLE
     ed = site.ed
-    page = site.page("history/people/index.html")
+    page = site.page(NOTABLE)
     c = page.cites
     people, tp_map = people_pool(ed)
     images = {r["image_id"]: r for r in ed.table("images")}
@@ -1590,6 +1624,8 @@ def build_history_people(site):
     page.add(hero(page, "Reference · History", toc,
                   "People chosen by five published rules, applied the same way to everyone in the guide's data. "
                   "Being listed is not praise or criticism."))
+    page.add(h("p", {"class": "notable-hub-link"}, "Each name links to the person's page. ",
+               h("a", {"href": page.rel(PEOPLE_HUB)}, "Everyone in the guide: the People list"), "."))
 
     rules = h("dl", {"class": "rule-list"},
               [[h("dt", None, h("span", {"class": "crit-tag mono"}, CRITERIA_LABELS[k])), h("dd", None, v)]
@@ -1689,7 +1725,7 @@ def build_history_people(site):
                       ", ".join(CRITERIA_LABELS.get(k, k) for k in crit(p)),
                       "Yes" if p.get("in_office_now") == "true" else "No",
                       _safe_note(p) or "See the cited sources.",
-                      h("span", {"class": "badge-row"}, status_badge(p["status"], page), status_badge("low", page),
+                      h("span", {"class": "badge-row"}, status_label(p["status"], page), status_label("low", page),
                         c.cite(_people_sources(p)))])
     page.add(section("low-confidence", 3, "Recorded with low confidence",
                      h("p", None, "These people meet a rule in the guide's data, but the record behind it is thin (for "
@@ -1702,7 +1738,7 @@ def build_history_people(site):
 
     # ---- the event-to-person mapping behind TURNING_POINT, published so the rule can be checked
     tprows = [[fmt_date(ev["date"]), ev["title"], join([_person_tag(p) for p in named], ", "),
-               h("span", None, status_badge(ev["status"], page), c.cite(ev["source_ids"]))] for ev, named in tp_map]
+               h("span", None, status_label(ev["status"], page), c.cite(ev["source_ids"]))] for ev, named in tp_map]
     page.add(section("turning-points", 4, "Turning-point names",
                      h("p", None, "Every political, government or legal event in the timeline whose title names a person "
                                   "in the guide's data, and the person it names. A shared surname counts only with the "
@@ -1774,5 +1810,6 @@ PAGES = {
     "community/housing-and-education/index.html": build_housing,
     "community/research-on-voting/index.html": build_research,
     "history/index.html": build_history,
-    "history/people/index.html": build_history_people,
 }
+# history/people/ is a forwarding page since 2026-11-16 (pages/people.py); build_history_people builds
+# people/notable/ and is registered there

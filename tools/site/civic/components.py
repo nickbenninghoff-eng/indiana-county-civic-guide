@@ -15,7 +15,8 @@ from .html import Markup, esc, h, join
 
 STATUS = {
     "official": ("OFFICIAL", "Certified or official government record."),
-    "unofficial": ("UNOFFICIAL", "Election-night or uncertified figures; may change when certified."),
+    "unofficial": ("UNOFFICIAL", "Not final yet: election-night figures, or a count that awaits a later step (a recount "
+                                 "window, another county's figures or state certification); may change."),
     "computed": ("COMPUTED", "The guide's own arithmetic from other sourced figures."),
     "from_scan": ("FROM SCAN", "Transcribed from a scanned image of an official document."),
     "secondary": ("SECONDARY", "A reliable secondary source; no primary record found yet."),
@@ -26,7 +27,22 @@ STATUS = {
 
 
 def status_badge(status: str, page=None, note: str | None = None) -> Markup:
-    """Status badge. Links to the definitions on /about/ when a page is given."""
+    """The status of a figure, as the page shows it beside the figure.
+
+    Changed 2026-11-18 (phase 6, "About these figures"; same signature): an official figure is the normal case and gets
+    no mark (empty markup); every other known status is one small symbol (``figure_mark``) that links to the page's
+    "About these figures" note. An unknown status still shows its word (``status_label``), so nothing is hidden."""
+    key = (status or "").strip().lower()
+    if key == "official":
+        return Markup("")
+    if key in FIGURE_MARKS:
+        return figure_mark(key, note)
+    return status_label(status, page, note)
+
+
+def status_label(status: str, page=None, note: str | None = None) -> Markup:
+    """The status as a word badge (the form status_badge had until 2026-11-18). For the few places where the word
+    itself must show: the 2026 UNOFFICIAL banner, a section's top line, the definitions on /about/#badges."""
     key = (status or "").strip().lower()
     label, definition = STATUS.get(key, (key.upper() or "STATUS UNKNOWN", "Status not recorded."))
     title = definition + (f" {note}" if note else "")
@@ -35,6 +51,196 @@ def status_badge(status: str, page=None, note: str | None = None) -> Markup:
         return h("a", {"class": "badge-link", "href": page.rel("about/index.html#badges"),
                        "aria-label": f"{label}: {definition}"}, inner)
     return inner
+
+
+def status_word(status: str) -> str:
+    """The status as plain text ("Official", "Computed", "Incomplete") for a Status column of a table: a column is not
+    clutter, and the words keep the table's Copy CSV text readable."""
+    key = (status or "").strip().lower()
+    if key in STATUS:
+        return STATUS[key][0].capitalize()
+    if key in FIGURE_MARKS:
+        return FIGURE_MARKS[key][1]
+    return (status or "").strip() or "Not recorded"
+
+
+# ----------------------------------------------------------------------- figure marks
+# "About these figures" (added 2026-11-18, phase 6; the owner's request of 2026-11-18 and the design direction's
+# "Confidence without clutter"). The normal case, a figure that is official and complete, carries no mark. An exception
+# carries one small symbol right after the figure: one fixed symbol per kind, the same on every page, for every party,
+# candidate and government. Each symbol links to the page's "About these figures" note, which shell.Page.render adds at
+# the bottom of the page listing only the symbols that page uses. Where a whole table, chart or section shares one
+# status, the section says it once (``scope_line`` + ``scope_attrs``) instead of marking every row.
+# kind: (symbol, name, plain-language meaning). The note lists them in this order. (Single source is a triangle, not
+# §, because the Ballot & Ink look numbers its sections with §.)
+FIGURE_MARKS = {
+    "incomplete": ("*", "Incomplete",
+                   "at least one expected report is not on file, so this total is a floor (the full amount may be "
+                   "higher)."),
+    "unofficial": ("†", "Unofficial",
+                   "not final yet: election-night figures, or a count that awaits a later step (a recount window, "
+                   "another county's figures or state certification); they may change."),
+    "secondary": ("‡", "Secondary source",
+                  "from a news report or another reliable secondary source; no primary record has been found yet."),
+    "single_source": ("△", "Single source",
+                      "only one news report or other secondary source gives this; not yet corroborated."),
+    "computed": ("‖", "Computed by the guide",
+                 "the guide's own arithmetic (a sum, share or conversion) from other sourced figures."),
+    "from_scan": ("¶", "From a scan", "transcribed from a scanned image of an official document."),
+    "low": ("◊", "Low confidence", "kept for completeness; not used in headings or charts."),
+    "unverified": ("?", "Unverified",
+                   "recorded in the guide's configuration but not yet checked against a primary source."),
+    "unreliable": ("≈", "Unreliable estimate",
+                   "the margin of error is large compared with the estimate (coefficient of variation above 30%, "
+                   "computed as MOE ÷ 1.645 ÷ estimate), so treat it as unreliable; such estimates are shown in grey "
+                   "and never used in headings or charts."),
+    "zero_moe": ("°", "No sampling error published",
+                 "the Census Bureau controls this total to its official population estimates (county, state and U.S. "
+                 "population and Hispanic or Latino origin), or the margin of error rounds to zero."),
+}
+# A word joiner before every symbol: the symbol never wraps away from its figure, even after a space.
+WORD_JOINER = "⁠"
+
+
+def note_id(kind: str) -> str:
+    """The id of a kind's entry in the page's note (letters, digits and hyphens only: fnote-from-scan)."""
+    return "fnote-" + kind.replace("_", "-")
+
+
+def figure_mark(kind: str, note: str | None = None, *, scope: bool = False, link: bool = True) -> Markup:
+    """One exception symbol, right after a figure: a link to the page's note (#fnote-<kind>), with the full meaning as
+    its accessible name and tooltip (``note`` adds a figure-specific sentence). ``data-word`` is the word Copy CSV
+    writes for it (static/app.js), so copied tables keep their status words. ``scope`` marks the symbol of a section's
+    caption line (``scope_line``), which stays when the marks of the same kind inside that section are dropped.
+    ``link=False`` gives the same symbol as a plain span (role img, same name and tooltip) for a place where a link
+    must not go, such as inside a fold's <summary>; the note at the bottom of the page still defines it."""
+    sym, name, meaning = FIGURE_MARKS[kind]
+    words = f"{name}: {meaning}" + (f" {note}" if note else "")
+    word = STATUS[kind][0] if kind in STATUS else name.upper()
+    cls = f"fmark fmark-{kind}" + (" fmark-scope" if scope else "")
+    if not link:
+        return Markup(WORD_JOINER) + h("span", {"class": cls, "data-fmark": kind, "data-word": word, "role": "img",
+                                                "title": words, "aria-label": words}, sym)
+    return Markup(WORD_JOINER) + h("a", {"class": cls, "data-fmark": kind, "data-word": word,
+                                         "href": f"#{note_id(kind)}", "title": words, "aria-label": words}, sym)
+
+
+def status_symbol(status: str, note: str | None = None) -> Markup:
+    """status_badge's mark as a plain span, not a link (inside a <summary>): empty for an official figure."""
+    key = (status or "").strip().lower()
+    if key == "official":
+        return Markup("")
+    if key in FIGURE_MARKS:
+        return figure_mark(key, note, link=False)
+    return status_label(status, None, note)
+
+
+def status_heading(status: str, page=None, note: str | None = None) -> Markup:
+    """The status beside the heading of a section that shows election results: unofficial results say the word there
+    ("Unofficial" and the symbol), so they are labelled at the top of their section, not only by a symbol; any other
+    status is the plain mark (none when official)."""
+    if (status or "").strip().lower() == "unofficial":
+        return h("span", {"class": "fword fword-unofficial"}, "Unofficial") + figure_mark("unofficial", note)
+    return status_badge(status, page, note)
+
+
+def scope_mark(status: str, link: bool = True) -> Markup:
+    """The mark of a one-line caption that speaks for its whole element (a contest's result line: the chart and table
+    below it carry no mark of their own); use with ``scope_attrs(status)`` on that element. Empty when official."""
+    key = (status or "").strip().lower()
+    if key == "official":
+        return Markup("")
+    if key in FIGURE_MARKS:
+        return figure_mark(key, scope=True, link=link)
+    return status_label(status)
+
+
+def mark_symbol(kind: str) -> Markup:
+    """The bare symbol of a kind, for legends that define the marks (not a figure: no link, not counted in the note)."""
+    return h("span", {"class": f"fmark-sym fmark-{kind}", "aria-hidden": "true"}, FIGURE_MARKS[kind][0])
+
+
+def scope_attrs(*kinds: str) -> dict:
+    """Attributes for a table, chart or section whose rows all share the statuses ``kinds``: the section's caption line
+    (``scope_line``) says it once, and shell.Page.render drops every mark of those kinds inside it (``drop_scoped``),
+    so the rows carry no mark of their own."""
+    ks = [k for k in FIGURE_MARKS if k in set(kinds)]
+    return {"data-fscope": " ".join(ks)} if ks else {}
+
+
+def scope_line(kinds, text, cls: str = "fscope-line") -> Markup:
+    """One short caption line stating the status of a whole table, chart or section once: ``text`` then the marks
+    (caption marks, ``scope=True``). Put ``scope_attrs`` on the element the line speaks for (the section, the list
+    item); the line goes inside it, or just before it when it speaks for several."""
+    ks = [k for k in FIGURE_MARKS if k in set(kinds)]
+    return h("p", {"class": cls}, text, [figure_mark(k, scope=True) for k in ks])
+
+
+_TAG = re.compile(r"<(/?)([a-zA-Z][a-zA-Z0-9-]*)((?:[^>\"']|\"[^\"]*\"|'[^']*')*)>")
+_VOID_TAGS = {"area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta", "source", "track", "wbr"}
+_SCOPE_ATTR = re.compile(r'\sdata-fscope="([^"]*)"')
+_MARK_OPEN = re.compile(r'^\s+class="fmark fmark-([a-z_]+)(?: fmark-scope)?"')
+_MARK_TAGS = ("a", "span")
+
+
+def drop_scoped(html: str) -> str:
+    """Remove every mark (with its word joiner) that sits inside an element whose ``data-fscope`` already states the
+    same status. A caption mark (``scope=True``) speaks for its own scoped element, so it is removed only when an outer
+    element states the same status too (a contest's mark inside a tab that says "every count is unofficial" once).
+    The status is not lost: the section says it once."""
+    if "data-fscope=" not in html:
+        return html
+    out, pos, stack, skip_to = [], 0, [], None
+    for m in _TAG.finditer(html):
+        if skip_to is not None:
+            if m.group(1) and m.group(2).lower() == skip_to:
+                pos, skip_to = m.end(), None
+            continue
+        close, tag, attrs = m.group(1), m.group(2).lower(), m.group(3)
+        if close:
+            while stack:
+                t, _ = stack.pop()
+                if t == tag:
+                    break
+            continue
+        mk = _MARK_OPEN.match(attrs) if tag in _MARK_TAGS else None
+        n_scoped = sum(1 for _, ks in stack if mk.group(1) in ks) if mk else 0
+        if mk and n_scoped > (1 if "fmark-scope" in attrs else 0):
+            start = m.start()
+            if html[start - 1:start] == WORD_JOINER:
+                start -= 1
+            out.append(html[pos:start])
+            skip_to = tag
+            continue
+        if tag not in _VOID_TAGS and not attrs.rstrip().endswith("/"):
+            sc = _SCOPE_ATTR.search(attrs)
+            stack.append((tag, set(sc.group(1).split()) if sc else set()))
+    out.append(html[pos:])
+    return "".join(out)
+
+
+def scope_note(kind: str, what: str = "figure in this section") -> Markup:
+    """The caption line of a section whose figures all share one exception status, in the same words everywhere:
+    "Unofficial: every count on this tab. Election-night or uncertified figures; ...†". The word comes first, so an
+    unofficial section is labelled in words at its top, not only by the symbol."""
+    _sym, name, meaning = FIGURE_MARKS[kind]
+    return scope_line([kind], [h("strong", None, f"{name}: every {what}."), f" {meaning[:1].upper()}{meaning[1:]}"],
+                      cls="fscope-line" + (" fscope-unofficial" if kind == "unofficial" else ""))
+
+
+def figure_notes(kinds, more: Markup | str | None = None) -> Markup:
+    """The page-bottom "About these figures" note: one entry per symbol the page uses, in FIGURE_MARKS order, each
+    with its meaning once (id fnote-<kind>, the target of every mark). Empty when the page uses none."""
+    ks = [k for k in FIGURE_MARKS if k in set(kinds)]
+    if not ks:
+        return Markup("")
+    items = [h("li", {"id": note_id(k), "data-fnote": k},
+               h("span", {"class": "fnote-sym", "aria-hidden": "true"}, FIGURE_MARKS[k][0]), " ",
+               h("strong", None, f"{FIGURE_MARKS[k][1]}:"), f" {FIGURE_MARKS[k][2]}") for k in ks]
+    return h("aside", {"class": "fnotes", "id": "figure-notes", "aria-labelledby": "figure-notes-h"},
+             h("h2", {"class": "fnotes-h", "id": "figure-notes-h"}, "About these figures"),
+             h("ul", {"class": "fnotes-list"}, items),
+             h("p", {"class": "fnotes-more"}, more) if more else None)
 
 
 def scope_badge(scope: str, ed) -> Markup:
@@ -394,7 +600,23 @@ class Citations:
                  h("a", {"href": f"{self.href_base}#src-{ids[0]}", "title": label, "aria-label": label}, f"{nums[0]} +{len(nums) - 1}"))
 
     def render(self, heading: str = "Sources on this page") -> Markup:
+        items = self._items()
+        if not items:
+            return Markup("")
+        return fold_section("sources", "sources", heading, len(items), None,
+                            h("ol", {"class": "source-list"}, items))
+
+    def render_list(self) -> Markup:
+        """The numbered source list alone (<ol class="source-list">, items id="src-<id>"), not folded: for a page
+        whose content is the list (civic/tabs.py Sources tab). Added 2026-11-16 (phase 6 step 1)."""
+        items = self._items()
+        if not items:
+            return h("p", None, "No sources are cited on these pages.")
+        return h("ol", {"class": "source-list"}, items)
+
+    def _items(self) -> list:
         items = []
+        cited = set(self.order)
         for sid in self.order:
             s = self.ed.sources.get(sid)
             if not s:
@@ -410,13 +632,34 @@ class Citations:
             link = h("a", {"href": s["url"], "target": "_blank", "rel": "noopener"}, t) if s.get("url", "").startswith("http") else t
             pub = h("span", {"class": "src-pub"}, f"{s['publisher']}: ") if s.get("publisher") else None
             meta = [f"accessed {fmt_date(s['accessed'])}"] if s.get("accessed") else []
+            # a source this one superseded (its notes say "Superseded ... by <sid>") keeps its old #src-<id> link on
+            # this page when the page no longer cites it: the link lands on the record that replaced it (2026-11-18:
+            # RES-029, the unofficial 2026 count, -> RES-048, the official canvass at the same address)
+            old = [o for o in superseded_by(self.ed).get(sid, ()) if o not in cited]
+            replaces = (h("span", {"class": "src-id mono"}, "Replaces ",
+                           join([h("span", {"id": f"src-{o}"}, o) for o in old], ", "))
+                        if old else None)
             items.append(h("li", {"id": f"src-{sid}"}, pub, link,
                            h("span", {"class": "src-meta"}, " · ".join(meta)),
-                           h("span", {"class": "src-id mono"}, f"{sid} · {s.get('kind', '')}")))
-        if not items:
-            return Markup("")
-        return fold_section("sources", "sources", heading, len(items), None,
-                            h("ol", {"class": "source-list"}, items))
+                           h("span", {"class": "src-id mono"}, f"{sid} · {s.get('kind', '')}"), replaces))
+        return items
+
+
+SUPERSEDED = re.compile(r"\bSuperseded\b[^.]*?\bby ([A-Z]+-\d+)\b")
+
+
+def superseded_by(ed) -> dict[str, list[str]]:
+    """{new source id: [older source ids it replaced]}, from the older sources' notes ("Superseded 2026-11-18 by
+    RES-048: ..."). A note naming an id not in the sources is ignored (the citation check reports unknown ids)."""
+    got = ed.__dict__.get("_superseded_by")
+    if got is None:
+        got = {}
+        for sid, s in ed.sources.items():
+            m = SUPERSEDED.search(s.get("notes") or "")
+            if m and m.group(1) in ed.sources and m.group(1) != sid:
+                got.setdefault(m.group(1), []).append(sid)
+        ed.__dict__["_superseded_by"] = got
+    return got
 
 
 # ---------------------------------------------------------------------- gaps
@@ -498,15 +741,17 @@ def data_table(table_id: str, headers: list, rows: list[list], caption: str | No
 
 def table_filter(table_id: str, controls: list[dict], total: int, noun: str = "row",
                  search: str | None = None, sort: list[tuple[str, str, str]] | None = None,
-                 label: str | None = None) -> Markup:
+                 label: str | None = None, *, search_first: bool = False) -> Markup:
     """One row of labelled controls above a table (static/js/tablefilter.js wires it).
 
     Rows opt in with ``data-tf-<key>="<value>"`` attributes (see ``data_table(row_attrs=...)``).
     controls: ``[{"key": "year", "label": "Year", "all": "All years", "options": [(value, text), ...]}]``;
-    a row shows when, for every select, its ``data-tf-<key>`` equals the chosen value.
+    a row shows when, for every select, its ``data-tf-<key>`` equals the chosen value (a control with ``"tokens": True``
+    matches when the value is one of the row's space-separated values; added 2026-11-16).
     search: label of a text box that matches the words typed against the row's text (``None`` = no box).
     sort: ``[(value, text, spec)]`` where spec is ``"attr:dir:kind[,attr:dir:kind]"`` (kind ``n`` = number,
     ``s`` = string; attr is a ``data-`` attribute of the row); the first option is the default order.
+    search_first (keyword only, added 2026-11-16 for the People hub): put the text box before the selects.
     The bar is ``hidden`` until the script runs, so with JavaScript off the table is simply whole.
     Filtering only hides rows; the count line says how many of the total are shown."""
     fields = []
@@ -514,15 +759,19 @@ def table_filter(table_id: str, controls: list[dict], total: int, noun: str = "r
         cid = f"tf-{table_id}-{c['key']}"
         fields.append(h("div", {"class": "field"},
                         h("label", {"for": cid}, c["label"]),
-                        h("select", {"id": cid, "data-tf-key": c["key"]},
+                        h("select", {"id": cid, "data-tf-key": c["key"], "data-tf-tokens": True if c.get("tokens") else None},
                           h("option", {"value": ""}, c.get("all", "All")),
                           [h("option", {"value": v}, t) for v, t in c["options"]])))
     if search:
         sid = f"tf-{table_id}-q"
-        fields.append(h("div", {"class": "field field-search"},
-                        h("label", {"for": sid}, search),
-                        h("input", {"id": sid, "type": "search", "data-tf-q": True, "autocomplete": "off",
-                                    "spellcheck": "false"})))
+        box = h("div", {"class": "field field-search"},
+                h("label", {"for": sid}, search),
+                h("input", {"id": sid, "type": "search", "data-tf-q": True, "autocomplete": "off",
+                            "spellcheck": "false"}))
+        if search_first:
+            fields.insert(0, box)
+        else:
+            fields.append(box)
     if sort:
         sid = f"tf-{table_id}-sort"
         fields.append(h("div", {"class": "field"},
@@ -682,7 +931,8 @@ def entity_list(list_id: str, items: list[dict], *, noun: str = "item", plural: 
         facts = [f for f in (it.get("facts") or []) if f not in (None, "")]
         st = it.get("status")
         # Markup is a str subclass: test it first so a ready-made badge is passed through, not escaped again
-        badge = st if isinstance(st, Markup) else (status_badge(st) if isinstance(st, str) and st else st)
+        # (2026-11-18: the status is its symbol, as a plain span, not a link: status_symbol; official shows none)
+        badge = st if isinstance(st, Markup) else (status_symbol(st) if isinstance(st, str) and st else st)
         sep = h("span", {"class": "ent-sep", "aria-hidden": "true"}, " · ")
         summary = [h(heading_tag, {"class": "one-h ent-name", "id": it.get("heading_id")}, it["name"]),
                    h("span", {"class": "one-digest ent-facts"},

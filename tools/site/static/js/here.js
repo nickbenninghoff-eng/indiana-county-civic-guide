@@ -1,4 +1,4 @@
-/* Your place: the "You are here" bar on every page, the visible place picker (civic/picker.py),
+/* Your place: the header's "My place" chip on every page (the "You are here" bar until 2026-11-16, same ids), the visible place picker (civic/picker.py),
    the layer rows and counts it drives, the landing map as a picker, and small "your place" markers on
    place pages and the election calendar. Plain JS, ASCII only, data inserted with textContent only.
 
@@ -85,29 +85,22 @@
     return namesOf(st).map(function (n) { return n.text; }).join(DOT);
   }
 
-  /* ------------------------------------------------------------ "You are here" bar */
+  /* ------------------------------------------------------------ "My place" chip (header) */
+  /* civic/shell.py _here_bar (phase 6 step 1): two links to Your place. With no saved place the "My place" one shows
+     (as without JavaScript); with one, the other shows the place's name (short: "City of" / "Town of" dropped) and
+     its title lists every government of the saved place. */
   var bar = doc.getElementById("here-bar");
+  function shortName(t) { return String(t || "").replace(/^(City|Town) of /, ""); }
   function renderBar() {
     if (!bar) return;
     var set = doc.getElementById("here-set"), none = doc.getElementById("here-none"), names = doc.getElementById("here-names");
     if (!set || !none || !names) return;
-    clear(names);
-    var list = namesOf(state);
-    list.forEach(function (n, i) {
-      if (i) names.appendChild(doc.createTextNode(DOT));
-      var el;
-      if (n.href) {
-        el = doc.createElement("a");
-        el.href = ROOT + n.href;
-      } else {
-        el = doc.createElement("span");
-        el.className = "here-missing";
-      }
-      el.textContent = n.text;
-      names.appendChild(el);
-    });
-    set.hidden = !state;
-    none.hidden = !!state;
+    var p = placeOf(state);
+    names.textContent = p ? shortName(p.n) : "";
+    if (p) set.title = "My place: " + plainNames(state);
+    else set.removeAttribute("title");
+    set.hidden = !p;
+    none.hidden = !!p;
     bar.hidden = false;
   }
 

@@ -9,11 +9,19 @@ source id exists in sources_gov.csv; enum values; date formats; overlapping term
 for the same seat (single-seat offices strict; multi-seat offices by seat count;
 rows with notes containing OVERLAP_OK are exempt; blank start is skipped; blank
 end = current, using scheduled_end=... from notes when present);
-2027+ starts must be unofficial; the South Bend mayors list has 33 entries.
+2027+ starts must be unofficial unless the term is official on the official county canvass of 11/13/2026
+(cites OFFICIAL_CANVASS_2026, gap-fill round 2, 2026-11-18); the South Bend mayors list has 33 entries.
+New files (2026-11-18): unit_contacts.csv (unique gov_id+body; gov_id is a unit or a derived/unit_id_aliases.csv
+alias; confidence, ISO as_of, schedule_year YYYY or YYYY-YYYY) and appointed_board_members.csv (unique member_id;
+board_id -> appointed_boards; confidence; holdover blank or yes; ISO dates; a blank person only for a vacant seat).
+Their source ids are checked and count as used. Privacy: no cell of a GOV file may hold a personal mailbox
+(PRIVATE_MAIL).
 """
 import csv, os, re, sys, datetime
 
 D = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data", "editions", "st-joseph")
+OFFICIAL_CANVASS_2026 = "RES-048"
+PRIVATE_MAIL = re.compile(r"(?i)@(gmail|yahoo|sbcglobal|aol|hotmail|outlook|icloud|comcast|msn|live|att)\.")
 HEAD = {
  "units.csv": "unit_id,unit_type,name,parent_unit_ids,places_covered,website,status,source_ids,notes",
  "offices.csv": "office_id,unit_id,office_type,title,district,seats,elected,partisan,term_years,next_election,status,source_ids,notes",
@@ -21,6 +29,8 @@ HEAD = {
  "appointed_boards.csv": "board_id,unit_id,name,what_it_decides,seats,appointing_authorities,levies_tax,status,source_ids,notes",
  "sources_gov.csv": "id,url,title,publisher,accessed,kind,notes",
  "gaps_gov.csv": "area,item,why_missing,how_to_fill",
+ "unit_contacts.csv": "gov_id,body,phone,office_address,contact_url,website,meeting_rule,meeting_place,meeting_info_url,schedule_year,as_of,status,confidence,source_ids,notes",
+ "appointed_board_members.csv": "member_id,board_id,person,role,appointed_by,term_start,term_end,holdover,as_of,status,confidence,source_ids,notes",
 }
 STATUS = {"official","unofficial","computed","from_scan","secondary","single_source"}
 KIND = {"primary","news","secondary","statute","dataset","derived"}
@@ -33,6 +43,9 @@ def err(m): errs.append(m)
 
 def load(name):
     p = os.path.join(D, name)
+    if not os.path.exists(p):
+        err("%s: file missing" % name)
+        return []
     with open(p, encoding="utf-8", newline="") as f:
         r = csv.reader(f)
         h = next(r)
@@ -46,7 +59,7 @@ def load(name):
     return rows
 
 data = {n: load(n) for n in HEAD}
-units, offices, terms, boards, sources, gaps = (data[k] for k in ("units.csv","offices.csv","terms.csv","appointed_boards.csv","sources_gov.csv","gaps_gov.csv"))
+units, offices, terms, boards, sources, gaps, contacts, members = (data[k] for k in ("units.csv","offices.csv","terms.csv","appointed_boards.csv","sources_gov.csv","gaps_gov.csv","unit_contacts.csv","appointed_board_members.csv"))
 
 def uniq(rows, key, name):
     seen = set()
@@ -79,7 +92,7 @@ def chk_status_src(rows, name, key):
             s = s.strip()
             if s and s not in all_src_ids: err("%s %s: unknown source id %s" % (name, r[key], s))
             used_src.add(s)
-for rows, name, key in ((units,"units","unit_id"),(offices,"offices","office_id"),(terms,"terms","term_id"),(boards,"appointed_boards","board_id")):
+for rows, name, key in ((units,"units","unit_id"),(offices,"offices","office_id"),(terms,"terms","term_id"),(boards,"appointed_boards","board_id"),(contacts,"unit_contacts","gov_id"),(members,"appointed_board_members","member_id")):
     chk_status_src(rows, name, key)
 for r in sources:
     if r["kind"] not in KIND: err("sources %s: bad kind %r" % (r["id"], r["kind"]))
@@ -115,12 +128,55 @@ for r in terms:
         if r[f] and not DATE.match(r[f]): err("terms %s: bad %s %r" % (t, f, r[f]))
     if not r["start"] and "Wax" not in r["person"] and "Arnold" not in r["person"] and "Broden" not in r["person"] and "Canfield" not in r["person"]:
         warns.append("terms %s: blank start" % t)
-    if r["start"] and r["start"] >= "2027" and r["status"] != "unofficial":
-        err("terms %s: starts %s but status is %s (2026-result terms must be unofficial)" % (t, r["start"], r["status"]))
+    # a term starting 2027+ rests on the 2026 results: unofficial, or official only on the official county canvass
+    if r["start"] and r["start"] >= "2027" and r["status"] != "unofficial" and not (
+            r["status"] == "official" and OFFICIAL_CANVASS_2026 in [x.strip() for x in r["source_ids"].split(";")]):
+        err("terms %s: starts %s but status is %s (a 2026-result term is official only on the official county canvass, %s)" % (t, r["start"], r["status"], OFFICIAL_CANVASS_2026))
     if r["status"] == "unofficial" and "Unofficial" not in r["notes"] and "UNOFFICIAL" not in r["notes"]:
         err("terms %s: unofficial row without an 'as of' note" % t)
-    if r["start"] and r["end"] and parse(r["end"]) < parse(r["start"]):
+    if DATE.match(r["start"]) and DATE.match(r["end"]) and parse(r["end"]) < parse(r["start"]):
         err("terms %s: end before start" % t)
+
+# new files (gap-fill round 2, 2026-11-18)
+aliases = {}
+_alias_p = os.path.join(D, "derived", "unit_id_aliases.csv")
+if os.path.exists(_alias_p):
+    with open(_alias_p, encoding="utf-8", newline="") as f:
+        for a in csv.DictReader(f):
+            aliases[a["alias_id"]] = a["unit_id"]
+board_ids = {b["board_id"] for b in boards}
+seen_c = set()
+for r in contacts:
+    k = (r["gov_id"], r["body"])
+    if k in seen_c: err("unit_contacts: duplicate (gov_id, body) %s" % (k,))
+    seen_c.add(k)
+    if r["gov_id"] not in unit_ids and r["gov_id"] not in aliases:
+        err("unit_contacts %s: unknown gov_id" % r["gov_id"])
+    if r["confidence"] not in CONF: err("unit_contacts %s: bad confidence %r" % (r["gov_id"], r["confidence"]))
+    if not re.fullmatch(r"\d{4}-\d{2}-\d{2}", r["as_of"]): err("unit_contacts %s: bad as_of %r" % (r["gov_id"], r["as_of"]))
+    if r["schedule_year"] and not re.fullmatch(r"\d{4}(-\d{4})?", r["schedule_year"]):
+        err("unit_contacts %s: bad schedule_year %r" % (r["gov_id"], r["schedule_year"]))
+    if r["contact_url"] and not re.fullmatch(r"(https?://|mailto:)\S+", r["contact_url"]):
+        err("unit_contacts %s: contact_url is not one URL or mailto: %r" % (r["gov_id"], r["contact_url"]))
+uniq(members, "member_id", "appointed_board_members")
+for r in members:
+    m = r["member_id"]
+    if r["board_id"] not in board_ids: err("appointed_board_members %s: unknown board_id %s" % (m, r["board_id"]))
+    if not m.startswith(r["board_id"] + "__"): err("appointed_board_members %s: member_id does not start with its board_id" % m)
+    if r["confidence"] not in CONF: err("appointed_board_members %s: bad confidence %r" % (m, r["confidence"]))
+    if r["holdover"] not in ("", "yes"): err("appointed_board_members %s: bad holdover %r" % (m, r["holdover"]))
+    for f in ("term_start", "term_end", "as_of"):
+        if r[f] and not DATE.match(r[f]): err("appointed_board_members %s: bad %s %r" % (m, f, r[f]))
+    if not r["as_of"]: err("appointed_board_members %s: blank as_of" % m)
+    if DATE.match(r["term_start"]) and DATE.match(r["term_end"]) and parse(r["term_end"]) < parse(r["term_start"]):
+        err("appointed_board_members %s: term_end before term_start" % m)
+    if not r["person"].strip() and "Vacant seat" not in r["notes"]:
+        err("appointed_board_members %s: blank person without a vacant-seat note" % m)
+# privacy: office contacts only; no personal mailbox anywhere in the GOV files
+for name in ("units.csv", "offices.csv", "terms.csv", "appointed_boards.csv", "sources_gov.csv", "unit_contacts.csv", "appointed_board_members.csv"):
+    for r in data[name]:
+        hit = PRIVATE_MAIL.search(",".join(r.values()))
+        if hit: err("%s: personal e-mail address (%s...) in row %s" % (name, hit.group(0), next(iter(r.values()))))
 
 # overlaps
 seats = {o["office_id"]: o["seats"] for o in offices}
@@ -153,6 +209,6 @@ if len(mayors) != 33: err("south-bend-mayor: %d rows, expected 33" % len(mayors)
 
 for w in warns: print("WARN:", w)
 for e in errs: print("ERROR:", e)
-print("units=%d offices=%d terms=%d appointed_boards=%d sources=%d gaps=%d | errors=%d warnings=%d" %
-      (len(units), len(offices), len(terms), len(boards), len(sources), len(gaps), len(errs), len(warns)))
+print("units=%d offices=%d terms=%d appointed_boards=%d sources=%d gaps=%d unit_contacts=%d appointed_board_members=%d | errors=%d warnings=%d" %
+      (len(units), len(offices), len(terms), len(boards), len(sources), len(gaps), len(contacts), len(members), len(errs), len(warns)))
 sys.exit(1 if errs else 0)

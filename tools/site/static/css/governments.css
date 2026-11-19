@@ -1,0 +1,109 @@
+/* governments.css: the government pages and the Governments hub (pages/governments.py, pages/gov_parts.py; phase 6
+   step 3, 2026-11-16). The tab template's parts are in tabs.css. Existing tokens only (the locator map's fills are the
+   accent and the surfaces, never party); every rule is checked in the three looks, light and dark. */
+
+/* ---------------------------------------------------------------- office rows (Overview) */
+.gov-offices { list-style: none; margin: 0 0 14px; padding: 0; }
+.gov-office { margin: 0; padding: 8px 0; border-top: 1px solid var(--grid);
+  display: grid; grid-template-columns: minmax(12rem, 18rem) minmax(0, 1fr) minmax(9rem, max-content); gap: 2px 18px;
+  align-items: baseline; }
+.gov-office:first-child { border-top: 0; }
+.gov-office-name { font-weight: 600; }
+.gov-office-who { min-width: 0; }
+.gov-office-next { font-family: var(--f-mono); font-size: .8rem; color: var(--ink-2); font-variant-numeric: tabular-nums;
+  text-align: right; }
+.gov-office-extra { grid-column: 1 / -1; font-size: .86rem; color: var(--ink-3); }
+.gov-office-vacant { color: var(--ink-3); }
+.gov-office-inc { font-size: .88rem; color: var(--ink-2); }
+.gov-office:target { background: var(--accent-wash); }
+
+/* ---------------------------------------------------------------- where it is: the small locator map */
+.gov-where { display: grid; grid-template-columns: minmax(150px, 220px) minmax(0, 1fr); gap: 8px 26px; align-items: start; }
+.gov-where > div > .sub-block:first-child { margin-top: 0; }
+.gov-where > div > h3:first-child { margin-top: 0; }
+.gov-loc { margin: 0; }
+.gov-loc-svg { display: block; width: 100%; height: auto; }
+.gov-loc-area { fill: var(--surface-2); stroke: var(--line); stroke-width: 1px; vector-effect: non-scaling-stroke; }
+.gov-loc-me { fill: var(--accent); stroke: var(--ink); stroke-width: 1.5px; vector-effect: non-scaling-stroke; }
+.gov-loc-county { fill: none; stroke: var(--ink-3); stroke-width: 1.5px; vector-effect: non-scaling-stroke; }
+.gov-loc-county-me { stroke: var(--accent); stroke-width: 2.5px; }
+.gov-loc-cap { font-size: .8rem; color: var(--ink-3); margin-top: 6px; }
+
+/* ---------------------------------------------------------------- at a glance (school corporations, special units) */
+.gov-glance { display: grid; grid-template-columns: minmax(9rem, max-content) minmax(0, 1fr); gap: 6px 18px; margin: 0;
+  max-width: var(--measure); }
+.gov-glance dt { color: var(--ink-3); font-size: .9rem; }
+.gov-glance dd { margin: 0; }
+
+/* ---------------------------------------------------------------- the community strip */
+.gov-ctx { list-style: none; margin: 0; padding: 0; display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 15rem), 1fr)); gap: 12px 22px; }
+.gov-ctx-item { margin: 0; display: flex; flex-direction: column; gap: 1px; }
+.gov-ctx-label { font-size: .84rem; color: var(--ink-2); }
+.gov-ctx-value { font-size: 1.15rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+.gov-ctx-moe { font-family: var(--f-mono); font-size: .78rem; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+.gov-ctx-vintage { font-size: .78rem; color: var(--ink-3); }
+.gov-ctx-note { margin-top: 12px; }
+
+/* ---------------------------------------------------------------- Money and History */
+.gov-wide { grid-template-columns: minmax(0, 1fr); }
+.gov-latest { max-width: var(--measure); }
+.gov-holders { list-style: none; margin: 0; padding: 0; columns: 2 22rem; column-gap: 28px; }
+.gov-holders li { margin: 0 0 6px; break-inside: avoid; }
+
+/* ---------------------------------------------------------------- the Governments hub */
+.gov-hub-map .cmap { margin-top: 0; }
+.gov-hub-groups { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 19rem), 1fr)); gap: 0 30px; }
+.gov-hub-group { margin-top: 22px; }
+.gov-hub-list { list-style: none; margin: 0; padding: 0; }
+.gov-hub-row { margin: 0; padding: 5px 0; border-top: 1px solid var(--grid); display: flex; flex-direction: column; }
+.gov-hub-row:first-child { border-top: 0; }
+.gov-hub-name { font-weight: 600; }
+.gov-hub-line { font-size: .84rem; color: var(--ink-3); }
+.gov-hub-row:target { background: var(--accent-wash); }
+.gov-hub-also { list-style: none; margin: 0; padding: 0; columns: 2 20rem; column-gap: 28px; }
+.gov-hub-also li { margin: 0 0 6px; break-inside: avoid; }
+
+/* ---------------------------------------------------------------- forwarding pages */
+.forward-line { font-size: 1.05rem; }
+
+@media (max-width: 760px) {
+  .gov-office { grid-template-columns: minmax(0, 1fr); }
+  .gov-office-next { text-align: left; }
+  .gov-where { grid-template-columns: minmax(0, 1fr); }
+  .gov-loc { max-width: 220px; }
+}
+
+/* the district map on a government's Overview: shorter than on the full map page, so the Overview stays within
+   about four screens (the drawing keeps its proportions inside the box) */
+.place-dmap .cmap-svg, #officeholders > .dmap .cmap-svg { max-height: 460px; }
+
+/* ---------------------------------------------------------------- contact and meetings (unit_contacts.csv, 2026-11-18) */
+.gov-contact { margin: 0 0 18px; max-width: var(--measure); }
+.gov-contact-h { margin: 14px 0 6px; font-size: 1rem; }
+.gov-contact-dl { display: grid; grid-template-columns: minmax(7rem, max-content) minmax(0, 1fr); gap: 4px 18px; margin: 0; }
+.gov-contact-dl dt { color: var(--ink-3); font-size: .9rem; }
+.gov-contact-dl dd { margin: 0; min-width: 0; overflow-wrap: anywhere; }
+.gov-contact-when { font-size: .86rem; }
+.gov-contact-src { font-size: .82rem; margin: 6px 0 0; }
+@media (max-width: 560px) {
+  .gov-contact-dl { grid-template-columns: minmax(0, 1fr); gap: 0; }
+  .gov-contact-dl dd { margin-bottom: 6px; }
+}
+
+/* ---------------------------------------------------------------- appointed board rosters (2026-11-18) */
+.gov-roster-h { margin: 18px 0 6px; font-size: 1rem; }
+.gov-rosters { display: flex; flex-direction: column; gap: 4px; }
+.gov-roster { margin: 0; border-top: 1px solid var(--grid); }
+.gov-roster-sum { padding: 6px 0; }
+.gov-roster-name { font-weight: 600; }
+.gov-roster-n { color: var(--ink-3); font-size: .9rem; }
+.gov-roster-lead { font-size: .86rem; margin: 2px 0 6px; max-width: var(--measure); }
+.gov-members { list-style: none; margin: 0 0 10px; padding: 0; max-width: var(--measure); }
+.gov-member { margin: 0; padding: 3px 0; display: flex; flex-wrap: wrap; gap: 2px 10px; align-items: baseline; }
+.gov-member-name { font-weight: 600; }
+.gov-member-vacant .gov-member-name { font-weight: 400; color: var(--ink-3); font-style: italic; }
+.gov-member-meta { color: var(--ink-2); font-size: .9rem; }
+.gov-member-hold { font-size: .86rem; color: var(--ink-2); }
+.gov-member-note { flex-basis: 100%; font-size: .82rem; }
+.gov-roster-foot { font-size: .82rem; }

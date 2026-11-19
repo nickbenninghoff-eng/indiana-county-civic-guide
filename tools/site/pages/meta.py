@@ -13,8 +13,10 @@ import re
 from collections import Counter
 
 from civic import sitemap
-from civic.components import STATUS, callout, data_table, gaps_section, scope_badge, section, status_badge
+from civic.components import (FIGURE_MARKS, STATUS, callout, data_table, gaps_section, mark_symbol, scope_badge, section,
+                              status_badge, status_label)
 from civic.data import fmt_date, fmt_int, split_ids
+from civic import results_status as RS
 from civic.html import Markup, h, json_script, join
 from civic.layers import COUNTING_RULES
 from civic.neutrality import BANNED_TERMS
@@ -100,10 +102,10 @@ def _rule_line(ed, page, key: str):
 def _status_mix(rows, page) -> Markup:
     c = Counter((r.get("status") or "").strip().lower() for r in rows)
     order = [k for k in STATUS if k in c] + sorted(k for k in c if k not in STATUS)
-    items = [h("li", None, status_badge(k, page), h("span", {"class": "mix-n mono"}, fmt_int(c[k]))) for k in order]
+    items = [h("li", None, status_label(k, page), h("span", {"class": "mix-n mono"}, fmt_int(c[k]))) for k in order]
     low = sum(1 for r in rows if r.get("confidence") == "low")
     if low:
-        items.append(h("li", None, status_badge("low", page), h("span", {"class": "mix-n mono"}, fmt_int(low))))
+        items.append(h("li", None, status_label("low", page), h("span", {"class": "mix-n mono"}, fmt_int(low))))
     return h("ul", {"class": "status-mix", "aria-label": "Rows by status"}, items)
 
 
@@ -388,7 +390,7 @@ def build_about(site):
                      h("ul", {"class": "gaps-list"}, [h("li", None, h("strong", None, g["item"]),
                                                        h("span", {"class": "gap-why"}, g.get("why_missing", "")))
                                                      for g in people_gaps]) if people_gaps else None,
-                     h("p", None, h("a", {"href": page.rel("history/people/index.html")}, "People who shaped local government")),
+                     h("p", None, h("a", {"href": page.rel("people/notable/index.html")}, "People who shaped local government")),
                      h("h3", None, "Community data"),
                      h("ul", None,
                        h("li", None, "The same indicators for every place, with Census category names as published, the "
@@ -402,19 +404,31 @@ def build_about(site):
 
     # ------------------------------------------------------------------ badges (foundation definitions kept)
     page.add(section("badges", 4, "Status and scope badges",
-                     h("p", None, "Every figure carries a status badge. Tap or hover a badge anywhere in the guide to see its "
-                                  "meaning; each one links here."),
+                     # 2026-11-18 (phase 6, "About these figures"): the normal case carries no mark; an exception is one
+                     # small symbol beside the figure, explained once in the note at the bottom of each page
+                     h("p", None, "A figure that is official and complete carries no mark. A figure that is an exception "
+                                  "carries one small symbol right after it, the same symbol on every page. Tap or hover "
+                                  "the symbol to see its meaning; it links to the \"About these figures\" note at the "
+                                  "bottom of the same page, which lists only the symbols that page uses. Where a whole "
+                                  "table or chart shares one status, its caption says so once. Tables keep the status "
+                                  "word in their Status column."),
                      h("dl", {"class": "badge-defs"},
-                       [[h("dt", None, status_badge(k)), h("dd", None, v[1])] for k, v in STATUS.items()] +
+                       [[h("dt", None, h("span", {"class": "fmark-sym fmark-none", "aria-hidden": "true"}, "–"), " ",
+                           "No mark"),
+                         h("dd", None, STATUS["official"][1] + " Complete as far as the guide knows.")]] +
+                       [[h("dt", None, mark_symbol(k), " ", FIGURE_MARKS[k][1]),
+                         h("dd", None, FIGURE_MARKS[k][2][:1].upper() + FIGURE_MARKS[k][2][1:])] for k in FIGURE_MARKS] +
+                       [[h("dt", None, status_label(k)), h("dd", None, v[1])] for k, v in STATUS.items()] +
                        [[h("dt", None, scope_badge(s, ed)), h("dd", None, t)] for s, t in (
                            ("indiana", "Applies to every Indiana county."),
                            ("county", f"Data or rules specific to {ed.county_label}."),
                            ("exception", f"Where state law treats {ed.county_label} differently from most counties."))]),
                      h("h3", None, "Two more labels"),
                      h("ul", None,
-                       h("li", None, h("strong", None, "Takes office Jan 1, 2027 (results unofficial). "),
-                         "People elected on Nov 3, 2026 are listed as incoming. Their results stay unofficial until the county "
-                         "certifies them."),
+                       h("li", None, h("strong", None, "Incoming, takes office later. "),
+                         "People elected on Nov 3, 2026 are listed as incoming until their terms start. A holder whose "
+                         "election result is still unofficial says \"(results unofficial)\" beside the name. ",
+                         RS.summary(ed, "2026g")),
                        h("li", None, h("strong", None, "Confidence. "),
                          "Many rows also record high, medium or low confidence. Low-confidence values stay in tables, "
                          "flagged, and are never used in headings, chart titles or summaries.")),
@@ -456,7 +470,8 @@ def build_about(site):
                                       f"{fmt_date(cfg['data_as_of'], long=True)}. Not yet published publicly."),
                          h("ul", None,
                            h("li", None, "Research, fact-check and data conversion complete; corrections applied."),
-                           h("li", None, "2026 general-election figures are unofficial until the county certifies them."),
+                           h("li", None, "2026 general election: ", RS.brief(ed, "2026g"), " Figures from the state's "
+                                         f"results portal are {RS.STATE_PHRASE}."),
                            h("li", None, "Local campaign-finance figures are on the Campaign finance page, each with its "
                                          "check status (arithmetic check on every form, second reading on a sample)."),
                            h("li", None, "Author disclosure published.")))),
@@ -711,9 +726,9 @@ def _csv_text(cols: list[str], rows: list[dict]) -> str:
 
 def _cell(page, col: str, val: str):
     if col == "status":
-        return status_badge(val, page)
+        return status_label(val, page)
     if col == "confidence":
-        return h("span", None, val, " ", status_badge("low", page)) if val == "low" else val
+        return h("span", None, val, " ", status_label("low", page)) if val == "low" else val
     if col == "source_ids":
         return h("span", {"class": "mono ids"}, val, page.cites.cite(val))
     if col == "website" and val.startswith("http"):
@@ -996,7 +1011,7 @@ def build_teach(site):
     els.sort(key=lambda e: e["date"])
     erows = [[e["date"][:4], "Even-year general" if e["type"] == "general" else "Odd-year city and town",
               e["scope"], fmt_int(e["registered"]), fmt_int(e["ballots_cast"]), f"{e['turnout_pct']}%",
-              h("span", None, status_badge(e["status"], page), c.cite(e["source_ids"]))] for e in els]
+              h("span", None, status_label(e["status"], page), c.cite(e["source_ids"]))] for e in els]
     page.add(section("facts", 3, "Facts to use in this lesson",
                      h("p", None, "These come straight from the guide's data, with sources. Use them instead of facts from "
                                   "memory."),
@@ -1009,7 +1024,7 @@ def build_teach(site):
                                                    "Turnout", "Status"], erows,
                                 caption=f"General-election turnout, {els[0]['date'][:4]} to {els[-1]['date'][:4]}" if els else None,
                                 numeric=(3, 4, 5), min_width="44rem") if erows else None,
-                     h("p", {"class": "muted"}, "Rows marked UNOFFICIAL may change when the county certifies the results."),
+                     h("p", {"class": "muted"}, "Rows marked UNOFFICIAL are not final yet and may change."),
                      scope="county", ed=ed))
 
     # ------------------------------------------------------------------ prompts

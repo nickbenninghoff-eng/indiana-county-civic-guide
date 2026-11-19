@@ -44,7 +44,7 @@ def here_layer(ed, unit_id: str, _seen: frozenset = frozenset()) -> str:
         return "county"
     if t == "library":
         return "library"
-    if t == "state_chamber":
+    if t in ("state_chamber", "state", "federal_chamber"):   # every saved place votes on these (2026-11-18)
         return "state"
     parent = (u.get("parent_unit_ids") or "").split(";")[0].strip()
     return here_layer(ed, parent, _seen | {unit_id}) if parent else ""

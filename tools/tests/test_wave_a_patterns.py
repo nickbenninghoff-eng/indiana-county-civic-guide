@@ -31,7 +31,10 @@ from civic.html import Markup, h  # noqa: E402
 from civic.shell import Site  # noqa: E402
 
 ID_RE = re.compile(r'\sid="([^"]+)"')
-SB, COUNTY, RESULTS = "places/south-bend/index.html", "county/index.html", "elections/results/index.html"
+# phase 6 step 3 (2026-11-16): the place and county pages became government pages (places/<id>/ and county/ forward
+# there); the rails are on each government's Overview
+SB, COUNTY, RESULTS = ("governments/south-bend/index.html", "governments/county/index.html",
+                       "elections/results/index.html")
 
 
 def _tag(html: str, cls: str) -> str:
@@ -109,7 +112,14 @@ class EntityList(unittest.TestCase):
         self.assertIn('<h3 class="one-h ent-name">Ann Example</h3>', summ)
         self.assertIn("Mayor 1980-1988", summ)
         self.assertIn("<em>R &amp; D</em>", summ)
-        self.assertIn("badge-official", summ)
+        # 2026-11-18 ("About these figures"): an official row carries no mark; an exception is its symbol, a plain
+        # span (never a link inside <summary>)
+        self.assertNotIn("badge-official", summ)
+        self.assertNotIn("fmark", summ)
+        unoff = entity_list("people", [dict(self.items[0], status="unofficial")])
+        usumm = re.search(r"<summary.*?</summary>", unoff, re.S).group(0)
+        self.assertIn('<span class="fmark fmark-unofficial"', usumm)
+        self.assertNotIn("<a ", usumm)
         self.assertNotIn("<a ", summ)                     # no link inside <summary>
         self.assertNotIn("Card A", summ)
 
@@ -234,7 +244,7 @@ class RelatedRules(unittest.TestCase):
     def test_other_page_links_back_to_the_place(self):
         items = related.related_items(self.page("money/campaigns/south-bend/index.html"), "south-bend")
         self.assertEqual(items[0].key, "place")
-        self.assertEqual(items[0].href, "../../../places/south-bend/index.html")
+        self.assertEqual(items[0].href, "../../../governments/south-bend/index.html")
         self.assertNotIn("campaigns", [i.key for i in items])
 
     def test_office_rail(self):
@@ -328,24 +338,26 @@ class Built(unittest.TestCase):
                     self.assertIn(frag, ID_RE.findall(self.html[target]), href)
 
     def test_rail_sits_after_at_a_glance(self):
+        # phase 6 step 3: a government's Overview ends with its rail (the page has tabs, not a table of contents)
         for page in (SB, COUNTY):
             html = self.html[page]
             self.assertLess(html.index('id="glance"'), html.index('id="related"'))
-            self.assertLess(html.index('id="related"'), html.index('class="toc"'))
+            self.assertNotIn('class="toc"', html)
 
     def test_results_rows_carry_contest_ids(self):
+        # phase 6 step 4 (2026-11-16): the explorer's payload is gone; every contest the old links reach
+        # (related.in_results) keeps its row and id, and #results-forward names the election page that has it
         html = self.html[RESULTS]
-        raw = re.search(r'<script type="application/json" id="elx-data">(.*?)</script>', html, re.S).group(1)
-        data = json.loads(raw.replace("<\\/", "</"))
-        # the payload ships the id without its election prefix ("i"; "fi" = the whole id), elections.js rebuilds it
-        ids = [c["i"] if c.get("fi") else f'{c["e"]}-{c["i"]}' for c in data["contests"]]
-        self.assertEqual(len(ids), len(set(ids)))
+        self.assertNotIn('id="elx-data"', html)
         page_ids = ID_RE.findall(html)
         self.assertEqual(len(page_ids), len(set(page_ids)))
         rows = {i[len("contest-"):] for i in page_ids if i.startswith("contest-")}
-        self.assertEqual(rows, set(ids))                    # every explorer contest has its row, and only those
-        for cid in ids:
+        self.assertTrue(rows)
+        for cid in rows:
             self.assertTrue(related.in_results(self.ed, cid), cid)
+        fwd = json.loads(re.search(r'id="results-forward">(.*?)</script>', html, re.S).group(1).replace("<\\/", "</"))
+        for cid in rows:
+            self.assertIn(fwd["x"].get(cid) or cid[:5], fwd["e"], cid)
         fold = _tag(html, "see-all")
         self.assertIn(" open", fold)
         self.assertIn('id="every-contest-all"', fold)
@@ -373,9 +385,10 @@ class Static(unittest.TestCase):
         src = self.read("static/js/elections.js")
         self.assertIn("#contest-", src)
         self.assertIn("hashchange", src)
-        self.assertIn("Show every contest in this election", src)
-        # runs its landing step after folds.js (which comes later in app.js)
-        self.assertIn("setTimeout(function () { showOne(first, true); }, 0)", src)
+        # phase 6 step 4: the results page forwards #contest-<id> to the election page, which opens that contest's
+        # fold after folds.js (which comes later in app.js) has closed the folds
+        self.assertIn('"results-forward"', src)
+        self.assertIn("window.setTimeout(openContest, 0)", src)
 
     def test_tablefilter_accepts_lists(self):
         self.assertIn('hasAttribute("data-tf-row")', self.read("static/js/tablefilter.js"))

@@ -2,7 +2,7 @@
 and the next agents have a file (and the path-stop anchors) to fill."""
 from __future__ import annotations
 
-from civic.components import STATUS, scope_badge, status_badge
+from civic.components import STATUS, scope_badge, status_label
 from civic.html import h
 from civic.layers import COUNTING_RULES
 
@@ -24,7 +24,7 @@ def build_stub(site, entry):
         body = [h("p", {"class": "muted"}, "Coming in a later build.")]
         if entry.path == "about/index.html" and anchor == "badges":
             body = [h("dl", {"class": "badge-defs"},
-                      [[h("dt", None, status_badge(k)), h("dd", None, v[1])] for k, v in STATUS.items()] +
+                      [[h("dt", None, status_label(k)), h("dd", None, v[1])] for k, v in STATUS.items()] +
                       [[h("dt", None, scope_badge(s, ed)), h("dd", None, t)] for s, t in (
                           ("indiana", "Applies to every Indiana county."),
                           ("county", f"Data or rules specific to {ed.county_label}."),

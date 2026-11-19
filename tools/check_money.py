@@ -3,10 +3,29 @@
 Run:  python -P -E tools/check_money.py
 Exit status 1 if any check fails. Prints each unit's budget series and flags
 year-over-year jumps over 40% that are not explained by a series_break row.
-"""
-import csv, collections, datetime, sys
 
-D = 'C:/Users/nickb/local-gov-guide/data/editions/st-joseph/'
+The data folder is found relative to this file (data/editions/st-joseph/ beside tools/), so a copy of the checker in
+<root>/tools/ checks <root>/data/ (the gap-fill merge and the unit tests rely on this).
+
+debt.csv integrity (gap-fill round 2, 2026-11-18): one row per (unit, year, debt_type); every unit-year "Total
+end-of-year principal outstanding (all debt)" equals the sum of that unit-year's "End-of-year principal outstanding:"
+class rows, and class rows never stand without a total; the county and Redevelopment Authority 2024/2025 totals carry
+the never-sum note. budgets.csv and debt.csv rows of the cross-county school corporations (WHOLE_CORPORATION_UNITS)
+carry the whole-corporation phrase.
+"""
+import csv, collections, datetime, os, sys
+from decimal import Decimal, InvalidOperation
+
+D = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'data', 'editions', 'st-joseph') + os.sep
+DEBT_CLASS_PREFIX = 'End-of-year principal outstanding:'
+DEBT_TOTAL = 'Total end-of-year principal outstanding (all debt)'
+# whole-corporation money rows of school corporations whose principal county is another county
+WHOLE_CORPORATION_UNITS = ('school-new-prairie', 'school-union-north')
+WHOLE_CORPORATION_PHRASE = 'Whole corporation (principal county:'
+# the same $50,000,000 bonds are reported by both units: their totals must say never to add them
+NEVER_SUM_UNITS = ('county-st-joseph', 'special-redevelopment-authority')
+NEVER_SUM_YEARS = ('2024', '2025')
+NEVER_SUM_PHRASE = 'never add the two totals'
 STATUS = {'official', 'unofficial', 'computed', 'from_scan', 'secondary', 'single_source'}
 BASES = {'general_fund', 'advertised_all_funds', 'all_funds_incl_utilities', 'gateway_reported_funds'}
 # table-only bases (never charted; see data/SCHEMA.md): the DLGF budget-order total and a later amended budget
@@ -189,6 +208,42 @@ for i, r in TR:
 
 DB = load('debt.csv')
 common('debt.csv', DB, ['amount'])
+
+
+def dec(s):
+    try:
+        return Decimal(s)
+    except (InvalidOperation, TypeError):
+        return None
+
+
+debt_keys = collections.Counter((r['unit_id'], r['year'], r['debt_type']) for _, r in DB)
+for k, n in sorted(debt_keys.items()):
+    if n > 1:
+        err('debt: duplicate (unit, year, debt_type) %s (%d rows)' % (k, n))
+debt_cls, debt_tot = collections.defaultdict(Decimal), {}
+for i, r in DB:
+    a = dec(r['amount'])
+    if a is None:
+        continue
+    if r['debt_type'].startswith(DEBT_CLASS_PREFIX):
+        debt_cls[(r['unit_id'], r['year'])] += a
+    elif r['debt_type'] == DEBT_TOTAL:
+        debt_tot[(r['unit_id'], r['year'])] = a
+for k, v in sorted(debt_tot.items()):
+    if k in debt_cls and debt_cls[k] != v:
+        err('debt %s %s: total %s != sum of classes %s' % (k[0], k[1], v, debt_cls[k]))
+for k in sorted(debt_cls):
+    if k not in debt_tot:
+        err('debt %s %s: class rows without a total row' % k)
+for fn, rows in (('budgets.csv', B), ('debt.csv', DB)):
+    for i, r in rows:
+        if r['unit_id'] in WHOLE_CORPORATION_UNITS and WHOLE_CORPORATION_PHRASE not in r['notes']:
+            err('%s line %d: %s row without the whole-corporation phrase %r' % (fn, i, r['unit_id'], WHOLE_CORPORATION_PHRASE))
+for i, r in DB:
+    if r['unit_id'] in NEVER_SUM_UNITS and r['year'] in NEVER_SUM_YEARS and r['debt_type'] == DEBT_TOTAL \
+            and NEVER_SUM_PHRASE not in r['notes']:
+        err('debt line %d: %s %s total without the never-sum note' % (i, r['unit_id'], r['year']))
 
 CF = load('cf_state.csv')
 common('cf_state.csv', CF, ['receipts', 'expenditures'])

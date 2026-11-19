@@ -546,6 +546,36 @@
     else { state.sel = { geo: geo, key: key, all: true }; rest(); }
   });
 
+  // ---------------------------------------------------------------- one election (added 2026-11-16, phase 6 step 4)
+  // An election page's Map tab (civic/map.py election_vote_map) carries data-vote-eid: keep only that election's races,
+  // and the offices, districts and levels that have one (the same rule as civic/map.py election_votes), with the
+  // race the markup shows as the default. The standalone map has no data-vote-eid and is unchanged.
+  function onlyElection(data) {
+    var eid = root.getAttribute("data-vote-eid");
+    if (!eid || !data || !data.races) return data;
+    var races = data.races.filter(function (r) { return r.eid === eid; });
+    if (!races.length) return data;
+    var keep = {};
+    races.forEach(function (r) { (keep[r.office] = keep[r.office] || {})[r.district || ""] = true; });
+    var offices = data.offices.filter(function (o) { return keep[o.key]; }).map(function (o) {
+      if (!o.districts) return o;
+      var c = {};
+      Object.keys(o).forEach(function (k) { c[k] = o[k]; });
+      c.districts = o.districts.filter(function (d) { return keep[o.key][d]; });
+      return c;
+    });
+    var lv = {};
+    offices.forEach(function (o) { lv[o.level] = true; });
+    var out = {};
+    Object.keys(data).forEach(function (k) { out[k] = data[k]; });
+    out.races = races;
+    out.offices = offices;
+    out.levels = (data.levels || []).filter(function (l) { return lv[l.key]; });
+    var d = root.getAttribute("data-vote-default");
+    out["default"] = races.some(function (r) { return r.id === d; }) ? d : races[0].id;
+    return out;
+  }
+
   // ---------------------------------------------------------------- data file
   function load() {
     if (V || loading) return;
@@ -555,7 +585,7 @@
     if (!window.fetch || !url) { failed = true; loading = false; idle(); return; }
     window.fetch(url).then(function (r) { if (!r.ok) throw new Error(String(r.status)); return r.json(); })
       .then(function (data) {
-        V = data;
+        V = onlyElection(data);
         V.races.forEach(function (r) { RACE[r.id] = r; });
         PVIEW = V.pview !== false;
         // a race asked for by the address (#race-<id>, set aside by map.js), else the default race

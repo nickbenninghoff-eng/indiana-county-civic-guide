@@ -7,11 +7,13 @@ from collections import defaultdict
 
 from civic.charts import columns, results_bars
 from civic.components import (bodies_block, name_party_text, name_with_party, callout, data_table, officeholder_card,
-                              party_label, scope_badge, section, see_all_fold, status_badge)
+                              party_label, scope_badge, section, see_all_fold, status_badge, status_label)
 from civic.district_map import district_map, district_set, load_district_shapes
 from civic.map import load_shapes
 from civic.pick_one import one_bar, one_fold, one_summary
 from civic.data import PARTY_LABELS, fmt_date, parse_date, split_ids
+from civic import results_status as RS
+from pages.elections import classify, contest_status
 from civic.html import h, join
 from civic.seat_split import seat_split
 from civic.related import related_items, related_rail
@@ -147,13 +149,15 @@ def build_state(site):
 
     # ---------------------------------------------------------------- 1 offices
     rows = []
+    any_unofficial = False
     for o in offices:
         cur, inc = _statewide_split(ed, o["office"])
         cur_cell = [_holder_line(page, t) for t in cur] or [h("span", {"class": "muted"}, "No holder in the guide's data")]
         inc_cell = []
         for t in inc:
             inc_cell.append(h("div", {"class": "state-holder"}, _holder_line(page, t),
-                              h("div", {"class": "muted"}, f"Takes office {fmt_date(t['start'])} (results unofficial)")))
+                              h("div", {"class": "muted"}, f"Takes office {fmt_date(t['start'])}"
+                                                           + (" (results unofficial)" if t.get("status") == "unofficial" else ""))))
         term_note = re.search(r"term ends (?:[A-Za-z]+ )?(\d{4})", (cur[0]["notes"] if cur else ""), re.I)
         if not inc_cell:
             if o["elected_or_appointed"] != "elected":
@@ -163,6 +167,7 @@ def build_state(site):
             else:
                 msg = "No 2026 winner in the guide's data"
             inc_cell = [h("span", {"class": "muted"}, msg)]
+        any_unofficial = any_unofficial or any(t.get("status") == "unofficial" for t in inc)
         rows.append([o["office"],
                      h("span", None, o["what_it_does"], c.cite(o["source_ids"]), " ", status_badge(o["status"], page)),
                      f"{o['term_years']}" + (f". Current term ends {term_note.group(0)[10:].strip()}." if term_note else ""),
@@ -170,8 +175,9 @@ def build_state(site):
                      h("div", None, cur_cell), h("div", None, inc_cell)])
     page.add(section("offices", 1, "Statewide offices and who holds them",
                      h("p", None, "Statewide officers are chosen by voters in every county. Officeholders are listed by office, "
-                                  "not by party. Winners of the Nov 3, 2026 general election are marked unofficial until the "
-                                  "state certifies results; their terms start in January 2027."),
+                                  "not by party. Winners of the Nov 3, 2026 general election take office in January 2027"
+                                  + ("; a winner whose statewide result is still unofficial (the statewide result awaits "
+                                     "state certification) is marked \"results unofficial\"." if any_unofficial else ".")),
                      data_table("statewide-offices", ["Office", "What it does", "Term (years)", "How filled", "Holder now",
                                                       "Elected 2026 (takes office 2027)"],
                                 rows, caption="Indiana statewide offices", min_width="56rem"),
@@ -192,7 +198,7 @@ def build_state(site):
         grows.append([h("span", None, t["person"], c.cite(t["source_ids"])), _plabel(t["party"]),
                       f"{fmt_date(t['start'])} to {fmt_date(t['end']) if t['end'] else 'present'}",
                       sel.capitalize(), basis, extra,
-                      status_badge(t["status"], page)])
+                      status_label(t["status"], page)])
     page.add(section("governors", 2, "Governors since 1945",
                      h("p", None, "The list starts at 1945, the earliest year the guide sourced. For every governor before "
                                   "2025 only the start and end years are recorded. A cross-check against the standard "
@@ -213,7 +219,7 @@ def build_state(site):
         det = _clean_detail(r["detail"])
         arows.append([r["rule_key"].replace("_", " ").capitalize(),
                       h("span", None, r["plain_language"], c.cite(r["source_ids"])),
-                      det, status_badge(r["status"], page)])
+                      det, status_label(r["status"], page)])
     page.add(section("assembly", 3, "How the General Assembly is organized",
                      h("p", None, "Indiana's legislature has two chambers. Members in both are elected from single-member "
                                   "districts drawn by the state."),
@@ -233,8 +239,9 @@ def build_state(site):
         figs.append(seat_split(f"control-{chamber.lower()}", f"Indiana {chamber}: seats by party",
                                rws, total, two_thirds,
                                subtitle=f"{rws[0]['label']} to {rws[-1]['label']}, {total} seats. Counts are as of the start of each period.",
-                               note="* The 2027 counts are blank on purpose: results are unofficial and the guide's sources "
-                                    "disagree. They will be filled in from certified results.",
+                               note=("* A blank count is blank on purpose: the source figures for that period are "
+                                     "unofficial and the guide's sources disagree." if any(r["d"] is None and r["status"] == "unofficial"
+                                                                                       for r in rws) else None),
                                page=page, cite=c.cite(sids)))
     page.add(section("control", 4, "Party control over time", figs,
                      h("p", None, "Each bar shows seats by party at the start of a two-year period. The line marks two-thirds "
@@ -337,7 +344,7 @@ def _results_summary(page, key, by_year: dict, title: str):
         srcs = ";".join(dict.fromkeys(x for r in rs for x in split_ids(r["source_ids"])))
         rows.append([f"{year} general", h("span", None, join(bits, "; "),
                                           h("span", {"class": "muted"}, " Uncontested.") if len(rs) == 1 else None),
-                     "; ".join(scopes), h("span", None, join([status_badge(x, page) for x in sts], " "), c.cite(srcs))])
+                     "; ".join(scopes), h("span", None, join([status_label(x, page) for x in sts], " "), c.cite(srcs))])
     return data_table(f"results-{key[0]}-{key[1]}-summary", ["Election", "Candidates (canvass order)",
                                                               "What the votes cover", "Status"],
                       rows, caption=f"{title}: one row per general election", min_width="44rem")
@@ -576,14 +583,14 @@ def build_legislators(site):
         xrows.append([h("a", {"href": f"#{did(key)}"}, o["title"]), tally,
                       (f"{wide[1].group(1)} to {wide[1].group(2)}, led by {wide[0]['person']} (Ballotpedia)"
                        if wide else "Not in the guide's data"),
-                      h("span", None, status_badge("unofficial", page),
+                      h("span", None, status_label(contest_status(ct["rows"]), page),
                         c.cite(ct["rows"][0]["source_ids"] + ";GOV-044;GOV-045"))])
     hd7_note = h("div", None,
                  h("h3", None, "2026 races in districts that extend outside the county"),
                  h("p", None, "For districts that cross the county line, the county tally does not decide the race. The same "
                               "fields are shown for each of them:"),
-                 data_table("cross-county-2026", ["District", "County tally (unofficial)", "District-wide count (unofficial)",
-                                                  "Status"], xrows,
+                 data_table("cross-county-2026", ["District", "County tally", "District-wide count (unofficial, Ballotpedia)",
+                                                  "Status of the county tally"], xrows,
                             caption="2026 races in districts that extend outside the county", min_width="44rem")) \
         if xrows else None
 
@@ -597,19 +604,30 @@ def build_legislators(site):
             note = ("Re-elected Nov 3, 2026 (unofficial)." if same else
                     "A different person leads the unofficial Nov 3, 2026 count.") + \
                    (" A legislator's term begins the day after the general election (Ballotpedia lists the 2026 "
-                    "winners as taking office Nov 4, 2026); results are unofficial until certified.")
+                    "winners as taking office Nov 4, 2026). This result is still unofficial: "
+                    + RS.REASON_WORDS[RS.office_reason(ed, o["office_id"])] + ".")
         card = officeholder_card(ed, page, o, st["current"], st["incoming"], note)
         fig = None
         ct = ed.contests.get(f"2026g-state-{key[0]}-{key[1]}")
         if ct:
             # blank votes or share: results_bars prints "votes not recorded" (int(float("")) crashed the page)
+            ct_st = contest_status(ct["rows"])
+            # a winner is marked only on an official count of a district wholly inside the county (classify: not
+            # crossing the county line); otherwise the county figures do not decide the seat (2026-11-18)
+            decided = ct_st == "official" and not classify(ct)[2]
             cands = [{"name": r["candidate"], "party": r["party"],
                       "votes": int(float(r["votes"])) if (r["votes"] or "").strip() else None,
-                      "pct": float(r["pct"]) if (r["pct"] or "").strip() else None, "winner": ""} for r in ct["rows"]]
-            fig = results_bars(f"res26-{key[0]}-{key[1]}", f"{o['title']}, county portion", cands,
-                               subtitle="Nov 3, 2026", status="unofficial",
-                               note="County portion only unless the table below says the totals match the district. "
-                                    "No winner is marked: the figures are unofficial.",
+                      "pct": float(r["pct"]) if (r["pct"] or "").strip() else None,
+                      "winner": r.get("winner", "") if decided else ""} for r in ct["rows"]]
+            fig = results_bars(f"res26-{key[0]}-{key[1]}",
+                               f"{o['title']}" + ("" if decided else ", St. Joseph County portion"), cands,
+                               subtitle="Nov 3, 2026", status=ct_st,
+                               note=("The district lies wholly in the county, so the county result is the full result."
+                                     if decided else
+                                     "County portion only unless the table below says the totals match the district. "
+                                     "No winner is marked: "
+                                     + ("the figures are unofficial." if ct_st == "unofficial"
+                                        else "the county portion does not decide the district.")),
                                page=page, cite=c.cite(ct["rows"][0]["source_ids"]))
         trs = []
         for year in sorted(contests[key]):
@@ -622,7 +640,7 @@ def build_legislators(site):
                 trs.append([f"{year} general", r["candidate"], party_label(r["party"]), votes,
                             f"{float(r['pct']):.2f}%" if r.get("pct") else "",
                             _result_text(r, scope), scope,
-                            h("span", None, status_badge(r["status"], page), c.cite(r["source_ids"]))])
+                            h("span", None, status_label(r["status"], page), c.cite(r["source_ids"]))])
         # results: one row per election (candidates in ballot order, what the votes cover); every row in a fold
         n_res = len(trs)
         results = [h("h4", {"id": f"results-{key[0]}-{key[1]}"}, f"{o['title']}: results, 2012 to 2026"),
@@ -642,7 +660,7 @@ def build_legislators(site):
             for r in rs:
                 crow.append([r["committee"], role, r["year"] + (" (partial)" if int(r["year"]) == last_cf else ""),
                              _money(float(r["receipts"] or 0)), _money(float(r["expenditures"] or 0)),
-                             h("span", None, status_badge(r["status"], page), c.cite(r["source_ids"]))])
+                             h("span", None, status_label(r["status"], page), c.cite(r["source_ids"]))])
         sl = area_path(STATE_AREA)
         sl_link = (h("a", {"href": page.rel(sl)}, "State legislators' committees on the campaign money pages")
                    if sl in page.site.by_path else None)
@@ -679,8 +697,8 @@ def build_legislators(site):
                               item_id=did(key)))
     page.add(section("members", 2, "Each district: who holds it, results and campaign money",
                      h("p", None, f"From the guide's terms data, as of {fmt_date(ed.as_of, long=True)}. Seats are listed by "
-                                  "chamber and district number, not by party. Members elected on Nov 3, 2026 are unofficial "
-                                  "until results are certified. Open a district to see its member, every general election "
+                                  "chamber and district number, not by party. A member elected on Nov 3, 2026 whose result is "
+                                  "still unofficial is marked so. Open a district to see its member, every general election "
                                   "since 2012 and its campaign committees."),
                      h("h3", None, "The county's delegation by party"),
                      bodies_block(ed, [], extra_bodies={"State House members": hos, "State Senate members": sos}),
@@ -700,8 +718,9 @@ def build_legislators(site):
                                   "\"What the votes cover\" column says otherwise. Only one row, the 2018 House District 8 "
                                   "result, is a district-wide total, taken from Ballotpedia because the county line could not "
                                   "be read from the scan; it is labeled district-wide and is not the county tally."),
-                     h("p", {"class": "muted"}, "The 2026 charts mark no winner: the figures are unofficial, and for most "
-                                                "districts the county portion is not the district result."),
+                     h("p", {"class": "muted"}, "A 2026 chart marks a winner only where the count is official and the "
+                                                "district lies wholly in the county; elsewhere the county portion is not "
+                                                "the district result."),
                      h("h3", None, "Every general election in the data, by district"),
                      h("p", None, "Each district's results table is in its section above:"),
                      h("ul", {"class": "leg-jump"},
@@ -744,7 +763,7 @@ def build_legislators(site):
     for r in sorted(cf, key=lambda r: (ck(r), int(r["year"]))):
         long_rows.append([r["committee"], r["district"], r["year"], _money(float(r["receipts"] or 0)),
                           _money(float(r["expenditures"] or 0)), r["top_funder_types"].replace(";", ";  "),
-                          status_badge(r["status"], page)])
+                          status_label(r["status"], page)])
     cavs = [r for r in ed.gaps(files=["gaps_money"], pattern=r"State campaign finance")]
     page.add(section("money", 4, "Campaign money, by filing year",
                      h("p", None, "Legislators and candidates file campaign-finance reports with the Indiana Election Division. "
@@ -834,7 +853,7 @@ def build_shapes(site):
     ded_table = data_table("sea1-deductions", ["Item", "What the sources say", "Status"],
                            [["Deductions schedule", h("span", None, ded["plain_language"], " ", _clean_detail(ded["detail"]),
                                                       c.cite(ded["source_ids"])),
-                             h("span", None, status_badge(ded["status"], page), " ", status_badge("low", page))]],
+                             h("span", None, status_label(ded["status"], page), " ", status_label("low", page))]],
                            caption="Where sources disagree (low confidence)", copy=False, min_width="36rem")
     page.add(section("sea1", 4, "SEA 1 (2025)",
                      _rule_block(page, ed, "sea1_overview", "What it did"),
@@ -862,7 +881,7 @@ def build_shapes(site):
                      h("p", None, "Dates are as stated in the guide's data. Dates for the 2025 and 2026 laws came from "
                                   "secondary sources and FindLaw, which can lag; see the Gaps list."),
                      data_table("law-timeline", ["When", "What changes", "Status"],
-                                [[w, h("span", None, t, c.cite(r["source_ids"])), status_badge(r["status"], page)] for w, t, r in tl],
+                                [[w, h("span", None, t, c.cite(r["source_ids"])), status_label(r["status"], page)] for w, t, r in tl],
                                 caption="Timeline of the 2025 and 2026 laws that affect local governments", min_width="40rem"),
                      scope="indiana", ed=ed))
 

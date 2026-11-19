@@ -1,10 +1,43 @@
-/* nav.js: the primary nav's <details> menus (civic/shell.py _nav: Topics = #ref-menu, Learn = #learn-menu).
-   Without JavaScript they are plain <details>: they open and close natively and every link works. This adds:
-   aria-expanded on each summary kept in step with the menu, one menu open at a time, Escape closes the open menu
-   and puts focus back on its summary, a click or focus outside closes it. ASCII only. */
+/* nav.js: the header's <details> menus (civic/shell.py _nav: one dropdown per nav item, Governments = #ref-menu,
+   Learn = #learn-menu; _display: #display-menu) and, below 1100 px, the Menu button (#menu-btn).
+   Without JavaScript the menus are plain <details>: they open and close natively and every link works; the Menu
+   button is a link to #primary-nav, which CSS :target opens. This adds: aria-expanded on each summary kept in step
+   with the menu, one menu open at a time, Escape closes the open menu and puts focus back on its summary, a click or
+   focus outside closes it; the Menu button becomes a toggle (aria-expanded, Escape closes it). ASCII only. */
 (function () {
   "use strict";
   var doc = document;
+
+  /* ---- the Menu button (phase 6 step 1) */
+  var head = doc.getElementById("site-head");
+  var btn = doc.getElementById("menu-btn");
+  var panel = doc.getElementById("primary-nav");
+  if (head && btn && panel) {
+    btn.setAttribute("role", "button");
+    btn.setAttribute("aria-expanded", "false");
+    var setOpen = function (on) {
+      head.classList.toggle("menu-open", on);
+      btn.setAttribute("aria-expanded", on ? "true" : "false");
+    };
+    btn.addEventListener("click", function (ev) {
+      ev.preventDefault();
+      setOpen(!head.classList.contains("menu-open"));
+    });
+    btn.addEventListener("keydown", function (ev) {
+      /* a link-as-button answers Space as well as Enter */
+      if (ev.key === " " || ev.key === "Spacebar") { ev.preventDefault(); setOpen(!head.classList.contains("menu-open")); }
+    });
+    doc.addEventListener("keydown", function (ev) {
+      if (ev.key === "Escape" && head.classList.contains("menu-open") && !head.querySelector(".head-menu details[open]")) {
+        setOpen(false);
+        btn.focus();
+      }
+    });
+    doc.addEventListener("click", function (ev) {
+      if (head.classList.contains("menu-open") && !head.contains(ev.target)) setOpen(false);
+    });
+  }
+
   var menus = Array.prototype.slice.call(doc.querySelectorAll("details[data-nav-menu]"));
   if (!menus.length) return;
 

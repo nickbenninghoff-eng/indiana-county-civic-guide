@@ -177,6 +177,13 @@ def moved_anchor_map(ed) -> dict:
     _pull_body(scratch_site, scratch)
     for sid in scratch.cites.order:
         src.setdefault(sid, "pull/index.html")
+    # a superseded source (2026-11-18: RES-029 -> RES-048) lands where its replacement is listed: that page's Sources
+    # list carries the old id on the replacement's entry (civic/components.py superseded_by)
+    from civic.components import superseded_by
+    for new, olds in superseded_by(ed).items():
+        if new in src:
+            for o in olds:
+                src.setdefault(o, src[new])
     return {"a": a, "src": src}
 
 

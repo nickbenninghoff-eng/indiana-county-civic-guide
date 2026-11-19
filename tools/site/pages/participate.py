@@ -6,6 +6,7 @@ import re
 from civic.components import (APPOINTED_NOTE, as_of_note, bodies_block, callout, data_table, entity_list, scope_badge,
                               section, see_all_table, status_badge)
 from civic.data import fmt_date, split_ids
+from civic import governments as gm
 from civic.html import h, join, json_script
 from civic.layers import build_layers, election_dates
 from civic.picker import picker_state, place_page
@@ -79,12 +80,11 @@ def _year_label(ys: dict) -> str:
 
 
 def _unit_link(page, ed, uid, name):
-    if ed.units[uid]["unit_type"] in ("city", "town", "township"):
-        return h("a", {"href": page.rel(f"places/{uid}/index.html")}, name)
+    # the unit's government page (phase 6 step 3, 2026-11-16; places/<id>/, county/ and schools/ forward there)
+    if ed.units[uid]["unit_type"] in ("city", "town", "township", "school_corporation"):
+        return h("a", {"href": page.rel(f"governments/{uid}/index.html")}, name)
     if uid == "county":
-        return h("a", {"href": page.rel("county/index.html")}, name)
-    if ed.units[uid]["unit_type"] == "school_corporation":
-        return h("a", {"href": page.rel("schools/index.html")}, name)
+        return h("a", {"href": page.rel("governments/county/index.html")}, name)
     return name
 
 
@@ -464,9 +464,9 @@ def build_who(site):
         if not o:
             return oid
         if o["unit_id"] == "county":
-            return h("a", {"href": page.rel("county/index.html")}, o["title"])
+            return h("a", {"href": page.rel("governments/county/index.html")}, o["title"])
         if ed.units[o["unit_id"]]["unit_type"] in ("city", "town", "township"):
-            return h("a", {"href": page.rel(f"places/{o['unit_id']}/index.html")}, o["title"])
+            return h("a", {"href": page.rel(f"governments/{o['unit_id']}/index.html")}, o["title"])
         return o["title"]
 
     def listing(items, fn):
@@ -543,11 +543,11 @@ def _layer_href(page, ed, L):
     if kind == "state":
         return page.rel("state/index.html")
     if kind == "county":
-        return page.rel("county/index.html")
-    if kind in ("township", "municipality") and uid in ed.units and uid != "any":
-        return page.rel(f"places/{uid}/index.html")
+        return page.rel("governments/county/index.html")
+    if kind in ("township", "municipality", "school") and uid in ed.units and uid != "any":
+        return page.rel(f"governments/{uid}/index.html")
     if kind == "school":
-        return page.rel("schools/index.html")
+        return page.rel("governments/index.html#schools")
     return None
 
 
@@ -689,17 +689,27 @@ def build_governments(site):
             body = h("a", {"href": site_url, "target": "_blank", "rel": "noopener"}, site_url)
         else:
             body = h("span", {"class": "muted"}, "No website in the guide's data")
-        items.append(h("li", {"class": "gov-site", "data-layer": L.layer_id}, h("strong", None, L.title), ": ", body))
+        # 2026-11-18: office contacts and meeting rules (unit_contacts.csv) are on each government's page
+        has_contact = uid and any((ed.unit_alias(r.get("gov_id") or "") or r.get("gov_id")) == uid
+                                  for r in ed.table("unit_contacts"))
+        meet = gm.unit_href(page, uid, "overview", "contact") if has_contact else None
+        items.append(h("li", {"class": "gov-site", "data-layer": L.layer_id}, h("strong", None, L.title), ": ", body,
+                       [" · ", h("a", {"href": meet}, "Office contacts and meetings")] if meet else None))
     page.add(section("meetings", 3, "How to contact or attend a meeting",
-                     h("p", None, "Start with the government's own website. Meeting times and places change, so the guide does not list them (see Gaps)."),
+                     h("p", None, "Start with the government's own website. Where the guide has a body's office contacts "
+                                  "and its stated meeting rule, they are on the government's page (Contact and meetings), "
+                                  "each with the date it was read. Schedules change, so check before you go."),
                      h("ul", {"class": "gov-sites"}, items), scope="county", ed=ed))
-    page.add(moved_anchors(page, _yp_moved(layers)))
+    # a source the page no longer cites (2026-11-18: GOV-072/GOV-073, the statutes of a board the merged data names
+    # differently) keeps its #src-<id> link: it lands on the sources index, which lists every source
+    page.add(moved_anchors(page, _yp_moved(layers), prefixes={"src-": "about/sources/index.html"}))
     page.finish(gaps=ed.gaps(files=["gaps_services"], areas=["governments"]))
     return page
 
 
 # Links under the cards: every government page in the county, so this page is the hub of "Your governments"
-YP_BROWSE = [("places/index.html", "Places"), ("county/index.html", "County"), ("schools/index.html", "Schools"),
+YP_BROWSE = [("governments/index.html", "Governments"), ("governments/county/index.html", "County"),
+             ("governments/index.html#schools", "Schools"),
              ("state/index.html", "State"), ("state/your-legislators/index.html", "Your legislators"),
              ("officeholders/index.html", "Who holds office now"), ("who-handles-this/index.html", "Who handles this?"),
              ("map/index.html", "Map")]

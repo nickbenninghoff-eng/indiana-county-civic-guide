@@ -39,6 +39,14 @@ def holder_state(ed, office: dict, current: list[dict], incoming: list[dict]) ->
     return {"now": now, "since": since, "how": how, "incoming": inc, "vacant": not current}
 
 
+def _office_page_line(page, office: dict):
+    """'Office page: elections, money and history' link in an opened holder or seat row (phase 6 step 1); None when
+    the office has no page in this build."""
+    from .offices import office_link
+    a = office_link(page, office["office_id"], text="Office page: what it does, every election, money and history")
+    return h("p", {"class": "hr-office-link"}, a) if a else None
+
+
 def holder_row(ed, page, office: dict, current: list[dict], incoming: list[dict], note=None,
                title: str | None = None) -> Markup:
     st = holder_state(ed, office, current, incoming)
@@ -72,6 +80,7 @@ def holder_row(ed, page, office: dict, current: list[dict], incoming: list[dict]
         body.append(h("p", {"class": "hr-term muted"}, "; ".join(x for x in (nxt, terms) if x) + "."))
     if note:
         body.append(h("p", {"class": "card-note"}, note))
+    body.append(_office_page_line(page, office))
     return one_fold(office["office_id"], title, summary, h("div", {"class": "hr-card"}, body),
                     item_id=f"office-{office['office_id']}", cls="holder-row")
 
@@ -125,6 +134,7 @@ def seat_row(ed, page, office: dict, current: list[dict], incoming: list[dict], 
         body.append(h("p", {"class": "hr-term muted"}, "; ".join(x for x in (nxt, terms) if x) + "."))
     if note:
         body.append(h("p", {"class": "card-note"}, note))
+    body.append(_office_page_line(page, office))
     if extra:
         body.append(extra)
     return h("details", {"class": "fold-details one-fold holder-row seat-row", "open": True, "data-fold": "seat",

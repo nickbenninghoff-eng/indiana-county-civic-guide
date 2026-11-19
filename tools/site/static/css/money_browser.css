@@ -1,0 +1,68 @@
+/* Campaign money browser and money hub (pages/money_browser.py, pages/money.py build_hub; phase 6 step 5,
+   2026-11-18). Tokens only; the header and tab bar reuse civic/tabs.py classes (static/css/tabs.css). */
+.cb-lead { max-width: var(--measure); color: var(--ink-2); font-size: .94rem; margin: 4px 0 6px; }
+.cb-legend { margin: 4px 0 2px; }
+.cb-office { font-weight: 600; }
+.cb-views a, .mrw-sub a { font-family: var(--f-body); }
+.cb-all { margin-top: 6px; }
+.cb-level { margin: 18px 0 0; }
+.cb-level[hidden] { display: none; }
+.cb-level-h { font: var(--display-wt) 1.15rem/1.1 var(--f-display); letter-spacing: var(--display-track); margin: 0 0 4px; }
+.cb-govs { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 19rem), 1fr)); gap: 0 24px; }
+.cb-gov, .cb-letter { margin: 0; border-top: 1px solid var(--grid); min-width: 0; }
+.cb-gov[open], .cb-letter[open] { grid-column: 1 / -1; padding-bottom: 10px; }
+.cb-gov[hidden], .cb-letter[hidden] { display: none; }
+.cb-gov-sum { cursor: pointer; padding: 8px 0; display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 10px; }
+.cb-gov-sum:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+.cb-gov-name { font-weight: 700; }
+.cb-gov-n { font-size: .84rem; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+.cb-area-link { font-size: .86rem; margin: 4px 0 0; }
+.cb-slist { list-style: none; margin: 6px 0 0; padding: 0; }
+.cb-slist > li { padding: 6px 0; border-top: 1px solid var(--grid); }
+.cb-slist-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 16rem), 1fr)); gap: 0 24px; }
+.cb-slist > li[hidden] { display: none; }
+.cb-srow-sub { display: block; font-size: .84rem; color: var(--ink-2); }
+.cb-year { font-family: var(--f-mono); font-size: .8rem; color: var(--ink-3); font-variant-numeric: tabular-nums;
+  display: inline-block; min-width: 3.2em; }
+.cb-doors { list-style: none; margin: 4px 0 0; padding: 0; display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 22rem), 1fr)); gap: 0 24px; }
+.cb-doors li { padding: 7px 0; border-top: 1px solid var(--grid); }
+.cb-doors a { font-weight: 600; }
+.cb-door-d { display: block; font-size: .86rem; color: var(--ink-2); }
+.cb-about h3 { font-size: 1rem; margin: 14px 0 2px; }
+.cb-about p { max-width: var(--measure); margin: 0; }
+.cb-jump { font-size: .9rem; margin: 6px 0; word-spacing: .2em; }
+.cb-clist { list-style: none; margin: 0; padding: 0; }
+.cb-crow { display: grid; grid-template-columns: minmax(10rem, 16rem) minmax(0, 1fr); gap: 2px 16px; padding: 7px 0;
+  border-top: 1px solid var(--grid); }
+.cb-crow[hidden] { display: none; }
+.cb-cname { font-weight: 600; min-width: 0; }
+.cb-cparty { display: block; font-weight: 400; font-size: .8rem; color: var(--ink-3); }
+.cb-cfacts { list-style: none; margin: 0; padding: 0; font-size: .9rem; min-width: 0; }
+.cb-fig { font-family: var(--f-mono); font-size: .84rem; font-variant-numeric: tabular-nums; }
+@media (max-width: 640px) {
+  .cb-crow { grid-template-columns: minmax(0, 1fr); }
+}
+/* Compare budgets: two ranked lists side by side on a wide screen (pages/money.py build_budgets) */
+.cb-two { display: grid; grid-template-columns: minmax(0, 1fr); gap: 0 32px; align-items: start; }
+@media (min-width: 1000px) { .cb-two { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } }
+.cb-cell, .cb-two > .tsec { min-width: 0; }
+@media (min-width: 641px) { .cb-two .mrw-row, .cb-two .mrw-axis { grid-template-columns: minmax(7rem, 12rem) minmax(0, 1fr); } }
+.cb-two .mrw { --mrw-val: 6rem; }
+/* the Money hub's two doors and headline figures (pages/money.py build_hub) */
+.mh-doors { margin-top: 8px; }
+.mh-door { min-width: 0; }
+.tsec .mh-door-h, .mh-door-h { font: var(--display-wt) 1.5rem/1.1 var(--f-display); letter-spacing: var(--display-track);
+  text-transform: none; color: var(--ink); margin: 0 0 6px; }
+.mh-door-h a { color: inherit; }
+.mh-door-d { max-width: var(--measure); margin: 0 0 8px; color: var(--ink-2); }
+.mh-links { list-style: none; margin: 0 0 14px; padding: 0; }
+.mh-links li { padding: 6px 0; border-top: 1px solid var(--grid); }
+.mh-links a { font-weight: 600; }
+.mh-link-d { display: block; font-size: .86rem; color: var(--ink-2); }
+.mh-facts { list-style: none; margin: 0; padding: 0; display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 17rem), 1fr)); gap: 0 24px; }
+.mh-fact { padding: 8px 0; border-top: 1px solid var(--grid); min-width: 0; }
+.mh-fact-v { display: block; font: 600 1.25rem/1.2 var(--f-mono); color: var(--ink); font-variant-numeric: tabular-nums; }
+.mh-fact-l { display: block; font-size: .86rem; color: var(--ink-2); }
+.cb-intro { margin: 0 0 8px; } .cb-intro .dek { font-size: 1rem; max-width: var(--measure); }

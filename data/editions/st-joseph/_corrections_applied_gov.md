@@ -145,3 +145,30 @@ Sources: `planning/qa/gapfill-2026-11-08-{C1-people,C2-towns-schools,A-rules,B-s
 ### B: skipped
 - The county Animal Care and Control Commission (members and appointers not found) and the Mishawaka Animal Control Commission (not confirmed on a page I read).
 - The bonus judge list (used only as a cross-check for C1).
+
+## 2026-11-18: gap-fill round 2
+
+Source: `planning/gapfill/MERGE-PLAN.md`, applied by `planning/gapfill/merge/merge.py` (manifest `planning/gapfill/merge/manifest.csv`, one line per changed cell or added row). Inputs frozen by checksum (`planning/gapfill/FROZEN-SHA256.txt`): the staged rows, `review-people-verdicts.csv` and `review-numbers-verdicts.csv` after the appeal ruling, and `canvass2/agreed-official.csv`. Only PASS and PASS-WITH-EDIT rows were merged, with the edit applied; REJECT and UNVERIFIABLE rows were not. Rows whose edit was prose, or whose stored value did not match the old value the staged note named, went to `planning/gapfill/merge/needs-human.csv` and were not merged. Switches: CROSS_COUNTY_SCHOOLS_MULTICOUNTY=on, FRONK_FRANCISCO_COUNTY_ONLY=on, ADD_FEDERAL_UNITS=on, ADD_IN_STATE_UNIT=on, ADD_CANVASS_EXTRA_ROWS=on, BUMP_DATA_AS_OF=on, FIX_KARMAN_EASH=on, EXTRA_17_OFFICIAL_ROWS=off, RECONSTRUCT_2020P_Q2_WORDING=off.
+
+- `units.csv`: 21 cells changed, 3 rows added, 0 rows removed.
+- `offices.csv`: 4 cells changed, 12 rows added, 0 rows removed.
+- `terms.csv`: 246 cells changed, 3 rows added, 0 rows removed.
+- `appointed_boards.csv`: 36 cells changed, 1 row added, 0 rows removed.
+- `sources_gov.csv`: 1 cell changed, 41 rows added, 0 rows removed.
+- `gaps_gov.csv`: 1 cell changed, 0 rows added, 1 row removed.
+- `unit_contacts.csv`: 0 cells changed, 36 rows added, 0 rows removed.
+- `appointed_board_members.csv`: 0 cells changed, 105 rows added, 0 rows removed.
+- `gaps_services.csv`: 2 cells changed, 0 rows added, 0 rows removed.
+
+### Applied
+- terms.csv: 80 incoming 2026 terms set official from the county canvass (notes rewritten; GOV-001 replaced by the canvass source); 12 stay unofficial (unofficial-cross-county 7, unofficial-recount 3, unofficial-state 2). Lakeville clerk-treasurer McQueen party R (2011 canvass).
+- offices.csv: state-house-48 added (2010 contests).
+- New `unit_contacts.csv` (office contacts and stated meeting rules; owner decisions for Greene, Lincoln and Indian Village) and units.csv websites where the unit had none.
+- New `appointed_board_members.csv` (Whitt, Brown, Hannon, the two housing placeholders, Pat Hahn and Calderone excluded; Rutten and Moffitt added per appeal items 1-2; the three listed Board of Public Safety members per item 8).
+- appointed_boards.csv: county Redevelopment Commission corrected (appeal item 1); "South Bend Board of Public Works" (id kept) and the new south-bend-board-public-safety (item 8); Mishawaka boards' seats and appointers; airport and South Bend Redevelopment Commission status official.
+- GOV-001 annotated as superseded by the official canvass.
+- Owner 2026-11-18: units `in-state` (statewide offices and appellate courts) and its offices: governor, attorney general (IC 4-6-1-2), secretary of state, treasurer, superintendent of public instruction, Supreme Court, Court of Appeals and Tax Court retentions. The comptroller office is not added (its edit is prose).
+- Owner 2026-11-18: units `us-house` and `us-senate` (unit type `federal_chamber`), offices us-house-2, us-senate-class-1 and us-senate-class-3, terms Yakym (from 2025-01-03), Young (from 2023-01-03) and Banks (from 2025-01-03); the gaps_gov federal row is removed.
+- Owner 2026-11-18: Reagan and Marnocha offices next_election 2032 (IC 33-33-71-42, six-year terms after the 2026 county retentions).
+- Follow-ups resolved in the merge script: Sherman and Teshka term notes now quote the official county figures (both terms stay unofficial); South Bend and John Glenn contact_url hold one URL each (the council e-mail and the form label moved to notes); the truncated Osceola page address is not cited (the row cites the town site); stale notes on six boards rewritten from the reviewer's readings; South Bend Redevelopment Commission appointers in the wording the appeal ruling (item 3) accepted.
+- Left as they are: the Greene trustee phone already in units.csv and GOV-165 notes (owner 2026-11-18); the county Redevelopment Commission's what_it_decides ("detail not verified"; no reviewed replacement).

@@ -26,7 +26,10 @@ FIXTURE = Path(__file__).parent / "fixtures" / "anchors_before_batch4.json"
 ID_RE = re.compile(r'\sid="([^"]+)"')
 OFFICES = ["township-trustee", "township-board", "school-board", "city-council", "county-council",
            "precinct-committeeperson"]
-PAGES = ["history/people/index.html", "money/campaigns/other-committees/index.html",
+# phase 6 (2026-11-16): the notable-people list moved from history/people/ to people/notable/ (same ids; the old
+# address is a forwarding page, tools/tests/test_phase6_people.py)
+NOTABLE = "people/notable/index.html"
+PAGES = [NOTABLE, "money/campaigns/other-committees/index.html",
          "money/campaigns/all-filings/index.html", "who-handles-this/index.html", "run/index.html",
          "data/pull/index.html", "community/income-and-work/index.html"] + [f"run/{o}/index.html" for o in OFFICES]
 
@@ -54,6 +57,7 @@ class Built(unittest.TestCase):
         before = json.loads(FIXTURE.read_text(encoding="utf-8"))["ids"]
         lost = []
         for page, ids in before.items():
+            page = NOTABLE if page == "history/people/index.html" else page
             for i in ids:
                 if i in self.ids[page]:
                     continue
@@ -86,7 +90,7 @@ class Built(unittest.TestCase):
 
     # ---------------------------------------------------------------- history/people
     def test_every_person_card_is_a_row_with_its_anchor(self):
-        h = self.html["history/people/index.html"]
+        h = self.html[NOTABLE]
         before = [i for i in json.loads(FIXTURE.read_text(encoding="utf-8"))["ids"]["history/people/index.html"]
                   if i.startswith("person-")]
         self.assertGreaterEqual(len(before), 30)
@@ -98,7 +102,7 @@ class Built(unittest.TestCase):
         self.assertNotIn("&lt;span", h)
 
     def test_people_rows_show_party_as_text_and_no_party_filter(self):
-        h = self.html["history/people/index.html"]
+        h = self.html[NOTABLE]
         self.assertNotIn('data-tf-key="party"', h)
         self.assertIn('data-tf-key="era"', h)
 

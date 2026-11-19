@@ -16,13 +16,15 @@ import math
 import re
 from collections import OrderedDict
 
-from civic.charts import _svg, _txt, bar_path, figure, fmt_tick, hbar, line, nice_ticks, text_w
-from civic.components import callout, data_table, scope_badge, section, status_badge, variant_slot
+from civic.charts import columns, figure, fmt_tick, hbar, line, nice_ticks
+from civic.components import callout, data_table, scope_badge, section, see_all_fold, status_badge, variant_slot
 from civic.data import fmt_date, split_ids
 from civic.html import Markup, h, join, json_script
 from civic.layers import build_layers
 from civic.spending import has_money_in_out, money_in_out
 from civic.map import load_shapes
+from civic import governments as gm
+from civic import tabs as T
 from civic import tax_base as tb
 from civic.money_map import county_figure, method_note, money_map, money_map_data, money_map_tables
 from civic.preselect import district_hints, here_slot
@@ -320,65 +322,64 @@ def hero(page, eyebrow: str, title: str, dek, toc: list[tuple[str, str]], badges
 
 def flag_columns(fid: str, title: str, points: list[dict], subtitle=None, breaks=None, flags=None,
                  legend_items=None, note=None, status=None, page=None, cite=None, gaps_href="#gaps") -> Markup:
-    """Column chart for one budget basis. Like charts.columns, plus per-point marks, a legend,
-    and flags: {index: text} draws a marker above the column ('unexplained change; see Gaps')."""
+    """Column chart for one budget basis, with per-point marks, a legend, series breaks and flags ({index: text}
+    draws a marker above the column: 'unexplained change; see Gaps').
+
+    Changed 2026-11-18 (phase 6 step 5): drawn as HTML instead of a fixed-width SVG, so the columns use the whole
+    width of the column they sit in at any screen size (the SVG was at most 760 px wide, about half a government
+    Money tab), while the labels stay real text at their normal size. Same signature, same figure id, same table
+    view, same figures; heights and positions are inline percentages (style attributes are allowed by the CSP for
+    chart positions). Each column is focusable and carries the shared tooltip attributes (data-tv / data-tl)."""
     flags = flags or {}
     vals = [p["value"] for p in points if p.get("value") is not None]
     vmax = max(vals) if vals else 1
     ticks = nice_ticks(vmax)
-    top = ticks[-1]
-    axis_w = max(text_w(fmt_tick(t, top, True), mono=True) for t in ticks) + 10
+    top = ticks[-1] or 1
     n = max(len(points), 1)
-    W = max(360, min(760, axis_w + n * 36 + 16))
-    plot_l, plot_r, plot_t, plot_b = axis_w, W - 8, 34, 230
-    H = plot_b + 30
-    band = (plot_r - plot_l) / n
-    cw = min(24, band * 0.62)
-    y = lambda v: plot_b - (plot_b - plot_t) * (v / top)
-    grid = [h("line", {"x1": plot_l, "x2": plot_r, "y1": f"{y(t):.1f}", "y2": f"{y(t):.1f}", "class": "grid" if t else "axis"}) for t in ticks]
-    tl = [_txt(plot_l - 6, y(t) + 4, fmt_tick(t, top, True), "ct ct-axis", "end") for t in ticks]
-    every = max(1, math.ceil(n / ((plot_r - plot_l) / 34)))
     labelled = set()
     if vals:
         idx = [i for i, p in enumerate(points) if p.get("value") is not None]
         last, peak = idx[-1], max(idx, key=lambda i: points[i]["value"])
         labelled = {last, peak} - set(flags)
-        if peak != last and {peak, last} <= labelled:
-            # two direct labels on nearby columns collide; keep the latest value only
-            def _lw(i):
-                return text_w(points[i].get("display") or usd_short(points[i]["value"]), mono=True)
-            if abs(last - peak) * band < (_lw(last) + _lw(peak)) / 2 + 6:
-                labelled.discard(peak)
-    marks = []
+        if peak != last and abs(last - peak) < 3:
+            labelled.discard(peak)     # two value labels on nearby columns collide; keep the latest value only
+    pct = lambda v: max(0.0, min(100.0, 100.0 * v / top))
+    grid = [h("span", {"class": "fcol-grid" + (" fcol-base" if not t else ""), "style": f"bottom:{pct(t):.2f}%"},
+              h("span", {"class": "fcol-tick"}, fmt_tick(t, top, True))) for t in ticks]
+    every = 1 if n <= 8 else 2
+    cols, xs = [], []
     for i, p in enumerate(points):
-        cx = plot_l + band * i + band / 2
-        xl = _txt(cx, plot_b + 16, p["x"], "ct ct-axis", "middle") if (i % every == 0 or i == n - 1) else None
+        xl_cls = "fcol-xl" + ("" if (i % every == 0 or i == n - 1) else " fcol-xl-odd")
+        xs.append(h("span", {"class": xl_cls}, str(p["x"])))
         if p.get("value") is None:
-            marks.append(h("g", None, xl))
+            cols.append(h("span", {"class": "fcol-c fcol-empty"},
+                          h("span", {"class": "visually-hidden"}, f"{p['x']}: no figure")))
             continue
         disp = p.get("display") or usd_short(p["value"])
-        y0 = y(p["value"])
         tipl = p.get("tip") or str(p["x"])
         if i in flags:
             tipl += " · " + flags[i]
-        g = [h("rect", {"class": "hit", "x": f"{cx - band / 2:.1f}", "y": plot_t, "width": f"{band:.1f}", "height": plot_b - plot_t}),
-             h("path", {"class": f"bar {p.get('mark', 'm-accent')}", "d": bar_path(cx - cw / 2, min(y0, plot_b - 1), cx + cw / 2, plot_b, "up")}),
-             _txt(cx, y0 - 6, disp, "ct ct-val", "middle") if i in labelled else None, xl]
+        hgt = pct(p["value"])
+        kids = [h("span", {"class": f"fcol-bar {p.get('mark', 'm-accent')}", "style": f"height:{max(hgt, 0.4):.2f}%",
+                           "aria-hidden": "true"})]
+        if i in labelled:
+            kids.append(h("span", {"class": "fcol-v", "style": f"bottom:{hgt:.2f}%", "aria-hidden": "true"}, disp))
         if i in flags:
-            fy = plot_t - 16
-            g.append(h("line", {"class": "mn-flag-line", "x1": f"{cx:.1f}", "x2": f"{cx:.1f}", "y1": f"{fy + 6:.1f}", "y2": f"{y0 - 2:.1f}"}))
-            g.append(h("path", {"class": "mn-flag", "d": f"M{cx:.1f},{fy - 6:.1f}L{cx + 6:.1f},{fy:.1f}L{cx:.1f},{fy + 6:.1f}L{cx - 6:.1f},{fy:.1f}Z"}))
-            g.append(_txt(cx, fy + 3.5, "!", "ct mn-flag-t", "middle"))
-        marks.append(h("g", {"class": "mark", "tabindex": "0", "data-tv": disp, "data-tl": tipl}, g))
+            kids.append(h("span", {"class": "fcol-flagline", "style": f"bottom:{hgt:.2f}%", "aria-hidden": "true"}))
+            kids.append(h("span", {"class": "fcol-flag mn-flag-key", "aria-hidden": "true"}, "!"))
+        cols.append(h("span", {"class": "fcol-c mark", "tabindex": "0", "data-tv": disp, "data-tl": tipl,
+                               "aria-label": f"{p['x']}: {disp}" + (f". {flags[i]}" if i in flags else "")}, kids))
     brk = []
     for b in breaks or []:
-        bx = plot_l + band * (b["after"] + 1)
-        right = bx + 4 + text_w(b["label"], 10.5) < plot_r
-        brk.append(h("g", {"class": "mark break", "tabindex": "0", "data-tv": b["label"], "data-tl": b.get("tip", "")},
-                     h("rect", {"class": "hit", "x": f"{bx - 8:.1f}", "y": plot_t - 30, "width": 16, "height": plot_b - plot_t + 30}),
-                     h("line", {"class": "break-line mn-break", "x1": f"{bx:.1f}", "x2": f"{bx:.1f}", "y1": plot_t - 28, "y2": plot_b}),
-                     _txt(bx + 4 if right else bx - 4, plot_t - 20, b["label"], "ct ct-muted ct-small", "start" if right else "end")))
-    svg = _svg(W, H, f"{title}. Column chart; values in the table view.", grid, tl, marks, brk)
+        left = 100.0 * (b["after"] + 1) / n
+        brk.append(h("span", {"class": "fcol-break mark" + (" fcol-break-r" if left > 70 else ""),
+                              "style": f"left:{left:.2f}%", "tabindex": "0", "data-tv": b["label"],
+                              "data-tl": b.get("tip", ""), "aria-label": b["label"]},
+                     h("span", {"class": "fcol-break-l"}, b["label"])))
+    body = h("div", {"class": "fcol", "role": "group", "aria-label": f"{title}. Column chart; values in the table view."},
+             h("div", {"class": "fcol-plot"},
+               h("div", {"class": "fcol-area"}, grid, h("div", {"class": "fcol-cols"}, cols), brk)),
+             h("div", {"class": "fcol-x", "aria-hidden": "true"}, xs))
     items = []
     for cls, lab in legend_items or []:
         items.append(h("li", None, h("span", {"class": f"key key-rect {cls}", "aria-hidden": "true"}), lab))
@@ -397,14 +398,15 @@ def flag_columns(fid: str, title: str, points: list[dict], subtitle=None, breaks
         notes = [x for x in (flags.get(i), p.get("row_note")) if x]
         rows.append([p["x"], usd(p["value"]) if p.get("value") is not None else "no data",
                      status_badge(p["status"], page) if p.get("status") else "", " ".join(notes)])
-    return figure(fid, title, subtitle, svg, ["Year", "Amount", "Status", "Note"], rows, note=note, numeric=(1,),
-                  status=status, page=page, legend=leg, kind="columns", cite=cite)
+    return figure(fid, title, subtitle, body, ["Year", "Amount", "Status", "Note"], rows, note=note, numeric=(1,),
+                  status=status, page=page, legend=leg, kind="columns", cite=cite, scroll=False)
 
 
 # =================================================================== budgets page
 
-def _unit_charts(mo: Money, page, mid: str, gap_flags: dict) -> tuple[list, list]:
-    """Charts for one unit (one per basis) and table rows for figures kept out of the charts."""
+def _unit_charts(mo: Money, page, mid: str, gap_flags: dict, gaps_href: str = "#gaps") -> tuple[list, list]:
+    """Charts for one unit (one per basis) and table rows for figures kept out of the charts. ``gaps_href``: where the
+    flags' "see Gaps" links go (a government page's Money tab sends them to its Sources tab; phase 6 step 3)."""
     ed = mo.ed
     c = page.cites
     years = list(range(mo.y0, mo.y1 + 1))
@@ -433,7 +435,8 @@ def _unit_charts(mo: Money, page, mid: str, gap_flags: dict) -> tuple[list, list
         # each primary series' shared first sentence goes once under the chart, not on every row
         commons = {}
         for s in primary:
-            notes = [r["notes"] for r in s["rows"]]
+            # the whole-corporation phrase is shown once per page (whole_corporation_note), not under each chart
+            notes = [strip_whole_corp(r["notes"]) for r in s["rows"]]
             first = sentences(notes[0])[:1] if notes else []
             commons[s["id"]] = first[0] if first and all(n.startswith(first[0]) for n in notes) else None
         points, flags = [], {}
@@ -443,7 +446,8 @@ def _unit_charts(mo: Money, page, mid: str, gap_flags: dict) -> tuple[list, list
                 continue
             s, r, secondary = by_year[yv]
             common = commons.get(s["id"])
-            extra = r["notes"][len(common):].strip() if common and r["notes"].startswith(common) else r["notes"]
+            rn = strip_whole_corp(r["notes"])
+            extra = rn[len(common):].strip() if common and rn.startswith(common) else rn
             extra = clean_note(extra)
             src_label = "news report (secondary)" if secondary else _source_label(s)
             points.append({"x": yv, "value": float(r["amount"]), "status": r["status"],
@@ -489,7 +493,7 @@ def _unit_charts(mo: Money, page, mid: str, gap_flags: dict) -> tuple[list, list
         fid = f"bud-{mid}-{basis.replace('_', '-')}"
         nominal = flag_columns(fid, title, points, subtitle=sub, breaks=breaks,
                                flags=flags, legend_items=legend_items, note=join(note_parts, " ") if note_parts else None,
-                               status=status, page=page, cite=c.cite(src))
+                               status=status, page=page, cite=c.cite(src), gaps_href=gaps_href)
         cpi = mo.cpi
         if not cpi:
             charts.append(nominal)
@@ -515,7 +519,7 @@ def _unit_charts(mo: Money, page, mid: str, gap_flags: dict) -> tuple[list, list
         real = flag_columns(fid + "-real", f"{title}, in {mo.cpi_base} dollars", real_pts, subtitle=real_sub, breaks=breaks,
                             flags=real_flags, legend_items=legend_items,
                             note=join(note_parts, " ") if note_parts else None,
-                            status="computed", page=page, cite=c.cite(src + ";" + mo.cpi_src))
+                            status="computed", page=page, cite=c.cite(src + ";" + mo.cpi_src), gaps_href=gaps_href)
         charts.append(h("div", {"class": "mn-dollars-block", "data-dollars": "nominal"}, nominal))
         charts.append(h("div", {"class": "mn-dollars-block", "data-dollars": "real", "hidden": True}, real))
     # non-adopted or one-off figures (proposed totals, news quotes, other scopes) go in a table, never a chart
@@ -579,226 +583,391 @@ def _series_charted(s, unit_series) -> bool:
     return len(sy) > 1 and not (sy & prim_years) and s["kinds"] == ["adopted"] and any(x["breaks"] for x in primary)
 
 
+def rank_rows(fid: str, title: str, rows: list[dict], subtitle=None, note=None, status=None, page=None, cite=None,
+              headers=None, word: str = "Amount", vmax: float | None = None) -> Markup:
+    """A ranked list of governments drawn as full-width HTML bars (phase 6 step 5, 2026-11-18), in the office money
+    charts' row markup (charts.money_rows classes, so it takes their styles in every look): one accent bar per row on
+    one scale, the value printed after the bar, the row's name a link. rows: [{name, sub, value, text, tip}] in the
+    caller's order (callers rank governments, never people). Table view: name, value."""
+    vals = [r["value"] for r in rows if r.get("value") is not None]
+    top_v = vmax or max(vals, default=1) or 1
+    ticks = nice_ticks(top_v, 4)
+    top = ticks[-1] or 1
+    items = []
+    for r in rows:
+        v = r.get("value")
+        kids = [h("span", {"class": "visually-hidden"}, f"{word}: ")]
+        if v is not None and v > 0:
+            kids.append(h("span", {"class": "mrw-bar m-accent", "style": f"width:{max(0.4, min(100.0, 100.0 * v / top)):.2f}%",
+                               "aria-hidden": "true"}))
+            kids.append(h("span", {"class": "mrw-v"}, r["text"]))
+        else:
+            kids.append(h("span", {"class": "mrw-v mrw-none"}, r["text"]))
+        items.append(h("li", {"class": "mrw-row rk-row", "title": r.get("tip") or None},
+                       h("span", {"class": "mrw-who"}, h("span", {"class": "mrw-name"}, r["name"]),
+                         h("span", {"class": "mrw-sub"}, r.get("sub")) if r.get("sub") else None),
+                       h("span", {"class": "mrw-bars"}, h("span", {"class": "mrw-line"}, kids))))
+    axis = h("div", {"class": "mrw-axis", "aria-hidden": "true"}, h("span", {"class": "mrw-axis-spacer"}),
+             h("span", {"class": "mrw-axis-scale"}, h("span", None, "0"), h("span", None, r_fmt_top(rows, top))))
+    body = h("div", {"class": "mrw rk"}, h("ul", {"class": "mrw-list", "aria-label": f"{title}: ranked, bars on one scale"},
+                                          items), axis)
+    trows = [[r.get("plain") or r.get("label") or "", r["text"]] for r in rows]
+    return figure(fid, title, subtitle, body, headers or ["Government", word], trows, note=note, numeric=(1,),
+                  status=status, page=page, kind="money-rows", scroll=False, cite=cite)
+
+
+RANK_TOP = 10    # rows a ranked list shows before "Show all N"
+
+
+def ranked(fid: str, title: str, rows: list[dict], top: int = RANK_TOP, **kw) -> list:
+    """rank_rows for the first ``top`` rows, then the rest in a "Show all N" fold on the same scale (one ranking)."""
+    vmax = max((r["value"] for r in rows if r.get("value") is not None), default=None)
+    if len(rows) <= top + 2:
+        return [rank_rows(fid, title, rows, vmax=vmax, **kw)]
+    rest_kw = {k: v for k, v in kw.items() if k in ("page", "headers", "word")}
+    return [rank_rows(fid, title + f" (top {top} of {len(rows)})", rows[:top], vmax=vmax, **kw),
+            see_all_fold(f"{fid}-rest", len(rows) - top,
+                         rank_rows(f"{fid}-more", title + f": the other {len(rows) - top}", rows[top:], vmax=vmax,
+                                   **rest_kw),
+                         hint=None, label=f"Show the other {len(rows) - top}")]
+
+
+def r_fmt_top(rows, top) -> str:
+    fmt = rows[0].get("fmt") if rows else None
+    return fmt(top) if fmt else f"{top:,.0f}"
+
+
+def _gov_row(mo: Money, page, mid: str, value: float, text: str, frag: str, sub: str = "", tip: str = "") -> dict:
+    """One ranked row: the government's name linked to its Money tab (#frag)."""
+    label = re.sub(r" \(state data: .*\)$", "", mo.label(mid))
+    gov = gm.gov_for_money_id(mo.ed, mid)
+    u = gm.href(page, gov.gid, "money", frag) if gov else None
+    return {"name": h("a", {"href": u}, label) if u else label, "plain": label, "value": value, "text": text,
+            "sub": sub or None, "tip": tip or None}
+
+
+def per_resident_rows(mo: Money, ids, basis: str, year: int) -> tuple[list, str]:
+    """[(mid, row, population row, per-resident value)] for an adopted basis and year (the comparison the budgets page
+    has drawn since Wave A: the adopted amount divided by the ACS 2020-2024 population estimate), and the sources."""
+    out, srcs = [], []
+    for mid in ids:
+        s = next((s for s in mo.series.values() if s["unit"] == mid and s["basis"] == basis
+                  and s["status"] in (["official"], ["computed"]) and s["kinds"] == ["adopted"]), None)
+        pop = mo.population(mid)
+        if not s or not pop:
+            continue
+        r = next((r for r in s["rows"] if int(r["year"]) == year), None)
+        # a blank amount or a blank / zero population has no per-resident figure
+        if not r or not (r["amount"] or "").strip() or not ((pop.get("value") or "").strip() and float(pop["value"]) > 0):
+            continue
+        out.append((mid, r, pop, float(r["amount"]) / float(pop["value"])))
+        srcs += [r, pop]
+    return out, union_sources(srcs)
+
+
+def _pop_tip(r, pop) -> str:
+    return (f"{usd(r['amount'])} / {int(float(pop['value'])):,} residents"
+            + (f" (MOE ±{int(float(pop['moe'])):,})" if pop.get("moe") else ""))
+
+
 def build_budgets(site):
+    """Compare budgets (phase 6 step 5, 2026-11-18; replaces the 182-fold "Budgets by unit"). Each government's own
+    budget history, breakdowns, debt and money in and out are on its government page's Money tab
+    (pages/gov_parts.py); this page compares governments: the money map, budget per resident, the certified tax rate,
+    debt and the tax base, each a ranked list whose rows link to that government's Money tab, then every government
+    with its latest adopted budget. Old ids forward through #moved-anchors (budgets_moved)."""
+    from civic.answers import latest_unit_rate
     ed = site.ed
     mo = money(ed)
-    page = site.page("money/budgets/index.html", banners=False)
+    page = site.page("money/budgets/index.html", title="Compare budgets", banners=False, body_class="thing-page")
     c = page.cites
-    has_map = load_shapes(ed) is not None and bool(ed.table("spending_breakdowns"))
-    toc = ([("money-map", "Money map")] if has_map else []) + [("over-time", "Budgets over time"), ("per-resident", "Per resident"), ("breakdowns", "2024 spending and revenue"),
-           ("debt", "Debt"), ("tax-base", "How the tax base shapes budgets"),
-           ("money-in-out", "Money in and out: libraries and special units"), ("gaps", "Gaps"), ("sources", "Sources")]
     n_units = len({r["unit_id"] for r in mo.budgets})
-    page.add(hero(page, "Reference · Money", page.title,
-                  h("span", None, f"Adopted budgets for {n_units} local units in {ed.county_label}, {mo.y0} to {mo.y1}, "
-                                  "from the state's budget file. Each chart uses one way of totaling a budget, and changes "
-                                  "in how a unit reports are drawn on the chart.", c.cite("MON-001"), " ",
-                    status_badge("computed", page, "Totals are sums of fund lines; per-resident figures divide by Census estimates.")),
-                  toc, [scope_badge("county", ed), " ", h("a", {"href": page.rel("money/what-is-a-budget/index.html")},
-                                                          "What counts as a budget?")]))
+    govs = gm.governments(ed)
+    page.add(h("header", {"class": "thing-head cb-head"},
+               page.crumb_nav(),
+               h("h1", {"class": "thing-title"}, "Compare budgets"),
+               h("p", {"class": "thing-facts"},
+                 join([h("span", {"class": "thing-fact"}, f) for f in (
+                     f"{n_units} local units with budget figures, {mo.y0} to {mo.y1}",
+                     "each government's full history is on its Money tab")],
+                      h("span", {"class": "facts-sep", "aria-hidden": "true"}, " · "))),
+               h("p", {"class": "cf-quick"},
+                 h("a", {"href": page.rel("money/what-is-a-budget/index.html")}, "What counts as a budget?"), " · ",
+                 h("a", {"href": page.rel("money/your-tax-bill/index.html")}, "Your tax bill"), " · ",
+                 h("a", {"href": page.rel(gm.HUB)}, "Every government"))))
+    page.add(h("p", {"class": "cb-lead"}, "Governments differ in size and in what their budgets count, so this page "
+                                          "compares them per resident and on one basis at a time. A list never mixes "
+                                          "two ways of totaling a budget. Select a government for its own charts.",
+               c.cite("MON-001"), " ", status_badge("computed", page, "Per-resident figures divide by Census estimates.")))
 
-    # ------------------------------------------------------------------ 1 money map
-    page.add(_money_map_section(mo, page))
+    # ---- 1 money map (counted spending per resident), every area linking to its government's Money tab
+    page.add(_money_map_compare(mo, page))
 
-    # ------------------------------------------------------------------ 2 over time
-    n_flags = len(mo.jumps)
-    nav = []
-    for g, glabel in GROUPS:
-        ids = [m for m in mo.unit_ids if group_of(m) == g and (mo.has_budget(m) or mo.in_units_csv(m))]
-        if ids:
-            nav.append(h("li", None, h("span", {"class": "mn-unitnav-h mono"}, glabel),
-                         h("span", {"class": "mn-unitnav-links"},
-                           join([h("a", {"href": f"#{mo.anchor(m)}"}, mo.label(m)) for m in ids], " · "))))
-    blocks, nodata_gaps = [], []
-    for g, glabel in GROUPS:
-        ids = [m for m in mo.unit_ids if group_of(m) == g and (mo.has_budget(m) or mo.in_units_csv(m))]
-        if not ids:
-            continue
-        blocks.append(h("h3", {"class": "mn-group-h"}, glabel))
-        group_items = []
-        for mid in ids:
-            charts, others = _unit_charts(mo, page, mid, {})
-            if not mo.has_budget(mid):
-                nodata_gaps.append({"item": f"{mo.label(mid)}: budget figures",
-                                    "why_missing": "The guide's budget file has no adopted budget rows for this unit "
-                                                   "(the state budget download used for the guide has none for it).",
-                                    "how_to_fill": "Check the unit's Gateway budget pages, or its own budget documents."})
-            anchor = mo.anchor(mid)
-            alias = h("span", {"id": mid, "class": "mn-alias"}) if anchor != mid else None
-            uid = mo._uid(mid)
-            place_link = None
-            for path in (f"places/{uid}/index.html",) if uid else ():
-                if path in site.by_path:
-                    place_link = h("a", {"href": page.rel(path)}, "Place page")
-            if uid and ed.units.get(uid, {}).get("unit_type") == "school_corporation":
-                place_link = h("a", {"href": page.rel(f"schools/index.html#{uid}")}, "Its section on the Schools page")
-            if mid == "county-st-joseph":
-                place_link = h("a", {"href": page.rel("county/index.html")}, "County government page")
-            head_bits = [h("h4", {"class": "mn-unit-h"}, mo.label(mid))]
-            if not mo.in_units_csv(mid):
-                head_bits.append(h("p", {"class": "mn-unit-note"},
-                                   "Named as in the state budget file. This unit has no entry in the guide's list of governments yet."))
-            if place_link:
-                head_bits.append(h("p", {"class": "mn-unit-note"}, place_link))
-            other_tbl = None
-            if others:
-                orow = []
-                for s, r in sorted(others, key=lambda t: (t[1]["year"], t[0]["id"])):
-                    orow.append([r["year"], usd(r["amount"]), BASIS.get(r["basis"], (r["basis"],))[0],
-                                 r["adopted_or_actual"], h("span", None, status_badge(r["status"], page), c.cite(r["source_ids"])),
-                                 clean_note(r["notes"])])
-                other_tbl = h("div", {"class": "mn-others"},
-                              h("p", {"class": "mn-others-h"}, "Other reported figures, not charted (different scope, proposed, or one news report):"),
-                              data_table(f"other-{mid}", ["Year", "Amount", "Basis", "Kind", "Status", "Note"], orow,
-                                         caption=f"{mo.label(mid)}: other reported budget figures", numeric=(1,), min_width="48rem"))
-            # one unit = one show-one item (civic/pick_one.py): the map, the unit list and old #anchors open it and
-            # fold the other units; the article keeps the unit's id, and the alias id stays inside it
-            group_items.append(h("article", {"class": "mn-unit", "id": anchor, "aria-label": mo.label(mid),
-                                             "data-one-for": anchor},
-                                 alias,
-                                 one_fold(anchor, mo.label(mid),
-                                          one_summary("h4", mo.label(mid), _unit_digest(mo, mid)),
-                                          [h("header", {"class": "mn-unit-head"}, head_bits[1:]) if head_bits[1:] else None,
-                                           h("div", {"class": "chart-grid mn-chart-grid"}, charts) if charts else
-                                           h("p", {"class": "mn-nodata"}, "No budget data for this unit in the guide's data."
-                                             if not mo.has_budget(mid) else
-                                             "No adopted multi-year series for this unit in the guide's data."),
-                                           other_tbl,
-                                           _unit_flows_line(mo, page, mid)])))
-        blocks.append(h("div", {"class": "one-list mn-unit-list"}, group_items))
-    page.add(section("over-time", 2, "Budgets over time",
-                     h("p", None, "Each unit's adopted budget for every year the state file has it. A chart never mixes two ways "
-                                  "of totaling a budget. Where a unit changed how it reports, the chart shows a break line, and "
-                                  "the years on either side should not be compared.", c.cite("MON-001;MON-023")),
-                     h("p", None, f"The guide's year-over-year check found {n_flags} changes of more than 40% from one year "
-                                  "to the next that no recorded change in reporting explains. They are marked on the charts "
-                                  "with ", h("span", {"class": "mn-flag-key", "aria-hidden": "true"}, "!"),
-                       " and listed under ", h("a", {"href": "#gaps"}, "Gaps"), ". They are shown as reported, not smoothed. ",
-                       status_badge("computed", page, "Flags come from the guide's own year-over-year comparison.")),
-                     h("p", {"class": "muted"}, "Amounts are shown in nominal dollars (the dollars of each year) unless you "
-                                                "switch to constant dollars below. Years with no usable total in the state file "
-                                                "are left empty."),
-                     _dollars_toggle(mo, page),
-                     h("p", {"class": "mn-unitnav-lead"}, "Pick a unit on the money map above or in this list. Its budget "
-                                                          "history opens here, and its 2024 breakdown, debt and money in "
-                                                          "and out open in the sections below; the other units fold away. "
-                                                          "Libraries and special units have no boundary on the map, so "
-                                                          "they are in the list only."),
-                     h("ul", {"class": "mn-unitnav", "aria-label": "Show one unit"}, nav),
-                     one_bar("unit", "units", "Every unit is listed below by group; open any of them, or pick one above."),
-                     h("div", one_scope("No budget history for {name} in the guide's data."), one_empty(), blocks),
-                     scope="county", ed=ed))
-
-    # ------------------------------------------------------------------ 2 per resident
-    def per_res_rows(ids, basis, year):
-        rows, srcs = [], []
-        for mid in ids:
-            s = next((s for s in mo.series.values() if s["unit"] == mid and s["basis"] == basis
-                      and s["status"] in (["official"], ["computed"]) and s["kinds"] == ["adopted"]), None)
-            pop = mo.population(mid)
-            if not s or not pop:
-                continue
-            r = next((r for r in s["rows"] if int(r["year"]) == year), None)
-            # a blank amount or a blank / zero population has no per-resident figure (a blank crashed the page; debug
-            # pass 2026-11-09)
-            if not r or not (r["amount"] or "").strip() or not ((pop.get("value") or "").strip() and float(pop["value"]) > 0):
-                continue
-            v = float(r["amount"]) / float(pop["value"])
-            rows.append({"label": re.sub(r" \(state data: .*\)$", "", mo.label(mid)), "value": v, "display": f"${v:,.0f}",
-                         "tip": f"{usd(r['amount'])} / {int(float(pop['value'])):,} residents"
-                                + (f" (MOE ±{int(float(pop['moe'])):,})" if pop.get("moe") else "")})
-            srcs += [r, pop]
-        return rows, union_sources(srcs)
+    # ---- 2 budget per resident
     gf_ids = ["county-st-joseph", "city-south-bend", "city-mishawaka"]
     tw_ids = ["county-st-joseph", "city-mishawaka"] + [m for m in mo.unit_ids if group_of(m) == "township"]
     pr_year = comparison_year(mo, gf_ids + tw_ids, ("general_fund", "advertised_all_funds"))
-    gf_rows, gf_src = per_res_rows(gf_ids, "general_fund", pr_year)
-    af_rows, af_src = per_res_rows(tw_ids, "advertised_all_funds", pr_year)
-    av_ids = gf_ids + [m for m in mo.unit_ids if group_of(m) == "township"]
-    av_rows, av_src, av_year = av_per_resident_rows(mo, av_ids)
     pop_note = ("Computed: the adopted amount divided by the Census Bureau's American Community Survey 2020-2024 5-year "
                 "population estimate. The estimate is a five-year average, so per-resident figures are approximate.")
-    av_chart = (hbar("perres-av", f"Certified assessed value per resident, {av_year}", av_rows,
-                     subtitle="County, the two cities and the townships", money=True, value_fmt=lambda v: f"${v:,.0f}",
-                     status="computed", page=page,
-                     note=("Computed: the state-certified net assessed value (the tax base property taxes are levied on) "
-                           "divided by the same 2020-2024 population estimate. The county's value covers everyone in the "
-                           "county, city residents included. A township's value includes the cities and towns inside it, "
-                           "as its population does."),
-                     headers=["Unit", "Per resident"], cite=c.cite(av_src)) if av_rows else None)
-    page.add(section("per-resident", 3, f"Comparing units: {pr_year} budgets per resident",
-                     h("p", None, "Units differ in size, so totals alone don't compare well. These charts divide each unit's "
-                                  f"{pr_year} adopted budget by its population. Each chart uses one basis."
-                                  + (f" The last chart divides each unit's {av_year} tax base the same way." if av_rows else "")),
-                     h("div", {"class": "chart-grid mn-chart-grid"},
-                       hbar("perres-gf", f"General fund per resident, {pr_year}", gf_rows, subtitle="County and the two cities",
-                            money=True, value_fmt=lambda v: f"${v:,.0f}", status="computed", page=page,
-                            note=pop_note + " The county's figure is divided by the whole county's population, which includes city residents.",
-                            headers=["Unit", "Per resident"], cite=c.cite(gf_src)),
-                       hbar("perres-af", f"All advertised funds per resident, {pr_year}", af_rows,
-                            subtitle="County, Mishawaka (civil city) and the townships", money=True,
-                            value_fmt=lambda v: f"${v:,.0f}", status="computed", page=page,
-                            note=pop_note + " Township populations include residents of cities and towns inside the township. "
-                                            "South Bend is left out: from 2024 the state file lists only 10 of its funds.",
-                            headers=["Unit", "Per resident"], cite=c.cite(af_src)),
-                       av_chart),
-                     scope="county", ed=ed))
+    fmt = lambda v: f"${v:,.0f}"
+    charts = []
+    for fid, basis, ids, title, sub, extra in (
+            ("perres-af", "advertised_all_funds", tw_ids, f"All advertised funds per resident, {pr_year}",
+             "County, Mishawaka (civil city) and the townships",
+             " Township populations include residents of cities and towns inside the township. South Bend is left "
+             "out: from 2024 the state file lists only 10 of its funds."),
+            ("perres-gf", "general_fund", gf_ids, f"General fund per resident, {pr_year}", "County and the two cities",
+             " The county's figure is divided by the whole county's population, which includes city residents.")):
+        got, src = per_resident_rows(mo, ids, basis, pr_year)
+        got.sort(key=lambda t: -t[3])
+        rows = [dict(_gov_row(mo, page, mid, v, fmt(v), "budget", tip=_pop_tip(r, pop)), fmt=fmt)
+                for mid, r, pop, v in got]
+        if rows:
+            charts.append(h("div", {"class": "cb-cell"},
+                            ranked(fid, title, rows, subtitle=sub, note=pop_note + extra, status="computed",
+                                   page=page, cite=c.cite(src), headers=["Government", "Per resident"],
+                                   word="Per resident")))
+    pr_at = len(page.parts)     # the per-resident section goes here once the tax base per resident is known
 
-    # ------------------------------------------------------------------ 3 breakdowns
-    page.add(section("breakdowns", 4, "2024 spending and revenue: county, South Bend, Mishawaka",
-                     h("p", None, "What each government actually spent and received in 2024, from the annual financial reports "
-                                  "units file with the state. These files have their own scope: each chart's note says what it "
-                                  "covers. They are not the same as the budget totals above.", c.cite("MON-002;MON-003")),
-                     h("div", one_scope("This section has 2024 breakdowns for the county and the two cities, and a few "
-                                        "other tables; {name} has none here. Its counted money in and money out is on "
-                                        "its own page or under Money in and out below."),
-                       one_empty(),
-                       h("div", {"class": "one-list"},
-                         [_breakdown_block(mo, page, mid) for mid in ("county-st-joseph", "city-south-bend", "city-mishawaka")]),
-                       _other_breakdowns(mo, page)),
-                     scope="county", ed=ed))
+    # ---- 3 certified tax rate and 4 debt, side by side on a wide screen
+    pair = []
+    rates = []
+    for g in govs:
+        r = latest_unit_rate(ed, g.unit_id) if g.unit_id else None
+        if r:
+            rates.append((g, r))
+    if rates:
+        ry = max(r["year"] for _g, r in rates)
+        rates = sorted([(g, r) for g, r in rates if r["year"] == ry], key=lambda t: -float(t[1]["rate_per_100"]))
+        rfmt = lambda v: f"${v:.4f}"
+        rows = []
+        for g, r in rates:
+            u = gm.href(page, g.gid, "money", "tax-base")
+            v = float(r["rate_per_100"])
+            rows.append({"name": h("a", {"href": u}, g.name) if u else g.name, "plain": g.name, "value": v,
+                         "text": rfmt(v), "fmt": lambda t: f"${t:.2f}"})
+        pair.append(T.tab_section("rates", f"Certified property-tax rate, taxes payable in {ry}",
+                               *ranked("rates-certified", f"Each government's own certified rate per $100 of assessed "
+                                                            f"value, {ry}", rows,
+                                         subtitle="One government's own rate; a tax bill adds the rates of every "
+                                                  "government that taxes the property.",
+                                         status="official" if all(r["status"] == "official" for _g, r in rates)
+                                         else "computed", page=page,
+                                         cite=c.cite(union_sources(r for _g, r in rates)),
+                                         headers=["Government", "Rate per $100"], word="Rate per $100"),
+                               h("p", {"class": "tnote"}, "How one bill is split among these governments: ",
+                                 h("a", {"href": page.rel("money/your-tax-bill/index.html")}, "Your tax bill"), ".")))
 
-    # ------------------------------------------------------------------ 4 debt
-    tot = [r for r in mo.debt if r["debt_type"].startswith("Total end-of-year principal")]
-    drows = [{"label": chart_label(mo, r["unit_id"]), "value": float(r["amount"]),
-              "display": usd_short(r["amount"]),
-              "tip": f"{mo.label(r['unit_id'])}: {usd(r['amount'])} at the end of {r['year']}"}
-             for r in sorted(tot, key=lambda r: mo.unit_ids.index(r["unit_id"]))]
-    cls_rows, cls_attrs = [], []
+    # ---- 4 debt (2026-11-18: the state files 2022-2025; the ranking keeps its id debt-2024 and shows the latest year)
+    dyears = debt_years(mo)
+    dy = dyears[-1] if dyears else None
+    tot = [r for r in mo.debt if r["debt_type"].startswith(DEBT_TOTAL) and (r.get("amount") or "").strip()
+           and r["year"] == dy]
+    tot.sort(key=lambda r: -float(r["amount"]))
+    drows = [dict(_gov_row(mo, page, r["unit_id"], float(r["amount"]), usd_short(r["amount"]), "debt",
+                           tip=f"{mo.label(r['unit_id'])}: {usd(r['amount'])} at the end of {r['year']}"),
+                  fmt=usd_short) for r in tot]
+    cls_rows = []
     for r in sorted(mo.debt, key=lambda r: (mo.unit_ids.index(r["unit_id"]), r["year"], r["debt_type"])):
         cls_rows.append([mo.label(r["unit_id"]), r["year"], r["debt_type"], usd(r["amount"]),
-                         h("span", None, status_badge(r["status"], page), c.cite(r["source_ids"])), r["notes"]])
-        cls_attrs.append(one_row(mo.anchor(r["unit_id"])))
-    page.add(section("debt", 5, "Debt",
-                     h("p", None, f"Principal still owed at the end of 2024, as each unit reported it to the state. "
-                                  f"{len(tot)} units report debt in the file. Totals include utility debt where a unit has utilities.",
-                       c.cite("MON-004")),
-                     hbar("debt-2024", "Debt outstanding, end of 2024", drows, subtitle="Total principal, all debt classes",
-                          money=True, value_fmt=usd_short, status="computed", page=page, headers=["Unit", "Principal"],
-                          note="Computed: the sum of each unit's debt-class rows in the state's 2024 annual financial report "
-                               "debt file. Units in the order used across the guide (county, cities, towns, townships, schools, "
-                               "libraries, special units).", cite=c.cite("MON-004")),
-                     later_debt_note(mo, page, "city-south-bend"),
-                     h("div", one_scope("No debt rows for {name} in the state's debt file."),
-                       one_empty(),
-                       one_wrap_see_all("debt-classes-all", f"See all {len(cls_rows)} rows: debt by class and unit",
-                                        [h("p", {"class": "muted"}, "When you pick a unit, only its rows are shown, and "
-                                                                   "Copy CSV copies those rows."),
-                                         data_table("debt-classes", ["Unit", "Year", "Debt type", "Amount", "Status", "Note"],
-                                                    cls_rows, caption="Debt by class and unit", numeric=(3,),
-                                                    min_width="54rem", row_attrs=cls_attrs)])),
-                     scope="county", ed=ed))
+                         h("span", None, status_badge(r["status"], page), c.cite(r["source_ids"])),
+                         strip_whole_corp(r["notes"])])
+    all_tot = [r for r in mo.debt if r["debt_type"].startswith(DEBT_TOTAL) and (r.get("amount") or "").strip()]
+    by_year = debt_by_year_table(mo, page, set(mo.unit_ids))
+    if dy:
+        pair.append(T.tab_section(
+            "debt", f"Debt outstanding, end of {dy}",
+            *ranked("debt-2024", f"Total principal still owed at the end of {dy}, all debt classes", drows,
+                      subtitle=f"{len(tot)} units report debt in the state's {dy} file. Totals include utility debt where "
+                               "a unit has utilities. Each unit separately; never add two units' totals.",
+                      note="Computed: the sum of each unit's debt-class rows in the state's annual financial report debt "
+                           "file.", status="computed", page=page, cite=c.cite(union_sources(tot)),
+                      headers=["Government", "Principal"], word="Principal"),
+            see_all_fold("debt-by-year-all", 0, by_year,
+                         label=f"Show debt by year, {dyears[0]} to {dyears[-1]}, for every unit", hint=None)
+            if by_year is not None and len(dyears) > 1 else None,
+            debt_notes_block(mo, page, all_tot if by_year is not None and len(dyears) > 1 else tot),
+            whole_corporation_note(mo, page, {r["unit_id"] for r in all_tot}),
+            see_all_fold("debt-classes-all", len(cls_rows),
+                         data_table("debt-classes", ["Unit", "Year", "Debt type", "Amount", "Status", "Note"], cls_rows,
+                                    caption="Debt by class and unit", numeric=(3,), min_width="54rem"),
+                         label=f"Show the table: every debt row by class and unit ({len(cls_rows)})")))
+    page.add(h("div", {"class": "cb-two cb-two-sec"}, pair))
 
-    # ------------------------------------------------------------------ 5 tax base
-    page.add(_tax_base(mo, page))
+    # ---- 5 tax base per resident, then the whole tax-base section (a learning-path stop, #tax-base) in a fold
+    av_ids = gf_ids + [m for m in mo.unit_ids if group_of(m) == "township"]
+    av_got = []
+    for mid in av_ids:
+        r, pop = tb.latest_certified(ed, mid), mo.population(mid)
+        if not r or not pop or tb.part_only(r):
+            continue
+        v = tb.av_per_resident(tb.av_value(r), pop["value"])
+        if v is not None:
+            av_got.append((mid, r, pop, v))
+    av_parts = []    # the tax base per resident, drawn beside the general fund per resident
+    if av_got:
+        av_year = max(r["year"] for _m, r, _p, _v in av_got)
+        av_got = sorted([t for t in av_got if t[1]["year"] == av_year], key=lambda t: -t[3])
+        rows = [dict(_gov_row(mo, page, mid, v, fmt(v), "tax-base",
+                              tip=f"{usd(tb.av_value(r))} / {int(float(pop['value'])):,} residents"), fmt=fmt)
+                for mid, r, pop, v in av_got]
+        av_parts.extend(ranked(
+            "perres-av", f"Certified assessed value per resident, {av_year}", rows,
+            subtitle="County, the two cities and the townships",
+            note=("Computed: the state-certified net assessed value (the tax base property taxes are levied on) divided "
+                  "by the 2020-2024 population estimate. The county's value covers everyone in the county, city "
+                  "residents included. A township's value includes the cities and towns inside it, as its population "
+                  "does."), status="computed", page=page,
+            cite=c.cite(union_sources(x for _m, r, pop, _v in av_got for x in (r, pop))),
+            headers=["Government", "Per resident"], word="Per resident"))
+    if len(charts) > 1:
+        charts[-1] = h("div", {"class": "cb-cell"}, charts[-1], av_parts)
+    else:
+        charts.append(h("div", {"class": "cb-cell"}, av_parts))
+    page.parts.insert(pr_at, T.tab_section(
+        "per-resident", f"Per resident, {pr_year}", h("div", {"class": "cb-two"}, charts),
+        lead=f"Each government's {pr_year} adopted budget, and its tax base, divided by its population; one basis per "
+             "list."))
+    av_parts = []
+    av_parts.append(see_all_fold("tax-base-all", 0, _tax_base(mo, page), hint=None,
+                                 label="Show how the tax base shapes budgets: rates over time, assessed value, "
+                                       "property-tax receipts"))
+    page.add(T.tab_section("tax-base-sec", "How the tax base shapes budgets", av_parts))
 
-    # ------------------------------------------------------------------ 6 money in and out (libraries, special units)
-    page.add(_flows_section(mo, page))
-
-    gaps = mo.jump_gap_rows() + nodata_gaps + money_gaps(ed) + cpi_gaps(mo)
-    page.finish(gaps=gaps, gaps_intro=("What the guide looked for and hasn't found or confirmed yet. The first "
-                                       f"{len(mo.jumps)} items are the year-over-year changes flagged on the charts."))
+    # ---- 6 every government (id over-time: the learning path's "Budgets over time" stop lands here)
+    nodata_gaps = []
+    for mid in mo.unit_ids:
+        if not (mo.has_budget(mid) or mo.in_units_csv(mid)):
+            continue
+        if not mo.has_budget(mid):
+            nodata_gaps.append({"item": f"{mo.label(mid)}: budget figures",
+                                "why_missing": "The guide's budget file has no adopted budget rows for this unit "
+                                               "(the state budget download used for the guide has none for it).",
+                                "how_to_fill": "Check the unit's Gateway budget pages, or its own budget documents."})
+    blocks = []
+    # every government with a page (civic/governments.py: units.csv governments, and every library and special unit
+    # with money figures), so a unit with only money in and out (no budget) is listed too
+    by_group: OrderedDict = OrderedDict((k, []) for k in gm.GROUPS)
+    for g in govs:
+        by_group[g.group].append(g)
+    for key, label in gm.GROUPS.items():
+        items = []
+        for g in by_group[key]:
+            bud = [m for m in g.money_ids if mo.has_budget(m)]
+            u = (gm.href(page, g.gid, "money", "budget" if bud else "") or gm.href(page, g.gid))
+            if bud:
+                digest = _unit_digest(mo, bud[0])
+            elif any(has_money_in_out(ed, m) for m in g.money_ids):
+                m = next(m for m in g.money_ids if has_money_in_out(ed, m))
+                digest = "No adopted budget series in the guide's data; " + _flows_digest(ed, m)[:1].lower() +                          _flows_digest(ed, m)[1:]
+            else:
+                digest = "No adopted budget series in the guide's data"
+            items.append(h("li", {"class": "cb-srow"}, h("a", {"href": u}, g.name) if u else g.name,
+                           h("span", {"class": "cb-srow-sub"}, digest)))
+        if items:
+            blocks.append(h("div", {"class": "cb-level"}, h("h3", {"class": "cb-level-h"}, label),
+                            h("ul", {"class": "cb-slist cb-slist-grid"}, items)))
+    n_govs = sum(len(v) for v in by_group.values())
+    page.add(T.tab_section("over-time", "Every government's budget over time",
+                           see_all_fold("over-time-all", n_govs, blocks, noun="government", hint=None,
+                                        label=f"Show all {n_govs} governments and their latest adopted totals"),
+                           lead="Each government's Money tab has its adopted budget for every year the state file has "
+                                "it, one chart per way of totaling, with changes in reporting drawn on the chart; then its "
+                                "tax base, debt, money in and out, and breakdowns. The line under each name is its latest "
+                                "adopted total."))
+    page.add(_budgets_moved_script(mo, page))
+    page.finish(gaps=nodata_gaps + money_gaps(ed) + cpi_gaps(mo),
+                gaps_intro=("What the guide looked for and hasn't found or confirmed yet. Each government's flagged "
+                            "budget changes are listed on its Sources tab."))
     return page
+
+
+def _money_map_compare(mo: Money, page) -> Markup | None:
+    """The money map (civic/money_map.py): every city, town, township and school corporation shaded by counted spending
+    per resident; every area links to its government's Money tab. The county as one figure, then every figure as
+    tables (folded)."""
+    ed = mo.ed
+    shapes = load_shapes(ed)
+    if shapes is None or not ed.table("spending_breakdowns"):
+        return None
+    mm = money_map_data(ed, shapes)
+    label = lambda m: re.sub(r" \(state data: .*\)$", "", mo.label(m))
+    return T.tab_section(
+        "money-map", "Spending per resident: the money map",
+        h("p", {"class": "tsec-lead"}, "Each area is shaded by how much its government spent per resident in its latest "
+                                       "year in the state's annual financial reports. Point at an area (or tap it, or "
+                                       "move to it with Tab) to see where its money came from and how it was spent; "
+                                       "select it again, or press Enter, to open its government's Money tab. Pick "
+                                       "cities and towns, townships or school corporations with the buttons above the "
+                                       "map."),
+        county_figure(page, ed, mm),
+        money_map(page, ed, shapes, mm),
+        method_note(page, ed),
+        see_all_fold("money-map-tables", 0, money_map_tables(page, ed, mm, label), hint="Copy CSV",
+                     label="Show the table: every figure on the map"))
+
+
+def budgets_moved(mo: Money, page) -> dict:
+    """Where the old budgets page's ids are now (static/js/moved.js): each unit's block, charts, other figures,
+    breakdowns and money in and out moved to its government's Money tab, which keeps the chart and table ids."""
+    ed = mo.ed
+    a, p = {}, {}
+    for mid in mo.unit_ids:
+        gov = gm.gov_for_money_id(ed, mid)
+        anchor = mo.anchor(mid)
+        if gov is None or gm.path(gov.gid, "money") not in page.site.by_path:
+            # no Money tab (no figure at all): the unit's line in this page's list says so
+            a[anchor] = a[mid] = "#over-time"
+            continue
+        tab = page.rel(gm.path(gov.gid, "money"))
+        a[anchor] = a[mid] = f"{tab}#budget" if mo.has_budget(mid) else f"{tab}#tabs"
+        if any(r["unit_id"] == mid and r["basis"].startswith("afr_2024") for r in mo.breakdowns):
+            a[f"breakdown-{anchor}"] = f"{tab}#breakdowns"
+        if has_money_in_out(ed, mid):
+            a[f"flows-{anchor}"] = f"{tab}#money-in-out"
+        for pre in (f"bud-{mid}-", f"other-{mid}", f"brk-{mid}-", f"obrk-{mid}-", f"sp-{anchor}-", f"sp-{mid}-",
+                    f"money-{anchor}", f"av-2026-{mid}"):
+            p[pre] = tab
+    for old, new in (("mn-dollars-toggle", "over-time"), ("mn-dollars-nominal", "over-time"),
+                     ("mn-dollars-real", "over-time"), ("breakdowns", "over-time"), ("breakdowns-h", "over-time"),
+                     ("money-in-out", "over-time"), ("money-in-out-h", "over-time"), ("over-time-h", "over-time"),
+                     ("money-map-others", "money-map-tables"), ("cmap-mhatch", "money-map"),
+                     ("debt-h", "debt"), ("per-resident-h", "per-resident"), ("money-map-h", "money-map")):
+        a[old] = f"#{new}"
+    # the old page's per-group budget figures for the cities, townships and schools on the assessed-value charts
+    p["av-2026-"] = "#tax-base"
+    p["mm-table-"] = "#money-map-tables"
+    p["src-"] = page.rel("about/sources/index.html")
+    return {"a": a, "p": p}
+
+
+def _budgets_moved_script(mo: Money, page) -> Markup:
+    import json
+    data = budgets_moved(mo, page)
+    return Markup('<script type="application/json" id="moved-anchors">'
+                  + json.dumps(data, sort_keys=True).replace("</", "<\\/") + "</script>")
+
+
+def other_breakdown_parts(mo: Money, page, mid: str) -> list:
+    """One unit's other breakdowns (phase 6 step 5): proposed figures, a later budget year and news-reported
+    department amounts (the budgets page's "Other breakdowns in the guide's data"), as tables with the same ids
+    (obrk-<mid>-<basis>), for the unit's government Money tab. Each has its own scope, so none is charted."""
+    c = page.cites
+    groups = OrderedDict()
+    for r in mo.breakdowns:
+        if r["unit_id"] == mid and not r["basis"].startswith("afr_2024"):
+            groups.setdefault((r["year"], r["basis"]), []).append(r)
+    out = []
+    for (year, basis), rows in groups.items():
+        total = sum(float(r["amount"]) for r in rows)
+        trows = [[r["category"], usd(r["amount"]), h("span", None, status_badge(r["status"], page), c.cite(r["source_ids"]))]
+                 for r in rows]
+        out.append(h("div", {"class": "mn-other-breakdown"},
+                     h("p", {"class": "mn-others-h"}, h("strong", None, f"{year}: {rows[0]['kind']}. "), rows[0]["notes"]),
+                     data_table(f"obrk-{mid}-{basis.replace('_', '-')}", ["Category", "Amount", "Status"], trows,
+                                caption=f"{mo.label(mid)} {year}: {basis.replace('_', ' ')} (rows total {usd(total)})",
+                                numeric=(1,), min_width="30rem")))
+    return out
 
 
 def comparison_year(mo: Money, ids, bases) -> int:
@@ -836,6 +1005,146 @@ def av_per_resident_rows(mo: Money, ids) -> tuple[list, str, str | None]:
                     + (f" (MOE ±{int(float(pop['moe'])):,})" if pop.get("moe") else "")}
             for mid, r, pop, v in picked]
     return rows, union_sources(x for _, r, pop, _ in picked for x in (r, pop)), year
+
+
+DEBT_TOTAL = "Total end-of-year principal"
+DEBT_DUE = "Principal due within one year"
+DEBT_CLASS = "End-of-year principal outstanding: "
+# sentences in debt.csv notes that every total or due row repeats (how the guide built the row): not shown as notes
+_DEBT_GENERIC = re.compile(r"^(Sum of the class rows for this unit\.|Sum of principal amounts due within 1 year[^.]*\.|"
+                           r"Gateway Annual Financial Report \d{4}, sum of debt entries in this class\.|"
+                           r"Entity in parentheses as filed\.)$")
+# budgets.csv / debt.csv notes of a cross-county school corporation open with this phrase (tools/check_money.py
+# requires it); a page shows it once (whole_corporation_note), never on every row (2026-11-18)
+WHOLE_CORP = re.compile(r"Whole corporation \(([^()]*(?:\([^()]*\))?[^()]*)\)\.?\s*")
+
+
+def strip_whole_corp(text: str) -> str:
+    return WHOLE_CORP.sub("", text or "").strip()
+
+
+def debt_totals(mo: Money, mid: str) -> dict[str, dict]:
+    """{year: total row} of one unit's end-of-year principal (state annual-report debt file), rows with an amount."""
+    return {r["year"]: r for r in mo.debt
+            if r["unit_id"] == mid and r["debt_type"].startswith(DEBT_TOTAL) and (r.get("amount") or "").strip()}
+
+
+def debt_years(mo: Money) -> list[str]:
+    return sorted({r["year"] for r in mo.debt if r["debt_type"].startswith(DEBT_TOTAL) and (r.get("amount") or "").strip()})
+
+
+def debt_note_text(note: str) -> str:
+    """A debt row's stored note without the generic "how the row was built" sentences and the whole-corporation phrase
+    (shown once per page): what is left is a reader's caveat (the never-sum note, the utility note, an unexplained
+    line)."""
+    keep = [s for s in sentences(strip_whole_corp(note)) if not _DEBT_GENERIC.match(s.strip())]
+    return " ".join(keep).strip()
+
+
+def debt_notes_block(mo: Money, page, rows: list[dict]) -> Markup | None:
+    """The stored caveats of the debt rows a chart or table shows, each once, with the units and years it is stored
+    on: "St. Joseph County (2024, 2025); St. Joseph Redevelopment Authority (2024, 2025): Same $50,000,000 ...; never
+    add the two totals." Shown wherever those totals appear."""
+    c = page.cites
+    groups: dict[str, dict] = OrderedDict()
+    for r in rows:
+        # one entry per stored sentence, so a caveat repeated on several years is listed once with its years
+        for t in sentences(debt_note_text(r.get("notes") or "")):
+            g = groups.setdefault(t, {"units": OrderedDict(), "rows": []})
+            g["units"].setdefault(r["unit_id"], []).append(r["year"])
+            g["rows"].append(r)
+    if not groups:
+        return None
+    items = []
+    for text, g in groups.items():
+        who = "; ".join(f"{re.sub(r' [(]state data: .*[)]$', '', mo.label(m))} ({', '.join(sorted(set(ys)))})"
+                        for m, ys in g["units"].items())
+        items.append(h("li", None, h("strong", None, who + ": "), text, c.cite(union_sources(g["rows"]))))
+    return h("div", {"class": "mn-debt-notes"}, h("p", {"class": "mn-debt-notes-h"}, "Notes stored with these totals:"),
+             h("ul", None, items))
+
+
+def whole_corporation_note(mo: Money, page, mids) -> Markup | None:
+    """Once per page: the cross-county school corporations whose budget and debt figures cover the whole corporation,
+    with the stored phrase ("Whole corporation (principal county: LaPorte, Gateway county 46)"). None when no unit of
+    `mids` carries the phrase."""
+    found: dict[str, str] = OrderedDict()
+    srcs = []
+    for r in list(mo.budgets) + list(mo.debt):
+        if r["unit_id"] in mids and r["unit_id"] not in found:
+            m = WHOLE_CORP.search(r.get("notes") or "")
+            if m:
+                found[r["unit_id"]] = m.group(0).strip().rstrip(".")
+                srcs.append(r)
+    if not found:
+        return None
+    bits = [h("li", None, h("strong", None, re.sub(r" [(]state data: .*[)]$", "", mo.label(m)) + ": "), phrase + ".")
+            for m, phrase in found.items()]
+    return h("div", {"class": "fscope-line mn-whole-corp", "id": "whole-corporation"},
+             h("p", None, h("strong", None, "Whole corporation. "),
+               ("These school corporations also cover land outside St. Joseph County. Their budget and debt figures "
+                "here are" if len(found) > 1 else "This school corporation also covers land outside St. Joseph County. "
+                "Its budget and debt figures here are")
+               + " for the whole corporation, as filed with the state, not a St. Joseph County share.",
+               page.cites.cite(union_sources(srcs))),
+             h("ul", None, bits))
+
+
+def debt_by_year_rows(mo: Money, mids) -> tuple[list[str], list[tuple[str, dict]]]:
+    """(years, [(mid, {year: total row})]) for the units with at least one total, in mo.unit_ids order."""
+    years = debt_years(mo)
+    out = []
+    for mid in mo.unit_ids:
+        if mid in mids:
+            t = debt_totals(mo, mid)
+            if t:
+                out.append((mid, t))
+    return years, out
+
+
+def debt_by_year_table(mo: Money, page, mids, tid: str = "debt-by-year") -> Markup | None:
+    """Every unit's total principal at the end of each year in the state file (2022-2025), one row per unit, one
+    column per year; a blank cell says the unit filed no debt in that year's file. Never a sum across units."""
+    c = page.cites
+    years, got = debt_by_year_rows(mo, mids)
+    if not got:
+        return None
+    rows = []
+    for mid, t in got:
+        gov = gm.gov_for_money_id(mo.ed, mid)
+        u = gm.href(page, gov.gid, "money", "debt") if gov else None
+        label = re.sub(r" \(state data: .*\)$", "", mo.label(mid))
+        rows.append([h("a", {"href": u}, label) if u else label]
+                    + [usd(t[y]["amount"]) if y in t else h("span", {"class": "muted"}, "none filed") for y in years]
+                    + [h("span", None, c.cite(union_sources(t.values())))])
+    return data_table(tid, ["Government"] + [f"End of {y}" for y in years] + ["Sources"], rows,
+                      caption="Total principal still owed at the end of each year, as each unit reported it to the state",
+                      numeric=tuple(range(1, len(years) + 1)), min_width="44rem")
+
+
+def unit_debt_years_chart(mo: Money, page, mid: str) -> Markup | None:
+    """Columns: one unit's total principal at the end of each year in the state file (accent marks, never party
+    colors), with the principal due within one year in each tooltip. None with fewer than two years."""
+    tots = debt_totals(mo, mid)
+    years = debt_years(mo)
+    if len(tots) < 2:
+        return None
+    due = {r["year"]: r for r in mo.debt if r["unit_id"] == mid and r["debt_type"].startswith(DEBT_DUE)
+           and (r.get("amount") or "").strip()}
+    pts = []
+    for y in years:
+        r = tots.get(y)
+        if r is None:
+            pts.append({"x": y, "value": None})
+            continue
+        d = due.get(y)
+        pts.append({"x": y, "value": float(r["amount"]), "display": usd_short(r["amount"]), "status": r["status"],
+                    "tip": f"End of {y}: {usd(r['amount'])}" + (f"; {usd(d['amount'])} due within one year" if d else "")})
+    st = "official" if all(r["status"] == "official" for r in tots.values()) else "computed"
+    return columns(f"debt-years-{mo.anchor(mid)}", f"{re.sub(r' [(]state data: .*[)]$', '', mo.label(mid))}: debt "
+                   f"outstanding at the end of each year", pts, subtitle=f"Total principal, {years[0]} to {years[-1]}, as "
+                   "reported to the state. Nominal dollars.", money=True, value_fmt=usd_short, status=st, page=page,
+                   headers=["Year", "Principal"], cite=page.cites.cite(union_sources(tots.values())))
 
 
 _DEBT_AS_OF = re.compile(r"^Total debt outstanding as of (\d{4}-\d{2}-\d{2})\s*(?:\((.*)\))?\s*$")
@@ -921,9 +1230,11 @@ def _flows_section(mo: Money, page) -> Markup:
                                     "data-one-for": mo.anchor(m)},
                         one_fold(mo.anchor(m), mo.label(m), one_summary("h3", name, _flows_digest(ed, m)),
                                  money_in_out(ed, page, m, level=4, label=name))))
-    links = [h("a", {"href": page.rel("county/index.html#money")}, "the county")]
-    for path, lab in (("places/index.html", "each city, town and township"), ("schools/index.html", "each school corporation")):
-        links.append(h("a", {"href": page.rel(path)}, lab))
+    links = [x for x in (gm.href(page, "county", "money", "money-in-out"),) if x]
+    links = [h("a", {"href": links[0]}, "the county")] if links else []
+    if gm.HUB in page.site.by_path:
+        for frag, lab in (("cities", "each city, town and township"), ("schools", "each school corporation")):
+            links.append(h("a", {"href": page.rel(f"{gm.HUB}#{frag}")}, lab))
     return section("money-in-out", 7, "Money in and out: libraries and special units",
                    h("p", None, "Where each library and special unit's money came from and how it was spent, from the "
                                 "annual financial reports they file with the state, with money that only passes through "
@@ -975,15 +1286,12 @@ def _flows_target(mo: Money, page, mid: str) -> tuple[str, str] | None:
     ed = mo.ed
     if not has_money_in_out(ed, mid):
         return None
-    uid = mo._uid(mid)
-    unit = ed.units.get(uid) if uid else None
-    built = page.site.by_path
-    if mid == "county-st-joseph" and "county/index.html" in built:
-        return page.rel("county/index.html#money"), "County government page"
-    if unit and unit["unit_type"] in ("city", "town", "township") and f"places/{uid}/index.html" in built:
-        return page.rel(f"places/{uid}/index.html#money-{uid}"), f"{re.sub(r'^(City|Town) of ', '', unit['name'])} place page"
-    if unit and unit["unit_type"] == "school_corporation" and "schools/index.html" in built:
-        return page.rel(f"schools/index.html#money-flows-{uid}"), "Schools page"
+    # every unit with a government page (phase 6 step 3): its Money tab's money-in-and-out block (id money-<anchor>,
+    # civic/spending.py money_in_out)
+    gov = gm.gov_for_money_id(ed, mid)
+    own = gm.href(page, gov.gid, "money", f"money-{ed.unit_alias(mid) or mid}") if gov else None
+    if own and page.path != gm.path(gov.gid, "money"):
+        return own, f"{gov.short} government page"
     if group_of(mid) in NO_BOUNDARY_GROUPS and mid in _flow_ids(mo):
         return f"#flows-{mo.anchor(mid)}", "Money in and out, below"
     return None
@@ -1033,8 +1341,76 @@ def _flows_digest(ed, mid: str) -> str:
 
 
 def _breakdown_block(mo: Money, page, mid: str) -> Markup:
-    c = page.cites
     name = mo.label(mid).replace(" (civil city)", "")
+    out, shown = _breakdown_content(mo, page, mid)
+    anchor = mo.anchor(mid)
+    digest = ("2024 actual: " + "; ".join(shown)) if shown else "No 2024 breakdown rows"
+    return h("div", {"class": "mn-breakdown", "id": f"breakdown-{anchor}", "data-one-for": anchor},
+             one_fold(anchor, mo.label(mid), one_summary("h3", name, digest), out))
+
+
+def breakdown_parts(mo: Money, page, mid: str) -> list:
+    """One unit's 2024 spending and revenue breakdown charts and tables (the content of its item on the budgets
+    page's section 4), for the unit's government page (phase 6 step 3). Same figures, same ids."""
+    return _breakdown_content(mo, page, mid)[0]
+
+
+def unit_debt_parts(mo: Money, page, mid: str) -> list:
+    """One unit's debt (the government page's Money tab). Since 2026-11-18 (gap-fill round 2: the state files for
+    2022, 2023 and 2025 joined 2024): its total principal at the end of each year as columns (unit_debt_years_chart),
+    the latest year's total and the part due within one year, the latest year's rows by class (the chart keeps its id
+    debt-<anchor>), every class row of every year behind "Show the table", the notes stored with the totals (never-sum,
+    utility) and the unit's own later totals (later_debt_note; never charted or added to the state figures)."""
+    c = page.cites
+    rows = [r for r in mo.debt if r["unit_id"] == mid and r.get("amount")]
+    if not rows:
+        return []
+    tots = debt_totals(mo, mid)
+    due = {r["year"]: r for r in rows if r["debt_type"].startswith(DEBT_DUE)}
+    classes = [r for r in rows if r["debt_type"].startswith(DEBT_CLASS)]
+    out = []
+    chart = unit_debt_years_chart(mo, page, mid)
+    if chart is not None:
+        out.append(chart)
+    if tots:
+        y = max(tots)
+        r = tots[y]
+        d = due.get(y)
+        out.append(h("p", None, f"Principal still owed at the end of {y}, as {mo.label(mid)} reported it to the "
+                                f"state: {usd(r['amount'])}", c.cite(r["source_ids"]),
+                     (f"; {usd(d['amount'])} of it due within one year" if d else ""),
+                     c.cite(d["source_ids"]) if d else None, ". ", status_badge(r["status"], page),
+                     " Totals include utility debt where a unit has utilities."))
+    if classes:
+        ly = max(r["year"] for r in classes)
+        latest = [r for r in classes if r["year"] == ly]
+        hr = [{"label": r["debt_type"].replace(DEBT_CLASS, "")[:46], "value": float(r["amount"]),
+               "display": usd_short(r["amount"]),
+               "tip": f"{r['debt_type']}: {usd(r['amount'])} at the end of {r['year']}"}
+              for r in sorted(latest, key=lambda r: r["debt_type"])]
+        out.append(hbar(f"debt-{mo.anchor(mid)}", f"Debt by class, end of {ly}", hr,
+                        subtitle="Principal outstanding, as reported to the state", money=True, value_fmt=usd_short,
+                        status="official" if all(r["status"] == "official" for r in latest) else "computed",
+                        page=page, headers=["Debt type", "Principal"], cite=c.cite(union_sources(latest))))
+        trs = [[r["year"], r["debt_type"].replace(DEBT_CLASS, ""), usd(r["amount"]),
+                h("span", None, status_badge(r["status"], page), c.cite(r["source_ids"]))]
+               for r in sorted(classes + list(due.values()), key=lambda r: (r["year"], r["debt_type"]))]
+        out.append(see_all_fold(f"debt-classes-{mo.anchor(mid)}-all", len(trs),
+                                data_table(f"debt-classes-{mo.anchor(mid)}", ["Year", "Debt type", "Amount", "Status"],
+                                           trs, caption=f"{mo.label(mid)}: debt by class and year", numeric=(2,),
+                                           min_width="36rem"),
+                                label=f"Show the table: every debt row by class and year ({len(trs)})"))
+    notes = debt_notes_block(mo, page, list(tots.values()))
+    if notes is not None:
+        out.append(notes)
+    note = later_debt_note(mo, page, mid)
+    if note:
+        out.append(note)
+    return out
+
+
+def _breakdown_content(mo: Money, page, mid: str) -> tuple[list, list]:
+    c = page.cites
     out = []
     groups = OrderedDict()
     for r in mo.breakdowns:
@@ -1070,11 +1446,8 @@ def _breakdown_block(mo: Money, page, mid: str) -> Markup:
         out.append(h("p", {"class": "mn-unit-note"}, "Its money in and money out (income by source and spending by "
                                                        "purpose, the state's annual report): ",
                      h("a", {"href": own[0]}, own[1]), "."))
-    anchor = mo.anchor(mid)
     shown = [titles[b][1].replace(", 2024 actual", "").lower() for b in titles if groups.get(b)]
-    digest = ("2024 actual: " + "; ".join(shown)) if shown else "No 2024 breakdown rows"
-    return h("div", {"class": "mn-breakdown", "id": f"breakdown-{anchor}", "data-one-for": anchor},
-             one_fold(anchor, mo.label(mid), one_summary("h3", name, digest), out))
+    return out, shown
 
 
 def _other_breakdowns(mo: Money, page) -> Markup:
@@ -1733,7 +2106,7 @@ def build_primer(site):
                                                      "185,000 to 300,000 that opted in under IC 36-2-2-4(c), and any other "
                                                      f"county that adopts it by ordinance. The guide's research reports that "
                                                      f"{ed.county} County is covered; the opt-in record itself has not been "
-                                                     "found yet. See ", h("a", {"href": page.rel("county/index.html#structure")},
+                                                     "found yet. See ", h("a", {"href": page.rel("governments/county/index.html#structure")},
                                                                          "County government"), ".")},
                                   page, split.get("source_ids")),
                      h("p", None, town.get("plain_language", ""), c.cite(town.get("source_ids"))),
@@ -1871,17 +2244,17 @@ def build_primer(site):
                                   "reporting, so the guide draws a break and never connects the two." if sb23 and sb24 else "",
                        c.cite("MON-001;MON-007")),
                      h("p", None, "See it on the chart: ",
-                       h("a", {"href": page.rel("money/budgets/index.html#south-bend")}, "South Bend budgets"), "."),
+                       h("a", {"href": page.rel("governments/south-bend/money/index.html#budget")}, "South Bend's Money tab"), "."),
                      scope="county", ed=ed))
 
     page.add(section("dollars", 7, "Nominal and constant dollars",
                      h("p", None, "Unless a chart says otherwise, every dollar figure in the guide is nominal: the amount in that "
                                   "year's dollars, as the government reported it.", c.cite("MON-024")),
                      h("p", None, "Comparing 2012 and 2026 fairly means restating older amounts with a price index. "
-                                  f"The budget charts on the Budgets page can switch to constant {mo.cpi_base} dollars, using the "
+                                  f"The budget charts on each government's Money tab can switch to constant {mo.cpi_base} dollars, using the "
                                   "national Consumer Price Index for All Urban Consumers (CPI-U). Tax rates are never adjusted.",
                        c.cite(mo.cpi_src), " ",
-                       h("a", {"href": page.rel("money/budgets/index.html#over-time")}, "Budgets over time"))
+                       h("a", {"href": page.rel("money/budgets/index.html#over-time")}, "Every government's budget over time"))
                      if mo.cpi else
                      h("p", None, "Comparing 2012 and 2026 fairly would mean restating older amounts with a price index. "
                                   "The guide doesn't have a sourced price index yet, so it doesn't offer inflation-adjusted "
@@ -1895,23 +2268,80 @@ def build_primer(site):
 # =================================================================== hub
 
 def build_hub(site):
+    """The Money hub (phase 6 step 5, 2026-11-18): two doors, Government money and Campaign money, each with one line,
+    its best entry points and a small ranked preview (figures the doors' pages already show, linking on), then the
+    headline figures as a compact list. Ids facts, pages, gaps and sources are kept."""
+    from . import money_browser as mb
     ed = site.ed
     mo = money(ed)
-    page = site.page("money/index.html", banners=False)
+    page = site.page("money/index.html", banners=False, body_class="thing-page")
     c = page.cites
 
     def latest(series_id):
         s = mo.series.get(series_id)
         return s["rows"][-1] if s and s["rows"] else None
 
+    page.add(h("header", {"class": "thing-head cb-head"},
+               page.crumb_nav(),
+               h("h1", {"class": "thing-title"}, "Money"),
+               h("p", {"class": "thing-facts"},
+                 "Two kinds of local money: what governments budget, tax and owe, and what candidates' campaigns "
+                 "raise and spend. Every figure says how it was totaled.")))
+
+    # ---- door 1: government money; preview = all advertised funds per resident (the Compare budgets ranking)
+    tw_ids = ["county-st-joseph", "city-mishawaka"] + [m for m in mo.unit_ids if group_of(m) == "township"]
+    pr_year = comparison_year(mo, ["county-st-joseph", "city-south-bend", "city-mishawaka"] + tw_ids,
+                              ("general_fund", "advertised_all_funds"))
+    got, src = per_resident_rows(mo, tw_ids, "advertised_all_funds", pr_year)
+    got.sort(key=lambda t: -t[3])
+    fmt = lambda v: f"${v:,.0f}"
+    gov_rows = [dict(_gov_row(mo, page, mid, v, fmt(v), "budget", tip=_pop_tip(r, pop)), fmt=fmt)
+                for mid, r, pop, v in got[:5]]
+    gov_links = [("money/budgets/index.html", "Compare budgets", "per resident, tax rates, debt, the money map"),
+                 ("money/your-tax-bill/index.html", "Your tax bill", "how one bill is split among the units that tax you"),
+                 (gm.HUB, "Each government's Money tab", "budget over time, tax base, debt, money in and out"),
+                 ("money/what-is-a-budget/index.html", "What counts as a budget", "why one budget can have several totals")]
+    gov_door = h("section", {"class": "tsec mh-door", "id": "government", "aria-labelledby": "government-h"},
+                 h("h2", {"class": "mh-door-h", "id": "government-h"},
+                   h("a", {"href": page.rel("money/budgets/index.html")}, "Government money")),
+                 h("p", {"class": "mh-door-d"}, "What each county, city, town, township, school corporation and special "
+                                                "unit budgets, taxes and owes, from the state's files.", c.cite("MON-001")),
+                 _door_links(page, gov_links),
+                 rank_rows("mh-gov-preview", f"All advertised funds per resident, {pr_year}: the top 5", gov_rows,
+                           subtitle="County, Mishawaka and the townships; the full list is on Compare budgets.",
+                           status="computed", page=page, cite=c.cite(src), headers=["Government", "Per resident"],
+                           word="Per resident") if gov_rows else None)
+
+    # ---- door 2: campaign money; preview = the five offices with the most spending (the By office ranking)
+    rows = mb._rank([r for r in mb.office_rows(ed) if not r["state"]])[:5]
+    vmax = mb._scale(rows)
+    camp_links = [(mb.INDEX, "By office",
+                   "every office's money, linking to its Money tab and its Primary / General switch"),
+                  (mb.BY_ELECTION, "By election", "every race of the 2026, 2024 and 2023 cycles on one scale"),
+                  (mb.BY_CANDIDATE, "By candidate", "every candidate and committee, alphabetical"),
+                  (cm_how(), "How campaign reporting works", "who files, what is public, how the guide adds it up")]
+    camp_door = h("section", {"class": "tsec mh-door", "id": "campaign", "aria-labelledby": "campaign-h"},
+                  h("h2", {"class": "mh-door-h", "id": "campaign-h"},
+                    h("a", {"href": page.rel(mb.INDEX)}, "Campaign money")),
+                  h("p", {"class": "mh-door-d"}, "What local candidates' committees reported raising and spending, "
+                                                 "election by election; earlier mayoral races as news coverage "
+                                                 "reported them. Money is not a measure of support."),
+                  _door_links(page, camp_links),
+                  mb._legend(),
+                  mb.money_rows("mh-camp-preview", "The five offices whose candidates reported the most spending",
+                                [mb._office_money_row(page, r) for r in rows], vmax=vmax, page=page,
+                                subtitle="Latest election on file, all candidates, whole cycle; an incomplete total "
+                                         "is a floor.",
+                                status="computed", cite=c.cite("CFM-010"), headers=["Office", "Raised", "Spent"]))
+    page.add(h("div", {"class": "cb-two mh-doors", "id": "pages"}, gov_door, camp_door))
+
+    # ---- headline figures, as one compact list
     facts = []
 
     def fact(value, label, row_or_src, status):
         src = row_or_src if isinstance(row_or_src, str) else row_or_src["source_ids"]
-        facts.append(h("div", {"class": "card mn-fact"},
-                       h("p", {"class": "mn-fact-v mono"}, value),
-                       h("p", {"class": "mn-fact-l"}, label, c.cite(src)),
-                       h("p", {"class": "mn-fact-b"}, status_badge(status, page))))
+        facts.append(h("li", {"class": "mh-fact"}, h("span", {"class": "mh-fact-v"}, value),
+                       h("span", {"class": "mh-fact-l"}, label, c.cite(src), " ", T.status_mark(status, page))))
 
     n_units = len({r["unit_id"] for r in mo.budgets})
     fact(str(n_units), f"local units with budget figures in the guide, {mo.y0} to {mo.y1}", "MON-001", "computed")
@@ -1923,52 +2353,52 @@ def build_hub(site):
         fact(usd_short(af["amount"]), f"St. Joseph County, all advertised funds, {af['year']} adopted", af, "computed")
     cb = latest("county-dlgf-certified-2026")
     if cb:
-        fact(usd_short(cb["amount"]), f"St. Joseph County budget certified by the state, {cb['year']} (the funds in the state's "
-                                      "budget order)", cb, "official")
+        fact(usd_short(cb["amount"]), f"St. Joseph County budget certified by the state, {cb['year']} (the funds in the "
+                                      "state's budget order)", cb, "official")
     sb = latest("sb-gateway-general-fund")
     if sb:
         fact(usd_short(sb["amount"]), f"South Bend general fund, {sb['year']} adopted", sb, "official")
     mi = latest("city-mishawaka-gateway-advertised-funds")
     if mi:
-        fact(usd_short(mi["amount"]), f"Mishawaka civil city, all advertised funds, {mi['year']} adopted (excludes utilities)", mi, "computed")
+        fact(usd_short(mi["amount"]), f"Mishawaka civil city, all advertised funds, {mi['year']} adopted (excludes "
+                                      "utilities)", mi, "computed")
     cert = [r for r in mo.rates if r["unit_id"] == "county-st-joseph" and r["rate_kind"] == "certified_unit_rate"]
     cr = max(cert, key=lambda r: int(r["year"])) if cert else None
     if cr:
-        fact(f"${float(cr['rate_per_100']):.4f}", f"county's own property-tax rate per $100 of assessed value, {cr['year']}, "
-                                                   "as certified by the state", cr, "official")
-    cd = next((r for r in mo.debt if r["unit_id"] == "county-st-joseph" and r["debt_type"].startswith("Total end-of-year")), None)
+        fact(f"${float(cr['rate_per_100']):.4f}", f"county's own property-tax rate per $100 of assessed value, "
+                                                   f"{cr['year']}, as certified by the state", cr, "official")
+    cdt = debt_totals(mo, "county-st-joseph")
+    cd = cdt[max(cdt)] if cdt else None
     if cd:
-        fact(usd_short(cd["amount"]), f"county debt outstanding, end of {cd['year']}", cd, "computed")
-    fact(str(len(mo.jumps)), "year-over-year budget changes over 40% with no recorded explanation, flagged on the charts",
-         "MON-001", "computed")
-
-    cards = [("money/what-is-a-budget/index.html", "What counts as a budget",
-              "General fund, all funds, adopted and actual: why one budget can have several totals."),
-             ("money/your-tax-bill/index.html", "Your tax bill",
-              "Pick a taxing district to see its certified tax rate and how it is shared among the units that levy it."),
-             ("money/budgets/index.html", "Budgets by unit",
-              f"Every unit's adopted budget, {mo.y0} to {mo.y1}, plus 2024 spending, revenue and debt."),
-             ("money/campaigns/index.html", "Campaign finance",
-              "How campaign-finance reporting works and what is public.")]
-    toc = [("facts", "Headline figures"), ("pages", "Money pages"), ("gaps", "Gaps"), ("sources", "Sources")]
-    page.add(hero(page, "Reference · Money", page.title,
-                  h("span", None, "Where local money comes from and where it goes: budgets for every unit, how a property-tax "
-                                  "bill is split, and debt. Every figure says how it was totaled.", c.cite("MON-001")),
-                  toc, [scope_badge("county", ed), " ", scope_badge("indiana", ed)]))
-    page.add(section("facts", 1, "Headline figures",
-                     h("p", {"class": "muted"}, "Computed from the guide's money data. Budget totals depend on which funds are "
-                                                "counted; ", h("a", {"href": page.rel("money/what-is-a-budget/index.html")},
-                                                               "read the primer"), " before comparing them."),
-                     h("div", {"class": "mn-facts"}, facts), scope="county", ed=ed))
-    page.add(section("pages", 2, "Money pages",
-                     h("div", {"class": "card-grid"},
-                       [h("article", {"class": "card"}, h("h3", {"class": "card-title"}, h("a", {"href": page.rel(p)}, t)),
-                          h("p", None, d)) for p, t, d in cards]),
-                     h("p", {"class": "mn-path-note"}, "Learning path: ", h("a", {"href": page.rel("money/what-is-a-budget/index.html#path-follow-the-money-1")},
-                                                       "Follow the money"), ", five stops, about 35 minutes.")))
+        # the stored caveat travels with the total (2026-11-18: the never-sum note on the 2024 and 2025 county totals)
+        caveat = debt_note_text(cd.get("notes") or "")
+        fact(usd_short(cd["amount"]), f"county debt outstanding, end of {cd['year']}" + (f". {caveat}" if caveat else ""),
+             cd, "computed")
+    fact(str(len(mo.jumps)), "year-over-year budget changes over 40% with no recorded explanation, flagged on each "
+                             "government's charts", "MON-001", "computed")
+    page.add(T.tab_section("facts", "Headline figures", h("ul", {"class": "mh-facts"}, facts),
+                           lead=h("span", None, "Budget totals depend on which funds are counted; ",
+                                  h("a", {"href": page.rel("money/what-is-a-budget/index.html")}, "read the primer"),
+                                  " before comparing them. Learning path: ",
+                                  h("a", {"href": page.rel("money/what-is-a-budget/index.html#path-follow-the-money-1")},
+                                    "Follow the money"), ", five stops.")))
+    # a source the hub no longer cites (2026-11-18: MON-004, the 2024 debt file; the debt fact now gives the latest
+    # year) keeps its #src-<id> link: it lands on the sources index, which lists every source
+    page.add(mb.moved_anchors_script({"a": {"pages-h": "#pages"}, "p": {"src-": page.rel("about/sources/index.html")}}))
     page.finish(gaps=money_gaps(ed, r"South Bend 2026|tax-district|assessed|Circuit|Debt before") + cpi_gaps(mo),
                 gaps_intro="The largest gaps in the money data. Each money page lists the gaps that affect it.")
     return page
+
+
+def cm_how() -> str:
+    from civic.campaign_money import HOW_PAGE
+    return HOW_PAGE
+
+
+def _door_links(page, links) -> Markup:
+    return h("ul", {"class": "mh-links"},
+             [h("li", None, h("a", {"href": page.rel(p)}, t), h("span", {"class": "mh-link-d"}, d))
+              for p, t, d in links if p.split("#")[0] in page.site.by_path])
 
 
 PAGES = {

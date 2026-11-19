@@ -36,3 +36,10 @@ research/tmp/
 # raw full-text dumps of source documents (may contain private individuals' contact details; regenerate from the PDFs)
 sources/recovered/**/*.txt
 !sources/recovered/laville-rename/notes.txt
+
+# gap-fill working files (2026-11-18): staged research rows, raw downloads and review files. Kept local: the staged
+# contact rows include details the owner chose not to publish, and the folder is ~50 MB. What was merged is recorded
+# in data/**/_corrections_applied_*.md and data/SCHEMA.md.
+/planning/gapfill/
+# browser-check screenshots (~55 MB)
+/planning/qa/phase6-shots/

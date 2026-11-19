@@ -1,4 +1,5 @@
-"""County government reference page (county/index.html)."""
+"""County government: the tabs of governments/county/ (phase 6 step 3, 2026-11-16; overview, elections, money_tab,
+history, sources) and the county/ forwarding page. Before 2026-11-16 this module built county/index.html."""
 from __future__ import annotations
 
 import re
@@ -6,10 +7,12 @@ from datetime import date
 
 from civic.charts import party_timeline, results_bars
 from civic.components import (as_of_note, body_state, body_with_breakdown, bodies_block, callout, data_table, name_party_text,
-                              party_label, scope_badge, section, see_all_fold, status_badge, variant_slot)
+                              party_label, scope_badge, section, see_all_fold, status_badge, status_heading, status_label, variant_slot)
 from civic.data import fmt_date, parse_date, split_ids
 from civic.answers import answer_box
 from civic.related import RelatedLink, contest_href, latest_contest, related_items, related_rail
+from civic import overall as OV
+from civic import results_status as RS
 from civic.html import Markup, h, join, json_script
 from civic.layers import county_scope_boards
 from civic.spending import has_money_in_out, money_in_out
@@ -69,8 +72,8 @@ CONTROL_METHOD = ("Each row shows the party label of the person holding each sea
                   "guide's terms data. Seats with no holder in the data are shown as 'no data'. A seat is left without a "
                   "party ('not shown') only when its holder's party, or whether that person holds the seat, is not "
                   "documented. Years marked † include a holder whose start or end date is uncertain in the sources; "
-                  "the party shown is documented, but the exact year of a change may differ. Rows marked * use terms "
-                  "that start after the 2026 election, whose results are unofficial.")
+                  "the party shown is documented, but the exact year of a change may differ. Rows marked * include a "
+                  "term whose election result is still unofficial in the guide's data.")
 
 
 def sid_for_url(ed, fragment: str) -> str:
@@ -178,53 +181,60 @@ def control_by_year(ed, offices: list[dict]) -> list[dict]:
     return years
 
 
-def build(site):
-    ed = site.ed
-    page = site.page("county/index.html", banners=True)
-    cites = page.cites
-    county = ed.county
+def _bodies(ed) -> dict:
     offices = ed.offices_for("county")
     court_offices = ed.offices_for("sjc-courts")
-    comm = [o for o in offices if o["office_type"] == "county_commissioner"]
-    council = [o for o in offices if o["office_type"] == "county_council_member"]
     row = [o for o in offices if o["office_type"] in ROW_TYPES]
-    superior = [o for o in court_offices if o["office_type"] == "superior_court_judge"]
-    other_courts = [o for o in court_offices if o["office_type"] != "superior_court_judge"]
+    return {"offices": offices, "courts": court_offices,
+            "comm": [o for o in offices if o["office_type"] == "county_commissioner"],
+            "council": [o for o in offices if o["office_type"] == "county_council_member"],
+            "row": row,
+            "superior": [o for o in court_offices if o["office_type"] == "superior_court_judge"],
+            "other_courts": [o for o in court_offices if o["office_type"] != "superior_court_judge"]}
+
+
+# ------------------------------------------------------------------ government tabs (phase 6 step 3, 2026-11-16)
+# The county's home is governments/county/ (civic/governments.py); county/ is a forwarding page. Overview: at a glance,
+# how county government is organized (with the litigation), offices and who holds them (the district map), row
+# officers, courts, appointed boards, contact, the community strip, the rail. Elections: recent results (district
+# seats one item each, countywide offices one row per race), retention votes. Money: the budgets page's charts, money
+# in and out, the 2024 breakdowns, tax base, debt. History: party control of the council and the commissioners, holders
+# over time. Sources. Section ids are the old page's, so old #anchors land on them.
+
+def overview(site, page):
+    from . import gov_parts as P
+    from civic import governments as gm
+    from civic import tabs as T
+    from .places import _context_rows, _community_target
+    ed = site.ed
+    cites = page.cites
+    county = ed.county
+    B = _bodies(ed)
+    offices, court_offices = B["offices"], B["courts"]
+    comm, council, row, superior, other_courts = B["comm"], B["council"], B["row"], B["superior"], B["other_courts"]
     n_elected = len(comm) + len(council) + len(row) + len(court_offices)
     n_pros = sum(1 for o in row if o["office_type"] == "county_prosecutor")
     n_row_only = len(row) - n_pros
+    keys = gm.gov_tabs(ed, "county")
+    page.add(h("p", {"class": "tsec-lead"},
+               f"{ed.county_label} has a board of commissioners, a county council, elected row officers and a "
+               f"prosecutor, and county courts. The guide's data lists {len(comm)} commissioner seats, "
+               f"{len(council)} council seats, {n_row_only} row officers, {n_pros} prosecutor{'s' if n_pros != 1 else ''} and {len(court_offices)} judgeships: "
+               f"{n_elected} offices in all.", cites.cite(_union_sources(offices[:1] + court_offices[:1])), " ",
+               status_badge("computed", page, "Seat counts computed from the guide's office data.")))
+    ctx = _context_rows(ed, ed.units["county"])
+    page.add(answer_box(ed, page, ed.units["county"], offices + court_offices, mark_here=False, links={
+        "who": "#officeholders",
+        "spend": (gm.path("county", "money"), "Budget, money in and out, debt") if "money" in keys else
+                 ("money/what-is-a-budget/index.html#county-example", "Why county budget totals differ"),
+        "vote": ("elections/calendar/index.html#by-year", "Election calendar"),
+        "people": "#context" if ctx else ("community/index.html", "Know your community")}))
+    loc = P.locator_map(page, ed, gm.by_id(ed)["county"])
 
-    # ------------------------------------------------------------------ hero
-    toc = [("structure", "How it's organized"), ("officeholders", "Who holds office"), ("row-officers", "Row officers"),
-           ("courts", "Courts"), ("boards", "Appointed boards"), ("control", "Party control over time"),
-           ("results", "Recent results")] + ([("money", "Money in and out")] if has_money_in_out(ed, "county-st-joseph") else []) +           [("gaps", "Gaps"), ("sources", "Sources")]
-    page.add(h("header", {"class": "page-hero"},
-               h("p", {"class": "eyebrow mono"}, "Reference · County"),
-               h("h1", None, "County government"),
-               h("p", {"class": "dek"},
-                 f"{ed.county_label} has a board of commissioners, a county council, elected row officers and a "
-                 f"prosecutor, and county courts. The guide's data lists {len(comm)} commissioner seats, "
-                 f"{len(council)} council seats, {n_row_only} row officers, {n_pros} prosecutor{'s' if n_pros != 1 else ''} and {len(court_offices)} judgeships: "
-                 f"{n_elected} offices in all.", cites.cite(_union_sources(offices[:1] + court_offices[:1])), " ",
-                 status_badge("computed", page, "Seat counts computed from the guide's office data.")),
-               answer_box(ed, page, ed.units["county"], offices + court_offices, mark_here=False, links={
-                   "who": "#officeholders",
-                   "spend": ("money/what-is-a-budget/index.html#county-example", "Why county budget totals differ"),
-                   "vote": ("elections/calendar/index.html#by-year", "Election calendar"),
-                   "people": ("community/index.html", "Know your community")}),
-               county_rail(page),
-               h("p", {"class": "hero-badges"}, scope_badge("county", ed), " ", scope_badge("indiana", ed),
-                 h("span", {"class": "muted"}, " marks rules that apply in every county.")),
-               h("nav", {"class": "toc", "aria-label": "On this page"},
-                 h("ol", None, [h("li", None, h("a", {"href": f"#{a}"}, t)) for a, t in toc]))))
-
-    # ------------------------------------------------------------------ 1 structure
+    # ------------------------------------------------------------------ structure
     split_rule = ed.local_rules.get("county_government_split", {})
     council_rule = ed.local_rules.get("county_council_structure", {})
     comm_type = ed.office_types.get("county_commissioner", {})
-    council_type = ed.office_types.get("county_council_member", {})
-    # Litigation over the county's election structure lives in the office notes (data), so each
-    # sentence keeps the office's citations. Only sentences about the lawsuit or ruling are shown.
     lit_pat = r"(?i)lawsuit|\bsued\b|ruled|ruling|appeal|docket|judgment|court record|order's text|held under the district system"
 
     def lit_text(offs):
@@ -281,59 +291,65 @@ def build(site):
                                              f"({letters}), one member each.", cites.cite(_union_sources(council))),
                                 council_litigation())},
         page, council_rule.get("source_ids"))
-    page.add(section("structure", 1, "How county government is organized",
-                     h("h3", None, "Who passes county laws and budgets"), legislative,
-                     h("h3", None, "How commissioners are elected"), commissioners,
-                     h("h3", None, "How the council is elected"), council_v,
-                     ed=ed,
-                     lead="Indiana sets the basic structure for every county; some counties differ by statute. "
-                          "Each rule below is shown with its county exception where one applies."))
+    page.add(T.tab_section("structure", "How county government is organized",
+                           # the three rules sit in a fold (closed with JavaScript on) so the Overview stays short; the
+                           # lawsuit fold inside keeps its id (#litigation), and a link to it opens both
+                           h("div", {"class": "gov-where"}, loc,
+                             h("div", None,
+                               h("p", None, f"Commissioners ({len(comm)}) run the county; the council ({len(council)}) "
+                                            "sets the budget and taxes; both are elected by district."),
+                               see_all_fold("structure-rules", 0, [
+                                   h("h3", None, "Who passes county laws and budgets"), legislative,
+                                   h("h3", None, "How commissioners are elected"), commissioners,
+                                   h("h3", None, "How the council is elected"), council_v],
+                                   label="Show the rules: who passes laws and budgets, how each board is elected",
+                                   hint=None))),
+                           lead="Indiana sets the basic structure for every county; some counties differ by statute. "
+                                "Each rule below is shown with its county exception where one applies."))
 
-    # ------------------------------------------------------------------ 2 officeholders
-    def rows(offs):
-        """One compact row per office (civic/holder_rows.py); each opens to the card's fields."""
-        out = []
-        for o in offs:
-            note = None
-            if o["office_type"] == "superior_court_judge":
-                note = ("Merit-selection seat; the canvass identifies the seat by the judge's surname. The start date shown is "
-                        "inferred from a retention vote in the guide's results (the January after the vote); the judge was already "
-                        "serving before that vote. The date of first appointment is not in the guide's data.")
-            # "Judge of the Superior Court (seat identified by incumbent surname: Manier)" -> "Superior Court, Manier seat"
-            m = re.search(r"Superior Court \(seat identified by incumbent surname: ([^)]+)\)", o["title"])
-            title = f"Superior Court judge, {m.group(1)} seat" if m else None
-            out.append(holder_row(ed, page, o, ed.current_terms(o["office_id"]), ed.incoming_terms(o["office_id"]), note,
-                                  title=title))
-        return h("div", {"class": "one-list holder-rows"}, out)
+    # ------------------------------------------------------------------ offices and who holds them
+    def judge_title(o):
+        m = re.search(r"Superior Court \(seat identified by incumbent surname: ([^)]+)\)", o["title"])
+        return f"Superior Court judge, {m.group(1)} seat" if m else None
+    titles = {o["office_id"]: judge_title(o) for o in superior if judge_title(o)}
     n_incoming = sum(len(ed.incoming_terms(o["office_id"])) for o in offices + court_offices)
     dmap = _district_map(ed, page, comm, council)
-    page.add(section("officeholders", 2, "Who holds county offices now",
-                     h("p", None, f"From the guide's terms data, as of {fmt_date(ed.as_of, long=True)}. Officeholders are listed "
-                                  "by office and district, never by party. ",
-                       f"{n_incoming} people elected on Nov 3, 2026 are shown as incoming; they take office Jan 1, 2027, "
-                       "and those results are unofficial until the county certifies them." if n_incoming else ""),
-                     h("p", None, "Commissioners and council members are each elected by one district. Find yours on the "
-                                  "map; every office is also listed below, one line each. Open a line for how the holder "
-                                  "was first chosen and the sources.") if dmap else
-                     h("p", None, "Every office is listed below, one line each. Open a line for how the holder was first "
-                                  "chosen and the sources."),
-                     dmap,
-                     _here_districts(ed),
-                     one_bar("office", "offices", "Pick a district on the map, or open any office below."),
-                     h("h3", None, body_with_breakdown("Board of Commissioners", *body_state(ed, comm))), rows(comm),
-                     h("h3", None, body_with_breakdown("County Council", *body_state(ed, council))), rows(council),
-                     as_of_note(ed),
-                     h("h3", None, "Countywide officers: row officers and prosecutor"),
-                     h("p", {"class": "muted"}, "Elected by the whole county, so they are not on the district map."),
-                     rows(row),
-                     h("h3", None, "Judges"), rows(other_courts + superior),
-                     h("h3", None, "State legislators for the county"),
-                     h("p", None, "These districts include part of the county, so the county's delegation is the set of legislators "
-                                  "whose districts reach it. Listed by chamber and district number."),
-                     bodies_block(ed, [], extra_bodies=_delegation(ed), note=False),
-                     scope="county", ed=ed))
+    ol = lambda offs: P.office_list(ed, page, offs, titles=titles)
+    # long lists show their first rows and fold the rest (2026-11-16: the Overview was 6.5 screens at 1280x900)
+    olf = lambda offs, fid, noun: P.office_list_first(ed, page, offs, 3, fid, noun, titles=titles)
+    page.add(T.tab_section(
+        "officeholders", "Offices and who holds them",
+        P.offices_lead(ed),
+        h("p", None, RS.incoming_note(ed, [o["office_id"] for o in offices + court_offices])) if n_incoming else None,
+        h("p", None, "Commissioners and council members are each elected by one district. Find yours on the map; every "
+                     "office is also listed below, one line each.") if dmap else None,
+        dmap,
+        h("h3", None, body_with_breakdown("Board of Commissioners", *body_state(ed, comm))), ol(comm),
+        h("h3", None, body_with_breakdown("County Council", *body_state(ed, council))),
+        olf(council, "council-more", "council seats"),
+        as_of_note(ed),
+        # the countywide officers and the judges are elected by the whole county (not on the map): one fold holds
+        # both lists (2026-11-16, to bring the Overview near 4 screens); a link to any row's id opens it
+        see_all_fold("countywide-all", len(row) + len(other_courts + superior), [
+            h("h3", None, "Countywide officers: row officers and prosecutor"),
+            h("p", {"class": "muted"}, "Elected by the whole county, so they are not on the district map."),
+            ol(row),
+            h("h3", None, "Judges"), ol(other_courts + superior),
+            h("p", {"class": "muted"}, "Superior Court seats are merit-selection seats; the canvass identifies each seat "
+                                       "by the judge's surname. A start date shown on an office page is inferred from a "
+                                       "retention vote (the January after the vote); the date of first appointment is "
+                                       "not in the guide's data.")],
+            label=f"Show the {len(row)} countywide officers and the {len(other_courts + superior)} judges' seats "
+                  "(elected countywide, not on the map)", hint=None),
+        h("h3", None, "State legislators for the county"),
+        h("p", None, "These districts include part of the county, so the county's delegation is the set of legislators "
+                     "whose districts reach it. Listed by chamber and district number. ",
+          h("a", {"href": page.rel("state/your-legislators/index.html")}, "Your legislators")
+          if "state/your-legislators/index.html" in page.site.by_path else None),
+        see_all_fold("delegation-all", 0, bodies_block(ed, [], extra_bodies=_delegation(ed), note=False),
+                     label="Show the county's state legislators", hint=None)))
 
-    # ------------------------------------------------------------------ 3 row officers
+    # ------------------------------------------------------------------ row officers
     trows = []
     for o in row:
         ot = ed.office_type_row(o) or {}
@@ -343,15 +359,16 @@ def build(site):
                       f"{o['term_years']} years" if o.get("term_years") else "",
                       ot.get("term_limit", ""),
                       o.get("next_election", "")])
-    page.add(section("row-officers", 3, "Row officers and what they do",
-                     h("p", None, "Indiana's county row officers are elected countywide in partisan races. "
-                                  "Descriptions and term limits are the Indiana-wide rules; next-election years are this county's.",
-                       cites.cite(ed.rules.get("county_row_office_term_limits", {}).get("source_ids"))),
-                     data_table("row-officers-table", ["Office", "What it does", "Term", "Term limit", "Next regular election"],
-                                trows, caption="County row officers", numeric=(4,), min_width="44rem"),
-                     scope="indiana", ed=ed))
+    page.add(T.tab_section("row-officers", "Row officers and what they do",
+                           h("p", None, "Indiana's county row officers are elected countywide in partisan races. "
+                                        "Descriptions and term limits are the Indiana-wide rules; next-election years are this county's.",
+                             cites.cite(ed.rules.get("county_row_office_term_limits", {}).get("source_ids"))),
+                           see_all_fold("row-officers-all", len(trows),
+                                        data_table("row-officers-table", ["Office", "What it does", "Term", "Term limit", "Next regular election"],
+                                                   trows, caption="County row officers", numeric=(4,), min_width="44rem"),
+                                        label=f"Show the table: the {len(trows)} row officers, what each does and its term limit")))
 
-    # ------------------------------------------------------------------ 4 courts
+    # ------------------------------------------------------------------ courts
     court_rule = ed.local_rules.get("court_structure", {})
     merit_rule = ed.rules.get("merit_selection_counties", {})
     ret_rule = ed.rules.get("superior_court_retention", {})
@@ -365,107 +382,135 @@ def build(site):
                                          "Superior Court seats. How a seat is filled: ", sup_type.get("vacancy_rule", ""),
                               cites.cite(sup_type.get("source_ids")))},
         page, merit_rule.get("source_ids"))
-    ret = []
-    for c in sorted((c for c in ed.contests.values() if c["office_id"] in {o["office_id"] for o in superior}),
-                    key=lambda c: (ed.elections[c["election_id"]]["date"], c["label"])):
-        ret.append(c)
-    latest_ret_eid = max((c["election_id"] for c in ret), key=lambda e: ed.elections[e]["date"], default=None)
-    ret_figs = []
-    for c in ret:
-        if c["election_id"] != latest_ret_eid:
-            continue
-        ret_figs.append(_contest_figure(ed, page, c, question=True))
-    page.add(section("courts", 4, "Courts",
-                     h("p", None, court_rule.get("plain_language", ""), cites.cite(court_rule.get("source_ids")), " ",
-                       circ_type.get("what_it_does", ""), cites.cite(circ_type.get("source_ids"))),
-                     h("h3", None, "How Superior Court judges are chosen"), superior_v,
-                     h("p", None, f"The Circuit Court and Probate Court judges are elected in partisan races "
-                                  f"({', '.join(o['term_years'] + '-year terms' for o in other_courts[:1])}).",
-                       cites.cite(_union_sources(other_courts))) if other_courts else None,
-                     h("h3", None, f"Most recent retention votes ({ed.elections[latest_ret_eid]['date'][:4]})") if ret_figs else None,
-                     h("div", {"class": "chart-grid"}, ret_figs) if ret_figs else None,
-                     ed=ed))
+    ret_href = gm.href(page, "county", "elections", "retention")
+    page.add(T.tab_section("courts", "Courts",
+                           h("p", None, court_rule.get("plain_language", ""), cites.cite(court_rule.get("source_ids")), " ",
+                             circ_type.get("what_it_does", ""), cites.cite(circ_type.get("source_ids"))),
+                           see_all_fold("superior-rule", 0, superior_v,
+                                        label="How Superior Court judges are chosen", hint=None),
+                           h("p", None, f"The Circuit Court and Probate Court judges are elected in partisan races "
+                                        f"({', '.join(o['term_years'] + '-year terms' for o in other_courts[:1])}).",
+                             cites.cite(_union_sources(other_courts))) if other_courts else None,
+                           h("p", None, h("a", {"href": ret_href}, "The most recent retention votes"),
+                             " are on the Elections tab.") if ret_href else None))
 
-    # ------------------------------------------------------------------ 5 boards
+    # ------------------------------------------------------------------ boards
     boards = county_scope_boards(ed) + [b for b in ed.boards if ed.units.get(b["unit_id"], {}).get("unit_type") == "library"]
     brows = []
     for b in boards:
         brows.append([b["name"], b.get("what_it_decides", ""), b.get("seats") or "not in sources",
                       b.get("appointing_authorities") or "not in sources",
-                      h("span", None, status_badge(b["status"], page), cites.cite(b["source_ids"]))])
-    page.add(section("boards", 5, "Appointed boards and who appoints them",
-                     h("p", None, "These bodies make county-level decisions but their members are appointed, not elected. "
-                                  "The table lists every county-level board in the guide's data, including the two public "
-                                  "library boards, with what the sources say about who appoints them."),
-                     data_table("boards-table", ["Board", "What it decides", "Seats", "Who appoints", "Status"], brows,
-                                caption="County-level appointed boards", min_width="44rem"),
-                     scope="county", ed=ed))
+                      h("span", None, status_label(b["status"], page), cites.cite(b["source_ids"]))])
+    page.add(T.tab_section("boards", "Appointed boards and who appoints them",
+                           h("p", None, "These bodies make county-level decisions but their members are appointed, not elected. "
+                                        "The table lists every county-level board in the guide's data, including the two public "
+                                        "library boards, with what the sources say about who appoints them."),
+                           see_all_fold("boards-all", len(brows),
+                                        data_table("boards-table", ["Board", "What it decides", "Seats", "Who appoints", "Status"], brows,
+                                                   caption="County-level appointed boards", min_width="44rem"),
+                                        label=f"Show the {len(brows)} boards"),
+                           # who serves (appointed_board_members.csv, 2026-11-18)
+                           P.board_rosters(ed, page, boards)))
+    page.add(P.contact_section(ed, page, ed.units["county"]))
+    # the community strip: after the neutral Contact section, never beside results or party control (F6)
+    page.add(P.community_strip(ed, page, ctx, _community_target(ed, ed.units["county"]), "county"))
+    page.add(county_rail(page))
 
-    # ------------------------------------------------------------------ 6 party control
+
+def elections(site, page):
+    from civic import governments as gm
+    from civic import tabs as T
+    ed = site.ed
+    B = _bodies(ed)
+    comm, council, row, superior, other_courts = B["comm"], B["council"], B["row"], B["superior"], B["other_courts"]
+    gen = [e for e in ed.elections.values() if e["type"] == "general"]
+    gen.sort(key=lambda e: e["date"], reverse=True)
+    recent = [e["election_id"] for e in gen[:2]]
+    map_href = gm.href(page, "county", "overview", "officeholders")
+    page.add(T.tab_section("results", "Recent results for county offices",
+                           *_results_body(ed, page, comm, council, row + other_courts, gen[:2], map_href=map_href),
+                           h("p", None, ballot_order_note(ed, page, recent), "Candidates appear in the order the source lists them. "
+                                        "The bar scale is 0 to 100% for every race. Percentages are computed from the vote counts "
+                                        "where the canvass doesn't print them. ",
+                             h("a", {"href": page.rel("elections/results/index.html")}, "All results, 2010 to 2026"))))
+    ret = sorted((c for c in ed.contests.values() if c["office_id"] in {o["office_id"] for o in superior}),
+                 key=lambda c: (ed.elections[c["election_id"]]["date"], c["label"]))
+    latest_ret_eid = max((c["election_id"] for c in ret), key=lambda e: ed.elections[e]["date"], default=None)
+    ret_figs = [_contest_figure(ed, page, c, question=True) for c in ret if c["election_id"] == latest_ret_eid]
+    if ret_figs:
+        page.add(T.tab_section("retention", f"Most recent retention votes ({ed.elections[latest_ret_eid]['date'][:4]})",
+                               h("div", {"class": "chart-grid"}, ret_figs),
+                               h("p", {"class": "muted"}, "Superior Court judges stand for retention (yes or no), not "
+                                                          "against an opponent. ",
+                                 h("a", {"href": page.rel("elections/judges-and-questions/index.html#retention")},
+                                   "Every retention vote")
+                                 if "elections/judges-and-questions/index.html" in page.site.by_path else None)))
+
+
+def money_tab(site, page):
+    from . import gov_parts as P
+    from civic import governments as gm
+    ed = site.ed
+    P.money_tab(ed, page, gm.by_id(ed)["county"],
+                tax_extra=" It covers all property in the county, inside the cities and towns too.")
+
+
+def history(site, page):
+    from . import gov_parts as P
+    from civic import tabs as T
+    ed = site.ed
+    cites = page.cites
+    B = _bodies(ed)
+    comm, council = B["comm"], B["council"]
     council_years = control_by_year(ed, council)
     comm_years = control_by_year(ed, comm)
-    method = CONTROL_METHOD
     charts = []
     if council_years:
         charts.append(party_timeline("control-council", "County Council seats by party", council_years, len(council),
                                      subtitle=f"{council_years[0]['year']} to {council_years[-1]['year']}, {len(council)} seats",
-                                     note=method, page=page, cite=cites.cite(_union_sources(ed.terms_for(o["office_id"])[0] for o in council))))
+                                     note=CONTROL_METHOD, page=page, cite=cites.cite(_union_sources(ed.terms_for(o["office_id"])[0] for o in council))))
     if comm_years:
         charts.append(party_timeline("control-commissioners", "Board of Commissioners seats by party", comm_years, len(comm),
                                      subtitle=f"{comm_years[0]['year']} to {comm_years[-1]['year']}, {len(comm)} seats",
-                                     note=method, page=page, cite=cites.cite(_union_sources(ed.terms_for(o["office_id"])[0] for o in comm))))
-    spans = [f"{label} {ys[0]['year']} to {ys[-1]['year']}" for label, ys in
-             (("County Council", council_years), ("Board of Commissioners", comm_years)) if ys]
-    page.add(section("control", 6, "Party control over time",
-                     bodies_block(ed, comm + council),
-                     h("p", None, "Two charts show the party label of each seat's holder on January 2 of every year in "
-                                  "the guide's data, one row per year, with a table view each. ",
-                       h("a", {"href": page.rel("history/index.html#control")}, "Party control of local bodies over time"),
-                       " is on the History page.") if charts else None,
-                     see_all_fold("control-charts", 0, charts,
-                                  label="Seat-by-seat charts: " + "; ".join(spans), hint="Charts · tables")
-                     if charts else None,
-                     h("p", {"class": "muted"}, "The full range of the guide's data is shown. Earlier years are listed under Gaps."),
-                     scope="county", ed=ed))
+                                     note=CONTROL_METHOD, page=page, cite=cites.cite(_union_sources(ed.terms_for(o["office_id"])[0] for o in comm))))
+    page.add(T.tab_section("control", "Party control over time",
+                           bodies_block(ed, comm + council),
+                           h("p", None, "The party label of each seat's holder on January 2 of every year in the guide's "
+                                        "data, one row per year, with a table view each. ",
+                             h("a", {"href": page.rel("history/index.html#control")}, "Party control of local bodies over time"),
+                             " is on the History page.") if charts else None,
+                           h("div", {"class": "chart-grid gov-wide", "id": "control-charts"}, charts) if charts else None,
+                           h("p", {"class": "muted"}, "The full range of the guide's data is shown. Earlier years are "
+                                                      "listed under Gaps on the Sources tab.")))
+    page.add(P.holders_section(ed, page, B["offices"] + B["courts"]))
 
-    # ------------------------------------------------------------------ 7 results
-    # District seats (commissioners, council): one show-one item per seat, keyed like its officeholder line, so a
-    # district picked on the map opens its result too. Countywide offices: one row per race, charts in a fold.
-    gen = [e for e in ed.elections.values() if e["type"] == "general"]
-    gen.sort(key=lambda e: e["date"], reverse=True)
-    recent = [e["election_id"] for e in gen[:2]]
-    page.add(section("results", 7, "Recent results for county offices",
-                     *_results_body(ed, page, comm, council, row + other_courts, gen[:2]),
-                     h("p", None, ballot_order_note(ed, page, recent), "Candidates appear in the order the source lists them. "
-                                  "The bar scale is 0 to 100% for every race. Percentages are computed from the vote counts "
-                                  "where the canvass doesn't print them. ",
-                       h("a", {"href": page.rel("elections/results/index.html")}, "All results, 2010 to 2026")),
-                     scope="county", ed=ed))
 
-    flows = money_in_out(ed, page, "county-st-joseph", level=3, label="County government money in and money out")
-    if flows:
-        digest = _flows_digest(ed, "county-st-joseph")
-        page.add(section("money", 8, "Money in and money out",
-                         h("p", None, "What county government received and spent, from the annual financial report the "
-                                      "county files with the state. ",
-                           h("a", {"href": page.rel("money/budgets/index.html#county")}, "Budgets over time"),
-                           " are on the budgets page."),
-                         tax_base_line(ed, page, "county-st-joseph", county_label=ed.county_label,
-                                       extra=" It covers all property in the county, inside the cities and towns too."),
-                         # the state report's income and spending charts (3 screens) open from one line, as on the
-                         # place pages; links into them (#sp-county-...) open the fold
-                         see_all_fold("money-flows-county", 0, flows,
-                                      label="Money in and money out, from the annual report to the state"
-                                            + (f": {digest}" if digest else ""), hint="Charts · tables"),
-                         scope="county", ed=ed))
+def sources(site, page):
+    from civic import tabs as T
+    ed = site.ed
+    notes = [h("span", None, "Results are as the county's canvass or the cited source prints them; every result chart "
+                             "uses the same 0 to 100% scale."),
+             h("span", None, "Party control: ", CONTROL_METHOD)]
+    page.add(*T.sources_body(page, ed.gaps(files=["gaps_gov", "gaps_results"], pattern=GAP_PATTERN), notes=notes,
+                             title="county government"))
 
-    # Superior Court 6 was two offices (named for Chapleau, then Woods) until 2026-11-09, which counted the seat twice;
-    # it is one office now, so an old link to the Chapleau seat goes to it (static/js/moved.js)
-    page.add(json_script("moved-anchors", {"a": {"office-superior-court-judge-chapleau":
-                                                 page.rel("county/index.html#office-superior-court-judge-woods")}}))
-    gaps = ed.gaps(files=["gaps_gov", "gaps_results"], pattern=GAP_PATTERN)
-    page.finish(gaps=gaps)
-    return page
+
+def renderers(site) -> dict:
+    from functools import partial
+    return {"overview": partial(overview, site), "elections": partial(elections, site),
+            "money": partial(money_tab, site), "history": partial(history, site), "sources": partial(sources, site)}
+
+
+# Superior Court 6 was two offices (named for Chapleau, then Woods) until 2026-11-09, which counted the seat twice; it
+# is one office now, so an old link to the Chapleau seat goes to it (static/js/moved.js, pages/governments.py)
+COUNTY_MOVED = {"office-superior-court-judge-chapleau": ("overview", "office-superior-court-judge-woods")}
+
+
+def build(site):
+    """county/: a forwarding page to governments/county/ (phase 6 step 3). Every id the old page had is sent to the tab
+    that now holds it (pages/governments.py forward_gov)."""
+    from .governments import forward_gov
+    return forward_gov(site, "county/index.html", "county")
 
 
 COUNTY_SETS = (("commissioners", "county-commissioner-2022", "Commissioner districts", "county_commissioner"),
@@ -566,17 +611,24 @@ def _contest_figure(ed, page, c, question: bool = False):
             votes = None
         cands.append({"name": r["candidate"].title() if r["candidate"] in ("YES", "NO") else r["candidate"],
                       "party": r["party"], "votes": votes, "pct": pct, "winner": r["winner"]})
+    # a multi-county contest (2026-11-18, civic/overall.py): the chart is titled "St. Joseph County portion", the
+    # overall winner is shown in the county-vs-overall table after it, not on the county bars
+    clear = OV.clear_county_winner(ed, c)
+    if clear:
+        for x in cands:
+            x["winner"] = ""
     notes = []
     if len(rows) == 1 and not is_q:
         notes.append("Uncontested.")
-    if all(r["winner"] == "" for r in rows) and not is_q:
+    if all(r["winner"] == "" for r in rows) and not is_q and not clear:
         notes.append("Winner not recorded in the guide's data.")
     if low:
         notes.append("Some figures are low confidence.")
     sub = f"Vote for {c['vote_for']}" if c.get("vote_for") and c["vote_for"] != "1" else None
     fid = "res-" + c["contest_id"]
-    return results_bars(fid, c["label"], cands, subtitle=sub, status=status, note=" ".join(notes) or None,
-                        page=page, question=is_q, cite=page.cites.cite(";".join(dict.fromkeys(s for r in rows for s in split_ids(r["source_ids"])))))
+    return OV.with_overall(page, c, results_bars(
+        fid, OV.figure_title(ed, c), cands, subtitle=sub, status=status, note=" ".join(notes) or None,
+        page=page, question=is_q, cite=page.cites.cite(";".join(dict.fromkeys(s for r in rows for s in split_ids(r["source_ids"]))))))
 
 
 # ------------------------------------------------------------------ "More about" rail (Wave C batch 7, 2026-11-09)
@@ -586,7 +638,7 @@ def _contest_figure(ed, page, c, question: bool = False):
 COUNTY_RAIL_EXTRA = (
     ("campaigns-courts", "Campaign money", "Judges' races", "money/campaigns/courts/index.html"),
     ("legislators", "Also in the county", "Your state legislators", "state/your-legislators/index.html"),
-    ("schools", "Also in the county", "School boards", "schools/index.html"),
+    ("schools", "Also in the county", "School corporations", "governments/index.html#schools"),
     ("history", "History", "Party control over time", "history/index.html#control"),
 )
 COUNTY_RAIL_ORDER = ("campaigns", "campaigns-courts", "budget", "tax-rate", "community", "legislators", "schools",
@@ -596,7 +648,8 @@ COUNTY_RAIL_ORDER = ("campaigns", "campaigns-courts", "budget", "tax-rate", "com
 def county_rail(page) -> Markup | None:
     """The county page's rail: related_items for the county without its arbitrary map race, plus the county's
     judges' campaign money, its legislators and school boards, and the History page's party-control chart."""
-    items = {i.key: i for i in related_items(page, "county") if i.key != "map-votes"}
+    # the county's own government page is this page (phase 6 step 3): no "place" or "budget" item (the Money tab)
+    items = {i.key: i for i in related_items(page, "county") if i.key not in ("map-votes", "place", "budget")}
     built = page.site.by_path
     for key, topic, text, target in COUNTY_RAIL_EXTRA:
         if target.partition("#")[0] in built:
@@ -641,7 +694,7 @@ def _race_links(ed, page, c, races) -> list:
     return out
 
 
-def _results_body(ed, page, comm, council, countywide, elections) -> list:
+def _results_body(ed, page, comm, council, countywide, elections, map_href: str = "#officeholders") -> list:
     """Recent results: (1) one item per commissioner and council seat (pick_one key = the office id, the same key as
     its officeholder line and its map district), holding that seat's races in the last two general elections;
     (2) the countywide offices as one row per race, with every countywide chart in a 'See all' fold."""
@@ -657,8 +710,8 @@ def _results_body(ed, page, comm, council, countywide, elections) -> list:
                  c.cite(e["source_ids"]))
                for e in elections if e.get("turnout_pct") and e.get("registered")]
     out = [h("p", None, f"County offices on the {years} general-election ballots. Commissioners and council members are "
-                        "elected by district: pick a district on the ", h("a", {"href": "#officeholders"}, "map"),
-             " and its result opens here too, beside its officeholder line."),
+                        "elected by district: find yours on the ", h("a", {"href": map_href}, "district map"),
+             ", then open its seat below. Each seat's office page has every election for it."),
            h("ul", {"class": "results-turnout"}, turnout) if turnout else None]
 
     # 1 district seats
@@ -681,10 +734,17 @@ def _results_body(ed, page, comm, council, countywide, elections) -> list:
             body = [h("p", None, f"This seat was not on the ballot in {years}. Next regular election: {nxt}. ",
                       h("a", {"href": href}, f"Its {ed.elections[last['election_id']]['date'][:4]} result in the results "
                                              "explorer") if href else "The results explorer has no earlier race for it.")]
+        from civic import offices as om
+        oh = om.href(page, o["office_id"], "elections")
+        if oh:
+            body.append(h("p", {"class": "res-seat-links"}, h("a", {"href": oh}, f"{o['title']}: every election")))
         items.append(one_fold(o["office_id"], o["title"], one_summary("h4", o["title"], digest), body,
                               item_id=f"results-{o['office_id']}"))
     out += [h("h3", None, "Commissioner and council districts"),
-            one_bar("office", "offices", "Pick a district on the map, or open any seat below."),
+            # saved-place preselect (static/js/preselect.js "one"): the reader's districts open, when the guide's
+            # precinct results place them in one district each (it was on the officeholder lines of the old page)
+            *_here_districts(ed),
+            one_bar("office", "offices", "Open any seat below."),
             h("div", {"class": "one-list results-seats"}, items)]
 
     # 2 countywide offices
@@ -697,15 +757,20 @@ def _results_body(ed, page, comm, council, countywide, elections) -> list:
         if not cs:
             continue
         for x in cs:
-            links = [h("a", {"href": f"#res-{x['contest_id']}"}, "Chart")] + _race_links(ed, page, x, races)
+            links = [h("a", {"href": f"#res-{x['contest_id']}"}, "Chart")]
+            from civic import offices as om
+            oh = om.href(page, x.get("office_id") or "", "elections")
+            if oh:
+                links.append(h("a", {"href": oh}, "Office"))
+            links += _race_links(ed, page, x, races)
             srcs = ";".join(dict.fromkeys(sid for r in x["rows"] for sid in split_ids(r["source_ids"])))
             sts = list(dict.fromkeys(r["status"] for r in x["rows"]))
             rows.append([fmt_date(e["date"]), x["label"], _result_cell(x),
-                         h("span", None, join([status_badge(st, page) for st in sts], " "), c.cite(srcs)),
+                         h("span", None, join([status_label(st, page) for st in sts], " "), c.cite(srcs)),
                          join(links, " · ")])
         n += len(cs)
         blocks.append(h("div", {"class": "results-year"},
-                        h("h3", None, f"{fmt_date(e['date'], long=True)} general election ", status_badge(e["status"], page)),
+                        h("h3", None, f"{fmt_date(e['date'], long=True)} general election ", status_heading(e["status"], page)),
                         h("div", {"class": "chart-grid"}, [_contest_figure(ed, page, x) for x in cs])))
     if rows:
         out += [h("h3", None, "Countywide offices: row officers, prosecutor and judges"),
@@ -738,7 +803,7 @@ def _here_districts(ed) -> list:
     years = sorted({int(r["year"]) for r in (votes or {}).get("races", [])
                     if r.get("office") in offices and int(r.get("year") or 0) >= 2022})
     when = " and ".join(str(y) for y in years) if years else ""
-    return [here_slot("one", "officeholders", extra={"data-here-keys": "json:here-districts",
+    return [here_slot("one", "results", extra={"data-here-keys": "json:here-districts",
                                                      "data-here-undo": "Show all offices",
                                                      "data-here-apply": "Open them"}),
             json_script("here-districts", {"places": county_districts(ed, votes), "years": when})]

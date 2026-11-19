@@ -52,8 +52,9 @@ def _in_townships(ed) -> dict[str, list[str]]:
 
 
 def place_page(p: dict) -> str:
-    """Site path of a picker place's own page (a city or town, or the township for unincorporated areas)."""
-    return f"places/{p['muni'] or p['township']}/index.html"
+    """Site path of a picker place's own page (a city or town, or the township for unincorporated areas): its
+    government page (phase 6 step 3; places/<id>/ forwards there)."""
+    return f"governments/{p['muni'] or p['township']}/index.html"
 
 
 def here_payload(ed, data: dict) -> dict:
@@ -101,7 +102,7 @@ def place_picker(page, data: dict, intro=None, heading_level: str = "h3") -> Mar
     # Which township, for a city or town: buttons only (the no-JS township list is the group above).
     town_items = [_choice(page, "township", u["unit_id"], _short_place(u["name"]), None) for u in data["townships"]]
     town_items.append(_choice(page, "township", "any", "Not sure", None))
-    school_items = [_choice(page, "school", u["unit_id"], u["name"], f"schools/index.html#{u['unit_id']}") for u in data["schools"]]
+    school_items = [_choice(page, "school", u["unit_id"], u["name"], f"governments/{u['unit_id']}/index.html") for u in data["schools"]]
     school_items.append(_choice(page, "school", "any", "Not sure", None))
 
     return h("div", {"class": "pick-lists", "id": "place-picker", "data-picker": True},

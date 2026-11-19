@@ -13,6 +13,9 @@ money/budgets/ (planning/qa/wave-c-batch7-2026-11-09.md).
     districts are listed as voting districts with no boundary file; a rail per corporation;
   - data: school-new-prairie is in derived/unit_id_aliases.csv and the code workaround is gone.
 
+Since phase 6 step 3 (2026-11-16) county/ and schools/ forward to the government pages (governments/county/ and one
+page per school corporation); the county and schools checks read those pages.
+
 Builds the four pages into a temporary folder.
 Run:  python -P -E -m unittest discover -s tools/tests
 """
@@ -27,6 +30,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "tools" / "site"))
+sys.path.insert(0, str(Path(__file__).resolve().parent))   # tests/gov_moved.py
 
 import build  # noqa: E402
 from civic.components import see_all_fold  # noqa: E402
@@ -34,6 +38,7 @@ from civic.data import Edition  # noqa: E402
 from civic.html import h  # noqa: E402
 from civic.pick_one import one_wrap_see_all  # noqa: E402
 from civic.shell import Site  # noqa: E402
+from gov_moved import lands  # noqa: E402
 
 FIXTURE = Path(__file__).parent / "fixtures" / "anchors_before_batch7.json"
 ID_RE = re.compile(r'\sid="([^"]+)"')
@@ -76,28 +81,44 @@ def _forwarded_here(html: str, old_id: str, ids: set) -> bool:
     return "#" in dest and dest.split("#", 1)[0] in ("", "index.html") and dest.split("#", 1)[1] in ids
 
 class Built(unittest.TestCase):
+    """Phase 6 step 3 (2026-11-16): county/ and schools/ became forwarding pages; the county's content is on
+    governments/county/ (Overview, Elections, Money, History, Sources) and each school corporation has its own
+    governments/<id>/. The county and schools checks now read those tabs; an old id must land on an id that exists,
+    through the #moved-anchors maps (tests/gov_moved.py)."""
+
     @classmethod
     def setUpClass(cls):
+        from civic import governments as gm
         cls.ed = Edition.load(ROOT, "st-joseph")
         cls.tmp = tempfile.TemporaryDirectory()
         out = Path(cls.tmp.name)
         site = Site(cls.ed, out)
         build.discover_builders()
-        for p in PAGES:
-            build.BUILDERS[p](site)
+        for p in PAGES + ["about/sources/index.html"]:   # phase 6 step 5: the budgets page's old #src- ids land there
+            build.BUILDERS[p](site)            # county/ and schools/ build the government pages they forward to
+        # phase 6 step 5 (2026-11-18): money/budgets/ is Compare budgets; each unit's old block forwards to its
+        # government's Money tab, so every government page is built for the old-anchor check
+        for e in site.entries:
+            if e.path.startswith("governments/") and e.path not in site.pages and e.path in build.BUILDERS:
+                build.BUILDERS[e.path](site)
         site.write()
-        cls.html = {p: (out / p).read_text(encoding="utf-8") for p in PAGES}
+        cls.html = {p: (out / p).read_text(encoding="utf-8") for p in sorted(site.pages)}
         cls.ids = {p: ID_RE.findall(x) for p, x in cls.html.items()}
+        cls.idset = {p: set(v) for p, v in cls.ids.items()}
+        cls.county = {k: gm.path("county", k) for k in gm.gov_tabs(cls.ed, "county")}
+        cls.schools = [g.gid for g in gm.governments(cls.ed) if g.kind == "school_corporation"]
 
     @classmethod
     def tearDownClass(cls):
         cls.tmp.cleanup()
 
+    def c(self, tab: str) -> str:
+        return self.html[self.county[tab]]
+
     # ------------------------------------------------------------ anchors, progressive enhancement
-    def test_every_old_anchor_still_on_its_page(self):
+    def test_every_old_anchor_lands(self):
         before = json.loads(FIXTURE.read_text(encoding="utf-8"))["ids"]
-        lost = [(p, i) for p, ids in before.items() for i in ids
-                if i not in set(self.ids[p]) and not _forwarded_here(self.html[p], i, set(self.ids[p]))]
+        lost = [(p, i) for p, ids in before.items() for i in ids if not lands(self.html, self.idset, p, i)]
         self.assertEqual(lost, [])
 
     def test_no_duplicate_ids(self):
@@ -112,7 +133,7 @@ class Built(unittest.TestCase):
 
     # ------------------------------------------------------------ county
     def test_county_rail(self):
-        rail = re.search(r'<nav class="related" id="related".*?</nav>', self.html[COUNTY], re.S).group(0)
+        rail = re.search(r'<nav class="related" id="related".*?</nav>', self.c("overview"), re.S).group(0)
         keys = re.findall(r'data-related="([^"]+)"', rail)
         self.assertNotIn("map-votes", keys)          # the arbitrary "latest county race" link is gone
         for k in ("campaigns", "campaigns-courts", "legislators", "schools", "history", "run"):
@@ -120,20 +141,19 @@ class Built(unittest.TestCase):
         self.assertIn("history/index.html#control", rail)
 
     def test_county_results_one_item_per_district_seat(self):
-        html = self.html[COUNTY]
         offices = self.ed.offices_for("county")
         seats = [o for o in offices if o["office_type"] in ("county_commissioner", "county_council_member")]
-        sec = _section(html, "results")
+        sec = _section(self.c("elections"), "results")
+        ov = self.c("overview")
         for o in seats:
             tag = _tag_with_id(sec, f"results-{o['office_id']}")
             self.assertIn(f'data-one="{o["office_id"]}"', tag, o["office_id"])
-            # the same key as its officeholder line, so a map click opens both
-            self.assertIn(f'data-one="{o["office_id"]}"', _tag_with_id(html, f"office-{o['office_id']}"))
-        map_uids = set(re.findall(r'class="cmap-a" data-uid="([^"]+)"', html))
+            self.assertTrue(_tag_with_id(ov, f"office-{o['office_id']}"), o["office_id"])   # its row on the Overview
+        map_uids = set(re.findall(r'class="cmap-a" data-uid="([^"]+)"', ov))
         self.assertEqual(map_uids, {o["office_id"] for o in seats})
 
     def test_county_countywide_rows_match_charts(self):
-        sec = _section(self.html[COUNTY], "results")
+        sec = _section(self.c("elections"), "results")
         table = re.search(r'<table id="results-countywide".*?</table>', sec, re.S).group(0)
         n_rows = len(re.findall(r"<tr\b", table.split("<tbody>", 1)[1]))
         fold = sec[sec.index('id="results-charts-county"'):]
@@ -143,17 +163,17 @@ class Built(unittest.TestCase):
         self.assertIn('data-fold="see-all"', _tag_with_id(sec, "results-charts-county"))
 
     def test_county_lawsuit_once_and_folded(self):
-        html = self.html[COUNTY]
+        html = self.c("overview")
         self.assertEqual(html.count('class="litigation"'), 1)
         self.assertIn('data-fold="see-all"', _tag_with_id(html, "litigation"))
         self.assertIn('href="#litigation"', html)
 
-    def test_county_money_and_control_folded(self):
-        html = self.html[COUNTY]
-        self.assertIn('data-fold="see-all"', _tag_with_id(html, "money-flows-county"))
-        self.assertIn('data-fold="see-all"', _tag_with_id(html, "control-charts"))
-        for fid in ("control-council", "control-commissioners"):
-            self.assertTrue(any("control-charts" in t for t in _enclosing_details(html, fid)))
+    def test_county_money_folded_and_control_on_history(self):
+        money = self.c("money")
+        self.assertTrue(any('id="money-in-out-all"' in t for t in _enclosing_details(money, "money-county")))
+        hist = self.c("history")
+        for fid in ("control-charts", "control-council", "control-commissioners"):
+            self.assertIn(f'id="{fid}"', hist)
 
     # ------------------------------------------------------------ legislators
     def test_legislators_results_summary_and_folds(self):
@@ -181,34 +201,38 @@ class Built(unittest.TestCase):
         self.assertIn(f"See all {n} committees", html)
 
     # ------------------------------------------------------------ budgets
-    def test_budget_chips_choose_their_unit(self):
+    def test_budget_units_without_a_boundary_are_listed(self):
+        # phase 6 step 5 (2026-11-18): the chips that chose a unit's block are gone with the blocks; every unit the
+        # map cannot draw (the county, libraries, special units) is in Compare budgets' list of every government,
+        # linking to its government page's Money tab
+        from civic import governments as gm
         from pages.money import money, no_boundary_units
         html = self.html[BUDGETS]
-        chips = re.findall(r'<a class="one-chip" href="#([^"]+)"', html)
-        self.assertEqual(len(chips), len(no_boundary_units(money(self.ed))))
-        self.assertGreaterEqual(len(chips), 10)
-        keys = set(re.findall(r'data-one="([^"]+)"', html))
-        for t in chips:
-            tag = _tag_with_id(html, t)
-            self.assertTrue(tag, t)
-            m = re.search(r'data-one(?:-for)?="([^"]+)"', tag)
-            self.assertTrue(m and m.group(1) in keys, t)
+        units = no_boundary_units(money(self.ed))
+        self.assertGreaterEqual(len(units), 10)
+        lst = re.search(r'<section[^>]*id="over-time".*?</section>', html, re.S).group(0)
+        for mid, _t in units:
+            g = gm.gov_for_money_id(self.ed, mid)
+            self.assertIn(f"governments/{g.gid}/", lst, mid)
 
     def test_debt_table_in_see_all_wrap(self):
         tags = _enclosing_details(self.html[BUDGETS], "debt-classes")
-        self.assertTrue(any('id="debt-classes-all"' in t and "data-one-wrap" in t and 'data-fold="see-all"' in t
-                            for t in tags))
-        self.assertIn("data-one-all", self.html[BUDGETS])   # "Show all units" kept
+        self.assertTrue(any('id="debt-classes-all"' in t and 'data-fold="see-all"' in t for t in tags))
 
     def test_unit_flows_lines(self):
+        # phase 6 step 3: each unit's money in and money out is on its government page's Money tab
         html = self.html[BUDGETS]
-        self.assertIn("county/index.html#money", html)
-        self.assertIn("places/south-bend/index.html#money-south-bend", html)
-        self.assertIn('href="#flows-sjcpl"', html)
+        self.assertIn("governments/county/money/index.html#money-county", html)
+        self.assertIn("governments/south-bend/money/index.html#money-south-bend", html)
+        self.assertIn("governments/sjcpl/money/index.html#money-sjcpl", html)
 
     # ------------------------------------------------------------ schools
+    def _schools(self) -> str:
+        from civic import governments as gm
+        return "".join(self.html[gm.path(u)] for u in self.schools)
+
     def test_school_seat_wording(self):
-        html = self.html[SCHOOLS]
+        html = self._schools()
         self.assertNotRegex(html, r"Voters in [A-Z][a-z]+ Township")
         for town in ("Harris", "Madison", "Penn"):
             self.assertIn(f"All voters in the corporation; the member must live in {town} Township", html)
@@ -217,15 +241,12 @@ class Built(unittest.TestCase):
         self.assertIn("SB1 to SB5", html)
 
     def test_school_seat_rows(self):
-        html = self.html[SCHOOLS]
-        for o in self.ed.offices_for("phm"):
-            tag = _tag_with_id(html, f"office-{o['office_id']}")
-            self.assertIn("seat-row", tag)
-            self.assertNotIn("data-one=", tag)      # nested in the corporation's item, not a second key
-            self.assertTrue(any('data-one="phm"' in t for t in _enclosing_details(html, f"office-{o['office_id']}")))
-        for uid in ("sbcsc", "phm"):
-            self.assertTrue(any(f'id="seats-{uid}-all"' in t for t in _enclosing_details(html, f"seats-{uid}")))
-            self.assertRegex(html, rf'<nav class="related" id="related-{uid}"[^>]*>\s*<h3')
+        from civic import governments as gm
+        for u in ("phm", "sbcsc"):
+            html = self.html[gm.path(u)]
+            for o in self.ed.offices_for(u):
+                self.assertIn('class="gov-office', _tag_with_id(html, f"office-{o['office_id']}"), o["office_id"])
+            self.assertRegex(html, rf'<nav class="related" id="related-{u}"[^>]*>\s*<h3')
 
     def test_residency_evidence(self):
         from pages.places import _residency_evidence

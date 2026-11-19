@@ -46,6 +46,11 @@ def load_shapes(ed) -> dict | None:
 
 
 def unit_href(page, uid: str, unit: dict) -> str:
+    # the unit's government page (phase 6 step 3, civic/governments.py) when it is built; the old place pages and
+    # schools/ forward there
+    gov = f"governments/{uid}/index.html"
+    if gov in page.site.by_path:
+        return page.rel(gov)
     if unit["unit_type"] == "school_corporation":
         return page.rel(f"schools/index.html#{uid}")
     return page.rel(f"places/{uid}/index.html")
@@ -890,3 +895,73 @@ def area_lists(page, ed, shapes: dict) -> Markup:
 def _plain(cell) -> str:
     import re
     return re.sub(r"<[^>]+>", "", str(cell)).lower()
+
+
+# ---------------------------------------------------------------- one election's races (phase 6 step 4, 2026-11-16)
+# An election page's Map tab (pages/election_pages.py) embeds the "How areas voted" layer preset to that election's
+# races: the same component, race rule, labels, legend, caveats and tables as map/index.html, with no new geometry.
+# Added next to boundary_map; nothing above changed.
+
+def election_votes(votes: dict | None, election_id: str) -> dict | None:
+    """A copy of map_votes.json limited to one election's races, with only the offices, districts and levels that
+    have one; None when the map has no race of that election. map_votes.js applies the same rule to the asset when the
+    map carries data-vote-eid, so the picker in the markup and the script agree."""
+    if not votes:
+        return None
+    races = [r for r in votes["races"] if r.get("eid") == election_id]
+    if not races:
+        return None
+    keep: dict[str, set] = {}
+    for r in races:
+        keep.setdefault(r["office"], set()).add(r.get("district") or "")
+    offices = []
+    for o in votes["offices"]:
+        if o["key"] not in keep:
+            continue
+        if o.get("districts"):
+            o = dict(o, districts=[d for d in o["districts"] if d in keep[o["key"]]])
+        offices.append(o)
+    levels_on = {o["level"] for o in offices}
+    levels = [lv for lv in votes["levels"] if lv["key"] in levels_on]
+    default = votes["default"] if any(r["id"] == votes["default"] for r in races) else races[0]["id"]
+    return dict(votes, races=races, offices=offices, levels=levels, default=default)
+
+
+def election_vote_map(page, ed, shapes: dict, votes: dict | None, election_id: str):
+    """(map, tables) for one election: the "How areas voted" layer alone (no layer tabs), its race picker limited to
+    the election's races (map_votes.js reads data-vote-eid and data-vote-default), and vote_tables for the same races
+    (the layer's numbers without JavaScript). Unlike the other embedded maps it keeps the #race-<id> address, so a
+    link to one race of the election opens it. None when the map has no race of that election."""
+    vv = election_votes(votes, election_id)
+    if vv is None or not shapes:
+        return None
+    vb = shapes["viewBox"]
+    # the township and place names, kinds and page links the layer's panel shows (map_votes.js reads #cmap-data)
+    _groups, _tabs, data = government_layers(page, ed, shapes, "votes", facts_area(page, ed), only=("cities", "townships"))
+    layer = h("g", {"class": "cmap-layer is-on", "data-layer": "votes", "role": "group", "aria-label": "Layer: How areas voted"},
+              vote_layer_group(page, ed, shapes, vv))
+    tab = h("button", {"type": "button", "class": "cmap-tab", "data-layer": "votes", "aria-pressed": "true"}, "How areas voted")
+    svg = h("svg", {"class": "cmap-svg", "viewBox": f"{vb[0]} {vb[1]} {vb[2]} {vb[3]}", "role": "group",
+                    "aria-label": f"Map of {ed.county_label}: how areas voted. Every race's totals are in the tables "
+                                  "after the map."},
+            h("defs", None, h("clipPath", {"id": "cmap-clip"}, h("path", {"d": shapes["county"]["d"]})),
+              h("pattern", {"id": "cmap-hatch", "patternUnits": "userSpaceOnUse", "width": 6, "height": 6,
+                            "patternTransform": "rotate(45)"},
+                h("rect", {"width": 6, "height": 6, "class": "cmap-hatch-bg"}),
+                h("line", {"x1": 0, "y1": 0, "x2": 0, "y2": 6, "class": "cmap-hatch-ln"}))),
+            layer,
+            h("path", {"d": shapes["county"]["d"], "class": "cmap-outline", "aria-hidden": "true"}),
+            h("g", {"class": "cmap-hl-g", "aria-hidden": "true"}))
+    panel = h("aside", {"class": "cmap-panel", "id": "cmap-panel", "aria-live": "polite", "aria-label": "Selected area"},
+              h("p", {"class": "cmap-hint"}, "Hover, focus or tap an area to see how it voted here."))
+    mp = h("div", {"class": "cmap cmap-single cmap-election", "data-default-layer": "votes",
+                   "data-vote-eid": election_id, "data-vote-default": vv["default"]},
+           h("div", {"class": "cmap-bar"},
+             h("div", {"class": "cmap-tabs", "role": "group", "aria-label": "Map layer", "hidden": True}, tab),
+             vote_controls(page, ed, vv)),
+           h("div", {"class": "cmap-grid"},
+             h("div", {"class": "cmap-stage"}, svg, vote_legend(vv),
+               h("div", {"class": "cmap-drill", "hidden": True}) if precinct_view(ed) else None),
+             panel),
+           json_script("cmap-data", data))
+    return mp, vote_tables(page, ed, shapes, vv)

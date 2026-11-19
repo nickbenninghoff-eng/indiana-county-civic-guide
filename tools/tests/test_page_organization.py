@@ -27,10 +27,14 @@ FIXTURE = Path(__file__).parent / "fixtures" / "anchors_before_page_split.json"
 ID_RE = re.compile(r'\sid="([^"]+)"')
 HREF_RE = re.compile(r'<a\b[^>]*\shref="([^"]+)"')
 
+# phase 6 step 4 (2026-11-16): landscape, margins and turnout became the Compare tabs (content and ids unchanged);
+# tools/tests/test_phase6_elections.py checks that every old id is forwarded from the old addresses
+LAND, MARG, TURN = ("elections/compare/overview/index.html", "elections/compare/index.html",
+                    "elections/compare/turnout/index.html")
 PAGES = ["data/index.html", "data/pull/index.html", "about/index.html", "about/sources/index.html",
-         "elections/landscape/index.html", "elections/calendar/index.html",
+         LAND, "elections/calendar/index.html",
          # Wave B batch 2 split the landscape page; its tables and filters now live on these pages
-         "elections/margins/index.html", "elections/turnout/index.html", "officeholders/index.html"] + \
+         MARG, TURN, "officeholders/index.html"] + \
         [f"data/{slug}/index.html" for slug, _, _ in sitemap.DATA_PAGES]
 
 
@@ -82,10 +86,10 @@ class Built(unittest.TestCase):
         # the five obsolete controls stay gone; the table's filter ids moved with it to elections/margins/ (Wave B
         # batch 2; tools/tests/test_wave_b_numbers.py pins every landscape id)
         for gone in ("mg-year", "mg-type", "mg-band", "mg-sort", "mg-count"):
-            self.assertNotIn(gone, self.ids["elections/landscape/index.html"])
-            self.assertNotIn(gone, self.ids["elections/margins/index.html"])
+            self.assertNotIn(gone, self.ids[LAND])
+            self.assertNotIn(gone, self.ids[MARG])
         for suffix in ("year", "type", "band", "office", "place", "district", "q", "sort"):
-            self.assertIn(f"tf-margins-table-{suffix}", self.ids["elections/margins/index.html"])
+            self.assertIn(f"tf-margins-table-{suffix}", self.ids[MARG])
 
     def test_path_stop_anchors(self):
         for p in sitemap.PATHS:
@@ -170,8 +174,8 @@ class Built(unittest.TestCase):
 
     def test_citation_links_resolve_in_fold(self):
         """Every in-page #src- link lands on an id that exists on the page (inside the fold)."""
-        for p in ("elections/landscape/index.html", "elections/calendar/index.html", "data/results/index.html",
-                  "elections/margins/index.html", "officeholders/index.html"):
+        for p in (LAND, "elections/calendar/index.html", "data/results/index.html",
+                  MARG, "officeholders/index.html"):
             h = self.html[p]
             for frag in HREF_RE.findall(h):
                 if frag.startswith("#src-"):
@@ -204,7 +208,7 @@ class Built(unittest.TestCase):
         self.assertIn(f'data-tf-empty="{table_id}"', h)
 
     def test_margins_filters_have_office_place_district(self):
-        self._check_filter("elections/margins/index.html", "margins-table",
+        self._check_filter(MARG, "margins-table",
                            ["year", "type", "band", "office", "place", "district"])
 
     def test_up_next_and_officeholders_filters(self):
@@ -218,7 +222,7 @@ class Built(unittest.TestCase):
         from pages.elections import _search_text
         self.assertEqual(_search_text("St. Joseph County Council, District H (Democratic primary)"),
                          "St. Joseph County Council, District H")
-        h = self.html["elections/margins/index.html"]
+        h = self.html[MARG]
         self.assertNotRegex(h, r'data-tf-text="[^"]*primary\)')
 
     def test_table_filter_helper(self):

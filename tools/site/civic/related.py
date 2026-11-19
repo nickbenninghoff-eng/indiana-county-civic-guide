@@ -5,7 +5,8 @@
     contest_anchor(contest_id)                         -> 'contest-<id>' (the explorer's deep-link id)
     contest_href(page, contest_id)                     -> 'elections/results/index.html#contest-<id>' or None
 
-The rail is a short row of links to the same entity on other topics: its place page, its latest result in the
+The rail is a short row of links to the same entity on other topics: its place page, its office page (one office)
+or its offices on the Offices hub (a unit; both added 2026-11-16, phase 6 step 1), its latest result in the
 explorer, how areas voted on the map, its campaign money page, its budget, its tax rate, community figures, the
 run-for-office page for its seats and its year on the election calendar. Every link is read from data the target page
 is built from, so a unit with no budget rows gets no budget link, a contest before the explorer's first year gets no
@@ -51,7 +52,7 @@ RUN_LABEL = {"city-council": "city council", "county-council": "county council",
 HEAD_TYPE = {"city": "mayor", "town": "town_clerk_treasurer", "township": "township_trustee"}
 
 RelatedLink = namedtuple("RelatedLink", "key topic text href")
-ORDER = ("place", "results", "map-votes", "campaigns", "budget", "tax-rate", "community", "run", "calendar")
+ORDER = ("place", "office", "offices", "results", "map-votes", "campaigns", "budget", "tax-rate", "community", "run", "calendar")
 _ID_OK = re.compile(r"[A-Za-z0-9-]+")
 
 
@@ -147,13 +148,13 @@ def _next_year(ed, offices: list[dict]) -> int | None:
 
 
 def _place_target(unit: dict) -> tuple[str, str] | None:
+    """The unit's own page: its government page (phase 6 step 3, civic/governments.py; the place pages, county/ and
+    schools/ forward there)."""
     t, uid = unit["unit_type"], unit["unit_id"]
-    if t in ("city", "town", "township"):
-        return f"places/{uid}/index.html", unit["name"]
+    if t in ("city", "town", "township", "school_corporation"):
+        return f"governments/{uid}/index.html", unit["name"]
     if t == "county":
-        return "county/index.html", "County government"
-    if t == "school_corporation":
-        return f"schools/index.html#{uid}", unit["name"]
+        return "governments/county/index.html", "County government"
     return None
 
 
@@ -205,6 +206,14 @@ def related_items(page, unit_id: str | None = None, office_id: str | None = None
     elif pt:
         add("place", "Government", pt[1], pt[0])
 
+    # the office's own page (one office), or the unit's offices on the Offices hub (phase 6 step 1, 2026-11-16)
+    from .offices import HUB, path as office_path
+    if office:
+        add("office", "Office page", f"{office['title']}: what it does, every election, money", office_path(office_id))
+    elif ed.offices_for(uid):
+        add("offices", "Offices", f"Every {_short(unit)} office and who holds it" if unit["unit_type"] != "county"
+            else "Every county office and who holds it", f"{HUB}#g-{uid}")
+
     # latest result in the explorer, and the same race on the map when it is there
     head = office or next((o for o in offices if o["office_type"] == HEAD_TYPE.get(unit["unit_type"])), None)
     c = latest_contest(ed, head["office_id"]) if head else None
@@ -232,7 +241,10 @@ def related_items(page, unit_id: str | None = None, office_id: str | None = None
     # money
     mids = _money_ids(ed, uid)
     if mids:
-        add("budget", "Budget", "Budget history and breakdown", f"{BUDGETS_PAGE}#{uid}")
+        # the government page's Money tab when it is built (phase 6 step 3), else the unit's item on the budgets page
+        gov_money = f"governments/{'county' if unit['unit_type'] == 'county' else uid}/money/index.html"
+        add("budget", "Budget", "Budget history and breakdown",
+            gov_money if gov_money in built else f"{BUDGETS_PAGE}#{uid}")
     if _has_rate(ed, mids):
         add("tax-rate", "Tax rate", "Certified rate, every unit", f"{TAX_BILL_PAGE}#all-rates")
 

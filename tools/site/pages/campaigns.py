@@ -368,7 +368,8 @@ def _contest_offices(label: str) -> list[str]:
 
 
 RACE_ELECTIONS = (("2024g", "2024"), ("2026g", "2026"))
-SKIP_CONTEST = re.compile(r"-state-|straight-party|public-question|retention")
+# state and federal candidates file with the state or the FEC, not the county (2026-11-18: the U.S. House contest)
+SKIP_CONTEST = re.compile(r"-state-|-us-|straight-party|public-question|retention")
 
 
 def _races(ed, rows) -> list[dict]:
@@ -726,9 +727,10 @@ def build_how(site):
 
     # ------------------------------------------------------------------ related
     page.add(h("p", {"class": "cf-related"}, "Related: ",
-               h("a", {"href": page.rel(INDEX_PAGE)}, "Campaign money by place"), " · ",
+               h("a", {"href": page.rel(INDEX_PAGE)}, "Campaign money by office"), " · ",
+               h("a", {"href": page.rel("money/campaigns/by-place/index.html")}, "Campaign money by place"), " · ",
                h("a", {"href": page.rel(ALL_PAGE)}, "Every filing"), " · ",
-               h("a", {"href": page.rel("money/budgets/index.html")}, "Budgets by unit"), " · ",
+               h("a", {"href": page.rel("money/budgets/index.html")}, "Compare budgets"), " · ",
                h("a", {"href": page.rel("state/your-legislators/index.html#money")}, "State legislators' campaign money"), " · ",
                h("a", {"href": page.rel("run/index.html")}, "Run for office")))
 
@@ -1225,13 +1227,15 @@ def build_all(site):
     cf = cf_all(ed)
     model = cf["model"]
     toc = [("explorer", "Every filing"), ("large", "Large contributions"), ("gaps", "Gaps"), ("sources", "Sources")]
-    page.add(h("header", {"class": "page-hero"},
-               h("p", {"class": "eyebrow mono"}, "Reference · Money · Campaign finance"),
-               h("h1", None, page.title),
+    from pages.money_browser import FILINGS, browser_head
+    page.add(browser_head(page, FILINGS, [page.title]))
+    page.add(h("div", {"class": "cb-intro"},
                h("p", {"class": "dek"}, f"All {len(model['rows'])} local campaign-finance reports the guide read from the "
                                         "county's scans, and every large-contribution notice.", c.cite(SRC_FILINGS_PAGE)),
                h("p", None, "Looking for one place or race? Start from the ",
-                 h("a", {"href": page.rel(INDEX_PAGE)}, "map and list by place"), ". How the forms were read: ",
+                 h("a", {"href": page.rel(INDEX_PAGE)}, "list by office"), " or the ",
+                 h("a", {"href": page.rel("money/campaigns/by-place/index.html")}, "map by place"),
+                 ". How the forms were read: ",
                  h("a", {"href": page.rel(HOW_PAGE + "#method")}, "How campaign finance reporting works"), "."),
                h("nav", {"class": "toc", "aria-label": "On this page"},
                  h("ol", None, [h("li", None, h("a", {"href": f"#{a}"}, t)) for a, t in toc]))))

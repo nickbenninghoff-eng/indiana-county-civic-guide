@@ -2,7 +2,10 @@
 "show one" items (civic/pick_one.py, static/js/pick_one.js) on those pages, the budgets page below its money map
 and the Schools page, and the anchors those pages had before.
 
-Builds the four pages into a temporary folder.
+Since phase 6 step 3 (2026-11-16) county/ and schools/ are forwarding pages: the county checks read
+governments/county/ and the schools checks the Governments hub.
+
+Builds the four pages (and the pages they forward to) into a temporary folder.
 Run:  python -P -E -m unittest discover -s tools/tests
 """
 from __future__ import annotations
@@ -16,18 +19,25 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "tools" / "site"))
+sys.path.insert(0, str(Path(__file__).resolve().parent))   # tests/gov_moved.py
 
 import build  # noqa: E402
 from civic.data import Edition  # noqa: E402
 from civic.district_map import neighbor_fills  # noqa: E402
 from civic.holder_rows import NO_HOLDER, holder_state  # noqa: E402
 from civic.shell import Site  # noqa: E402
+from gov_moved import follow, lands  # noqa: E402
 
 FIXTURE = Path(__file__).parent / "fixtures" / "anchors_before_map_batch.json"
 ID_RE = re.compile(r'\sid="([^"]+)"')
 LEG, COUNTY, BUDGETS, SCHOOLS = ("state/your-legislators/index.html", "county/index.html",
                                  "money/budgets/index.html", "schools/index.html")
 PAGES = [LEG, COUNTY, BUDGETS, SCHOOLS]
+# phase 6 step 3 (2026-11-16): county/ and schools/ forward to the government pages; the county's district map and
+# office rows are on its Overview, its results (still show-one items) on its Elections tab, and the school
+# corporations are on the Governments hub's map, each linking to its own page
+GOV_COUNTY, GOV_COUNTY_EL, HUB = ("governments/county/index.html", "governments/county/elections/index.html",
+                                  "governments/index.html")
 
 
 def _svg(html: str) -> str:
@@ -68,11 +78,17 @@ class Built(unittest.TestCase):
         out = Path(cls.tmp.name)
         site = Site(cls.ed, out)
         build.discover_builders()
-        for p in PAGES:
+        for p in PAGES + ["about/sources/index.html"]:   # phase 6 step 5: old #src- ids of the budgets page land there
             build.BUILDERS[p](site)
+        # phase 6 step 5 (2026-11-18): money/budgets/ is Compare budgets; each unit's old block is on its government's
+        # Money tab, so every government page is built for the old-anchor checks
+        for e in site.entries:
+            if e.path.startswith("governments/") and e.path not in site.pages and e.path in build.BUILDERS:
+                build.BUILDERS[e.path](site)
         site.write()
-        cls.html = {p: (out / p).read_text(encoding="utf-8") for p in PAGES}
+        cls.html = {p: (out / p).read_text(encoding="utf-8") for p in sorted(site.pages)}
         cls.ids = {p: ID_RE.findall(h) for p, h in cls.html.items()}
+        cls.idset = {p: set(v) for p, v in cls.ids.items()}
 
     @classmethod
     def tearDownClass(cls):
@@ -82,7 +98,8 @@ class Built(unittest.TestCase):
     def test_every_old_anchor_still_on_its_page(self):
         before = json.loads(FIXTURE.read_text(encoding="utf-8"))["ids"]
         lost = [(p, i) for p, ids in before.items() for i in ids
-                if i not in set(self.ids[p]) and not _forwarded_here(self.html[p], i, set(self.ids[p]))]
+                if not lands(self.html, self.idset, p, i) and not (
+                    i in self.idset[p] or _forwarded_here(self.html[p], i, self.idset[p]))]
         self.assertEqual(lost, [])
 
     def test_no_duplicate_ids(self):
@@ -92,7 +109,8 @@ class Built(unittest.TestCase):
 
     def test_items_ship_open(self):
         """With JavaScript off every area's detail is on the page: each show-one item is written open."""
-        for p, html in self.html.items():
+        for p in (LEG, GOV_COUNTY_EL):   # phase 6 step 5: Compare budgets has no show-one items
+            html = self.html[p]
             items = re.findall(r"<details\b[^>]*\bdata-one=\"[^\"]+\"[^>]*>", html)
             self.assertTrue(items, p)
             for tag in items:
@@ -102,10 +120,16 @@ class Built(unittest.TestCase):
     def test_old_unit_and_district_ids_choose_their_item(self):
         """An old #id of a unit or district section is on, or inside, an element that names its item (data-one or
         data-one-for), so static/js/pick_one.js opens that item when the address points at it."""
-        checks = {SCHOOLS: ["sbcsc", "phm", "school-city-mishawaka", "john-glenn", "union-north", "new-prairie"],
-                  BUDGETS: ["county", "south-bend", "mishawaka", "phm", "centre-township", "walkerton"],
-                  COUNTY: ["office-county-council-a", "office-county-commissioner-d1", "office-county-sheriff"],
-                  LEG: ["office-state-house-5", "results-house-7", "res26-house-5", "cf-senate-8"]}
+        checks = {LEG: ["office-state-house-5", "results-house-7", "res26-house-5", "cf-senate-8"]}
+        # phase 6 step 5 (2026-11-18): an old budgets-page unit id lands on that government's Money tab
+        for uid in ("county", "south-bend", "mishawaka", "phm", "centre-township", "walkerton"):
+            got = follow(self.html, self.idset, BUDGETS, uid)
+            self.assertEqual(got, (f"governments/{uid}/money/index.html", "budget"), uid)
+        # phase 6 step 3: an old schools/ or county/ id lands on the corporation's page or on the county's office row
+        for uid in ("sbcsc", "phm", "school-city-mishawaka", "john-glenn", "union-north", "new-prairie"):
+            self.assertEqual(follow(self.html, self.idset, SCHOOLS, uid)[0], f"governments/{uid}/index.html", uid)
+        for i in ("office-county-council-a", "office-county-commissioner-d1", "office-county-sheriff"):
+            self.assertEqual(follow(self.html, self.idset, COUNTY, i), (GOV_COUNTY, i))
         for p, ids in checks.items():
             html = self.html[p]
             for i in ids:
@@ -155,7 +179,7 @@ class Built(unittest.TestCase):
 
     # ------------------------------------------------------------ county
     def test_county_map_covers_every_district_seat(self):
-        html = self.html[COUNTY]
+        html = self.html[GOV_COUNTY]
         areas = _areas(html)
         seats = [o for o in self.ed.offices_for("county")
                  if o["office_type"] in ("county_commissioner", "county_council_member")]
@@ -163,72 +187,66 @@ class Built(unittest.TestCase):
         data = _panel_data(html)
         for href, uid in areas:
             self.assertEqual(href, f"#office-{uid}")
-            self.assertIn(f'data-one="{uid}"', _tag_with_id(html, href[1:]))
+            self.assertIn('class="gov-office', _tag_with_id(html, href[1:]))      # the seat's row on the Overview
             labels = [f[0] for f in data[uid]["f"]]
             self.assertEqual(labels[0], "Represented by")
             self.assertIn("Next election", labels)
 
     def test_county_every_office_is_one_row(self):
-        html = self.html[COUNTY]
+        html = self.html[GOV_COUNTY]
         offices = self.ed.offices_for("county") + self.ed.offices_for("sjc-courts")
         for o in offices:
             tag = _tag_with_id(html, f"office-{o['office_id']}")
-            self.assertTrue(tag.startswith("<details"), o["office_id"])
-            self.assertIn("holder-row", tag)
+            self.assertTrue(tag.startswith("<li"), o["office_id"])
+            self.assertIn("gov-office", tag)
         self.assertNotIn("holder-card", html.split('id="officeholders"', 1)[1].split('id="row-officers"', 1)[0])
 
     # ------------------------------------------------------------ budgets
-    def test_budget_map_clicks_stay_on_the_page(self):
+    def test_budget_map_clicks_open_the_government_money_tab(self):
+        # phase 6 step 5 (2026-11-18): the budgets page no longer holds each unit's block; a map click opens the
+        # government's Money tab (its money in and money out block, or its page)
+        import posixpath
         html = self.html[BUDGETS]
         areas = _areas(html)
         self.assertGreater(len(areas), 20)
-        data = _panel_data(html)
         for href, uid in areas:
-            self.assertTrue(href.startswith("#"), (uid, href))
-            tag = _tag_with_id(html, href[1:])
-            self.assertIn(f'data-one-for="{href[1:]}"', tag, uid)
-            self.assertTrue(data[uid].get("more"), uid)   # the unit's own page stays one click away
+            target = posixpath.normpath(posixpath.join("money/budgets", href.split("#")[0]))
+            self.assertTrue(target.startswith("governments/"), (uid, href))
+            self.assertIn(target, self.html, (uid, href))
 
     def test_budget_units_without_boundary_are_in_the_list(self):
         html = self.html[BUDGETS]
-        nav = re.search(r'<ul class="mn-unitnav".*?</ul>', html, re.S).group(0)
+        lst = re.search(r'<section[^>]*id="over-time".*?</section>', html, re.S).group(0)
         for label in ("Library", "Airport"):
-            self.assertIn(label, nav)
-        keys = set(re.findall(r'data-one="([^"]+)"', html))
-        for href in re.findall(r'href="#([^"]+)"', nav):
-            self.assertIn(href, keys)
+            self.assertIn(label, lst)
 
     def test_debt_rows_keyed_and_wrapped(self):
         html = self.html[BUDGETS]
         table = re.search(r'<table id="debt-classes".*?</table>', html, re.S).group(0)
         rows = re.findall(r"<tr\b[^>]*>", table.split("<tbody>", 1)[1])
         self.assertTrue(rows)
-        self.assertTrue(all("data-one=" in r for r in rows))
-        # Wave C batch 7: the wrapper is now a "See all N rows" fold (pick_one.one_wrap_see_all)
-        self.assertRegex(html, r'<details[^>]*data-one-wrap[^>]*>\s*<summary[^>]*>\s*<span class="see-all-label">'
-                               r'See all \d+ rows: debt by class and unit')
+        # phase 6 step 5: one plain "Show the table" fold (no show-one keys: the page has no unit items)
+        self.assertRegex(html, r'<details[^>]*id="debt-classes-all"[^>]*data-fold="see-all"')
 
     def test_all_unit_comparison_charts_kept(self):
         html = self.html[BUDGETS]
         for fid in ("perres-gf", "perres-af", "debt-2024"):
             self.assertIn(f'id="{fid}', html)
-        per_res = html.split('id="per-resident"', 1)[1].split('id="breakdowns"', 1)[0]
+        per_res = html.split('id="per-resident"', 1)[1].split('id="rates"', 1)[0]
         self.assertNotIn("data-one=", per_res)
 
     # ------------------------------------------------------------ schools
-    def test_schools_sections_are_items_and_map_links_them(self):
-        html = self.html[SCHOOLS]
+    def test_schools_are_rows_and_the_hub_map_links_their_pages(self):
+        html = self.html[HUB]
         corps = [u["unit_id"] for u in self.ed.units.values() if u["unit_type"] == "school_corporation"]
+        areas = dict((uid, href) for href, uid in _areas(html))
         for uid in corps:
-            tag = _tag_with_id(html, uid)
-            self.assertIn(f'data-one-for="{uid}"', tag)
-            self.assertIn(f'data-one="{uid}"', html)
-        for href, uid in _areas(html):
-            self.assertEqual(href, f"#{uid}")
+            self.assertIn("gov-hub-row", _tag_with_id(html, uid), uid)
+            self.assertEqual(areas.get(uid), f"{uid}/index.html", uid)
 
     # ------------------------------------------------------------ neutrality
     def test_district_maps_not_shaded_by_party(self):
-        for p in (LEG, COUNTY):
+        for p in (LEG, GOV_COUNTY):
             svg = _svg(self.html[p])
             classes = set(re.findall(r'class="([^"]+)"', svg))
             self.assertFalse([c for c in classes if re.search(r"party|cmap-vb-|cmap-mm-\d", c)], p)

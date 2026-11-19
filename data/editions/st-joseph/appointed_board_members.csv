@@ -1,0 +1,106 @@
+member_id,board_id,person,role,appointed_by,term_start,term_end,holdover,as_of,status,confidence,source_ids,notes
+sjc-board-of-health__john-w-linn-pe,sjc-board-of-health,"John W. Linn, PE",Chair,Board of County Commissioners,,2027-06-30,,2026-11-18,official,high,GOV-064,
+sjc-board-of-health__elizabeth-betsy-lindenman-md,sjc-board-of-health,"Elizabeth ""Betsy"" Lindenman, MD",Vice Chair,Board of County Commissioners,,2027-12-31,,2026-11-18,official,high,GOV-064,
+sjc-board-of-health__robert-hays-md,sjc-board-of-health,"Robert Hays, MD",Member,Board of County Commissioners,,2027-06-30,,2026-11-18,official,high,GOV-064,
+sjc-board-of-health__michael-a-harding-edd,sjc-board-of-health,"Michael A. Harding, EDd",Member,Board of County Commissioners,,2028-07-29,,2026-11-18,official,high,GOV-064,
+sjc-board-of-health__ellen-reilander-esq,sjc-board-of-health,"Ellen Reilander, Esq.",Member,Board of County Commissioners,,2028-12-31,,2026-11-18,official,high,GOV-064,
+sjc-board-of-health__jill-kaps-vanbruaene,sjc-board-of-health,Jill Kaps VanBruaene,Member,Board of County Commissioners,,2028-12-31,,2026-11-18,official,high,GOV-064,
+sjc-board-of-health__kristin-lynn-vincent-cnm,sjc-board-of-health,"Kristin Lynn Vincent, CNM",Member,Board of County Commissioners,,2027-06-30,,2026-11-18,official,high,GOV-064,
+sjc-board-of-health__vacant-south-bend-mayor,sjc-board-of-health,,Member,"Mayor, City of South Bend, Indiana",,,,2026-11-18,official,high,GOV-064,Vacant seat (listed as Vacant on the board page).
+sjc-board-of-health__vacant-mishawaka-mayor,sjc-board-of-health,,Member,"Mayor, City of Mishawaka, Indiana",,,,2026-11-18,official,high,GOV-064,Vacant seat (listed as Vacant on the board page).
+sjc-redevelopment-commission__dennis-jordan,sjc-redevelopment-commission,Dennis Jordan,President,Board of Commissioners,,2026-12-31,,2026-11-10,official,medium,GOV-201,
+sjc-redevelopment-commission__josh-gobel,sjc-redevelopment-commission,Josh Gobel,Secretary,Board of Commissioners,,2026-12-31,,2026-11-10,official,medium,GOV-201,
+sjc-redevelopment-commission__nick-troiola,sjc-redevelopment-commission,Nick Troiola,Member,Board of Commissioners,,2026-12-31,,2026-11-10,official,medium,GOV-201,
+sjc-redevelopment-commission__gary-fox,sjc-redevelopment-commission,Gary Fox,Vice-President,County Council,,2026-12-31,,2026-11-10,official,medium,GOV-201,
+sjc-redevelopment-commission__andy-rutten,sjc-redevelopment-commission,Andy Rutten,Member,County Council,2026-10-20,2026-12-31,,2026-11-10,official,high,GOV-201,"Printed ""Councilman Andy Rutten""."
+sjc-area-plan-commission__adam-j-devon,sjc-area-plan-commission,Adam J. DeVon,Commission President,County Council (citizen member),,2029-12-31,,2026-11-18,official,medium,GOV-164,
+sjc-area-plan-commission__eugene-matzat,sjc-area-plan-commission,Eugene Matzat,Commission Vice President (agricultural interests),County Commissioners,,2026-12-31,,2026-11-18,official,medium,GOV-164,
+sjc-area-plan-commission__dr-julie-lauck,sjc-area-plan-commission,Dr. Julie Lauck,Member (citizen),County Commissioners,,2028-12-31,,2026-11-18,official,medium,GOV-164,
+sjc-area-plan-commission__derek-d-dieter,sjc-area-plan-commission,Derek D. Dieter,Member,County Surveyor (seat set by state law),,,,2026-11-18,official,medium,GOV-164,
+sjc-area-plan-commission__tom-england,sjc-area-plan-commission,Tom England,Member,North Liberty town council,,,,2026-11-18,official,medium,GOV-164,Term: until replaced by council.
+sjc-area-plan-commission__william-moffitt,sjc-area-plan-commission,William Moffitt,Member,New Carlisle town council,,,,2026-11-18,official,high,GOV-164,Term: Until replaced by town council. Replaced Molly Hannon as New Carlisle's representative in spring 2026 (between the 21 Apr and 19 May 2026 meetings per the advocate's reading of the APC minutes; both names seen in minutes in the 21 Jul 2026 packet).
+sjc-area-plan-commission__dj-tavernier,sjc-area-plan-commission,DJ Tavernier,Member,Osceola town council,,,,2026-11-18,official,medium,GOV-164,Term: until replaced by council.
+sjc-area-plan-commission__lori-kelly,sjc-area-plan-commission,Lori L. Kelly,Member,Advisory Council on Town Affairs (Lakeville and Roseland),,,,2026-11-18,official,medium,GOV-164,Term: replaceable by agreement of the two town councils.
+sjc-area-plan-commission__christopher-winchell,sjc-area-plan-commission,Christopher Winchell,Member (public schools),School corporation superintendents,,,,2026-11-18,official,medium,GOV-164,
+sjc-airport-authority__vincent-henderson,sjc-airport-authority,Vincent Henderson,Treasurer,St. Joseph County Commissioners,,2026-12-31,,2026-11-18,official,high,GOV-188,
+sjc-airport-authority__andrew-kostielney,sjc-airport-authority,Andrew Kostielney,Vice President,St. Joseph County Commissioners,,2029-12-31,,2026-11-18,official,high,GOV-188,
+sjc-airport-authority__david-sage,sjc-airport-authority,David Sage,President,St. Joseph County Commissioners,,2028-12-31,,2026-11-18,official,high,GOV-188,
+sjc-airport-authority__ashley-portolese-miller,sjc-airport-authority,Ashley Portolese-Miller,Secretary,St. Joseph County Commissioners,,2028-12-31,,2026-11-18,official,high,GOV-188,
+sjcpl-board__ruth-warren,sjcpl-board,Dr. Ruth Warren,President,South Bend Community School Corporation,,2028-12-31,,2026-11-18,official,high,GOV-160,
+sjcpl-board__nicole-garcia,sjcpl-board,Dr. Nicole Garcia,Vice President,St. Joseph County Council,,2026-12-31,,2026-11-18,official,low,GOV-160,
+sjcpl-board__alan-feldbaum,sjcpl-board,Alan Feldbaum,Secretary,St. Joseph County Board of Commissioners,,2027-12-31,,2026-11-18,official,low,GOV-160,
+mphpl-board__jenny-mcneil,mphpl-board,Jenny McNeil,President,Mishawaka School Board,,2026-12-31,,2026-11-18,official,high,GOV-065,
+mphpl-board__dee-dee-gerber,mphpl-board,Dee Dee Gerber,Vice President,Mishawaka School Board,,2029-12-31,,2026-11-18,official,high,GOV-065,
+mphpl-board__mark-bagwell,mphpl-board,Mark Bagwell,,County Council,,2028-12-31,,2026-11-18,official,high,GOV-065,
+mphpl-board__karen-baldini,mphpl-board,Karen Baldini,,County Commissioners,,2027-04-08,,2026-11-18,official,high,GOV-065,
+mphpl-board__sarah-holmes,mphpl-board,Sarah Holmes,,County Commissioners,,2029-01-01,,2026-11-18,official,high,GOV-065,
+mphpl-board__mary-nicolini,mphpl-board,Mary Nicolini,,Penn-Harris-Madison School Board,,2028-12-01,,2026-11-18,official,high,GOV-065,
+mphpl-board__david-straughn,mphpl-board,David Straughn,,County Council,,2029-12-31,,2026-11-18,official,high,GOV-065,
+transpo-board__ken-kahlenbeck,transpo-board,Ken Kahlenbeck,Secretary,Mishawaka Common Council,,2025-06-08,yes,2026-10-19,official,high,GOV-161,"Still serving per Oct 19, 2026 minutes; printed term ended 6/8/25 (holdover)."
+transpo-board__jitin-kain,transpo-board,Jitin Kain,Director,Mayor of South Bend,,2025-12-31,yes,2026-10-19,official,high,GOV-161,"Present at Oct 19, 2026 meeting; printed term ended 12/31/25 (holdover)."
+transpo-board__milt-lee,transpo-board,Milt Lee,Chairperson,Mayor of South Bend,,2022-01-01,yes,2026-10-19,official,high,GOV-161,"Chaired Oct 19, 2026 meeting; printed term ended 1/1/22 (holdover)."
+transpo-board__sheila-niezgodski,transpo-board,Sheila Niezgodski,Vice Chairperson,South Bend Common Council,,2027-12-31,,2026-11-18,official,high,GOV-161,
+transpo-board__jill-scicchitano,transpo-board,Jill Scicchitano,Director,Mayor of South Bend,,2024-12-31,yes,2026-10-19,official,high,GOV-161,"Present at Oct 19, 2026 meeting; printed term ended 12/31/24 (holdover)."
+transpo-board__don-schlunt,transpo-board,Don Schlunt,Director,Mayor of Mishawaka,,2028-07-31,,2026-11-18,official,high,GOV-161,
+transpo-board__bianca-tirado,transpo-board,Bianca Tirado,Director,South Bend Common Council,,2027-12-31,,2026-11-18,official,high,GOV-161,
+south-bend-redevelopment-commission__dave-relos,south-bend-redevelopment-commission,Dave Relos,President,Mayor,,2026-12,,2026-10-01,official,high,GOV-069,
+south-bend-redevelopment-commission__karen-white,south-bend-redevelopment-commission,Karen White,Vice President,Council,,2027-12,,2026-10-01,official,high,GOV-069,
+south-bend-redevelopment-commission__eli-wax,south-bend-redevelopment-commission,Eli Wax,Secretary,Mayor,,2027-12,,2026-10-01,official,high,GOV-069,
+south-bend-redevelopment-commission__ophelia-gooden-rodgers,south-bend-redevelopment-commission,Ophelia Gooden-Rodgers,Commissioner,Council,,2027-12,,2026-10-01,official,high,GOV-069,
+south-bend-redevelopment-commission__maureen-miller,south-bend-redevelopment-commission,Maureen Miller,Commissioner,Mayor,,2029-12,,2026-10-01,official,high,GOV-069,
+south-bend-redevelopment-commission__marcus-ellison,south-bend-redevelopment-commission,Marcus Ellison,Non-Voting Advisor,Mayor (non-voting adviser drawn from the SBCSC school board),,2026-12,,2026-10-01,official,high,GOV-069,
+south-bend-board-public-works__elizabeth-a-maradik,south-bend-board-public-works,Elizabeth A. Maradik,President,Mayor of South Bend,2015-04-14,,,2026-11-18,official,high,GOV-193,Term: indefinite.
+south-bend-board-public-works__joseph-r-molnar,south-bend-board-public-works,Joseph R. Molnar,Vice President,Mayor of South Bend,2020-01-08,,,2026-11-18,official,high,GOV-193,Term: indefinite.
+south-bend-board-public-works__murray-l-miller,south-bend-board-public-works,Murray L. Miller,Member,Mayor of South Bend,2021-03-26,,,2026-11-18,official,high,GOV-193,Term: indefinite.
+south-bend-board-public-works__breana-n-micou,south-bend-board-public-works,Breana N. Micou,Member,Mayor of South Bend,2023-11-21,,,2026-11-18,official,high,GOV-193,Term: indefinite.
+south-bend-board-public-works__abigail-e-magas,south-bend-board-public-works,Abigail E. Magas,Member,Mayor of South Bend,2026-01-06,,,2026-11-18,official,high,GOV-193,Term: indefinite.
+south-bend-board-public-safety__charles-king-iii,south-bend-board-public-safety,Charles King III,President,Mayor of South Bend,2026-02-13,,,2026-07-02,official,high,GOV-202,Term: indefinite (city page).
+south-bend-board-public-safety__alfred-kirsits,south-bend-board-public-safety,Alfred Kirsits,Member,Mayor of South Bend,2022-01-18,,,2026-07-02,official,high,GOV-202,Term: indefinite (city page).
+south-bend-board-public-safety__pamela-claeys,south-bend-board-public-safety,Pamela Claeys,Member,Mayor of South Bend,2023-01-18,,,2026-07-02,official,high,GOV-202,Term: indefinite (city page).
+mishawaka-board-public-works__ken-prince,mishawaka-board-public-works,Ken Prince,President (Board of Public Works and Safety and Utility Board),Mayoral Appointment,2026-01-01,2026-12-31,,2026-11-18,official,medium,GOV-200,
+mishawaka-board-public-works__rebecca-maguire,mishawaka-board-public-works,Rebecca Maguire,Vice President (both boards),Mayoral Appointment,2026-01-01,2026-12-31,,2026-11-18,official,medium,GOV-200,
+mishawaka-board-public-works__george-obren,mishawaka-board-public-works,George Obren,Member (Board of Public Works and Safety),Mayoral Appointment,2026-01-01,2026-12-31,,2026-11-18,official,medium,GOV-200,
+mishawaka-board-public-works__anthony-violi,mishawaka-board-public-works,Anthony Violi,Member (Utility Board),Mayoral Appointment,2026-01-01,2026-12-31,,2026-11-18,official,medium,GOV-200,
+mishawaka-plan-commission__christopher-tordi,mishawaka-plan-commission,Christopher Tordi,President,Parks and Recreation Board,2026-01-01,2026-12-31,,2026-11-18,official,high,GOV-195,
+mishawaka-plan-commission__dru-cash,mishawaka-plan-commission,Dru Cash,Member,Mayor (Mayoral),2025-01-01,2028-12-31,,2026-11-18,official,high,GOV-195,
+mishawaka-plan-commission__samuel-cressy,mishawaka-plan-commission,Samuel Cressy,Member,Mayor (Mayoral),2024-01-01,2027-12-31,,2026-11-18,official,high,GOV-195,
+mishawaka-plan-commission__drew-johnson,mishawaka-plan-commission,Drew Johnson,Member,Mayor (Mayoral),2024-01-01,2027-12-31,,2026-11-18,official,high,GOV-195,
+mishawaka-plan-commission__michael-portolese,mishawaka-plan-commission,Michael Portolese,Vice President,Mayor (Mayoral),2025-01-01,2028-12-31,,2026-11-18,official,high,GOV-195,
+mishawaka-plan-commission__kathleen-white-gadacz,mishawaka-plan-commission,Kathleen White-Gadacz,Member,Mayor (Mayoral),2026-01-01,2029-12-31,,2026-11-18,official,high,GOV-195,
+mishawaka-plan-commission__randy-fras,mishawaka-plan-commission,Randy Fras,Member,Board of Public Works & Safety,2026-01-01,2026-12-31,,2026-11-18,official,high,GOV-195,
+mishawaka-plan-commission__matt-carroll,mishawaka-plan-commission,Matt Carroll,Member,Common Council,2026-01-01,2026-12-31,,2026-11-18,official,high,GOV-195,
+mishawaka-redevelopment-commission__janet-whitfield-hyduk,mishawaka-redevelopment-commission,Janet Whitfield-Hyduk,President,Common Council,2026-01-01,2026-12-31,,2026-11-18,official,high,GOV-194,
+mishawaka-redevelopment-commission__dr-lindsey-kintner,mishawaka-redevelopment-commission,Dr. Lindsey Kintner,Vice President,Mayor,2026-01-01,2026-12-31,,2026-11-18,official,high,GOV-194,
+mishawaka-redevelopment-commission__kris-ermeti,mishawaka-redevelopment-commission,Kris Ermeti,Secretary,Common Council,2026-01-01,2026-12-31,,2026-11-18,official,high,GOV-194,
+mishawaka-redevelopment-commission__laura-dennison,mishawaka-redevelopment-commission,Laura Dennison,Member,Mayor,2026-01-01,2026-12-31,,2026-11-18,official,high,GOV-194,
+mishawaka-redevelopment-commission__mike-bellovich,mishawaka-redevelopment-commission,Mike Bellovich,Member,Mayor,2026-01-01,2026-12-31,,2026-11-18,official,high,GOV-194,
+mishawaka-redevelopment-commission__bill-pemberton,mishawaka-redevelopment-commission,Bill Pemberton,Advisory Member (non-voting),Mayor,2026-01-01,2026-12-31,,2026-11-18,official,high,GOV-194,
+mishawaka-board-zoning-appeals__christopher-tordi,mishawaka-board-zoning-appeals,Christopher Tordi,President,Plan Commission,2026-01-01,2029-12-31,,2026-11-18,official,high,GOV-196,
+mishawaka-board-zoning-appeals__mike-compton,mishawaka-board-zoning-appeals,Mike Compton,Vice President,Mayoral,2024-01-01,2027-12-31,,2026-11-18,official,high,GOV-196,
+mishawaka-board-zoning-appeals__denise-graves,mishawaka-board-zoning-appeals,Denise Graves,Member,Mayoral,2024-01-01,2027-12-31,,2026-11-18,official,high,GOV-196,
+mishawaka-board-zoning-appeals__adam-gerstbauer,mishawaka-board-zoning-appeals,Adam Gerstbauer,Member,Mayoral,2026-01-01,2029-12-31,,2026-11-18,official,high,GOV-196,
+mishawaka-board-zoning-appeals__joel-dendiu,mishawaka-board-zoning-appeals,Joel Dendiu,Member,Common Council,2026-01-01,2029-12-31,,2026-11-18,official,high,GOV-196,
+mishawaka-parks-board__joe-tordi,mishawaka-parks-board,Joe Tordi,,Mayoral,2023-01-01,2026-12-31,,2026-11-18,official,medium,GOV-197,
+mishawaka-parks-board__carolyn-a-teeter,mishawaka-parks-board,Carolyn A. Teeter,Secretary,Mayoral,2024-01-01,2027-12-31,,2026-11-18,official,medium,GOV-197,
+mishawaka-parks-board__naomi-rea,mishawaka-parks-board,Naomi Rea,Member,Mayoral,2025-01-01,2028-12-31,,2026-11-18,official,medium,GOV-197,
+mishawaka-parks-board__jenny-mcneil,mishawaka-parks-board,Jenny McNeil,Member,Library Board,2024-01-01,2027-12-31,,2026-11-18,official,medium,GOV-197,
+mishawaka-historic-preservation__alan-grzeskowiak,mishawaka-historic-preservation,Alan Grzeskowiak,Chairperson,Mayor (Mayoral Appointments),,2026-12-31,,2026-11-18,official,medium,GOV-198,
+mishawaka-historic-preservation__michael-bultinck,mishawaka-historic-preservation,Michael Bultinck,Member,Mayor (Mayoral Appointments),,2027-12-31,,2026-11-18,official,medium,GOV-198,
+mishawaka-historic-preservation__lacy-hahn,mishawaka-historic-preservation,Lacy Hahn,Common Council Representative,listed under Mayoral Appointments; role title says Common Council,,2026-12-31,,2026-11-18,official,medium,GOV-198,
+mishawaka-historic-preservation__shirley-mcalister,mishawaka-historic-preservation,Shirley McAlister,Member,Mayor (Mayoral Appointments),,2026-12-31,,2026-11-18,official,medium,GOV-198,
+mishawaka-historic-preservation__doug-merritt,mishawaka-historic-preservation,Doug Merritt,Member,Mayor (Mayoral Appointments),,2026-12-31,,2026-11-18,official,medium,GOV-198,
+mishawaka-historic-preservation__thomas-morris,mishawaka-historic-preservation,Thomas Morris,Member,Mayor (Mayoral Appointments),,2026-12-31,,2026-11-18,official,medium,GOV-198,
+mishawaka-historic-preservation__nancy-seidler,mishawaka-historic-preservation,Nancy Seidler,Member,Mayor (Mayoral Appointments),,2028-12-31,,2026-11-18,official,medium,GOV-198,
+mishawaka-historic-preservation__bob-sullivan,mishawaka-historic-preservation,Bob Sullivan,Member,Mayor (Mayoral Appointments),,2028-12-31,,2026-11-18,official,medium,GOV-198,
+mishawaka-historic-preservation__louann-welsh,mishawaka-historic-preservation,LouAnn Welsh,Member,Mayor (Mayoral Appointments),,2027-12-31,,2026-11-18,official,medium,GOV-198,
+mishawaka-historic-preservation__dave-eisen,mishawaka-historic-preservation,Dave Eisen,Advisory Member,not stated,,2026-12-31,,2026-11-18,official,medium,GOV-198,
+mishawaka-historic-preservation__heather-kelley,mishawaka-historic-preservation,Heather Kelley,Advisory Member,not stated,,2026-12-31,,2026-11-18,official,medium,GOV-198,
+mishawaka-historic-preservation__adam-sheer,mishawaka-historic-preservation,Adam Sheer,Advisory Member,not stated,,2027-12-31,,2026-11-18,official,medium,GOV-198,
+mishawaka-historic-preservation__jason-stoller,mishawaka-historic-preservation,Jason Stoller,Advisory Member,not stated,,2027-12-31,,2026-11-18,official,medium,GOV-198,
+mishawaka-historic-preservation__kate-voelker,mishawaka-historic-preservation,Kate Voelker,Advisory Member,not stated,,2026-12-31,,2026-11-18,official,medium,GOV-198,
+mishawaka-traffic-commission__christine-jamrose-p-e,mishawaka-traffic-commission,"Christine Jamrose, P.E.",City Engineer,By virtue of position held,,,,2026-11-18,official,medium,GOV-199,
+mishawaka-traffic-commission__alex-arendt,mishawaka-traffic-commission,Alex Arendt,Police Chief,By virtue of position held,,,,2026-11-18,official,medium,GOV-199,
+mishawaka-traffic-commission__tim-ryan,mishawaka-traffic-commission,Tim Ryan,Street Commissioner,Mayoral Appointment,2025-06-30,2027-12-31,,2026-11-18,official,medium,GOV-199,
+mishawaka-traffic-commission__sandy-arnold,mishawaka-traffic-commission,Sandy Arnold,Resident,Mayoral Appointment,2026-01-01,2029-12-31,,2026-11-18,official,medium,GOV-199,
+mishawaka-traffic-commission__ron-banicki,mishawaka-traffic-commission,Ron Banicki,Council Member,City Council Appointment,2026-01-01,2029-12-31,,2026-11-18,official,medium,GOV-199,
+school-city-mishawaka-appointed__dave-weber,school-city-mishawaka-appointed,Dave Weber,Secretary,Common Council (per search summary of an SCM news item; roster page does not say),,2029-12-31,,2026-11-18,official,medium,GOV-180,Appointer from news coverage of his earlier term (to Dec 2025); reappointment for the term to 12/31/29 not confirmed from an official source.

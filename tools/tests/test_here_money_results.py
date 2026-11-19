@@ -3,7 +3,7 @@ results pages").
 
 - money/campaigns/index.html: the area list has a "rows" slot, and every area row names its layer
   (municipality:/township:/school:/county/...) so preselect.js can move the reader's rows to the top.
-- elections/margins/index.html: a "one" slot whose JSON gives, per saved place, fold keys that exist on the page
+- elections/compare/index.html (was elections/margins/): a "one" slot whose JSON gives, per saved place, fold keys that exist on the page
   (countywide plus the single commissioner/council district where the precinct results show one); the page script
   adds the place's city or town, township and school folds (data-here-also).
 - Clearing the saved place: the slot is hidden by default and the page shows everything, as before.
@@ -26,8 +26,9 @@ import build  # noqa: E402
 from civic.data import Edition  # noqa: E402
 from civic.shell import Site  # noqa: E402
 
-CAMPAIGNS = "money/campaigns/index.html"
-MARGINS = "elections/margins/index.html"
+# phase 6 step 5: the area list moved from the index to the browser's By place view, unchanged
+CAMPAIGNS = "money/campaigns/by-place/index.html"
+MARGINS = "elections/compare/index.html"   # phase 6 step 4: was elections/margins/ (now a forwarding page)
 LAYER = re.compile(r"^(county|state|library|(municipality|township|school):[a-z0-9-]+)$")
 
 

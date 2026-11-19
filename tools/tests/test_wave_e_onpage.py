@@ -101,11 +101,23 @@ class Assets(unittest.TestCase):
         self.assertNotIn("tabindex", s.replace('"tabindex", "-1"', ""))
 
     def test_masthead_keeps_every_control(self):
+        # Updated 2026-11-16 (phase 6 step 1): the header now folds the nav, the place chip and Display behind a Menu
+        # button below 1100 px (the design direction's phone header: logo, search, menu). Nothing is removed: every
+        # rule that hides something is one of the known cases below, and the folded menu reopens with the button
+        # (.menu-open) and with JS off (#primary-nav :target).
         css = (CSS / "masthead.css").read_text(encoding="utf-8")
-        self.assertIn("max-width: 480px", css)
-        self.assertNotRegex(css, r"display:\s*none")           # nothing is removed
+        self.assertIn("max-width: 1099px", css)
+        hidden = re.findall(r"([^{}]+)\{[^{}]*display:\s*none", css)
+        allowed = ("series-short", ".menu-btn {", "display-menu", "-webkit-details-marker", ".head-menu {",
+                   ".series, ", ".lockup-text", ".head-menu, ")
+        for sel in hidden:
+            sel = " ".join(sel.split())
+            self.assertTrue(any(a.strip() in sel + " {" for a in allowed), sel)
+        self.assertIn(".site-head.menu-open .head-menu", css)
+        self.assertIn(".head-menu:target", css)
         shell = (SITE_DIR / "civic" / "shell.py").read_text(encoding="utf-8")
-        for needle in ('"theme-toggle"', "look_switch(\"head\")", "self._search()", "Not your county?"):
+        for needle in ('"theme-toggle"', "look_switch(\"head\")", "self._search()", "Not your county?",
+                       '"menu-btn"', '"#primary-nav"'):
             self.assertIn(needle, shell)
 
 

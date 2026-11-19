@@ -38,9 +38,15 @@ from civic.shell import Site  # noqa: E402
 JS = ROOT / "tools" / "site" / "static" / "js"
 CAL, OH, RES, JQ, TAX, COUNTY, SCHOOLS, PEOPLE = (
     "elections/calendar/index.html", "officeholders/index.html", "elections/results/index.html",
-    "elections/judges-and-questions/index.html", "money/your-tax-bill/index.html", "county/index.html",
-    "schools/index.html", "community/people/index.html")
-PAGES = [CAL, OH, RES, JQ, TAX, COUNTY, SCHOOLS, PEOPLE]
+    "elections/judges-and-questions/index.html", "money/your-tax-bill/index.html",
+    # phase 6 step 3 (2026-11-16): county/ and schools/ forward to the government pages; the county's results (and
+    # their "open your districts" slot) are on its Elections tab, and the school corporations are on the Governments
+    # hub, whose map selects the saved place
+    "governments/county/elections/index.html", "governments/index.html", "community/people/index.html")
+# phase 6 step 4 (2026-11-16): the results explorer is gone; its "explorer" slot kind now serves the Elections hub's
+# next ballot (elections.js), so the hub is checked in its place
+HUB = "elections/index.html"
+PAGES = [CAL, OH, RES, JQ, TAX, COUNTY, SCHOOLS, PEOPLE, HUB]
 SLOT_RE = re.compile(r'<p class="here-pre"([^>]*)>(.*?)</p>', re.S)
 
 
@@ -271,8 +277,8 @@ class PreselectTests(unittest.TestCase):
 
     # ------------------------------------------------------------------ the pages
     def test_every_page_has_a_hidden_empty_slot(self):
-        kinds = {CAL: "filter", OH: "filter", RES: "explorer", JQ: "first", TAX: "taxbill", COUNTY: "one",
-                 SCHOOLS: "one", PEOPLE: "map"}
+        kinds = {CAL: "filter", OH: "filter", HUB: "explorer", JQ: "first", TAX: "taxbill", COUNTY: "one",
+                 SCHOOLS: "map", PEOPLE: "map"}
         for pg, kind in kinds.items():
             slots = SLOT_RE.findall(self.html[pg])
             self.assertEqual(len(slots), 1, pg)
@@ -296,18 +302,15 @@ class PreselectTests(unittest.TestCase):
         self.assertIn('data-here-layer="state"', self.html[OH])
         self.assertIn('data-here-layer="state"', self.html[CAL])
 
-    def test_results_payload_layers(self):
-        data = _json(self.html[RES], "elx-data")
-        self.assertEqual(len(data["pl"]), len(data["places"]))
-        pl = dict(zip(data["places"], data["pl"]))
-        self.assertEqual(pl["St. Joseph County"], "county")
-        self.assertEqual(pl["Statewide"], "state")
-        self.assertEqual(pl["South Bend"], "municipality:south-bend")
-        self.assertEqual(pl["Penn Township"], "township:penn-township")
-        self.assertEqual(pl["Penn-Harris-Madison schools"], "school:phm")
-        self.assertEqual(pl["Town of Walkerton"], "municipality:walkerton")
-        for v in data["pl"]:
-            self.assertIn(v, self.valid_layers() | {""})
+    def test_hub_ballot_layers(self):
+        """The hub's next-ballot cards carry the saved-place keys elections.js matches (was the explorer payload)."""
+        cards = re.findall(r'<div class="ehub-gov" data-here-unit="([^"]+)" data-here-layer="([^"]*)"', self.html[HUB])
+        self.assertTrue(cards)
+        ok = self.valid_layers()
+        for unit, layer in cards:
+            self.assertIn(layer, ok, unit)
+        self.assertIn(("south-bend", "municipality:south-bend"), cards)
+        self.assertNotIn('id="elx-data"', self.html[RES])
 
     def test_question_groups(self):
         html = self.html[JQ]
@@ -318,17 +321,23 @@ class PreselectTests(unittest.TestCase):
         lay = {g: re.search(r'data-here-layer="([^"]*)"', a).group(1) for g, a in groups}
         self.assertEqual(lay["statewide"], "state")
         self.assertEqual(lay["mishawaka"], "municipality:mishawaka")
+        # 2026-11-18: the merged canvass labels name the corporations in full, and the 2013/2016 "mishawaka" questions
+        # are the School City's; every School City question now shares its layer
         self.assertEqual(lay["school-city-of-mishawaka"], "school:school-city-mishawaka")
-        self.assertEqual(lay["south-bend-community-schools"], "school:sbcsc")
-        self.assertEqual(lay["new-prairie-schools"], "school:new-prairie")
-        # old anchors kept
+        self.assertEqual(lay["south-bend-community-school-corporation"], "school:sbcsc")
+        self.assertEqual(lay["new-prairie-united-school-corporation"], "school:new-prairie")
+        # old anchors kept, or forwarded to the renamed group
         for i in ("q-group-statewide", "q-2016g-mishawaka-public-question"):
             self.assertIn(f'id="{i}"', html)
+        mm = json.loads(re.search(r'id="moved-anchors">(.*?)</script>', html).group(1).replace("<\\/", "</"))["a"]
+        for old, new in (("new-prairie-schools", "new-prairie-united-school-corporation"),
+                         ("south-bend-community-schools", "south-bend-community-school-corporation")):
+            self.assertTrue(mm[f"q-group-{old}"].endswith(f"#q-group-{new}"), old)
 
     def test_slot_targets_match_page_keys(self):
-        self.assertIn('data-here-keys="school"', self.html[SCHOOLS])
+        # the hub: each school corporation's row names its preselect layer
         for uid in ("sbcsc", "phm", "john-glenn"):
-            self.assertIn(f'data-one="{uid}"', self.html[SCHOOLS])
+            self.assertIn(f'id="{uid}" data-here-layer="school:{uid}"', self.html[SCHOOLS])
         for k in ("county-commissioner-d1", "county-council-a", "county-council-f"):
             self.assertIn(f'data-one="{k}"', self.html[COUNTY])
         self.assertRegex(self.html[PEOPLE], r'id="[^"]+"[^>]*>(?:(?!</section>).)*data-here-pre="map"')

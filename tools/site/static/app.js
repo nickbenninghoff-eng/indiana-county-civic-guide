@@ -169,7 +169,14 @@
       if (filtered && tr.hidden && tr.parentNode && tr.parentNode.tagName === "TBODY") return;
       var cells = [];
       Array.prototype.forEach.call(tr.children, function (c) {
-        var t = (c.textContent || "").replace(/\s+/g, " ").trim();
+        /* a status symbol (.fmark, "About these figures") is copied as its word, as the badges were before */
+        if (c.querySelector(".fmark")) {
+          c = c.cloneNode(true);
+          Array.prototype.forEach.call(c.querySelectorAll(".fmark"), function (m) {
+            m.textContent = " " + (m.getAttribute("data-word") || "") + " ";
+          });
+        }
+        var t = (c.textContent || "").replace(/[\s\u2060]+/g, " ").trim();
         cells.push(/[",\n]/.test(t) ? '"' + t.replace(/"/g, '""') + '"' : t);
       });
       rows.push(cells.join(","));

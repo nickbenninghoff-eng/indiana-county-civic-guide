@@ -17,8 +17,16 @@ class Entry:
     nav: str
     description: str
     scope: str = "county"          # indiana | county | mixed
-    group: str = ""               # topic the page belongs to (TOPICS name; "" = none). The menu itself is TOPICS
+    group: str = ""               # topic the page belongs to (TOPICS name; "" = none). The menu itself is NAV
     sections: list[tuple[str, str]] = field(default_factory=list)  # planned (anchor, title)
+    # added 2026-11-16 (phase 6 step 1, civic/tabs.py): a page of a tabbed thing (an office) carries its own
+    # breadcrumb [(label, site path or None)], its tab key and the thing's folder ("offices/south-bend-mayor/")
+    crumb: list = field(default_factory=list)
+    tab: str = ""
+    thing: str = ""
+    # added 2026-11-16 (phase 6 step 4): a page whose content moved (elections/margins/ -> elections/compare/) is a
+    # short forwarding page; this is the site path it forwards to. Search and the reachability test skip it.
+    moved_to: str = ""
 
 
 def _e(path, title, nav, description, scope="county", group="", sections=None):
@@ -89,10 +97,12 @@ def entries(ed) -> list[Entry]:
            "indiana", "Your governments", [("caps", "Property tax caps and levy limits")]),
         # Elections hub (Wave D batch 6); the explainer that was here moved to elections/how-it-works/ (anchors
         # forwarded by static/js/moved.js, pages/elections.py HOW_IT_WORKS_IDS)
+        # phase 6 step 4 (2026-11-16): the hub leads with the next election, then every election (one page each)
         _e("elections/index.html", "Elections", "Elections",
-           "Where each part of the guide's election record is: the calendar, results, the numbers, judges and ballot "
-           "questions, how elections work and how to run.",
-           "county", "Elections", [("pages", "Election pages")]),
+           "The next election in the county and what is on its ballot, then every election in the guide's records, "
+           "each with its own page: turnout, every contest and how areas voted.",
+           "county", "Elections", [("next", "Next election in the county"), ("timeline", "Every election"),
+                                   ("pages", "More about elections")]),
         _e("elections/how-it-works/index.html", "How Indiana elections work", "How elections work",
            "Calendar, primaries, ballot access, voting methods and ID, vacancies and caucuses.",
            "indiana", "Elections", [("offices", "Offices on the ballot"),
@@ -100,9 +110,10 @@ def entries(ed) -> list[Entry]:
         _e("elections/calendar/index.html", "Election calendar", "Calendar",
            "What is on the ballot in each year from 2026 to 2030, filled in for this county.",
            "county", "Elections", [("next", "What's on your next ballot")]),
-        _e("elections/results/index.html", "Election results", "Results",
-           "Results 2010 to 2026 by office and year, each marked official, unofficial or from scan.",
-           "county", "Elections", [("turnout", "Turnout first"), ("by-office", "Results by office")]),
+        _e("elections/results/index.html", "Find a result", "Find a result",
+           "Pick an election or an office to see its results, or search every contest since 2010 in one table.",
+           "county", "Elections", [("by-election", "Pick an election"), ("by-office", "Pick an office"),
+                                   ("every", "Every contest in one table")]),
         _e("elections/judges-and-questions/index.html", "Judges and public questions", "Judges & ballot questions",
            "Judicial retention votes, public questions and school-board party labels.",
            "mixed", "Elections", [("retention", "Judicial retention votes"),
@@ -148,11 +159,15 @@ def entries(ed) -> list[Entry]:
         _e("money/your-tax-bill/index.html", "Your tax bill", "Your tax bill",
            "How one property-tax bill is split among the units that tax you, from published rates.",
            "county", "Money", [("split", "Your tax bill, split by unit")]),
-        _e("money/budgets/index.html", "Budgets by unit", "Budgets",
-           "Budgets 2012 to 2026 for every unit, one basis per chart, with series breaks marked.",
+        # phase 6 step 5 (2026-11-18): Compare budgets (each unit's budget history is on its government's Money tab)
+        _e("money/budgets/index.html", "Compare budgets", "Compare budgets",
+           "Governments compared: spending and budgets per resident, certified tax rates, debt and the tax base, each "
+           "linking to the government's own Money tab.",
            "county", "Money", [("over-time", "Budgets over time"), ("tax-base", "How the tax base shapes budgets")]),
-        _e("money/campaigns/index.html", "Campaign finance", "Campaign finance",
-           "Campaign money in local races by place: a map, then each government's races, candidates and reports.",
+        # phase 6 step 5: the campaign money browser's "By office" view (pages/money_browser.py)
+        _e("money/campaigns/index.html", "Campaign money", "Campaign money",
+           "Campaign money by office: every office with money on record, each linking to its Money tab with every "
+           "election, primary and general; also by election, by candidate and by place.",
            "mixed", "Money", [("obligations", "Campaign-finance obligations"), ("public", "What's public and what isn't")]),
         _e("community/index.html", "The community", "Community",
            "Social and economic context: the same fixed indicators for every unit, with sources and margins of error.",
@@ -186,6 +201,10 @@ def entries(ed) -> list[Entry]:
         _e("data/pull/index.html", "Data: how to pull it yourself", "How to pull the data yourself",
            "Where each public source lives and the query patterns the guide used, with this county's codes filled in.",
            "mixed", "Data", [("pull", "How to pull it yourself")]),
+        # phase 6 (2026-11-18): the Learn hub (pages/learn.py): the guides as cards, then the learning paths
+        _e("learn/index.html", "Learn", "Learn",
+           "The guides that explain how local government, elections and money work, the learning paths that put them in "
+           "order, and lesson kits for teachers.", "mixed", "", [("guides", "Guides"), ("paths", "Learning paths")]),
         _e("teach/index.html", "For teachers and groups", "For teachers",
            "Lesson kits built on the learning paths, with objectives, prompts and handouts.", "mixed"),
         _e("about/index.html", "About and methods", "About & methods",
@@ -211,6 +230,31 @@ def entries(ed) -> list[Entry]:
     # campaign money: how reporting works, every filing, and one page per government (civic/campaign_money.py)
     from .campaign_money import campaign_entries
     out += [_e(*args) for args in campaign_entries(ed.tables["units"])]
+    # offices (phase 6 step 1): the Offices hub and one tabbed page per office (civic/offices.py)
+    from .offices import office_entries
+    out += office_entries(ed)
+    # elections (phase 6 step 4): one tabbed page per election and the Compare tabs (civic/election_pages.py); the
+    # pages Compare replaced become forwarding pages (Entry.moved_to)
+    from .election_pages import MOVED_TO, election_entries
+    out += election_entries(ed)
+    for e in out:
+        if e.path in MOVED_TO:
+            e.moved_to = MOVED_TO[e.path]
+    # governments (phase 6 step 3): the Governments hub and one tabbed page per government (civic/governments.py); the
+    # place pages, county/, places/ and schools/ become forwarding pages (Entry.moved_to)
+    from .governments import government_entries, moved_pages
+    out += government_entries(ed)
+    gmoved = moved_pages(ed)
+    for e in out:
+        if e.path in gmoved:
+            e.moved_to = gmoved[e.path]
+    # people (phase 6, 2026-11-16): the People hub, the notable-people view and one tabbed page per person
+    # (civic/people.py); history/people/ became a forwarding page to the notable-people view
+    from .people import NOTABLE, OLD_NOTABLE, people_entries
+    out += people_entries(ed)
+    for e in out:
+        if e.path == OLD_NOTABLE:
+            e.moved_to = NOTABLE
     # every page in a topic names it (campaign area pages, run office pages...): search labels and stubs use it
     for e in out:
         t = topic_of(e.path)
@@ -227,8 +271,10 @@ def entries(ed) -> list[Entry]:
 
 
 # ---------------------------------------------------------------- navigation (Wave D batch 6, review section 1.4, Q1)
-# Nav bar: Your place · Topics ▾ · Learn ▾ · About. Topics has one group per topic; each group heading links to the
-# topic's hub page and the leaves follow the review's mock-up. A leaf is a site path, or a tuple of paths shown on
+# Since 2026-11-16 (phase 6 step 1) the header menu is NAV below; TOPICS no longer renders a menu. It still names each
+# page's topic (Entry.group, the search list's group label, breadcrumb roots through NAV_OF_TOPIC) and lists the pages
+# every topic covers (tests check each leaf is built). Was: Topics has one group per topic; each group heading links
+# to the topic's hub page and the leaves follow the review's mock-up. A leaf is a site path, or a tuple of paths shown on
 # one line ("State · Your legislators"). Labels are each entry's `nav`, unless MENU_LABELS gives a shorter menu label.
 YOUR_PLACE = "your-governments/index.html"
 TOPICS = [
@@ -237,8 +283,8 @@ TOPICS = [
                 ("state/index.html", "state/your-legislators/index.html"), "officeholders/index.html",
                 "who-handles-this/index.html", "map/index.html"]},
     {"name": "Elections", "hub": "elections/index.html",
-     "leaves": ["elections/calendar/index.html", "elections/results/index.html", "elections/landscape/index.html",
-                "elections/margins/index.html", "elections/turnout/index.html",
+     "leaves": ["elections/calendar/index.html", "elections/results/index.html", "elections/compare/index.html",
+                "elections/compare/turnout/index.html", "elections/compare/overview/index.html",
                 "elections/judges-and-questions/index.html", "elections/how-it-works/index.html", "run/index.html"]},
     {"name": "Money", "hub": "money/index.html",
      "leaves": ["money/what-is-a-budget/index.html", "money/your-tax-bill/index.html", "money/budgets/index.html",
@@ -246,7 +292,7 @@ TOPICS = [
     {"name": "Community & history", "hub": "community/index.html",
      "leaves": ["community/people/index.html", "community/income-and-work/index.html",
                 "community/housing-and-education/index.html", "community/research-on-voting/index.html",
-                "history/index.html", "history/people/index.html"]},
+                "history/index.html", "people/notable/index.html"]},
     {"name": "Data", "hub": "data/index.html",
      "leaves": ["data/index.html#datasets", "data/pull/index.html", "about/sources/index.html"]},
 ]
@@ -258,9 +304,9 @@ MENU_LABELS = {
     "money/campaigns/index.html": "Campaign money",
     "data/index.html#datasets": "All datasets",
     "data/pull/index.html": "Pull it yourself",
-    "elections/margins/index.html": "Close races (margins)",
+    "elections/compare/index.html": "Compare: close races",
 }
-LEARN_PAGE = "teach/index.html"
+LEARN_PAGE = "learn/index.html"   # the Learn hub (was teach/index.html until 2026-11-18); teach/ is its lesson-kit page
 ABOUT_PAGE = "about/index.html"
 
 # Which topic a page belongs to, by its path (first match wins). Pages outside every topic: the home page, teach/,
@@ -289,32 +335,131 @@ def menu_label(by_path: dict, target: str) -> str:
     return by_path[target.split("#")[0]].nav
 
 
+# ---------------------------------------------------------------- primary nav (phase 6 step 1, 2026-11-16)
+# The header's one row: Governments · Offices · Elections · Money · Learn (design direction 2026-11-16, section 3).
+# Each item links to its hub page and opens a short dropdown of at most MAX_DROPDOWN links (no mega-menu). Until later
+# steps build the new hubs, Governments, Elections, Money and Learn point at the best existing page; every page the old
+# Topics / Learn / About menus reached is still reachable within two clicks (tools/tests/test_phase6_offices.py).
+# About, Data, the Sources index, the Corrections log and "Not your county?" are in the footer (FOOTER).
+MAX_DROPDOWN = 6
+NAV = [
+    # phase 6 step 3 (2026-11-16): the Governments hub (map + list by type); Your legislators, the full map and Who
+    # handles this? are linked from the hub
+    {"name": "Governments", "hub": "governments/index.html", "menu_id": "ref-menu", "links": [
+        ("governments/county/index.html", "County government"), ("governments/index.html#cities", "Cities and towns"),
+        ("governments/index.html#townships", "Townships"), ("governments/index.html#schools", "School corporations"),
+        ("governments/index.html#special", "Libraries and special units"), ("state/index.html", "State government")]},
+    # phase 6 people pages (2026-11-16): "People" did not fit the header's one row at 1280 px (the row is full from
+    # the lockup to Display in all three looks), so it sits in this dropdown and in the footer. Cities and towns share
+    # one line to keep six links (the hub's #towns group follows #cities).
+    {"name": "Offices", "hub": "offices/index.html", "menu_id": "offices-menu", "links": [
+        ("offices/index.html#county", "County and courts"), ("offices/index.html#cities", "Cities and towns"),
+        ("offices/index.html#townships", "Townships"), ("offices/index.html#schools", "School boards"),
+        ("offices/index.html#state", "State legislature"), ("people/index.html", "People")]},
+    {"name": "Elections", "hub": "elections/index.html", "menu_id": "elections-menu", "links": [
+        ("elections/calendar/index.html", "Calendar"), ("elections/results/index.html", "Find a result"),
+        ("elections/compare/index.html", "Compare elections"),
+        ("elections/judges-and-questions/index.html", "Judges & ballot questions"),
+        ("elections/how-it-works/index.html", "How elections work"), ("run/index.html", "Run for office")]},
+    {"name": "Money", "hub": "money/index.html", "menu_id": "money-menu", "links": [
+        ("money/budgets/index.html", "Compare budgets"), ("money/your-tax-bill/index.html", "Your tax bill"),
+        ("money/campaigns/index.html", "Campaign money"),
+        ("money/what-is-a-budget/index.html", "What counts as a budget"),
+        ("money/campaigns/how-it-works/index.html", "How campaign reporting works"),
+        ("money/campaigns/all-filings/index.html", "Every campaign filing")]},
+    # phase 6 (2026-11-18): the Learn hub (learn/) holds every guide as a card; the dropdown keeps the six most used
+    {"name": "Learn", "hub": "learn/index.html", "menu_id": "learn-menu", "links": [
+        ("learn/index.html#paths", "Learning paths"), ("elections/how-it-works/index.html", "How elections work"),
+        ("money/what-is-a-budget/index.html", "What counts as a budget"),
+        ("who-handles-this/index.html", "Who handles this?"), ("run/index.html", "Run for office"),
+        ("history/index.html", "History")]},
+]
+FOOTER = [("about/index.html", "About and methods"), ("people/index.html", "People"),
+          ("data/index.html", "Data downloads"),
+          ("about/sources/index.html", "Sources index"), ("about/index.html#corrections", "Corrections log"),
+          ("community/index.html", "Community profile"), ("indiana/index.html", "Not your county?")]
+# phase 6 (2026-11-18): the footer's labeled columns (civic/shell.py _footer). A column link is a site path (with an
+# optional #fragment) and a label; the columns together are the no-JavaScript "Browse everything" list that the header
+# search links to (#browse). Every FOOTER link is in a column (tools/tests/test_phase6_learn.py).
+FOOTER_COLUMNS = [
+    ("Explore", [("governments/index.html", "Governments"), ("offices/index.html", "Offices"),
+                 ("elections/index.html", "Elections"), ("money/index.html", "Money"), ("learn/index.html", "Learn"),
+                 ("your-governments/index.html", "My place")]),
+    ("People and place", [("people/index.html", "People"), ("community/index.html", "Community profile"),
+                          ("history/index.html", "History"), ("indiana/index.html", "Not your county?")]),
+    ("Data and sources", [("data/index.html", "Data downloads"), ("about/sources/index.html", "Sources index"),
+                          ("about/index.html#corrections", "Corrections log")]),
+    ("About the guide", [("about/index.html", "About and methods"),
+                         ("about/index.html#methods", "How we choose what to include"),
+                         ("about/index.html#badges", "What the badges mean"), ("about/index.html#looks", "Choose a look"),
+                         ("about/index.html#changelog", "Changelog")]),
+]
+# The breadcrumb's first item for a page in an old topic: the nav item it now sits under
+NAV_OF_TOPIC = {"Your governments": ("Governments", "governments/index.html"), "Elections": ("Elections", "elections/index.html"),
+                "Money": ("Money", "money/index.html"), "Community & history": ("Learn", "learn/index.html"),
+                "Data": ("Data", "data/index.html")}
+
+
+def nav_of(path: str) -> dict | None:
+    """The NAV item a page sits under (the header marks it current), or None (home, about/, data/, indiana/)."""
+    by_name = {i["name"]: i for i in NAV}
+    if path.startswith(("offices/", "people/")):
+        return by_name["Offices"]
+    if path.startswith("governments/"):
+        return by_name["Governments"]
+    if path.startswith(("teach/", "learn/")):
+        return by_name["Learn"]
+    for item in NAV:
+        if path == item["hub"]:
+            return item
+    t = topic_of(path)
+    if t is None:
+        return None
+    return by_name.get(NAV_OF_TOPIC.get(t["name"], ("",))[0])
+
+
 def crumbs(by_path: dict, path: str) -> list[tuple[str, str | None]]:
     """The breadcrumb for a page, from the sitemap: [(label, site path or None)], the last item being the page itself
-    (path None). Topic pages: "Topics", the topic (linked to its hub), every parent page that exists (money/campaigns/
-    for a campaign area page, history/ for history/people/, run/ for a run office page), then the page. teach/ and
-    about/ pages start with "Learn" / "About". Empty for the home page and pages outside every topic."""
+    (path None). A page with its own crumb (an office tab, civic/offices.py) uses it, the last item linked to the
+    thing's overview on the other tabs. Topic pages: the nav item it sits under (linked to that item's hub; sitemap.NAV),
+    every parent page that exists (money/campaigns/ for a campaign area page, history/ for history/people/, run/ for a
+    run office page), then the page. teach/ and about/ pages start with "Learn" / "About". Empty for the home page and
+    pages outside every topic. Changed 2026-11-16 (phase 6 step 1): the old "Topics" first item is gone with the Topics
+    menu."""
     e = by_path.get(path)
     if e is None or path == "index.html":
         return []
+    if getattr(e, "crumb", None):
+        items = [tuple(x) for x in e.crumb]
+        if e.tab and e.tab != "overview" and e.thing:
+            label = items[-1][0]
+            items[-1] = (label, f"{e.thing}index.html")
+            items.append((e.nav, None))
+        return items
     out: list[tuple[str, str | None]] = []
     t = topic_of(path)
+    hub = None
+    if t is None and not path.startswith(("teach/", "about/")):
+        own = next((i for i in NAV if i["hub"] == path), None)
+        if own is not None:          # a nav hub outside the old topics (offices/): its name, as the other hubs show
+            return [(own["name"], None)]
     if t is not None:
-        out.append(("Topics", None))
-        if path != t["hub"]:
-            out.append((t["name"], t["hub"]))
+        label, hub = NAV_OF_TOPIC.get(t["name"], (t["name"], t["hub"]))
+        if path == hub:
+            return [(label, None)]
+        out.append((label, hub))
     elif path.startswith("teach/"):
-        out.append(("Learn", None))
+        out.append(("Learn", LEARN_PAGE))
     elif path.startswith("about/"):
         if path != ABOUT_PAGE:
             out.append(("About", ABOUT_PAGE))
     else:
         return []
-    # parents: each ancestor directory with its own page, below the hub
+    # parents: each ancestor directory with its own page, below the nav hub
     parts = path.split("/")[:-1]
     for i in range(1, len(parts)):
         anc = "/".join(parts[:i]) + "/index.html"
-        if anc in by_path and anc != path and (t is None or anc != t["hub"]) and anc != ABOUT_PAGE:
+        if anc in by_path and anc != path and anc != hub and anc != ABOUT_PAGE:
             out.append((by_path[anc].nav, anc))
     label = t["name"] if t is not None and path == t["hub"] else e.nav
     out.append((label[:1].upper() + label[1:], None))
@@ -330,7 +475,7 @@ PATHS = [
          "lead": "Start with the list of governments that cover your address."},
         {"page": "who-handles-this/index.html", "anchor": "services", "title": "Who handles this?",
          "lead": "Match everyday services to the government that runs them."},
-        {"page": "county/index.html", "anchor": "boards", "title": "Unelected but powerful",
+        {"page": "governments/county/index.html", "anchor": "boards", "title": "Unelected but powerful",
          "lead": "Some decisions sit with appointed boards. See who appoints them."},
         {"page": "your-governments/index.html", "anchor": "meetings", "title": "Contact or attend a meeting",
          "lead": "Where and how to reach each body."}]},
@@ -340,7 +485,8 @@ PATHS = [
          "lead": "See which seats are up next where you live."},
         {"page": "your-governments/index.html", "anchor": "offices", "title": "What each office controls",
          "lead": "What the people you elect actually decide."},
-        {"page": "elections/results/index.html", "anchor": "turnout", "title": "Results history, turnout first",
+        # phase 6 step 4: every election, with its turnout, on the Elections hub (was elections/results/#turnout)
+        {"page": "elections/index.html", "anchor": "timeline", "title": "Results history, turnout first",
          "lead": "How many voters took part, then how each race came out."},
         {"page": "elections/judges-and-questions/index.html", "anchor": "retention", "title": "Judges and public questions",
          "lead": "The yes-or-no lines at the end of the ballot."},
@@ -381,15 +527,16 @@ PATHS = [
          "lead": "Dated, sourced events in the local economy."},
         {"page": "history/index.html", "anchor": "political", "title": "Political turning points",
          "lead": "Dated, sourced events in local politics."},
-        {"page": "history/people/index.html", "anchor": "people", "title": "People who shaped local government",
+        {"page": "people/notable/index.html", "anchor": "people", "title": "People who shaped local government",
          "lead": "Chosen by published rules, applied to everyone."}]},
     {"id": "elections-by-the-numbers", "title": "Elections by the numbers",
      "blurb": "Margins, turnout, open seats.", "minutes": 25, "primary": False, "stops": [
         # repointed to the pages split from elections/landscape/ (Wave B batch 2); static/js/moved.js sends an old
         # landscape/#path-elections-by-the-numbers-<n> link to the stop's new page
-        {"page": "elections/turnout/index.html", "anchor": "turnout", "title": "Turnout: odd vs even years",
+        # phase 6 step 4: turnout and margins are tabs of elections/compare/ now
+        {"page": "elections/compare/turnout/index.html", "anchor": "turnout", "title": "Turnout: odd vs even years",
          "lead": "Turnout with its denominator shown."},
-        {"page": "elections/margins/index.html", "anchor": "short-answer", "title": "How close were local races?",
+        {"page": "elections/compare/index.html", "anchor": "short-answer", "title": "How close were local races?",
          "lead": "Every race, the same measure."},
         {"page": "elections/calendar/index.html", "anchor": "year-2027", "title": "Up next: seats and term limits",
          "lead": "The seats on the next ballots, who holds them and the term-limit rule."},

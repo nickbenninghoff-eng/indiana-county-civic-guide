@@ -1296,6 +1296,18 @@ def campaign_entries(units_rows: list[dict]) -> list[tuple]:
            (ALL_PAGE, "Every local campaign filing", "All filings",
             "Every local campaign-finance report read from the county's scans, filterable, with Copy CSV, and the "
             "large-contribution notices.", "county", "", [])]
+    # phase 6 step 5 (2026-11-18): the campaign money browser's other views (pages/money_browser.py); the index is
+    # "By office", other-committees/ "Committees" and all-filings/ "Every filing"
+    out += [
+        ("money/campaigns/by-election/index.html", "Campaign money by election", "By election",
+         "Every local race of the 2023, 2024 and 2026 election cycles on one scale, and the earlier elections with "
+         "figures reported in the news.", "county", "", []),
+        ("money/campaigns/by-candidate/index.html", "Campaign money by candidate", "By candidate",
+         "Every candidate and committee with campaign money on record, alphabetical, with links to their pages.",
+         "county", "", []),
+        ("money/campaigns/by-place/index.html", "Campaign money by place", "By place",
+         "The campaign-money map and every government's latest election, with links to its races and reports.",
+         "county", "", [])]
     for aid in area_ids(units_rows):
         name = area_title(aid, units)
         if aid == STATE_AREA:

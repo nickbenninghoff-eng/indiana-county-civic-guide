@@ -1,21 +1,159 @@
-/* masthead.css: a compact masthead on phones (Wave E batch 9). Sorts after looks.css and search.css, so it wins on
-   equal specificity. At 480 px and narrower the header's controls are laid out as: title; data date, version and
-   "Not your county?" on one line; search; then the Look switcher and the Theme button side by side. Nothing is removed:
-   every control stays a real button/link with its label (the "Look" word becomes visually hidden, the group keeps its
-   accessible name) and keeps its 44 px target. Widths above 480 px are untouched. */
-@media (max-width: 480px) {
-  :root .masthead { gap: 6px 10px; padding-block: 8px 8px; justify-content: flex-start; }
-  /* the .stamp wrapper dissolves so the date line, the Look switch and the Theme button can be placed in rows */
-  :root .masthead .stamp { display: contents; }
-  :root .masthead .lockup { order: 0; flex: 1 1 100%; }
-  :root .masthead .stamp-date, :root .masthead .stamp-ver, :root .masthead .stamp-county { order: 1; }
-  :root .masthead .stamp-county { margin-left: auto; }
-  :root .masthead .site-search { order: 2; flex: 1 1 100%; }
-  :root[data-look] .masthead .look-switch { order: 3; flex: 1 1 0; width: auto; min-width: 0; gap: 0; }
-  :root .masthead .look-label {
-    position: absolute !important; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap;
-  }
-  :root .masthead .look-opts { flex: 1 1 auto; }
-  :root .masthead .look-btn { padding-inline: 4px; font-size: .78rem; gap: 4px; min-width: 0; }
-  :root .masthead .theme-toggle { order: 4; flex: none; padding-inline: 10px; }
+/* masthead.css: the site header (civic/shell.py _masthead; phase 6 step 1, 2026-11-16).
+   One row at 1100 px and wider: logo · Governments · Offices · Elections · Money · Learn · search · My place · Display.
+   Narrower: logo, search and a Menu button; the menu (#primary-nav) holds the nav, the My place chip and Display.
+   Every rule is scoped under :root .site-head so it wins over the older base rules for .nav / .here-bar / .site-search
+   (style.css, looks.css, here.css, search.css) in every look. Colors are existing tokens only. In the Wayfinding look
+   the header is the dark sign (looks.css remaps --ink / --surface inside .masthead), so these rules follow it. */
+
+/* ---------------------------------------------------------------- the row */
+:root .site-head {
+  display: flex; flex-wrap: nowrap; align-items: center; gap: 0 12px;
+  min-height: 60px; padding-block: 8px;
+  position: sticky; top: env(safe-area-inset-top, 0px); z-index: 31;
 }
+:root .site-head .lockup { order: 0; flex: none; gap: 10px; }
+:root .site-head .glyph { width: 22px; height: 34px; }
+:root .site-head .lockup-text { gap: 3px; }
+:root .site-head .series { font-size: 1.05rem; line-height: 1; white-space: nowrap; }
+:root .site-head .series-short { display: none; font-family: var(--f-display); font-weight: var(--display-wt);
+  text-transform: var(--display-case); font-size: 1.05rem; line-height: 1; white-space: nowrap; }
+:root .site-head .edition { font-size: .6rem; letter-spacing: .12em; white-space: nowrap; }
+:root[data-look="line"] .site-head .edition { font-size: .74rem; letter-spacing: .02em; }
+
+/* the menu wrapper dissolves at desktop width, so its children sit in the row */
+:root .site-head .head-menu { display: contents; }
+:root .site-head .nav { order: 1; flex: 0 1 auto; min-width: 0; position: static; z-index: auto; }
+:root .site-head .nav::before { content: none; }
+:root .site-head .site-search { order: 2; flex: 1 1 12rem; min-width: 8rem; max-width: 19rem; margin-left: auto; }
+:root .site-head .here-bar { order: 3; flex: none; }
+:root .site-head .display-menu { order: 4; flex: none; }
+:root .site-head .menu-btn { display: none; }
+
+/* ---------------------------------------------------------------- nav items: hub link + dropdown chevron */
+:root .site-head .nav-list { display: flex; flex-wrap: nowrap; align-items: center; gap: 2px; margin: 0; padding: 0; }
+:root .site-head .nav-item { position: relative; display: flex; align-items: center; min-width: 0; }
+:root .site-head .nav-list a.nav-top {
+  display: block; padding: 10px 2px 10px 8px; color: var(--ink); text-decoration: none; white-space: nowrap;
+  font: 600 .95rem/1.2 var(--f-sans); border-bottom: 3px solid transparent; border-radius: 0; background: none;
+}
+:root .site-head .nav-list a.nav-top:hover { color: var(--ink); border-bottom-color: var(--accent); }
+:root .site-head .nav-item.is-current > a.nav-top { border-bottom-color: var(--accent); }
+:root .site-head .nav-list summary.nav-more {
+  display: flex; align-items: center; justify-content: center; width: 26px; min-height: 40px; padding: 0;
+  color: var(--ink-2); border: 0; border-radius: var(--r-sm); background: none; cursor: pointer;
+}
+:root .site-head .nav-list summary.nav-more::after { margin: 0; transform: translateY(-2px) rotate(45deg); }
+:root .site-head .nav-list details[open] > summary.nav-more::after { transform: translateY(2px) rotate(-135deg); }
+:root .site-head .nav-list summary.nav-more:hover { color: var(--ink); background: var(--surface-2); }
+
+/* dropdowns: a short list, never a mega-menu */
+:root .site-head .menu-list {
+  display: block; position: absolute; left: 0; top: calc(100% + 4px); z-index: 46;
+  width: max-content; min-width: 13rem; max-width: calc(100vw - 32px);
+  list-style: none; margin: 0; padding: 6px 0; grid-template-columns: none; gap: 0;
+}
+:root .site-head .menu-list li { margin: 0; }
+:root .site-head .nav-list .menu-list a {
+  display: block; padding: 8px 16px; color: var(--ink); font: 500 .92rem/1.3 var(--f-sans); text-decoration: none;
+  border: 0; border-radius: 0; background: none; white-space: nowrap;
+}
+:root .site-head .nav-list .menu-list a:hover { background: var(--surface-2); color: var(--ink); }
+:root .site-head .nav-list .menu-list a[aria-current="page"] { font-weight: 700; box-shadow: inset 3px 0 0 var(--accent); }
+
+/* Line map: pills; Wayfinding: the sign's yellow bar under the current item */
+:root[data-look="line"] .site-head .nav-list a.nav-top { border-bottom: 0; border-radius: 999px; padding: 8px 4px 8px 12px; font-weight: 500; }
+:root[data-look="line"] .site-head .nav-list a.nav-top:hover { background: var(--surface-2); }
+:root[data-look="line"] .site-head .nav-item.is-current { background: var(--accent-wash); box-shadow: inset 0 0 0 1.5px var(--accent);
+  border-radius: 999px; }
+:root[data-look="line"] .site-head .nav-item.is-current > a.nav-top { font-weight: 600; }
+:root[data-look="wayfinding"] .site-head .nav-list a.nav-top { font-weight: 800; border-bottom-width: 4px; }
+:root[data-look="wayfinding"] .site-head .nav-list a.nav-top:hover,
+:root[data-look="wayfinding"] .site-head .nav-item.is-current > a.nav-top { border-bottom-color: var(--hl); }
+
+/* ---------------------------------------------------------------- My place chip */
+:root .site-head .here-bar { font-size: .88rem; isolation: auto; position: static; }
+:root .site-head .here-bar::before { content: none; }
+:root .site-head .chip {
+  display: inline-flex; align-items: center; gap: 7px; min-height: 40px; max-width: 13rem; padding: 6px 12px;
+  color: var(--ink); font-weight: 600; text-decoration: none; white-space: nowrap;
+  border: 1.5px solid var(--line); border-radius: var(--r-btn); background: transparent;
+}
+:root .site-head .chip:hover { border-color: var(--ink-2); color: var(--ink); }
+:root .site-head .chip[aria-current="page"] { border-color: var(--accent); }
+:root .site-head .here-names { overflow: hidden; text-overflow: ellipsis; min-width: 0; flex: 0 1 auto; }
+:root .site-head .here-pin { width: 14px; height: 10px; }
+
+/* ---------------------------------------------------------------- Display (looks + light/dark) */
+.display-menu { display: none; }
+:root[data-look] .site-head .display-menu { display: block; position: relative; }
+:root .site-head .display-btn {
+  display: inline-flex; align-items: center; gap: 7px; min-height: 40px; padding: 6px 12px; cursor: pointer;
+  list-style: none; color: var(--ink); font-weight: 600; font-size: .88rem;
+  border: 1.5px solid var(--line); border-radius: var(--r-btn);
+}
+:root .site-head .display-btn::-webkit-details-marker { display: none; }
+:root .site-head .display-btn:hover { border-color: var(--ink-2); }
+:root .site-head .display-panel {
+  position: absolute; right: 0; left: auto; top: calc(100% + 6px); z-index: 46;
+  display: flex; flex-direction: column; align-items: flex-start; gap: 12px;
+  width: max-content; max-width: calc(100vw - 32px); padding: 14px 16px; grid-template-columns: none;
+}
+:root .site-head .display-panel .look-switch { flex-wrap: wrap; }
+:root .site-head .display-theme { margin: 0; }
+
+/* ---------------------------------------------------------------- Menu button (below 1100 px) */
+:root .site-head .menu-btn {
+  align-items: center; gap: 8px; min-height: 44px; min-width: 44px; padding: 6px 12px; flex: none; order: 3;
+  color: var(--ink); font-weight: 700; font-size: .9rem; text-decoration: none;
+  border: 1.5px solid var(--line); border-radius: var(--r-btn);
+}
+:root .site-head .menu-btn-icon { position: relative; width: 16px; height: 2px; background: currentColor;
+  box-shadow: 0 -5px 0 currentColor, 0 5px 0 currentColor; }
+:root .site-head.menu-open .menu-btn-icon { box-shadow: none; transform: rotate(45deg); }
+:root .site-head.menu-open .menu-btn-icon::after { content: ""; position: absolute; inset: 0; background: currentColor;
+  transform: rotate(90deg); }
+
+@media (max-width: 1099px) {
+  :root .site-head { flex-wrap: wrap; gap: 8px 10px; }
+  :root .site-head .menu-btn { display: inline-flex; }
+  :root .site-head .site-search { order: 2; flex: 1 1 10rem; max-width: none; position: static; }
+  /* the search list spans the header, not the narrow box */
+  :root .site-head .search-pop { left: 0; right: 0; width: auto; top: calc(100% - 2px); }
+  :root .site-head .head-menu { display: none; order: 10; flex: 1 1 100%; padding: 4px 0 12px; }
+  :root .site-head.menu-open .head-menu, :root .site-head .head-menu:target,
+  :root .site-head #primary-nav:target ~ .head-tools {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 10px 12px;
+  }
+  :root .site-head .nav { flex: 1 1 100%; }
+  :root .site-head .nav-list { flex-direction: column; align-items: stretch; gap: 0; }
+  :root .site-head .nav-item { flex-wrap: wrap; border-top: 1px solid var(--line); }
+  :root .site-head .nav-list a.nav-top { flex: 1 1 auto; padding: 12px 4px; border-bottom: 0; }
+  :root .site-head .nav-item.is-current > a.nav-top { box-shadow: inset 3px 0 0 var(--accent); padding-left: 12px; }
+  :root[data-look="line"] .site-head .nav-item.is-current { border-radius: 12px; }
+  :root .site-head .nav-list summary.nav-more { width: 44px; min-height: 44px; }
+  :root .site-head .nav-dd { flex: none; }
+  :root .site-head .nav-dd[open] { flex: 1 1 100%; order: 2; }
+  :root .site-head .menu-list { position: static; width: auto; min-width: 0; max-width: none; padding: 0 0 8px 12px;
+    box-shadow: none; border: 0; background: none; }
+  :root .site-head .nav-list .menu-list a { white-space: normal; padding: 9px 8px; }
+  :root .site-head .display-panel { right: auto; left: 0; }
+}
+@media (max-width: 700px) {
+  :root .site-head .series, :root .site-head .edition { display: none; }
+  :root .site-head .series-short { display: inline; }
+  :root .site-head .lockup-text { justify-content: center; }
+}
+@media (max-width: 420px) {
+  :root .site-head .lockup-text { display: none; }
+  :root .site-head .menu-btn { padding-inline: 10px; }
+}
+@media print {
+  :root .site-head { position: static; }
+  :root .site-head .head-menu, :root .site-head .menu-btn, :root .site-head .site-search { display: none !important; }
+}
+
+/* ---------------------------------------------------------------- the 2026 banner and the footer stamp */
+:root .banner { margin: 10px 0 0; padding: 6px 12px; font-size: .84rem; }
+:root .footer-stamp { margin: 10px 0 4px; }
+/* the stamp moved from the dark Wayfinding masthead to the footer: its link takes the page ink again */
+:root[data-look="wayfinding"] p.footer-stamp a { color: var(--ink); }

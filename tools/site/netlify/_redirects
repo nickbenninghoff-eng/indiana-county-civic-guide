@@ -1,0 +1,11 @@
+# Netlify redirects (copied into the publish directory by tools/site/netlify_prep.py).
+# Path-level moves only; an #anchor is kept by the browser across a redirect. "301!" is forced because the old
+# paths still exist as small forwarding pages (they serve the claude.ai Artifact host, which has no redirects).
+
+# phase 6 step 4 (2026-11-16): "Elections by the numbers" became Compare elections, three tabs; the ids are unchanged
+/elections/margins/              /elections/compare/                       301!
+/elections/margins/index.html    /elections/compare/index.html             301!
+/elections/turnout/              /elections/compare/turnout/               301!
+/elections/turnout/index.html    /elections/compare/turnout/index.html     301!
+/elections/landscape/            /elections/compare/overview/              301!
+/elections/landscape/index.html  /elections/compare/overview/index.html    301!

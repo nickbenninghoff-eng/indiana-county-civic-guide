@@ -1,16 +1,20 @@
-"""Elections by the numbers (Wave B batch 2, 2026-11-09; planning/qa/site-ux-review-2026-11-09.md §3.4).
+"""Compare elections (phase 6 step 4, 2026-11-16; was "Elections by the numbers", Wave B batch 2, 2026-11-09).
 
-The old one-page landscape (66 screens, 14 tables) is split by measure:
+Three real-URL tabs (civic/election_pages.py COMPARE_TABS), each the content of a page it replaced, moved unchanged
+(same sections, ids, figures and filters):
 
-    elections/landscape/   overview: four summary cards (turnout, margins, up next, how officeholders took office)
-    elections/margins/     "Margins: how close each race was": counts, small multiples by level, a map and a
-                           list by area and seat to find a race, and every race as a table (see-all fold)
-    elections/turnout/     turnout with its denominator, odd vs even years, and straight-party ballots
-    officeholders/         every current elected officeholder by government, and how each first took office
+    elections/compare/            Close races (was elections/margins/): counts, small multiples by level, a map and a
+                                  list by area and seat to find a race, and every race as a table (see-all fold)
+    elections/compare/turnout/    Turnout (was elections/turnout/): turnout with its denominator, odd vs even years,
+                                  and straight-party ballots
+    elections/compare/overview/   Uncontested seats and overview (was elections/landscape/): four summary cards
+    officeholders/                every current elected officeholder by government, and how each first took office
     (the old "Up next" table is on elections/calendar/, pages/elections.py build_calendar)
 
-Every old landscape id that is not on the overview is forwarded by its #moved-anchors map (static/js/moved.js);
-tools/tests/test_wave_b_numbers.py pins them against tools/tests/fixtures/anchors_before_wave_b2.json.
+elections/margins/, turnout/ and landscape/ are short forwarding pages now (build_moved): a title, one line, a plain
+link that works without JavaScript and a canonical link; their #moved-anchors map sends every id they had to the
+Compare tab that has it (static/js/moved.js). tools/tests/test_phase6_elections.py pins them against
+tools/tests/fixtures/anchors_before_phase6_elections.json, and test_wave_b_numbers.py the older ids.
 
 Rules kept from the landscape page: the margin scope (no statewide offices, no legislative districts in years they
 crossed the county line, no questions, retention or straight-party lines), the three numeric bands, no party filter,
@@ -21,7 +25,8 @@ from __future__ import annotations
 import re
 
 from civic.charts import hbar, share_bars
-from civic.components import (STATUS, data_table, filter_empty_note, party_label, section, see_all_table, status_badge,
+from civic.components import (STATUS, data_table, filter_empty_note, party_label, scope_badge, section, see_all_fold,
+                              see_all_table, status_badge, status_label,
                               table_filter)
 from civic.data import PARTY_LABELS, SELECTED_BY_LABELS, fmt_date, fmt_int
 from civic.district_map import district_map, district_set, load_district_shapes
@@ -29,7 +34,10 @@ from civic.html import Markup, h, json_script
 from civic.map import load_shapes, load_votes, race_by_contest
 from civic.pick_one import one_bar, one_fold
 from civic.preselect import county_districts, here_attrs, here_slot
-from civic.related import contest_href
+from civic import election_pages as EP
+from civic import overall as OV
+# phase 6 step 4: a race links to its contest on its election's page (elections/<id>/contests/#contest-<id>)
+from civic.election_pages import contest_href
 
 from pages.elections import (BANDS, MUNICIPAL_TYPES, SCHOOLS, TOWNS, TYPE_LABEL, YEARS, _calendar_items, _district_of,
                              _election_name, _election_short, _elections, _gaps, _hero, _holders_now, _opts, _place_order,
@@ -44,8 +52,13 @@ SCOPE_OUT = ("Straight-party ballots", "Public questions", "Superior Court reten
 MARGIN_GROUPS = [("County row offices", "county"), ("County commissioners", "county"), ("County council", "county"),
                  ("County courts", "county"), ("City offices", "city"), ("Town offices", "town"),
                  ("Township offices", "township"), ("School boards", "school"), ("State legislature", "legislature")]
+# a contest pages/elections.py classify() cannot place (a new kind of contest id) is never dropped and never crashes
+# the page: it is counted in a neutral "Other contests" group, listed last (2026-11-18, gap-fill round 2)
+OTHER_GROUP = ("Other contests", "other")
+MARGIN_GROUP_NAMES = {g for g, _ in MARGIN_GROUPS}
 AREA_LEVELS = [("county", "County"), ("city", "Cities"), ("town", "Towns"), ("township", "Townships"),
-               ("school", "School boards"), ("legislature", "State legislature (districts wholly inside the county)")]
+               ("school", "School boards"), ("legislature", "State legislature (districts wholly inside the county)"),
+               ("other", "Other contests")]
 # school board contest ids start with these; the units are the school corporations of civic/data (LaVille's
 # corporation is not a unit of the guide: it lies mostly in Marshall County)
 SCHOOL_UNIT = {"south-bend-schools": "sbcsc", "mishawaka-schools": "school-city-mishawaka",
@@ -57,7 +70,11 @@ SCHOOL_UNIT = {"south-bend-schools": "sbcsc", "mishawaka-schools": "school-city-
 KINDS = [("unc", "Uncontested", "m-ink"), ("under-5", "Under 5 points", "m-share-0"), ("5-15", "5 to 15 points", "m-share-1"),
          ("over-15", "Over 15 points", "m-share-2"), ("nc", "Not measurable", "m-nodata")]
 KIND_LABEL = {k: lab for k, lab, _ in KINDS}
-TICK_MAX = 30.0   # the margin strip under each race runs from 0 to 30 points; wider margins sit at its right end
+TICK_MAX = 30.0
+# a multi-county race with no overall figure: its county margin is never ranked as the contest's (2026-11-18)
+PORTION_REASON = "only the St. Joseph County portion is in the guide (voters in another county also decide it)"
+BASIS_WORDS = {"county": "County vote (the whole electorate)", "overall": "Overall vote (whole school corporation)",
+               "portion": "County portion only: not ranked"}   # the margin strip under each race runs from 0 to 30 points; wider margins sit at its right end
 
 _ORDINAL = re.compile(r",\s*(\d+)(?:st|nd|rd|th)\b")
 _WARD = re.compile(r"\bWard\s+(\w+)")
@@ -112,6 +129,11 @@ def area_of(c, group: str, office, district: str) -> str:
     return "other"
 
 
+def margin_groups(races) -> list[tuple[str, str]]:
+    """MARGIN_GROUPS, plus the "Other contests" group when a race falls in it."""
+    return MARGIN_GROUPS + ([OTHER_GROUP] if any(r["g"] == OTHER_GROUP[0] for r in races) else [])
+
+
 def area_level(key: str) -> str:
     if key == "countywide" or key.startswith(("commissioner-", "council-")):
         return "county"
@@ -123,12 +145,16 @@ def area_level(key: str) -> str:
         return "township"
     if key.startswith(("house-", "senate-")):
         return "legislature"
+    if key == "other":
+        return "other"
     return "school"
 
 
 def area_name(ed, key: str, fallback: str = "") -> str:
     if key == "countywide":
         return "Countywide offices"
+    if key == "other":
+        return "Other contests"
     m = re.fullmatch(r"(commissioner|council)-(\w+)", key)
     if m:
         return f"County {'Commissioner' if m.group(1) == 'commissioner' else 'Council'} District {m.group(2).upper()}"
@@ -187,16 +213,49 @@ def margin_races(ed) -> list[dict]:
         e = els.get(c["election_id"])
         if not e:
             continue
-        g, place, cross = classify(c)
-        if cross or g in SCOPE_OUT or is_question(c):
-            continue
-        m = margin(c)
-        kind = "unc" if m is None else (m["band"] if "pts" in m else "nc")
-        o = ed.offices.get(c["office_id"]) if c.get("office_id") else None
-        dist = seat_district(c, o)
-        out.append({"c": c, "e": e, "g": g, "place": place or "(not stated)", "office": o, "district": dist,
-                    "area": area_of(c, g, o, dist), "kind": kind, "m": m, "st": contest_status(c["rows"]),
-                    "seat": c["office_id"] or _rest(c), "seat_name": seat_name(c["label"])})
+        r = _race_record(ed, c, e)
+        if r is not None:
+            out.append(r)
+    return out
+
+
+def _race_record(ed, c, e) -> dict | None:
+    """One contest as a margin race (margin_races), or None when it is outside the scope: decided outside the county,
+    a question, a retention vote or a straight-party line."""
+    g, place, cross = classify(c)
+    if cross or g in SCOPE_OUT or is_question(c):
+        return None
+    if g not in MARGIN_GROUP_NAMES:
+        g = OTHER_GROUP[0]
+    m = margin(c)
+    # a school corporation that also votes in another county (2026-11-18, civic/overall.py): its margin is the
+    # overall one where the guide has the overall result; otherwise the county portion is not ranked as the contest's
+    basis = "county"
+    if m is not None:
+        inf = OV.info(ed, c)
+        if inf["basis"] == "overall":
+            om_ = OV.overall_margin(ed, c)
+            m, basis = (om_ if om_ is not None else {"reason": "overall margin not measurable"}), "overall"
+        elif inf["basis"] in ("pending", "missing"):
+            m, basis = {"reason": PORTION_REASON}, "portion"
+    kind = "unc" if m is None else (m["band"] if "pts" in m else "nc")
+    o = ed.offices.get(c["office_id"]) if c.get("office_id") else None
+    dist = seat_district(c, o)
+    return {"c": c, "e": e, "g": g, "place": place or "(not stated)", "office": o, "district": dist,
+            "area": area_of(c, g, o, dist), "kind": kind, "m": m, "st": contest_status(c["rows"]),
+            "seat": c["office_id"] or _rest(c), "seat_name": seat_name(c["label"]), "basis": basis}
+
+
+def election_races(ed, election_id: str) -> list[dict]:
+    """The races of one election under the margin_races rule (phase 6 step 4, the election pages' Overview). Any
+    election in elections.csv, including those before 2010 that Compare leaves out."""
+    e = ed.elections[election_id]
+    out = []
+    for c in ed.contests.values():
+        if c["election_id"] == election_id:
+            r = _race_record(ed, c, e)
+            if r is not None:
+                out.append(r)
     return out
 
 
@@ -255,8 +314,10 @@ def _pts_text(m) -> str:
 # =========================================================================== margins: the page
 
 def build_margins(site):
+    """Compare elections: Close races (elections/compare/index.html; was elections/margins/, moved 2026-11-16 with its
+    content and ids unchanged)."""
     ed = site.ed
-    page = site.page("elections/margins/index.html", banners=True)
+    page = site.page(EP.COMPARE_PATH["margins"], banners=True)
     cites = page.cites
     els = _elections(ed)
     span = f"{els[0]['date'][:4]} to {els[-1]['date'][:4]}"
@@ -268,15 +329,16 @@ def build_margins(site):
     toc = [("short-answer", "The short answer"), ("by-level", "By level of government"), ("find", "Find a race"),
            ("all-races", "All races as a table"), ("rules", "What this page does not do"), ("gaps", "Gaps"),
            ("sources", "Sources")]
-    page.add(_hero(page, "Reference · Elections · By the numbers",
-                   f"Every race for local office decided inside the county from {span}: how many had no contest, and "
-                   "how close the others were. Past results only; the bands say nothing about future races.",
-                   ["county"], toc))
+    page.add(compare_hero(page, "margins",
+                          f"Every race for local office decided inside the county from {span}: how many had no contest, "
+                          "and how close the others were. Past results only; the bands say nothing about future races.",
+                          ["county"], toc))
 
     # ---- §1 the short answer
     tiles = [("unc", n_unc, "had no contest", "No more candidates on the ballot than seats to fill."),
              ("con", n_con, "were contested", "More candidates than seats, with every vote count recorded."),
-             ("nc", n_nc, "can't be measured", "The seat count is not in the data, or a vote count is missing."),
+             ("nc", n_nc, "can't be measured", "The seat count is not in the data, a vote count is missing, or only the "
+                                                "county's part of a multi-county race is in the guide."),
              ("all", n_all, f"races in all, {span}", "Decided by voters inside the county (scope below).")]
     page.add(section("short-answer", 1, "The short answer",
                      h("p", {"class": "mg-lede"},
@@ -296,7 +358,8 @@ def build_margins(site):
                                 cite=cites.cite_compact(src_votes),
                                 note="Uncontested races are in ink; the three margin bands in the accent color, darker for "
                                      "closer races. Colors never stand for a party."),
-                     h("div", {"class": "callout elx-def", "id": "bands"},
+                     # folded to keep the tab near 4 screens (phase 6 people step, 2026-11-16); #bands opens it
+                     see_all_fold("bands-fold", 0, h("div", {"class": "callout elx-def", "id": "bands"},
                        h("p", None, h("strong", None, "How the margin is measured. "),
                          "Margin in points = the votes of the last candidate inside the seats minus the votes of the next "
                          "candidate, divided by all votes cast in that contest. In a one-seat race that is the winner and "
@@ -307,6 +370,7 @@ def build_margins(site):
                        h("p", None, h("strong", None, "Uncontested. "), "No more candidates than seats. A canvass line that "
                          "totals all write-in votes is not a candidate, so a race with one named candidate for one seat is "
                          "uncontested whatever its write-in total; a write-in candidate the canvass names is a candidate.")),
+                                  label="How the margin is measured, the bands and what counts as uncontested", hint=None),
                      h("p", None, f"{n_con} races are contested, whatever party finished ahead. "
                                   f"{n_unc} uncontested races (no more candidates than seats) and {n_nc} races with missing vote "
                                   "counts or no recorded seat count have no margin. Statewide offices, and legislative districts in "
@@ -319,7 +383,8 @@ def build_margins(site):
 
     # ---- §2 by level of government (small multiples)
     groups = []
-    for g, lvl in MARGIN_GROUPS:
+    mgroups = margin_groups(races)
+    for g, lvl in mgroups:
         rs = [r for r in races if r["g"] == g]
         cg = _counts(rs)
         groups.append({"label": g, "counts": cg, "href": f"#lvl-{lvl}",
@@ -344,7 +409,7 @@ def build_margins(site):
     dshapes = load_district_shapes(ed, shapes) if shapes else None
     lines_from = _lines_from(dshapes)
     dmap = _find_map(page, ed, shapes, dshapes, by_area, lines_from)
-    g_ix = {g: str(i) for i, (g, _) in enumerate(MARGIN_GROUPS)}
+    g_ix = {g: str(i) for i, (g, _) in enumerate(mgroups)}
     places = sorted({r["place"] for r in races})
     p_ix = {p: str(i) for i, p in enumerate(places)}
     dists = sorted({r["district"] for r in races} - {""}, key=_dist_key)
@@ -361,13 +426,23 @@ def build_margins(site):
                                      h("span", {"class": "one-digest"}, _digest(_counts(by_area[k])))],
                                     body, item_id=f"area-{k}", cls="mg-area-fold")))
         if items:
+            # each level is one fold, "County · 13 areas", in a grid like the Offices hub's governments; choosing an
+            # area (map, link, old #area-<id>) or a filter opens it: pick_one's wrapper (one_wrap_see_all markup) that
+            # is also a filter group (phase 6 people step, 2026-11-16: this tab was 8.6 screens at 1280x900)
+            n = len(items)
             levels.append(h("section", {"class": "mg-level", "id": f"lvl-{lvl}", "aria-labelledby": f"lvl-{lvl}-h",
                                         "data-tf-group": True},
-                            h("h3", {"class": "mg-level-h", "id": f"lvl-{lvl}-h"}, lvl_name),
-                            h("ul", {"class": "mg-areas one-list"}, items)))
+                            h("details", {"class": "fold-details see-all mg-more", "id": f"lvl-{lvl}-more",
+                                          "open": True, "data-fold": "see-all", "data-one-wrap": True},
+                              h("summary", {"class": "fold-summary see-all-summary mg-level-sum"},
+                                h("h3", {"class": "mg-level-h", "id": f"lvl-{lvl}-h"}, lvl_name),
+                                h("span", {"class": "see-all-label"}, f"{n} area{'s' if n != 1 else ''}"),
+                                h("span", {"class": "fold-toggle", "aria-hidden": "true"})),
+                              h("div", {"class": "fold-body see-all-body"},
+                                h("ul", {"class": "mg-areas one-list"}, items)))))
     no_shape = [k for k in by_area if not _has_shape(k, shapes, dshapes)]
     finder = table_filter("mg-find", [
-        {"key": "office", "label": "Office", "all": "All offices", "options": [(g_ix[g], g) for g, _ in MARGIN_GROUPS
+        {"key": "office", "label": "Office", "all": "All offices", "options": [(g_ix[g], g) for g, _ in mgroups
                                                                                 if any(r["g"] == g for r in races)]},
         {"key": "place", "label": "Place", "all": "All places", "options": [(p_ix[p], p) for p in places]},
         {"key": "district", "label": "District", "all": "Any district", "options": _opts(dists)}],
@@ -377,7 +452,9 @@ def build_margins(site):
                                   "races, newest first, with the margin and the two candidates it compares. Every race links "
                                   "to its full result. Filters narrow the list to the seats of one office group, place or "
                                   "district."),
-                     dmap,
+                     # the map sits in a fold too (2026-11-16, same reason); a link into it opens it
+                     see_all_fold("find-map", 0, dmap, label="Show the map: pick an area to open its races",
+                                  hint=None) if dmap else None,
                      h("p", {"class": "muted"}, "Not on the map: ",
                        "; ".join(area_name(ed, k, by_area[k][0]["place"]) for k in sorted(no_shape, key=lambda k: _area_sort(ed, k))),
                        ". They are in the list below.") if no_shape else None,
@@ -401,7 +478,7 @@ def build_margins(site):
         trows.append([h("span", None, lab, h("span", {"class": "elx-sub muted"}, f" · {m['seats']} seats") if m["seats"] > 1 else None),
                       _election_short(e), f"{m['pts']:.2f}", f"{m['votes']:,}" + (" (tied)" if m["tie"] else ""),
                       KIND_LABEL[r["kind"]], _cand(a, bool(c.get("party_primary"))), _cand(b, bool(c.get("party_primary"))),
-                      plain_badge(r["st"], m["low"])])
+                      BASIS_WORDS[r["basis"]], plain_badge(r["st"], m["low"])])
         tattrs.append({"data-margin": f"{m['pts']:.4f}", "data-date": e["date"], "data-tf-year": e["date"][:4],
                        "data-tf-type": "primary" if "primary" in e["type"] else "general", "data-tf-band": r["kind"],
                        "data-tf-office": g_ix[r["g"]], "data-tf-place": p_ix[r["place"]],
@@ -409,7 +486,7 @@ def build_margins(site):
     years = sorted({e["date"][:4] for e in els if any(r["e"] is e for r in contested)}, reverse=True)
     table = see_all_table(
         "margins-table", ["Contest", "Election", "Margin (points)", "Votes apart", "Band", "Last candidate inside the seats",
-                          "Next candidate", "Status"], trows,
+                          "Next candidate", "Margin from", "Status"], trows,
         noun="race", caption="Margins in every race decided inside the county, closest first", numeric=(2, 3),
         min_width="60rem", row_attrs=tattrs,
         controls=[{"key": "year", "label": "Year", "all": "All years", "options": _opts(years)},
@@ -417,7 +494,7 @@ def build_margins(site):
                    "options": [("general", "General elections"), ("primary", "Primaries")]},
                   {"key": "band", "label": "Band", "all": "All bands", "options": [(bid, lab) for bid, lab, _, _ in BANDS]},
                   {"key": "office", "label": "Office", "all": "All offices",
-                   "options": [(g_ix[g], g) for g, _ in MARGIN_GROUPS if any(r["g"] == g for r in contested)]},
+                   "options": [(g_ix[g], g) for g, _ in mgroups if any(r["g"] == g for r in contested)]},
                   {"key": "place", "label": "Place", "all": "All places",
                    "options": [(p_ix[p], p) for p in places if any(r["place"] == p for r in contested)]},
                   {"key": "district", "label": "District", "all": "Any district",
@@ -489,9 +566,12 @@ def _race_row(page, r, on_map, lines_year) -> Markup:
         links.append(h("a", {"href": page.rel(f"map/index.html#race-{on_map[c['contest_id']]}")}, "How areas voted"))
     links = [x for x in links if x]
     seats = f" · {m['seats']} seats" if m and m.get("seats", 1) > 1 else ""
+    if r.get("basis") == "overall":
+        seats += " · margin from the whole school corporation's vote"
     earlier = (h("p", {"class": "mg-note"}, f"Held under the district lines in use before {lines_year}, not the ones on the map.")
                if lines_year and int(e["date"][:4]) < lines_year else None)
-    foot = h("p", {"class": "mg-ft"}, plain_badge(r["st"], bool(m and m.get("low"))),
+    foot = h("p", {"class": "mg-ft"}, status_badge(r["st"], page),
+             status_badge("low", page) if m and m.get("low") else None,
              [[" ", x] for x in links])
     if r["kind"] == "nc":
         reason = {"seat count not in data": "the seat count is not in the guide's data",
@@ -702,7 +782,7 @@ def _turnout_section(page, ed, els):
                          "Odd-year municipal" if e["type"] in MUNICIPAL_TYPES else "Countywide",
                          e["scope"], fmt_int(e["registered"]) or "not printed", fmt_int(e["ballots_cast"]) or "not printed",
                          f"{float(e['turnout_pct']):.2f}%" if e.get("turnout_pct") else "not printed",
-                         h("span", None, status_badge(e["status"], page), cites.cite(e["source_ids"]))])
+                         h("span", None, status_label(e["status"], page), cites.cite(e["source_ids"]))])
     ev = [e for e in els if e["type"] == "general"]
     mu = [e for e in els if e["type"] == "municipal_general"]
     return section("turnout", 1, "Turnout: odd vs even years",
@@ -765,15 +845,16 @@ def _straight_section(page, ed, els):
 
 
 def build_turnout(site):
+    """Compare elections: Turnout (elections/compare/turnout/; was elections/turnout/, moved 2026-11-16 unchanged)."""
     ed = site.ed
-    page = site.page("elections/turnout/index.html", banners=True)
+    page = site.page(EP.COMPARE_PATH["turnout"], banners=True)
     els = _elections(ed)
     toc = [("turnout", "Turnout: odd vs even years"), ("straight-party", "Straight-party ballots"),
            ("rules", "What this page does not do"), ("gaps", "Gaps"), ("sources", "Sources")]
-    page.add(_hero(page, "Reference · Elections · By the numbers",
-                   f"Turnout in every election in the guide's data from {els[0]['date'][:4]} to {els[-1]['date'][:4]}, "
-                   "always with the number of registered voters it is measured against, and how many ballots used a "
-                   "straight-party mark.", ["county"], toc))
+    page.add(compare_hero(page, "turnout",
+                          f"Turnout in every election in the guide's data from {els[0]['date'][:4]} to "
+                          f"{els[-1]['date'][:4]}, always with the number of registered voters it is measured against, "
+                          "and how many ballots used a straight-party mark.", ["county"], toc))
     page.add(_turnout_section(page, ed, els))
     page.add(_straight_section(page, ed, els))
     page.add(_rules_section(page, ["forecast", "party", "votes-map"]))
@@ -814,21 +895,9 @@ def _took_chart(page, ed, cur, fid):
 
 def office_card_href(page, ed, o) -> str | None:
     """The officeholder card of an office on its government's page (the card ids are office-<office id>)."""
-    u = ed.units.get(o["unit_id"], {})
-    ut = u.get("unit_type")
-    if ut in ("city", "town", "township"):
-        path = f"places/{o['unit_id']}/index.html"
-    elif o["unit_id"] in ("county", "sjc-courts"):
-        path = "county/index.html"
-    elif ut == "school_corporation":
-        path = "schools/index.html"
-    elif o["unit_id"] in ("in-house", "in-senate"):
-        path = "state/your-legislators/index.html"
-    else:
-        return None
-    if path not in page.site.by_path:
-        return None
-    return page.rel(f"{path}#office-{o['office_id']}")
+    # phase 6: every office has its own page (civic/offices.py); the old cards on places/county/schools moved there
+    from civic import offices as OF
+    return OF.href(page, o["office_id"])
 
 
 def _money_line(page, ed, o, t):
@@ -873,6 +942,12 @@ def build_officeholders(site):
                      h("p", None, h("a", {"href": page.rel("elections/how-it-works/index.html#vacancies")}, "How vacancies are filled")),
                      scope="county", ed=ed))
 
+    # each holder's name links to the person's page (2026-11-16, civic/people.py); the party stays plain text
+    def _person_link(pg, name):
+        from civic.people import href_for_name
+        u = href_for_name(pg, name)
+        return h("a", {"class": "person-link", "href": u}, name) if u else name
+
     # ---- every officeholder: one fold per government, rows filtered by level, government and how
     by_gov: dict[str, list] = {}
     for o, t in cur:
@@ -896,7 +971,8 @@ def build_officeholders(site):
             card = office_card_href(page, ed, o)
             lis.append(h("li", {**a, **here_attrs(ed, o["unit_id"]), "class": "oh-row", "data-tf-row": True},
                          h("p", {"class": "oh-office"}, h("a", {"href": card}, o["title"]) if card else o["title"]),
-                         h("p", {"class": "oh-who"}, h("strong", None, t["person"]), f" · {_plabel(t.get('party'))}",
+                         h("p", {"class": "oh-who"}, h("strong", None, _person_link(page, t["person"])),
+                           f" · {_plabel(t.get('party'))}",
                            f" · since {since}"),
                          h("p", {"class": "oh-how"}, first_by_text(t)[0].upper() + first_by_text(t)[1:],
                            f"; current term by {now}. ", badges),
@@ -972,21 +1048,21 @@ def _card_links(*links):
 
 
 LANDSCAPE_MOVED = {  # old elections/landscape/ id -> its new home (site-root path#id)
-    "bands": "elections/margins/index.html#bands",
-    "margin-bands": "elections/margins/index.html#margin-bands",
-    "margin-bands-details": "elections/margins/index.html#margin-bands-details",
-    "margin-bands-table": "elections/margins/index.html#margin-bands-table",
-    "margin-bands-table-copy": "elections/margins/index.html#margin-bands-table-copy",
-    "margins-table": "elections/margins/index.html#margins-table",
-    "margins-table-copy": "elections/margins/index.html#margins-table-copy",
-    **{f"tf-margins-table-{k}": f"elections/margins/index.html#tf-margins-table-{k}"
+    "bands": "elections/compare/index.html#bands",
+    "margin-bands": "elections/compare/index.html#margin-bands",
+    "margin-bands-details": "elections/compare/index.html#margin-bands-details",
+    "margin-bands-table": "elections/compare/index.html#margin-bands-table",
+    "margin-bands-table-copy": "elections/compare/index.html#margin-bands-table-copy",
+    "margins-table": "elections/compare/index.html#margins-table",
+    "margins-table-copy": "elections/compare/index.html#margins-table-copy",
+    **{f"tf-margins-table-{k}": f"elections/compare/index.html#tf-margins-table-{k}"
        for k in ("year", "type", "band", "office", "place", "district", "q", "sort")},
-    "turnout-denominators": "elections/turnout/index.html#turnout-denominators",
-    "turnout-denominators-copy": "elections/turnout/index.html#turnout-denominators-copy",
-    **{f"turnout-{k}{s}": f"elections/turnout/index.html#turnout-{k}{s}"
+    "turnout-denominators": "elections/compare/turnout/index.html#turnout-denominators",
+    "turnout-denominators-copy": "elections/compare/turnout/index.html#turnout-denominators-copy",
+    **{f"turnout-{k}{s}": f"elections/compare/turnout/index.html#turnout-{k}{s}"
        for k in ("general", "primary") for s in ("", "-details", "-table", "-table-copy")},
-    "straight-party": "elections/turnout/index.html#straight-party",
-    "straight-party-h": "elections/turnout/index.html#straight-party-h",
+    "straight-party": "elections/compare/turnout/index.html#straight-party",
+    "straight-party-h": "elections/compare/turnout/index.html#straight-party-h",
     "up-next-table": "elections/calendar/index.html#up-next-table",
     "up-next-table-copy": "elections/calendar/index.html#up-next-table-copy",
     **{f"tf-up-next-table-{k}": f"elections/calendar/index.html#tf-up-next-table-{k}"
@@ -1003,18 +1079,21 @@ LANDSCAPE_MOVED = {  # old elections/landscape/ id -> its new home (site-root pa
 
 
 def build_landscape(site):
+    """Compare elections: Uncontested seats and overview (elections/compare/overview/; was elections/landscape/, moved
+    2026-11-16 unchanged)."""
     ed = site.ed
-    page = site.page("elections/landscape/index.html", banners=True)
+    page = site.page(EP.COMPARE_PATH["overview"], banners=True)
     cites = page.cites
     els = _elections(ed)
     span = f"{els[0]['date'][:4]} to {els[-1]['date'][:4]}"
     toc = [("turnout", "Turnout"), ("margins", "How close were the races?"), ("up-next", "Up next"),
            ("how-took-office", "How officeholders first took office"), ("rules", "What this page does not do"),
            ("gaps", "Gaps"), ("sources", "Sources")]
-    page.add(_hero(page, "Reference · Elections · By the numbers",
-                   "Four measures, the same for every race and every party, looking back only: turnout with its base, how "
-                   "close each race was, the seats on the next ballots, and how today's officeholders first took office. "
-                   "Each card leads to the full page.", ["county"], toc))
+    page.add(compare_hero(page, "overview",
+                          "Four measures, the same for every race and every party, looking back only: turnout with its "
+                          "base, how close each race was and how many seats had no contest, the seats on the next "
+                          "ballots, and how today's officeholders first took office. Each card leads to the full page.",
+                          ["county"], toc))
 
     # ---- turnout card
     gen = [e for e in els if e["type"] == "general" and e.get("turnout_pct")]
@@ -1028,7 +1107,7 @@ def build_landscape(site):
                         status_badge("computed", page, "Ranges from elections.csv turnout_pct."),
                         cites.cite_compact(_src(*(gen + mun)))) if gen and mun else None,
                       t_chart,
-                      _card_links((page.rel("elections/turnout/index.html"), "Turnout with its denominator, and straight-party ballots")))
+                      _card_links((page.rel("elections/compare/turnout/index.html"), "Turnout with its denominator, and straight-party ballots")))
 
     # ---- margins card
     races = margin_races(ed)
@@ -1050,8 +1129,8 @@ def build_landscape(site):
                                  [{"key": k, "label": lab, "mark": mk} for k, lab, mk in KINDS], noun=("race", "races"),
                                  ramp="alt", page=page, group_header="Races"),
                       close_p,
-                      _card_links((page.rel("elections/margins/index.html"), "Margins: how close each race was"),
-                                  (page.rel("elections/margins/index.html#find"), "Find a race on the map")))
+                      _card_links((page.rel("elections/compare/index.html"), "Margins: how close each race was"),
+                                  (page.rel("elections/compare/index.html#find"), "Find a race on the map")))
 
     # ---- up next card
     items, _ = _calendar_items(ed)
@@ -1084,16 +1163,101 @@ def build_landscape(site):
                                (page.rel("elections/how-it-works/index.html#vacancies"), "How vacancies are filled")))
     page.add(h("div", {"class": "ov-grid"}, turnout, margins, up_next, took))
     page.add(_rules_section(page, ["forecast", "party", "votes-map"]))
-    straight = {f"straight-{e['election_id']}{x}": f"elections/turnout/index.html#straight-{e['election_id']}{x}"
-                for e in straight_elections(ed, els) for x in ("", "-copy")}
-    page.add(moved_anchors(page, {**LANDSCAPE_MOVED, **straight}))
+    page.add(moved_anchors(page, landscape_moved(ed)))
     page.finish(gaps=_gaps(ed, "elections-landscape", ["gaps_results"], r"winner|seat count|multi-seat|2026 general"))
     return page
 
 
+# =========================================================================== Compare: the shared header, the old pages
+
+def compare_bar(page, current: str):
+    """The Compare tab bar: the tab template's markup and classes (civic/tabs.py tab_bar; static/css/tabs.css), the
+    current tab marked aria-current="page"."""
+    items = []
+    for k, label, path in EP.COMPARE_TABS:
+        a = {"class": "tab-link", "href": page.rel(path)}
+        if k == current:
+            a["aria-current"] = "page"
+        items.append(h("li", {"class": "tab" + (" is-current" if k == current else "")}, h("a", a, label)))
+    return h("nav", {"class": "tabs", "aria-label": "Compare elections: sections", "id": "tabs"},
+             h("ul", {"class": "tab-list"}, items))
+
+
+def compare_hero(page, current: str, dek, scopes, toc):
+    """Breadcrumb, the title "Compare elections", the tab bar, then the moved page's own lead, badges and contents."""
+    ed = page.ed
+    label = next(lab for k, lab, _ in EP.COMPARE_TABS if k == current)
+    return [h("header", {"class": "thing-head cmp-head"},
+              page.crumb_nav(),
+              h("h1", {"class": "thing-title"}, "Compare elections", h("span", {"class": "visually-hidden"}, f": {label}")),
+              h("p", {"class": "thing-facts"}, "Every election since 2010 on the same measures: close races, turnout and "
+                                               "seats with no contest. Each election also has its own page."),
+              compare_bar(page, current)),
+            h("div", {"class": "page-hero cmp-hero"},
+              h("p", {"class": "dek"}, dek),
+              h("p", {"class": "hero-badges"}, [[scope_badge(s, ed), " "] for s in scopes]),
+              h("nav", {"class": "toc", "aria-label": "On this page"},
+                h("ol", None, [h("li", None, h("a", {"href": f"#{a}"}, t)) for a, t in toc])))]
+
+
+COMPARE_BUILDERS = {EP.COMPARE_PATH["margins"]: build_margins, EP.COMPARE_PATH["turnout"]: build_turnout,
+                    EP.COMPARE_PATH["overview"]: build_landscape}
+_ID = re.compile(r'\sid="([^"]+)"')
+# where the ids the old pages forwarded now live (LANDSCAPE_MOVED is already written for Compare)
+RESULTS_MOVED = {"turnout-table": EP.COMPARE_PATH["turnout"] + "#turnout-denominators",
+                 "turnout-table-copy": EP.COMPARE_PATH["turnout"] + "#turnout-denominators-copy"}
+
+
+def compare_page(site, path: str):
+    """The Compare tab at ``path``, built once per site (a forwarding page needs its ids)."""
+    got = site.pages.get(path)
+    return got if got is not None else COMPARE_BUILDERS[path](site)
+
+
+def page_ids(page) -> set[str]:
+    return set(_ID.findall(str(page._main())))
+
+
+def landscape_moved(ed) -> dict:
+    """The ids the overview (elections/landscape/, now Compare: Uncontested seats and overview) forwards: its old cards
+    and the straight-party tables that moved to the turnout tab."""
+    straight = {f"straight-{e['election_id']}{x}": f"{EP.COMPARE_PATH['turnout']}#straight-{e['election_id']}{x}"
+                for e in straight_elections(ed, _elections(ed)) for x in ("", "-copy")}
+    return {**LANDSCAPE_MOVED, **straight}
+
+
+def build_moved(site, old: str | None = None):
+    """A page whose content moved to a Compare tab: its title, one line, a plain link (works without JavaScript;
+    static/js/elections.js follows it when the address has no #anchor) and a canonical link to the new page. Every id
+    the new page has is forwarded there by #moved-anchors (static/js/moved.js), with the ids the old page itself had
+    forwarded elsewhere (elections/landscape/'s old cards)."""
+    page = site.page(old)
+    new = page.entry.moved_to
+    label = next(lab for k, lab, p in EP.COMPARE_TABS if p == new)
+    dest = compare_page(site, new)
+    page.canonical = new
+    page.add(h("header", {"class": "page-hero moved-hero"},
+               h("p", {"class": "eyebrow mono"}, "Elections"),
+               h("h1", None, page.title),
+               h("p", {"class": "dek"}, "This page moved to ",
+                 h("a", {"href": page.rel(new), "id": "moved-link", "data-forward": True},
+                   f"Compare elections: {label}"),
+                 ". Every section is there, under the same names.")))
+    own = {"moved-anchors", "moved-link"}
+    moved = {i: new for i in page_ids(dest) if i not in own}
+    if old == "elections/landscape/index.html":
+        for k, v in landscape_moved(site.ed).items():
+            moved.setdefault(k, v)
+    page.add(moved_anchors(page, moved))
+    return page
+
+
 PAGES = {
-    "elections/landscape/index.html": build_landscape,
-    "elections/margins/index.html": build_margins,
-    "elections/turnout/index.html": build_turnout,
+    EP.COMPARE_PATH["overview"]: build_landscape,
+    EP.COMPARE_PATH["margins"]: build_margins,
+    EP.COMPARE_PATH["turnout"]: build_turnout,
+    "elections/landscape/index.html": lambda site: build_moved(site, "elections/landscape/index.html"),
+    "elections/margins/index.html": lambda site: build_moved(site, "elections/margins/index.html"),
+    "elections/turnout/index.html": lambda site: build_moved(site, "elections/turnout/index.html"),
     "officeholders/index.html": build_officeholders,
 }

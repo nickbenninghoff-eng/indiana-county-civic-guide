@@ -136,3 +136,14 @@ corrections are logged here.
 - run/precinct-committeeperson and the run/index card: next elections 2028 (Republican) and 2030 (Democratic) instead
   of "Confirm"; the LOW badge note no longer calls the four-year cycle unsourced.
 - Filing note: 2027 opening day (Jan 6) added from the 2027 brochure.
+
+## 2026-11-18: gap-fill round 2
+
+Source: `planning/gapfill/MERGE-PLAN.md`, applied by `planning/gapfill/merge/merge.py` (manifest `planning/gapfill/merge/manifest.csv`, one line per changed cell or added row). Inputs frozen by checksum (`planning/gapfill/FROZEN-SHA256.txt`): the staged rows, `review-people-verdicts.csv` and `review-numbers-verdicts.csv` after the appeal ruling, and `canvass2/agreed-official.csv`. Only PASS and PASS-WITH-EDIT rows were merged, with the edit applied; REJECT and UNVERIFIABLE rows were not. Rows whose edit was prose, or whose stored value did not match the old value the staged note named, went to `planning/gapfill/merge/needs-human.csv` and were not merged. Switches: CROSS_COUNTY_SCHOOLS_MULTICOUNTY=on, FRONK_FRANCISCO_COUNTY_ONLY=on, ADD_FEDERAL_UNITS=on, ADD_IN_STATE_UNIT=on, ADD_CANVASS_EXTRA_ROWS=on, BUMP_DATA_AS_OF=on, FIX_KARMAN_EASH=on, EXTRA_17_OFFICIAL_ROWS=off, RECONSTRUCT_2020P_Q2_WORDING=off.
+
+- `office_types.csv`: 0 cells changed, 6 rows added, 0 rows removed.
+- `unit_types.csv`: 0 cells changed, 1 row added, 0 rows removed.
+- `sources_indiana.csv`: 0 cells changed, 2 rows added, 0 rows removed.
+
+### Applied
+- Rows added: `IND-083`, `IND-084`, `supreme_court_justice`, `court_of_appeals_judge`, `tax_court_judge`, `superintendent_public_instruction`, `us_representative`, `us_senator`, `federal_chamber`. The type rows' wording is the integrator's (the plan gave none); it was reviewed by the applier but not checked against a source read this round. The two FindLaw statute URLs (IC 33-33-71-42, IC 4-6-1-2) were opened and checked on 2026-11-18.

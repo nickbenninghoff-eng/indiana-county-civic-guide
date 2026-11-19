@@ -12,7 +12,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "tools" / "site"))
 
-from civic.components import entity_list, status_badge  # noqa: E402
+from civic.components import entity_list, status_badge, status_symbol  # noqa: E402
 from civic.data import CONTEST_OFFICE_ALIASES, Edition  # noqa: E402
 from civic.html import Markup, h  # noqa: E402
 
@@ -22,14 +22,16 @@ class EntityListStatus(unittest.TestCase):
         return {"key": "a", "name": "Ada", "status": status, "body": h("p", None, "body")}
 
     def test_markup_status_is_not_escaped_again(self):
-        badge = status_badge("official")
+        badge = status_badge("computed")          # 2026-11-18: "official" is unmarked now, so test an exception
         out = str(entity_list("l", [self._item(badge)]))
         self.assertIn(str(badge), out)
         self.assertNotIn("&lt;span", out)
 
     def test_plain_key_goes_through_status_badge(self):
-        out = str(entity_list("l", [self._item("official")]))
-        self.assertIn(str(status_badge("official")), out)
+        # 2026-11-18: a plain key becomes the status symbol, a span (no link inside <summary>); official: no mark
+        out = str(entity_list("l", [self._item("secondary")]))
+        self.assertIn(str(status_symbol("secondary")), out)
+        self.assertNotIn("ent-status", str(entity_list("l", [self._item("official")])))
 
     def test_markup_other_than_a_badge_passes_unchanged(self):
         out = str(entity_list("l", [self._item(Markup("<em>custom</em>"))]))

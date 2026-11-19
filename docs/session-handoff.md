@@ -296,8 +296,12 @@ old home description; 5 = commit email) and "add my name Nick Benninghoff; Pheno
 for every page". All done (Roadmap Phase 5). Item 1: one Opus agent checked the run/ pages against the Election
 Division's guides and the statutes (10 fixes; log research/run-pages-check-2026-11-09.md); election office address
 confirmed in Chrome (4th Floor, 227 W. Jefferson); open: re-check when the 2027 Candidate Guide is out. Verified:
-locked build PASSED (113 pages), 418 tests OK, check_gov 0 errors / 23 warnings. Next: Netlify hosting (Nick:
-"let's get started on hosting this on my netlify account").
+locked build PASSED (113 pages), 418 tests OK, check_gov 0 errors / 23 warnings. Netlify (Nick: "let's get started on
+hosting this on my netlify account"; chose auto-deploy from GitHub): 11 page images tracked, main pushed (ef78b46);
+site st-joseph-civic-guide connected to the repo (branch `production`). DEPLOYED on Nick's "Deploy": production =
+ef78b46, LIVE at https://st-joseph-civic-guide.netlify.app (live checks passed; see Roadmap Phase 5). Later updates:
+fast-forward `production` to main and push, only on a fresh "deploy" (a hook enforces it). Roadmap + this file:
+uncommitted edits after ef78b46.
 
 ## Session 2026-11-09 (late) — canvass re-check + zero-MOE note (DONE, ALL UNCOMMITTED)
 Nick: "Can you try doing these?" = (1) re-check the 2010-2019 county canvasses, (2) explain the missing ± on
@@ -380,3 +384,284 @@ per "focus since 2010").
   read IC 20-23-4 board plans; older races on today's district lines OK?; path 6 stop order; Copy-all vs shown on
   dataset pages; earlier open items (license, commit email, Acrobat PDFs, deploy) unchanged.
 - Usage guard: stopped at ~09:40 after all work finished (never hit 90%).
+
+## Session 2026-11-16 — Phase 6: reorganize and beautify (IN PROGRESS, ALL UNCOMMITTED)
+Nick: site is "way too complex and complicated to navigate"; test case = money spent historically by mayor candidates
+in the Democratic primary. Plan: `planning/design-direction-2026-11-16.md` (section 0 = his decisions: structure
+approved; KEEP the three looks; person pages included; no mock-ups; home page uses the maps as a way in). Main session
+on Fable plans and verifies; implementation on Opus high/medium and Sonnet (Nick's instruction).
+- RUNNING: step 1 agent (Opus high): tab template, one-row header with a "Display" control for looks/theme, nav
+  Governments · Offices · Elections · Money · Learn, search with tab/keyword entries, Offices hub, 127 office pages
+  (Overview/Elections/Money/History/Sources). Report → planning/qa/phase6-step1-2026-11-16.md, screenshots →
+  planning/qa/phase6-shots/. It starts pm2 `civic-guide-preview` on :8787 and leaves it running.
+- NEXT: verify step 1 myself (build, tests, check_gov, browser: Mayor of South Bend Money tab), show Nick, then
+  steps 2-7 (government pages, election pages, people pages, money hub/browser, home map, Learn/footer, checks),
+  giving Nick an estimate and model choice before each large step. Old URLs must keep working (forwards).
+- No rollback commit exists for Phase 6 (Nick has not said "commit"); tree before step 1 = ef78b46 + the small
+  menu edit in shell.py/nav.css + Roadmap/handoff notes.
+- Step 1 DONE and VERIFIED by me (build PASSED 703 pages, 442 tests, check_gov 0; browser: offices/south-bend-mayor/money/
+  3.3 screens, no overflow; search "mayor money"/"mayor primary"/"sheriff results" return the right office tab). Agent
+  report: planning/qa/phase6-step1-2026-11-16.md (helper API in civic/tabs.py for the next page types). Preview pm2
+  `civic-guide-preview` running on :8787. Polish noted for later: money charts use only the left half of the width;
+  no Primary/General switch or party filter yet; 2023 figures are whole-cycle (primary + general together).
+  Agent's open questions for Nick: review link (744 files > 511 per artifact version), Offices hub 8.9 screens,
+  results page +116 KB from office links, folded older contests with JS off, data date twice in the footer.
+  WAITING ON NICK: look at step 1; go-ahead + model choice for steps 2-4 (governments, elections, people).
+- 2026-11-16 (later): Nick: "Yes, go ahead" on governments/elections/people; asked to fix the step-1 shortfalls and to
+  put a map on the Offices page ("look for other pages that may also benefit"). RUNNING, 3 Opus-medium agents, all
+  UNCOMMITTED: (1) offices fix-ups: Money-tab Primary/General + party filter, primary split where a pre-primary report
+  exists, chart width, Offices hub map + collapsed groups, audit of the 111 unmatched contests (aliases only when
+  certain) → planning/qa/phase6-offices2-2026-11-16.md; (2) government pages governments/<unit_id>/ with tabs + hub
+  with map, old places/county/schools URLs forward → planning/qa/phase6-governments-2026-11-16.md; (3) election pages
+  elections/<id>/ (with the vote map where precinct data exists), hub timeline, elections/compare/ →
+  planning/qa/phase6-elections-2026-11-16.md. AFTER: verify each (build, tests, check_gov, browser in all 3 looks),
+  review the alias list myself, then people pages (Opus medium), then home map / money hub / Learn. The Artifact
+  review link is being left to lapse unless Nick says otherwise (site > 511 files).
+- 2026-11-16 (night): offices round 2, government pages and election pages all DONE and VERIFIED together by me
+  (build PASSED 1,013 pages, 500 tests OK, check_gov 0, check_money OK, browser: 16 pages x 1280/400 x 3 looks x
+  light/dark no overflow). I made 3 integration fixes (shell.py ONPAGE_PAGES; civic/offices.py government_page;
+  pages/elections_numbers.py office_card_href). Reports: planning/qa/phase6-{offices2,governments,elections}-2026-11-16.md.
+  RUNNING: people pages agent (Opus medium) → planning/qa/phase6-people-2026-11-16.md (also trims county Overview
+  6.5 screens and compare 8.6 screens). NEXT after it: verify (read the merge table and ambiguous-name list myself),
+  then home page map, money hub/browser, Learn + footer, Sources-tab length, budget chart width. Decisions waiting on
+  Nick are listed in Roadmap Phase 6. Nick chose to KEEP the old claude.ai review link (not updated, not deleted).
+  Everything is UNCOMMITTED; no rollback commit (Nick has not said "commit").
+- 2026-11-17 ~00:30: people pages DONE and VERIFIED by me (build PASSED 3,480 pages, 534 tests OK in 701 s, check_gov 0,
+  no data edits; James Mueller page viewed). 764 person pages at people/<id>/, hub, people/notable/ (history/people/
+  forwards). Report planning/qa/phase6-people-2026-11-16.md (246-row merge table read by me). Site 137 → 246 MB;
+  build+check 291 s. For Nick to eyeball (same name across governments): Jamie Woods (PHM board + courts), Jason
+  Critchlow (PHM + Portage Twp + South Bend), Marcellus Lebbin (New Carlisle + PHM), Jim Fox (county + courts),
+  William Davis (D and R; no page), Lacy Hahn x3, Robert Middlebrook x3, Tom/Thomas McCormick.
+  NEXT (not started, needs Nick's go + model): home page map as the way in; money hub + campaign browser + compare
+  budgets; Learn hub + footer; shared header/JSON to shrink pages; Sources-tab length; budget chart width.
+  Everything UNCOMMITTED; Nick has not said "commit".
+- 2026-11-18: Nick said go ahead on the remaining round. RUNNING (all UNCOMMITTED): (A) home page led by the county
+  map, Opus medium → planning/qa/phase6-home-2026-11-18.md; (B) Money hub + campaign money browser + Compare budgets +
+  area-page forwards + budget chart width, Opus medium → planning/qa/phase6-money-2026-11-18.md; (C) Learn hub, footer,
+  learning paths re-pointed, stale-link sweep, Sonnet → planning/qa/phase6-learn-2026-11-18.md; (D) read-only gap
+  audit Nick asked for ("see if we need any more information/gaps filled"), Sonnet, ≤15 web searches →
+  planning/qa/gap-audit-2026-11-18.md. AFTER: verify A-C myself (build, full tests in background ~12 min, check_gov,
+  check_money, browser 3 looks x light/dark x 1280/400), then a cleanup round NOT yet launched: shared header/JSON
+  file to shrink pages (246 MB site), Sources tabs 4-8 screens, final checks. People pages reported to Nick as
+  verified; he has not yet answered on the same-name merges. No commit (Nick has not said "commit").
+- 2026-11-18 (later): gap audit DONE (planning/qa/gap-audit-2026-11-18.md, 22 ranked gaps; agent counts, not
+  spot-checked by me). Nick: "dispatch agents on filling all of those gaps if they can. Make sure there's an
+  adversarial agent reviewing everything before finishing/publishing on our site." This AUTHORIZES data edits for
+  these gaps, but only after review. DESIGN: 6 Sonnet research agents (≤25 searches each) STAGE proposed rows in
+  planning/gapfill/ (common rules: planning/gapfill/BRIEF.md) and do NOT touch data/ while the 3 build agents run:
+  results (2026 certified + older unofficial + precinct availability; may use Claude-in-Chrome for the 403 county
+  page), contests (seat counts/winners, 68 missing offices, ballot wording, party/start dates, same-name evidence),
+  contacts-a (county/cities/towns/schools: website, phone, meetings), contacts-b (townships/libraries/special),
+  boards (19 appointed boards' members + federal offices layer), budgets (New Prairie/Union-North budgets, debt
+  rows, APRA request draft for pre-2023 campaign money). THEN, in order: (1) verify the 3 build agents; (2) launch an
+  adversarial Opus reviewer over every staged row against its source → planning/gapfill/REVIEW.md; (3) only rows
+  that pass get merged into data/ (via the project's own tools/corrections pattern, with sources rows), pages wired
+  for new fields (contacts, meetings, board members, federal offices), full checks; (4) report to Nick. "Publishing"
+  was NOT a deploy trigger: deploy still needs Nick's explicit word, and nothing is committed.
+- 2026-11-18 (evening): gap-fill agents back so far, all STAGED + UNREVIEWED in planning/gapfill/: contacts-a (16
+  units, 17 rows), contacts-b (28 units, 20 rows), budgets (28 budget rows New Prairie/Union-North 2013-2026; 11
+  debt rows), boards (107 member rows, 12 changes) + federal (6 rows; county wholly in IN-2). Weak spot for the
+  reviewer: sjcindiana.gov, sjcpl.org, congress.gov 403 to plain fetch → rows from search summaries must be re-read
+  in a real browser or rejected; possibly-personal township contacts must be left out. NICK'S DECISIONS 2026-11-18:
+  (1) YES show whole-corporation budgets for the two cross-county schools with a note; (2) YES pull 2022-2025 debt
+  for every unit (budgets agent resumed → planning/gapfill/debt-allyears-rows.csv); (3) NO, do not send the APRA
+  records request (draft stays in budgets-report.md). Still running: 3 build agents, results agent, contests agent,
+  budgets follow-up. Schema needs at merge: per-unit contact/meeting file, appointed_board_members.csv, units rows
+  us-house/us-senate + office types us_representative/us_senator, 5 new sources_money rows.
+- 2026-11-18 (night): results agent back (STAGED, unreviewed): 2026g NOT certified yet (county page still unofficial;
+  election board met Nov 13, no minutes; state corrections window to noon Nov 20) → re-check after Nov 20; 91 later
+  unofficial vote changes staged (my recommendation to Nick: wait for the canvass; awaiting his answer); 47 older
+  rows → official from the state historical portal (12 small 2024p vote corrections); ~310 older local rows stay
+  unofficial. Debt follow-up back: 296 rows 2022/2023/2025 staged in debt-allyears-rows.csv (103/103 method match);
+  NOTE my id instruction was wrong — money files use `school-new-prairie` style ids, fix at merge.
+  NEW REQUEST from Nick: inline "Incomplete"/status words clutter heavily-read areas → replace with an asterisk-style
+  mark + one note at the bottom of the page. RUNNING: status-marks agent (Opus medium) →
+  planning/qa/phase6-status-marks-2026-11-18.md; it must not edit files owned by the 3 build agents until their
+  reports exist, and must prove no status is lost. Still running: home, money, learn build agents; contests agent.
+- 2026-11-18 (late): contests agent back (STAGED): 154 vote_for/winner rows (28 of 29 no-winner contests; canvass PDFs
+  do print "Vote For n"), 13 ballot-question wordings (11 of 12; 2024 PQ1 secondary only), 16 office rows (10 adds
+  covering 68 contests, 6 next_election), 1 unit, 1 term (McQueen R); party/start dates mostly not found; identity
+  evidence only (Jamie Woods = one person per news/Judicial Branch). ALL 6 gap-fill agents are in. RUNNING: two
+  ADVERSARIAL Opus-high reviewers (rules: planning/gapfill/REVIEW-BRIEF.md): review-numbers (budgets, debt, results,
+  contests) and review-people (contacts, boards, federal) → planning/gapfill/review-*-verdicts.csv + -review.md.
+  UNVERIFIABLE is not a pass. Also running: home, money, learn build agents; status-marks agent.
+  MERGE STEP (not started; after reviewers AND build agents finish): apply only PASS / PASS-WITH-EDIT rows to data/
+  with sources rows + corrections log, add schema for contacts/meetings/board members/federal, wire pages, full
+  checks. Owner-decision rows wait for Nick (2026 later-unofficial numbers: my advice is wait for the canvass).
+- 2026-11-18 (later still): home agent DONE (planning/qa/phase6-home-2026-11-18.md; I viewed it at 1280 default
+  look: good; to fix later: empty map panel until a click, headline 37 vs list 40 governments). Learn agent DONE
+  (planning/qa/phase6-learn-2026-11-18.md; viewed; cards' heavy borders to lighten; no "school board rules" guide
+  exists — asked Nick). Whole-site build --check and tests currently FAIL only because the money agent is mid-work;
+  I must re-run everything after it finishes. review-people DONE: 162 rows → contacts-a 6 PASS/10 EDIT/1 OWNER;
+  contacts-b 8/9/1 UNVERIFIABLE/2 OWNER; boards 84/27/6 REJECT/2 UNVERIFIABLE; federal 6 EDIT. Files
+  planning/gapfill/review-people-{verdicts.csv,review.md}. KEY FACT it found: the county has now posted signed
+  OFFICIAL 2026 general results dated 11/13/2026 (scan, no text layer; 77,946 ballots vs 77,909 stored) → I told the
+  running review-numbers agent to judge the 2026 rows against it. Owner decisions pending: Greene trustee phone,
+  Lincoln twp gmail/phone/address, Indian Village phone; rename SB "Board of Public Works"; 37 vs 40; school board
+  rules guide; apply 2026 official figures (needs reliable reading of a scan). Still running: money agent,
+  status-marks agent, review-numbers.
+- Nick 2026-11-18 on home questions: (1) headline "40 if it's more accurate" → home agent resumed to establish one
+  true definition + test; (2) map shapes stay embedded; (3) County = plain link above the map. Home agent also
+  filling the empty map panel (neutral alphabetical list; saved place opens on reader's governments). Nick approved
+  ("This is fine") lightening the Learn guide cards' heavy borders in the CLEANUP ROUND (not yet launched; also holds:
+  shared header/JSON shrink, Sources-tab length, final full checks).
+- review-numbers DONE (planning/gapfill/review-numbers-{verdicts.csv,review.md}; 653 verdict lines, 0 UNVERIFIABLE):
+  budgets 28 EDIT (ids must be school-new-prairie / school-union-north + `…-gateway-advertised-funds` basis ids; all
+  amounts re-derived OK), debt 8 PASS/3 EDIT, debt-allyears 284/12 EDIT, results 38 PASS/3 EDIT/17 REJECT/75 OWNER,
+  contests-rows 154 PASS, questions 6/7 EDIT, offices 7/5 EDIT/4 REJECT (John Glenn 2028 x4), units 1 OWNER, terms 1.
+  OFFICIAL 2026 COUNTY CANVASS IS POSTED: sjcindiana.gov/DocumentCenter/View/73081 (scan, 10 pp, "Official Results"
+  11/13/2026, signed; 77,946 ballots; sha256 26bd5c2b…). Reviewer read all 75 contests by eye (sums check): no winner
+  changes; all 162 stored 2026g rows covered; 17 staged rows differ from official by 1-3 votes; 17 more unstaged
+  rows differ. County-only contests + HD5/6/8 can go official; HD7, HD21, SD11, US House 2, statewide, appellate
+  retentions, public questions need state certification. MERGE RISKS: budgets.csv/debt.csv are OUTPUTS of
+  tools/build_money.py (hand rows would be lost on re-run; tool must not be run by agents) → merge must go through
+  the tool's inputs/config with Nick's OK, or a documented supplement file; never sum county + Redevelopment
+  Authority debt (same $50M bonds); add gap row Union-North 2018→2019 +45%; fix "Karman Leash" → "Karman L Eash"
+  (2018); 2023p R at-large vote_for 3 → 2; 17 more 2024p/2014 rows certifiable on the state portal; state portal
+  has official ballot wording 2016/2018/2020/2024. Before applying 2026 official figures: a SECOND independent
+  read of the scan (figures were read by eye once). All gap-fill research + both reviews are complete; merge NOT started.
+- Money agent DONE (planning/qa/phase6-money-2026-11-18.md): hub 2.2 screens; campaign money browser
+  (pages/money_browser.py; By office = money/campaigns/, by-election/, by-candidate/, by-place/, Committees, Every
+  filing); 30 area pages now a ranked chart + folds (South Bend 11,045 → 1,970 px); Compare budgets at money/budgets/
+  (1.84 MB → 419 KB, ~4.6 screens); budget charts full width; no URL retired; 736 old ids forward. I viewed
+  money/campaigns/ (Mayor of South Bend is row 1, $610,625.36 / $393,342.90). I resumed it to (a) make check.py accept
+  the `#show=primary|general|both[&party=]` state narrowly and (b) add direct Primary/General links on By office.
+  Home follow-up DONE: headline now "40 governments and public bodies" via governments.count() (neither 37 nor 40
+  "local governments" was true; strict count would be 38 — Nick may choose), County = plain row above the map, panel
+  shows an alphabetical area list before a choice. build --check currently FAILS (605): 579 `#fnote-*` hashes from the
+  status-marks agent's in-progress work (told it), rest on people/catherine-fanello/ pages (no <head>; probably a
+  concurrent-build race — CHECK in final verification). Told the status-marks agent: fix fnote targets, 6 tests,
+  duplicate "About these figures" heading on money/campaigns/, inline "incomplete/complete" under By office rows.
+  RUNNING: status-marks agent, money follow-up. THEN: my full verification (build, tests in background, check_gov,
+  check_money, browser sweep), then merge plan for gap-fill rows (needs Nick on build_money inputs + 2026 official).
+- Money follow-up DONE: check.py accepts `#show=…` narrowly; By office rows have Primary/General links; agent's
+  build --check PASSED 3,484 pages, 0 problems (full suite not re-run). NICK'S DECISIONS (2026-11-18, late):
+  contacts — Greene Twp phone LEAVE OUT; Lincoln Twp website link only; Indian Village phone LEAVE OUT (no meeting
+  place either); South Bend board rename → investigate and put before the adversarial reviewer BEFORE deciding, then
+  go ahead if right. 2026 canvass — YES apply official county figures after a second independent read; YES check
+  recount filings for New Carlisle + HD7 first. Reviewer's rejections — Nick wants an advocate to look for logical
+  reasons; none → stay rejected; reasons → argue with the adversarial reviewer to decide. RUNNING: advocate (Opus
+  high) → planning/gapfill/appeal.md (8 items incl. SB board name), then I resume reviewer aa367a51e959ddf63 to rule
+  on the appeal (one rebuttal round if needed); canvass second reader (Opus high, blind until its read is frozen) →
+  planning/gapfill/canvass2/{second-read.csv,agreed-official.csv,report.md} + recount filings check; status-marks
+  agent still running.
+- Canvass second read DONE (planning/gapfill/canvass2/report.md, written by me from the hand-back): blind read of all
+  10 pages, 76 contests, sums check, 162/162 stored rows AGREED with first reader, 0 unresolved; 108 stored values
+  change (+1..+25), no winner changes; New Carlisle margin 17, HD7 county portion 38. Recounts: none found on Recount
+  Commission page / MyCase / Election Board agendas as of 2026-11-18; candidate deadline passed noon Nov 17;
+  county-chairman petitions possible until noon Nov 20 → RE-CHECK after Nov 20 noon before marking New Carlisle and
+  HD7 official. agreed-official.csv is the merge input for 2026g votes. Still running: advocate, status-marks.
+- Advocate DONE (planning/gapfill/appeal.md): cases for county commissioners' 2026 schedule (signed, approved
+  12/16/2025, DocumentCenter/View/65571: "Tuesdays at 11:00am", "3rd Tuesday of the Month at 6:00pm") and John Glenn
+  ("generally the 1st and 3rd Tuesday … 7:00P.M."); Brown/Hannon were real past members (stay out); proposal: rename
+  SB board to "Board of Public Works" + add Board of Public Safety row (SB Municipal Code § 2-50). Reviewer
+  aa367a51e959ddf63 RESUMED to rule → planning/gapfill/appeal-ruling.md and updated review-people-verdicts.csv.
+  Also RUNNING: read-only Plan agent (Opus) producing the MERGE PLAN (generated-vs-hand files, tool runs needed,
+  schema additions, site code, order of operations) — it returns the plan in its final message; status-marks agent.
+  appointed_boards.csv is generated by tools/build_gov.py (~line 707); budgets.csv/debt.csv by tools/build_money.py.
+- APPEAL RULED (planning/gapfill/appeal-ruling.md; review-people-verdicts.csv updated and remains the single merge
+  source; boards now 122 lines: 82 PASS/32 EDIT/6 REJECT/2 UNVERIFIABLE): commissioners rule restored ("Tuesdays at
+  11:00 a.m.; third Tuesday of the month at 6:00 p.m.", 2026 schedule approved 12/16/2025); John Glenn rule restored
+  ("Generally the 1st and 3rd Tuesday of the month, 7:00 p.m."); PHM no rule; Brown, Hannon, SB adviser change,
+  Mishawaka clerk stay rejected; Rutten added to County Redevelopment Commission (vacancy = nonvoting adviser).
+  SOUTH BEND BOARDS (Nick's condition met: put before the reviewer, upheld on every point) → rename row
+  `south-bend-board-public-works` to "South Bend Board of Public Works" (id kept; 3 or 5 seats by IC 36-4-9-6(d), five
+  seated; Mayor, indefinite terms; Maradik President, Molnar Vice President) AND add `south-bend-board-public-safety`
+  (3 members listed as of 2 Jul 2026: Charles King III President, Alfred Kirsits, Pamela Claeys; city page says five
+  but lists three — never show five filled). Must be changed in tools/build_gov.py too. Not verified by reviewer:
+  Municode § 2-50 text, Brown 14 Jul minutes, exact Hannon→Moffitt dates.
+- MERGE PLAN SAVED: planning/gapfill/MERGE-PLAN.md (from the read-only Plan agent). KEY: no forbidden generator
+  needs to run — they are all stale vs their outputs; hand-merge by script + manifest is the established convention
+  (data/ is committed and clean at ef78b46, so `git diff -- data/` = the merge). Inputs frozen:
+  planning/gapfill/FROZEN-SHA256.txt. New finding: cross-county school contests (John Glenn, LaVille, New Prairie)
+  are multi-county → hold 28 staged winner flags, keep 10 results rows + 7 terms unofficial (ask Nick). 7 questions
+  for Nick are in section 7 of the plan. NEXT: (a) status-marks agent still running → then my full verification of
+  the site code; (b) merge step 1 = merge script + manifest DRY RUN (no data/ writes) can start now.
+- Status-marks agent DONE (planning/qa/phase6-status-marks-2026-11-18.md): no mark on official/complete figures;
+  symbols * incomplete, † unofficial, ‡ secondary, △ single source, ‖ computed, ¶ scan, ◊ low confidence, ? unverified,
+  ≈ unreliable estimate, ° no sampling error; one "About these figures" note per page; shared status said once in
+  captions. Leftovers for CLEANUP ROUND: campaign_map.py SVG labels "(incomplete)", ~525 "incomplete" words on
+  campaign pages, sitemap/footer "What the badges mean" wording, "computed" once per tab (my recommendation).
+  MY VERIFICATION of all site code (home, money, learn, marks), 2026-11-18: build --check PASSED 3,484 pages;
+  check_gov errors=0 (23 warnings); check_money OK; data/ untouched; full unittest result on the next line; viewed
+  home, learn, money/campaigns, mayor Money tab at 1280 default look. NOT yet re-swept by me: 3 looks x light/dark x
+  400 px on the new pages (agents report clean).
+
+OK
+netlify_prep: C:\Users\nickb\AppData\Local\Temp\tmpugwwozp7\st-joseph ready (full-document index.html, _headers, 404.html; CSP check passed)
+  → FULL SUITE: Ran 621 tests in 1253 s, OK. My browser sweep: 15 new/changed pages x 1280/400 x 3 looks x
+  light/dark (180 views) no horizontal overflow, no dangling #fnote links. SITE CODE FOR THIS ROUND IS VERIFIED
+  (home map, money hub/browser/compare budgets, learn hub/footer, status marks). Still UNCOMMITTED. Waiting on: merge
+  dry-run agent (planning/gapfill/merge/REPORT.md) and Nick's answers to MERGE-PLAN section 7 + "commit".
+- MERGE DRY RUN DONE (planning/gapfill/merge/REPORT.md, merge.py, manifest 1,801 lines, 146 checks pass, nothing
+  written to data/). needs-human.csv has 23 rows. PRIVACY: Greene trustee phone (574) 289-9942 is ALREADY in
+  data/ (units.csv notes, GOV-165 notes) — Nick decided "leave out", so it must be removed there too (see the grep
+  result reported to Nick for whether it is on the built site). Before --apply: Nick's answers to the switches,
+  checker edits (checker-changes.md), SCHEMA additions, banner decision. Then site code for new data (plan §5).
+
+### 2026-11-18 (late): Nick's answers on the merge; apply launched
+- Nick: "I'll go with your recommendations" on all 7 merge questions. Switches ON: cross-county schools multi-county,
+  Fronk/Francisco official + relabel, federal units, in-state unit, extra canvass rows, data_as_of → 2026-11-18,
+  Karman L Eash fix. The 17 extra 2014p/2024p rows: stage + review in a follow-up (switch stays OFF for now).
+- Banner approved: "2026 results: official county canvass; multi-county and statewide contests await state
+  certification."
+- Greene trustee phone already in committed data: Nick says KEEP it (do not remove). Not added to the new contacts row.
+- Status marks: ten symbols fine; keep "OFFICIAL" word in Status columns; say "computed" once per tab (cleanup round).
+- NEW requirements from Nick for the federal/statewide layer (site-code round):
+  1. Stay St. Joseph County centric: always the county map, never a U.S. or Indiana map; just show an indication that
+     a state or federal view is being looked at.
+  2. For inter-county, state and federal races show BOTH the St. Joseph County vote breakdown and the overall result.
+     => needs new data: district-wide / statewide totals for multi-county contests (not in results.csv today, which
+     holds county portions). Needs a research + adversarial review round before the site can show it. Not launched;
+     estimate to Nick first.
+- No "commit" word given: still uncommitted; no rollback point before the data merge (git diff -- data/ is the record).
+- Opus agent launched to set switches, update checkers (+tests), SCHEMA, run merge.py --apply, prove diff == manifest,
+  write planning/gapfill/applied.md. It must not touch tools/site/.
+
+### 2026-11-18: overall-totals round (Nick said yes to research + review + page round)
+- Staged in planning/gapfill/overall/: overall-a-rows.csv (226, state house/senate), overall-b-rows.csv (282, statewide,
+  retentions, cross-county schools 2018g-2024g), extra17-rows.csv (17). Reviewed by Opus:
+  review-overall-verdicts.csv + review-overall-review.md. A: 222 PASS/2 EDIT/2 OWNER; B: 250/18/12 REJECT/2 OWNER;
+  extra17: 12/5 EDIT. Every official figure matches the raw state exports (own parser; 81 hashes; 9 re-downloads).
+- Rulings: status wording "official results as reported to the Secretary of State" (never "certified"); pct + winner
+  published with the computed mark; Brown/Robb 2010 rejected (portal double count); Altice 2018 rejected and the
+  results.csv contest needs re-identifying vs county document 60006; Chamblee/Hostetler/Hurley dropped (county
+  retentions); 10 Court of Appeals rows electorate = statewide; 103 no-figure rows go to gaps, not results.
+- Owner decisions open: 2024g PQ1 county winner flag (clear it, show "Statewide: Yes (ratified)"); Wait/Dvorak 2026p
+  overall line for wholly-in-county districts (county 2,381/3,841 vs state 2,378/3,840).
+- Gaps: school boards 2010g-2016g overall; 2026g school boards other counties; no president / US Senate / US House
+  rows in results.csv at all (2026g US House county portion comes with the merge).
+- Not merged yet. Needs a merge step (new file for overall results + extra17 into results.csv) after the main apply.
+
+### 2026-11-18: main merge APPLIED and verified by the main session
+- merge.py --apply done by the Opus agent. Verified by me: check_gov errors=0 (24 warnings), check_money OK,
+  check_results 0/0, 34 new checker tests pass (tools/tests/test_checkers_gapfill2.py), results 2,351 rows,
+  2026g 166 rows = 124 official / 42 unofficial, banner + data_as_of 2026-11-18 set, 3 new CSVs present.
+  Record: planning/gapfill/applied.md, applied-dispositions.csv, merge/manifest.csv, merge/resolved-followups.csv.
+- Site build --check now FAILS (expected until the page round): elections/margins and elections/compare KeyError
+  'Other' because contest 2026g-us-house-2 matches nothing in classify() (elections.py:185-224 →
+  elections_numbers.py:451). Stale wording: county.py:74,:322; places.py:1001; elections.py:1254; meta.py:428,:471;
+  state.py:173-703; community_history.py:1204. Hard-coded question wording elections.py:1617-1641. Fronk/Francisco no
+  office alias, winner flags blank. Landing "184 elected seats" may include federal/statewide.
+- Open small items: edition.json working copy went CRLF→LF (git copy is LF; harmless); validate_indiana_csv.py
+  reports 10 errors (was 2; ids valid in other sources files; checker too narrow); 6 needs-human items left
+  (2011 Mishawaka question, 2020 Q2 wording, comptroller office, wording on new type rows, county RDC "what it
+  decides"); full test suite not run since the merge.
+- Merge #2 (overall totals → new overall_results.csv, extra17 → results.csv) launched on Opus:
+  planning/gapfill/overall/merge2/. Page round NOT launched: actual token use this round ran about 2x my estimates
+  (apply 428k, research 326k, review 251k), so the page round is more likely 700k-1M; told Nick, waiting for his word.
+
+### 2026-11-18: merge #2 APPLIED and verified; page round launched
+- Nick: page round in ONE round; 2024 PQ1: clear county winner flag, show "Statewide: Yes (ratified)" = yes;
+  wholly-in-county districts get no overall line, note on Wait/Dvorak 2026p = yes.
+- merge2 applied (planning/gapfill/overall/merge2/, applied2.md): new overall_results.csv 295 rows / 167 contests
+  (2010 → 2026 primary; none for 2026 general), columns contest_id,candidate,candidate_in_source,party,overall_votes,
+  overall_pct,overall_winner,overall_total_votes,derived,electorate,vote_for,status,confidence,source_ids,notes.
+  results.csv: 17 extra rows official (8 vote fixes). 13 rows held (2010 House 6/7/8: wholly-in-county not
+  established). 22 needs-human items in merge2/needs-human.csv (Altice 2018 misidentified; three county retentions
+  filed as state-retention; "final" wording on RES-047 + 41 notes; stale "Unofficial as of" clauses; etc).
+- Verified by me: check_results 0/0, check_gov 0 errors/24 warnings, check_money OK, 67 checker tests pass, spot
+  check of 2024 governor and PQ1 rows.
+- Page round launched on Opus (single agent), brief: planning/gapfill/PAGES-BRIEF.md; report to come at
+  planning/qa/phase6-gapfill-pages-2026-11-18.md. Build --check fails until it finishes.
+- Token use so far this round: apply 428k, research 326k, review 251k, merge2 363k.

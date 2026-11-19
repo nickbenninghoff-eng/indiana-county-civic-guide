@@ -33,6 +33,32 @@ from civic.neutrality import find_banned  # noqa: E402
 ALLOWED_STYLE_HOSTS = {"fonts.googleapis.com"}
 ALLOWED_SCRIPT_HOSTS = {"cdnjs.cloudflare.com", "cdn.jsdelivr.net", "unpkg.com", "cdn.tailwindcss.com", "code.jquery.com"}
 RESERVED_HASHES = {"settings", "sidebar", "customize", "upgrade", "downloads"}
+# An office Money tab's switch state in the address (static/js/offices.js parseHash, phase 6 step 5 follow-up,
+# 2026-11-18): "show=primary|general|both", optionally "&party=<code>". It is the one fragment allowed outside the
+# letters/digits/hyphens rule, and only on a page that ships the switch (#mt-ctl with that button, #mt-party with that
+# option, app.js which bundles offices.js). Any other key=value fragment is still a problem.
+MT_STATE_KEY = re.compile(r"[a-z]+=")
+MT_SHOW = {"primary", "general", "both"}
+
+
+def money_tab_state_problems(frag: str, target_src: str) -> list[str]:
+    """Why a key=value fragment is not a valid Money-tab state for the target page's source ([] when it is)."""
+    parts = frag.split("&")
+    keys = [kv.partition("=")[0] for kv in parts]
+    vals = {k: unquote(kv.partition("=")[2]) for k, kv in zip(keys, parts)}
+    if keys[0] != "show" or len(keys) > 2 or len(set(keys)) != len(keys) or (len(keys) == 2 and keys[1] != "party"):
+        return [f"state fragment #{frag} is not show=<view>[&party=<code>]"]
+    if 'id="mt-ctl"' not in target_src or not re.search(r'<script[^>]*src="[^"]*assets/app\.js"', target_src):
+        return [f"state fragment #{frag} points to a page without the Money-tab switch"]
+    out = []
+    if vals["show"] not in MT_SHOW or f'data-mt-show="{vals["show"]}"' not in target_src:
+        out.append(f"unknown view show={vals['show']}")
+    if "party" in vals:
+        sel = re.search(r'<select[^>]*id="mt-party".*?</select>', target_src, re.S)
+        codes = set(re.findall(r'<option value="([^"]*)"', sel.group(0))) - {""} if sel else set()
+        if vals["party"] not in codes:
+            out.append(f"party={vals['party']} is not a choice on that page")
+    return out
 # Bare class selectors that two area stylesheets may both define (class -> why it is harmless).
 CSS_DUP_ALLOWLIST: dict[str, str] = {}
 CSS_DIR = HERE / "static" / "css"
@@ -192,6 +218,9 @@ def run(site_dir) -> int:
             target = (p.parent / unquote(path)).resolve() if path else p
             if path and not target.is_file():
                 problems.append(f"{rel}: broken link {url}")
+                continue
+            if frag and target.suffix == ".html" and MT_STATE_KEY.match(frag):
+                problems += [f"{rel}: link {url}: {why}" for why in money_tab_state_problems(frag, raw.get(target, ""))]
                 continue
             if frag:
                 if frag in RESERVED_HASHES or frag.startswith("comment-"):

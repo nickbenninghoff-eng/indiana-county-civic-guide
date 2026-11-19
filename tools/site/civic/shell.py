@@ -12,7 +12,8 @@ import re
 from pathlib import Path
 
 from . import sitemap
-from .components import Citations, gaps_section, section, status_badge
+from .components import (Citations, drop_scoped, figure_notes, gaps_section, section, status_badge,  # noqa: F401
+                         status_label)
 from .data import fmt_date
 from .glyph import indiana_glyph
 from .html import Markup, esc, h, join, json_script
@@ -110,7 +111,17 @@ ONPAGE_PAGES = frozenset({
     "community/people/index.html", "elections/calendar/index.html", "places/south-bend/index.html",
     "community/income-and-work/index.html", "money/campaigns/mishawaka/index.html",
     "money/campaigns/south-bend/index.html", "elections/margins/index.html", "elections/results/index.html",
-    "money/campaigns/sbcsc/index.html"})
+    "money/campaigns/sbcsc/index.html",
+    "elections/compare/index.html"})   # phase 6 step 4: the margins page's content, now Compare: Close races
+# phase 6 step 3 (2026-11-16): these became small forwarding pages (their content is on governments/<id>/, in tabs)
+ONPAGE_PAGES = ONPAGE_PAGES - {"county/index.html", "places/mishawaka/index.html", "places/south-bend/index.html"}
+# phase 6 step 4: elections/margins/ is a forwarding page too (its content is elections/compare/, listed above)
+ONPAGE_PAGES = ONPAGE_PAGES - {"elections/margins/index.html"}
+# phase 6 step 5 (2026-11-18): Compare budgets and the campaign area pages are short now (their detail is in folds or
+# on government Money tabs), with no table of contents
+ONPAGE_PAGES = ONPAGE_PAGES - {"money/budgets/index.html", "money/campaigns/county/index.html",
+                               "money/campaigns/mishawaka/index.html", "money/campaigns/south-bend/index.html",
+                               "money/campaigns/sbcsc/index.html"}
 
 _LEGACY_EYEBROW = re.compile(r'<p class="eyebrow mono">[^<]*</p>')
 
@@ -161,6 +172,30 @@ class Site:
         return written
 
 
+# A page displays unofficial figures when its content carries an UNOFFICIAL status badge or mark (phase 6 step 1)
+# (2026-11-18: and the symbol mark or section caption of the "About these figures" system, components.figure_mark)
+_UNOFFICIAL_MARK = re.compile(r'class="badge badge-unofficial"|class="smark smark-is-unofficial"'
+                              r'|data-fmark="unofficial"|data-fscope="[^"]*\bunofficial\b')
+_TAGS = re.compile(r"<[^>]+>")
+# the symbol marks and section-wide statuses a page uses (components.figure_mark / scope_attrs), and the space a call
+# site left before a mark (a mark sits right against its figure, like a footnote sign)
+_FMARK_USE = re.compile(r'data-f(?:mark|scope)="([^"]+)"')
+_FMARK_SPACE = re.compile("(?:[ \t\r\n]|&nbsp;|&#160;|\u00a0)+(?=\u2060<(?:a|span) class=\"fmark )")
+# legends that show every badge or mark to define it (about/#badges, an office's Sources tab #marks) are not figures
+_LEGENDS = re.compile(r'<(dl|ul) class="(?:badge-defs|marks-key)"[^>]*>.*?</\1>', re.S)
+
+
+def shows_unofficial(main_html: str, year: str | None = None) -> bool:
+    """True when a page's content (its <main> HTML) shows a figure whose status is unofficial: an UNOFFICIAL badge
+    (components.status_badge) or mark (civic/tabs.py status_mark), outside the legends that define the badges. With
+    ``year``, the content must also name that year, so a page showing only older election-night figures (the 2015 city
+    election is still labelled unofficial in results.csv) does not get the 2026 notice."""
+    html = _LEGENDS.sub("", main_html)
+    if not _UNOFFICIAL_MARK.search(html):
+        return False
+    return not year or re.search(rf"\b{re.escape(year)}\b", _TAGS.sub(" ", html)) is not None
+
+
 class Page:
     def __init__(self, site: Site, path: str, title: str, description: str, entry=None,
                  banners: bool = False, body_class: str = ""):
@@ -174,6 +209,12 @@ class Page:
         self.body_class = body_class
         self.cites = Citations(site.ed)
         self.parts: list[Markup] = []
+        # added 2026-11-16 (phase 6 step 4): a site path for <link rel="canonical"> (a forwarding page names the page
+        # its content moved to); None writes no canonical link
+        self.canonical: str | None = None
+        # added 2026-11-16 (phase 6 step 3): extra <head> tags (a forwarding page's civic-moved-to meta, which
+        # tools/site/netlify_prep.py turns into a 301; pages/governments.py forward_page)
+        self.head_extra: list = []
 
     # ---- links --------------------------------------------------------------------
     @property
@@ -223,29 +264,54 @@ class Page:
             h("link", {"rel": "preconnect", "href": "https://fonts.gstatic.com", "crossorigin": True}),
             h("link", {"rel": "stylesheet", "href": FONTS}),
             h("link", {"rel": "stylesheet", "href": self.rel("assets/style.css")}),
+            h("link", {"rel": "canonical", "href": self.rel(self.canonical)}) if self.canonical else None,
+            *self.head_extra,
         ]
         return join(tags, "\n")
 
     def _masthead(self) -> Markup:
+        """The header (phase 6 step 1, 2026-11-16): one row at desktop width,
+        logo · Governments · Offices · Elections · Money · Learn · search · "My place" chip · Display.
+        Below 1100 px: logo, search and a Menu button; the menu (``#primary-nav``) holds the nav, the chip and the
+        Display control. Without JavaScript the Menu button is a link to ``#primary-nav`` and CSS ``:target`` opens it;
+        static/js/nav.js turns it into a toggle. "Data as of", the version and "Not your county?" are in the footer.
+        Display (the three looks and light/dark) needs JavaScript, so it is hidden without it (looks.css: the look
+        boot script sets html[data-look])."""
         ed = self.ed
         cfg = ed.config
-        return h("header", {"class": "masthead"},
+        return h("header", {"class": "masthead site-head", "id": "site-head"},
                  h("a", {"class": "lockup", "href": self.rel("index.html"),
                          "aria-label": f"{cfg['series']}, {cfg['edition']}: home"},
                    indiana_glyph(ed, "glyph"),
                    h("span", {"class": "lockup-text"},
                      h("span", {"class": "series"}, cfg["series"]),
+                     h("span", {"class": "series-short", "aria-hidden": "true"}, "Civic Guide"),
                      h("span", {"class": "edition"}, cfg["edition"]))),
-                 h("div", {"class": "stamp"},
-                   h("span", {"class": "stamp-date"}, "Data as of ",
-                     h("time", {"datetime": cfg["data_as_of"]}, fmt_date(cfg["data_as_of"]))),
-                   h("span", {"class": "stamp-ver"}, f"v{cfg.get('version', '')}"),
-                   h("a", {"class": "stamp-county", "href": self.rel("indiana/index.html")}, "Not your county?"),
-                   h("button", {"type": "button", "class": "theme-toggle", "id": "theme-toggle",
-                                "aria-label": "Switch between light and dark theme"},
-                     h("span", {"class": "theme-icon", "aria-hidden": "true"}), "Theme")),
+                 # DOM order = visual order at desktop (nav, search, chip, Display), so keyboard focus follows the
+                 # row; below 1100 px both .head-menu parts fold behind the Menu button (#primary-nav:target ~
+                 # .head-tools opens the second part with JS off)
+                 h("div", {"class": "head-menu", "id": "primary-nav"},
+                   self._nav()),
                  self._search(),
-                 look_switch("head"))
+                 h("div", {"class": "head-menu head-tools", "id": "head-tools"},
+                   self._here_bar(),
+                   self._display()),
+                 h("a", {"class": "menu-btn", "id": "menu-btn", "href": "#primary-nav",
+                         "aria-controls": "primary-nav head-tools"},
+                   h("span", {"class": "menu-btn-icon", "aria-hidden": "true"}), "Menu"))
+
+    def _display(self) -> Markup:
+        """One compact control for the three looks and light/dark (Nick's decision D2: the looks stay, they leave the
+        header's main row). A <details> menu like the nav's; the ids look-switch-head and theme-toggle are kept."""
+        return h("details", {"class": "nav-dd display-menu", "id": "display-menu", "data-nav-menu": True},
+                 h("summary", {"class": "display-btn"},
+                   h("span", {"class": "theme-icon", "aria-hidden": "true"}), "Display"),
+                 h("div", {"class": "menu-panel display-panel"},
+                   look_switch("head"),
+                   h("p", {"class": "display-theme"},
+                     h("button", {"type": "button", "class": "theme-toggle", "id": "theme-toggle",
+                                  "aria-label": "Switch between light and dark theme"},
+                       h("span", {"class": "theme-icon", "aria-hidden": "true"}), "Light / dark"))))
 
     def _search(self) -> Markup:
         """Header search (static/js/search.js): an ARIA 1.2 combobox over assets/search-index.json.
@@ -257,7 +323,7 @@ class Page:
                    h("label", {"class": "visually-hidden", "for": "site-search-input"}, "Search the guide"),
                    h("span", {"class": "search-icon", "aria-hidden": "true"}),
                    h("input", {"type": "text", "id": "site-search-input", "name": "q", "class": "search-input",
-                               "placeholder": "Town, office or person", "autocomplete": "off", "spellcheck": "false",
+                               "placeholder": "Search offices, places, people", "autocomplete": "off", "spellcheck": "false",
                                "role": "combobox", "aria-expanded": "false", "aria-controls": "site-search-list",
                                "aria-autocomplete": "list", "aria-describedby": "site-search-help"}),
                    h("span", {"class": "visually-hidden", "id": "site-search-help"},
@@ -269,81 +335,47 @@ class Page:
                      h("p", {"class": "search-foot"}, h("a", {"href": "#browse"}, "Browse everything")))))
 
     def _here_bar(self) -> Markup:
-        """"You are here" bar (static/js/here.js fills it from localStorage `civic-place`). Hidden without JS."""
-        pick = self.rel("index.html#pick")
-        return h("div", {"class": "here-bar", "id": "here-bar", "hidden": True},
-                 h("p", {"class": "here-set", "id": "here-set", "hidden": True},
+        """The "My place" chip (phase 6 step 1; it replaces the "You are here" bar under the nav). Without JavaScript,
+        or with no saved place, it reads "My place" and links to Your place (your-governments/, which lists every place
+        to pick from). With a saved place static/js/here.js shows the place's name in it (the full list of the
+        reader's governments is its title) and the link stays. The old bar's ids are kept on the chip."""
+        yp = self.rel(sitemap.YOUR_PLACE)
+        cur = "page" if self.path == sitemap.YOUR_PLACE else None
+        return h("div", {"class": "here-bar place-chip", "id": "here-bar"},
+                 h("a", {"class": "chip here-none", "id": "here-none", "href": yp, "aria-current": cur},
+                   h("span", {"class": "here-pin", "aria-hidden": "true"}), "My place"),
+                 h("a", {"class": "chip here-set", "id": "here-set", "href": yp, "hidden": True, "aria-current": cur},
                    h("span", {"class": "here-pin", "aria-hidden": "true"}),
-                   h("strong", {"class": "here-label"}, "You are here:"), " ",
-                   h("span", {"class": "here-names", "id": "here-names"}),
-                   h("a", {"class": "here-change", "href": pick}, "Change", h("span", {"class": "visually-hidden"}, " your place"))),
-                 h("p", {"class": "here-none", "id": "here-none", "hidden": True},
-                   h("span", {"class": "here-pin", "aria-hidden": "true"}),
-                   h("a", {"class": "here-pick", "href": pick}, "Pick your place to see what applies to you")))
+                   h("span", {"class": "visually-hidden"}, "My place: "),
+                   h("span", {"class": "here-names", "id": "here-names"})))
 
     def _nav(self) -> Markup:
-        """Primary nav (Wave D batch 6, review 1.4 / Q1): Your place · Topics ▾ · Learn ▾ · About.
+        """Primary nav (phase 6 step 1): Governments · Offices · Elections · Money · Learn (sitemap.NAV).
 
-        Topics and Learn are <details> menus, so without JavaScript they open and close natively and every link is a
-        plain link; static/js/nav.js adds closing on Escape / outside click, one menu open at a time and aria-expanded
-        on the summary. The Topics menu keeps the id "ref-menu" (old fixtures and static/app.js use it). Each topic's
-        heading links to its hub page; the leaves come from sitemap.TOPICS."""
+        Each item is a link to its hub page plus a <details> dropdown of at most sitemap.MAX_DROPDOWN links, so
+        without JavaScript the hub links work and the dropdowns open and close natively; static/js/nav.js adds
+        aria-expanded, one menu open at a time, Escape and outside-click closing. The item the page sits under is
+        marked (class is-current; aria-current="page" on the hub link when the page is the hub). The Governments menu
+        keeps the id "ref-menu" and Learn "learn-menu" (older fixtures and static/app.js use them)."""
         by_path = self.site.by_path
-
-        def link(path, label, extra_cls=None):
-            target_path = path.split("#")[0]
-            current = "page" if target_path == self.path and "#" not in path else None
-            return h("a", {"href": self.rel(path), "aria-current": current, "class": extra_cls}, label)
-
-        groups = []
-        for t in sitemap.TOPICS:
-            slug = re.sub(r"[^a-z0-9]+", "-", t["name"].lower()).strip("-")
-            hid = f"nav-topic-{slug}"
-            leaves = []
-            for leaf in t["leaves"]:
-                paths = leaf if isinstance(leaf, tuple) else (leaf,)
-                paths = [p for p in paths if p.split("#")[0] in by_path]
-                if paths:
-                    leaves.append(h("li", None, join([link(p, sitemap.menu_label(by_path, p)) for p in paths],
-                                                     h("span", {"class": "menu-sep", "aria-hidden": "true"}, " · "))))
-            hub_cur = "page" if t["hub"] == self.path else None
-            groups.append(h("div", {"class": "menu-group"},
-                            h("p", {"class": "menu-head", "id": hid},
-                              h("a", {"class": "menu-hub", "href": self.rel(t["hub"]), "aria-current": hub_cur},
-                                t["name"], h("span", {"class": "menu-hub-arrow", "aria-hidden": "true"}))),
-                            h("ul", {"aria-labelledby": hid}, leaves)))
-        paths = [h("li", None,
-                   h("a", {"href": self.rel(p["stops"][0]["page"]) + f"#path-{p['id']}-1", "class": "menu-path"},
-                     h("span", {"class": "menu-path-title"}, p["title"]),
-                     h("span", {"class": "menu-path-meta mono"}, f" · about {p['minutes']} min")))
-                 for p in sitemap.PATHS]
-        learn = [h("div", {"class": "menu-group"},
-                   h("p", {"class": "menu-head", "id": "nav-learn-paths"},
-                     h("a", {"class": "menu-hub", "href": self.rel("index.html#paths")}, "Learning paths",
-                       h("span", {"class": "menu-hub-arrow", "aria-hidden": "true"}))),
-                   h("ul", {"aria-labelledby": "nav-learn-paths"}, paths)),
-                 h("div", {"class": "menu-group"},
-                   h("p", {"class": "menu-head", "id": "nav-learn-teach"}, "Teaching"),
-                   h("ul", {"aria-labelledby": "nav-learn-teach"},
-                     h("li", None, link(sitemap.LEARN_PAGE, "For teachers and groups"))))]
-        topic = sitemap.topic_of(self.path)
-        topics_current = topic is not None and self.path != sitemap.YOUR_PLACE
-        learn_current = self.path.startswith("teach/")
-        about_cur = "page" if self.path == sitemap.ABOUT_PAGE else None
-        return h("nav", {"class": "nav", "aria-label": "Primary"},
-                 h("ul", {"class": "nav-list"},
-                   h("li", None, link(sitemap.YOUR_PLACE, "Your place", "nav-place")),
-                   h("li", {"class": "nav-menu"},
-                     h("details", {"id": "ref-menu", "class": "nav-dd", "data-nav-menu": True},
-                       h("summary", {"class": "is-current" if topics_current else None}, "Topics"),
-                       h("div", {"class": "menu-panel menu-topics"}, groups))),
-                   h("li", {"class": "nav-menu"},
-                     h("details", {"id": "learn-menu", "class": "nav-dd", "data-nav-menu": True},
-                       h("summary", {"class": "is-current" if learn_current else None}, "Learn"),
-                       h("div", {"class": "menu-panel menu-learn"}, learn))),
-                   h("li", None, h("a", {"href": self.rel(sitemap.ABOUT_PAGE), "aria-current": about_cur,
-                                         "class": "is-current" if self.path.startswith("about/") else None},
-                                   "About"))))
+        here_item = sitemap.nav_of(self.path)
+        items = []
+        for it in sitemap.NAV:
+            links = [(p, label) for p, label in it["links"] if p.split("#")[0] in by_path][:sitemap.MAX_DROPDOWN]
+            cur = it is here_item
+            hub_cur = "page" if it["hub"] == self.path else None
+            lis = []
+            for p, label in links:
+                lc = "page" if p == self.path else None
+                lis.append(h("li", None, h("a", {"href": self.rel(p), "aria-current": lc}, label)))
+            items.append(h("li", {"class": "nav-item" + (" is-current" if cur else "")},
+                           h("a", {"class": "nav-top", "href": self.rel(it["hub"]), "aria-current": hub_cur},
+                             it["name"]),
+                           h("details", {"class": "nav-dd", "id": it["menu_id"], "data-nav-menu": True},
+                             h("summary", {"class": "nav-more"},
+                               h("span", {"class": "visually-hidden"}, f"More in {it['name']}")),
+                             h("ul", {"class": "menu-panel menu-list", "aria-label": it["name"]}, lis)) if lis else None))
+        return h("nav", {"class": "nav", "aria-label": "Primary"}, h("ul", {"class": "nav-list"}, items))
 
     def crumb_nav(self) -> Markup | None:
         """The page's breadcrumb (sitemap.crumbs) as the hero eyebrow: <nav class="crumbs eyebrow mono"
@@ -355,7 +387,7 @@ class Page:
         lis = []
         for i, (label, target) in enumerate(items):
             last = i == len(items) - 1
-            sep = h("span", {"class": "crumb-sep", "aria-hidden": "true"}, " · ") if i else None
+            sep = h("span", {"class": "crumb-sep", "aria-hidden": "true"}, " › ") if i else None
             if target:
                 body = h("a", {"href": self.rel(target)}, label)
             else:
@@ -363,22 +395,31 @@ class Page:
             lis.append(h("li", None, sep, body))
         return h("nav", {"class": "crumbs eyebrow mono", "aria-label": "Breadcrumb"}, h("ol", None, lis))
 
-    def _banners(self) -> Markup:
-        if not self.banners:
-            return Markup("")
+    def shows_unofficial(self, main_html: str | None = None, year: str | None = None) -> bool:
+        """Whether this page's content shows unofficial figures (module-level ``shows_unofficial``)."""
+        return shows_unofficial(str(self._main()) if main_html is None else main_html, year)
+
+    def _banners(self, main_html: str | None = None) -> Markup:
+        """The status banners of edition.json (the 2026 UNOFFICIAL notice), same wording as before. Changed
+        2026-11-16 (phase 6 step 1): no longer decided by the page's ``banners`` flag but by its content; a banner shows
+        only on a page that displays unofficial figures and names the banner's year (its id starts with the year:
+        "2026-unofficial")."""
         out = []
         for b in self.ed.config.get("status_banners", []):
+            m = re.match(r"(\d{4})", b.get("id", ""))
+            if not self.shows_unofficial(main_html, m.group(1) if m else None):
+                continue
             out.append(h("div", {"class": "banner banner-unofficial", "role": "note", "id": f"banner-{b['id']}"},
-                         status_badge("unofficial", self), h("p", None, b["text"])))
+                         status_label("unofficial", self), h("p", None, b["text"])))
         return join(out)
 
     def _footer(self) -> Markup:
+        """Footer (phase 6 step 1; columns 2026-11-18): four short labeled columns (sitemap.FOOTER_COLUMNS: Explore, People
+        and place, Data and sources, About the guide; together they are "Browse everything", the search's no-JavaScript
+        fallback), the neutrality line, the byline, and the stamp with the data date (once) and version."""
         ed = self.ed
         cfg = ed.config
-        browse = [("places/index.html", "Places"), ("county/index.html", "County"),
-                  ("schools/index.html", "Schools"), ("state/index.html", "State"),
-                  ("elections/index.html", "Elections"), ("money/index.html", "Money"),
-                  ("history/index.html", "History"), ("data/index.html", "Data")]
+        by_path = self.site.by_path
         disclosure = cfg.get("author_disclosure", "")
         if not disclosure or disclosure.startswith("["):
             disclosure_m = h("span", None, "Author disclosure statement: pending, to be published on ",
@@ -386,23 +427,31 @@ class Page:
         else:
             disclosure_m = h("span", None, esc(cfg.get("author_disclosure_short") or disclosure), " ",
                              h("a", {"href": self.rel("about/index.html#disclosure")}, "Full disclosure"), ".")
+        # phase 6 (2026-11-18): labeled columns (sitemap.FOOTER_COLUMNS); a link to a page that is not built is left out
+        columns = []
+        for heading, items in sitemap.FOOTER_COLUMNS:
+            items = [(p, l) for p, l in items if p.split("#")[0] in by_path]
+            if items:
+                columns.append(h("div", {"class": "foot-col"},
+                                 h("p", {"class": "foot-h mono"}, heading),
+                                 h("ul", None, [h("li", None, h("a", {"href": self.rel(p),
+                                                                     "aria-current": "page" if p == self.path else None}, l))
+                                                for p, l in items])))
         return h("footer", {"class": "site-footer"},
-                 h("nav", {"class": "browse", "id": "browse", "aria-label": "Browse everything"},
-                   h("span", {"class": "browse-head mono"}, "Browse everything"),
-                   h("ul", None, [h("li", None, h("a", {"href": self.rel(p)}, l)) for p, l in browse])),
+                 h("nav", {"class": "browse foot-cols", "id": "browse", "aria-label": "Browse everything"}, columns),
                  h("div", {"class": "footer-main"},
                    h("p", {"class": "np"}, "Built to published ",
                      h("a", {"href": self.rel("about/index.html#neutrality")}, "neutrality rules"),
                      ". Every figure links to its source. No ads, no endorsements."),
-                   h("ul", {"class": "footer-links"},
-                     h("li", None, h("a", {"href": self.rel("about/index.html#methods")}, "How we choose what to include")),
-                     h("li", None, h("a", {"href": self.rel("about/index.html#corrections")}, "Corrections log")),
-                     h("li", None, h("a", {"href": self.rel("about/sources/index.html")}, "Sources index")),
-                     h("li", None, h("a", {"href": self.rel("about/index.html#badges")}, "What the badges mean")),
-                     h("li", None, h("a", {"href": self.rel("about/index.html#changelog")}, "Changelog"))),
                    h("p", {"class": "byline"}, f"Built from public records by {cfg.get('author', '')}. ", disclosure_m)),
+                 h("p", {"class": "stamp footer-stamp mono"},
+                   h("span", {"class": "stamp-date"}, "Data as of ",
+                     h("time", {"datetime": cfg["data_as_of"]}, fmt_date(cfg["data_as_of"]))),
+                   h("span", {"class": "stamp-ver"}, f"v{cfg.get('version', '')}")),
+                 # the data date and version are in the stamp above (shown on screen and in print), so the colophon
+                 # names only the series and edition (phase 6, 2026-11-16: the date was printed twice)
                  h("p", {"class": "edition-stamp mono"},
-                   f"{cfg['series']} · {cfg['edition']} · Data as of {cfg['data_as_of']} · v{cfg.get('version', '')}",
+                   f"{cfg['series']} · {cfg['edition']}",
                    h("span", {"class": "print-only"}, f" · {self.path}")))
 
     # ---- output -------------------------------------------------------------------
@@ -417,6 +466,29 @@ class Page:
             return html
         return Markup(_LEGACY_EYEBROW.sub(lambda m: str(crumb), str(html), count=1))
 
+    def _with_figure_notes(self, main: Markup) -> Markup:
+        """Added 2026-11-18 (phase 6, "About these figures"): the page's symbol marks (components.figure_mark) sit right
+        against their figures (no space before a mark), and the page ends with one "About these figures" note listing
+        only the symbols it uses, each meaning once (a mark inside a section that states the same status once, in its
+        caption line, is dropped: components.drop_scoped). A tab page's note links on to the thing's Sources tab, another
+        page's to the definitions on About. A page with no marks gets no note. Static HTML: works with JavaScript off."""
+        html = _FMARK_SPACE.sub("", drop_scoped(str(main)))
+        kinds = {k for m in _FMARK_USE.finditer(html) for k in m.group(1).split()}
+        if not kinds:
+            return Markup(html)
+        from .tabs import tab_path
+        thing = self.entry.thing if self.entry is not None else ""
+        src = tab_path(thing, "sources") if thing else ""
+        if src and src in self.site.by_path and self.path != src:
+            more = h("span", None, "Where each figure comes from, and what every mark means: the ",
+                     h("a", {"href": self.rel(src + "#marks")}, "Sources tab"), ".")
+        elif src and self.path == src:
+            more = h("span", None, "Every mark is listed under ", h("a", {"href": "#marks"}, "What the marks mean"), ".")
+        else:
+            more = h("span", None, "Every mark is defined on ",
+                     h("a", {"href": self.rel("about/index.html#badges")}, "About: how figures are marked"), ".")
+        return Markup(html + str(figure_notes(kinds, more)))
+
     def render(self) -> str:
         paths_payload = {"root": self.root, "paths": [
             {"id": p["id"], "title": p["title"],
@@ -424,15 +496,19 @@ class Page:
                        for s in p["stops"]]} for p in sitemap.PATHS]}
         cls = "site" + (f" {self.body_class}" if self.body_class else "")
         onpage = ' data-onpage="1"' if self.path in ONPAGE_PAGES else ""
+        main = self._main()
+        # every person name printed with a party tag (and every candidate name in a results chart) links to the
+        # person's page (phase 6 people pages, 2026-11-16; civic/people.py link_names)
+        from .people import link_names
+        main = Markup(link_names(str(main), self))
+        main = self._with_figure_notes(main)
         body = join([
             h("a", {"class": "skip-link", "href": "#main"}, "Skip to content"),
             Markup(f'<div class="{esc(cls)}" id="site" data-root="{esc(self.root)}" data-page="{esc(self.path)}"{onpage}>'),
             self._masthead(),
-            self._nav(),
-            self._here_bar(),
-            self._banners(),
+            self._banners(str(main)),
             h("div", {"id": "path-bar", "class": "path-bar", "hidden": True, "aria-live": "polite"}),
-            h("main", {"id": "main", "tabindex": "-1"}, self._main()),
+            h("main", {"id": "main", "tabindex": "-1"}, main),
             self._footer(),
             Markup("</div>"),
             json_script("paths-data", paths_payload),
