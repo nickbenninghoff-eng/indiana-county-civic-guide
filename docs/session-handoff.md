@@ -665,3 +665,15 @@ netlify_prep: C:\Users\nickb\AppData\Local\Temp\tmpugwwozp7\st-joseph ready (ful
 - Page round launched on Opus (single agent), brief: planning/gapfill/PAGES-BRIEF.md; report to come at
   planning/qa/phase6-gapfill-pages-2026-11-18.md. Build --check fails until it finishes.
 - Token use so far this round: apply 428k, research 326k, review 251k, merge2 363k.
+
+### 2026-11-18 (evening): page round verified, committed; deploy in progress
+- Page round (Opus) finished all 10 brief items; verified by me: build PASSED 3,530 pages, 714 tests OK
+  (1924.958s), check_gov 0 errors, check_money OK, check_results 0/0, screenshots viewed.
+- Nick: "1) We don't need district 48. 2) Go ahead and add them to the follow-up with statewide holders later.
+  3) text is fine. 4) Add the governor page to the to-do list as well. 5) Let's commit, push, and deploy".
+- Commit 3d16286 on main (everything verified). planning/gapfill/ and planning/qa/phase6-shots/ are now git-ignored
+  (staged contact rows hold details Nick chose not to publish; ~108 MB) and stay local only.
+- After the commit: removed offices.csv row state-house-48 (logged in _corrections_applied_gov.md), offices count
+  tests 139 → 138, dropped "(county tally only)" from the election-page group headings and reworded three sentences.
+  Re-verifying (build + full suite), then second commit, push main, deploy = fast-forward production to main + push.
+- Follow-ups are in Roadmap.md "Gap-fill follow-ups". Cleanup round still not launched.

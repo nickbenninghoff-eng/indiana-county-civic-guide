@@ -51,8 +51,8 @@ CONTEST_LEVELS = [
     ("town", "Towns", ("Town offices",)),
     ("school", "School boards", ("School boards",)),
     ("legislature", "State legislature", ("State legislature",)),
-    ("state", "Statewide offices and courts (county tally only)", ("Statewide offices", "State court retention")),
-    ("federal", "Federal offices (county tally only)", ("Federal offices",)),
+    ("state", "Statewide offices and courts", ("Statewide offices", "State court retention")),
+    ("federal", "Federal offices", ("Federal offices",)),
     ("questions", "Public questions", ("Public questions",)),
     ("straight", "Straight-party ballots", ("Straight-party ballots",)),
     ("other", "Other contests", ("Other",)),
@@ -414,7 +414,8 @@ def _contests(ed, e, page):
                                          "party's county vote for Secretary of State at the last election, and the "
                                          "county's reports follow that order.", page.cites.cite("IND-056"),
                " A contest decided by voters outside the county too (statewide offices and questions, state courts, "
-               "legislative districts that cross the county line) shows the county tally only."))
+               "legislative districts that cross the county line) shows the St. Joseph County tally, with the overall "
+               "result beside it where the guide has it."))
 
 
 # =========================================================================== Map

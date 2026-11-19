@@ -215,13 +215,10 @@ class Pages(unittest.TestCase):
         listed = set()
         for b in blocks.values():
             listed |= set(re.findall(r'class="ofm-office" href="([a-z0-9-]+)/index.html"', b))
-        # 2026-11-18: Indiana House District 48 is a district of the 2001-2011 map (contests 2010 only); it has no area
-        # on today's map, so no panel lists it; it stays in the list below the map like every office
-        old_plan = {o["office_id"] for o in self.ed.tables["offices"]
-                    if o["unit_id"] in ("in-house", "in-senate") and "2001-2011 map" in o["title"]}
-        self.assertEqual(old_plan, {"state-house-48"})
-        self.assertEqual(listed, {o["office_id"] for o in self.ed.tables["offices"]} - old_plan)
-        self.assertRegex(h, r'<li class="ofh-row"[^>]*>.*?state-house-48/index\.html')
+        # every office is listed in some area's panel (Indiana House District 48, a 2001-2011 map district, was
+        # removed from offices.csv on 2026-11-18 on the owner's decision)
+        self.assertEqual(listed, {o["office_id"] for o in self.ed.tables["offices"]})
+        self.assertNotIn("state-house-48", {o["office_id"] for o in self.ed.tables["offices"]})
         # seats with no boundary file are said to have none; drawn districts point to their layer
         self.assertIn("No drawn boundary in the guide", blocks["walkerton"])
         self.assertIn("No drawn boundary in the guide", blocks["sbcsc"])
@@ -237,7 +234,7 @@ class Pages(unittest.TestCase):
             self.assertIn('data-fold="gov"', g)
             self.assertIn("data-tf-group", g)
         rows = re.findall(r'<li class="ofh-row"[^>]*>', h)
-        self.assertEqual(len(rows), len(self.ed.tables["offices"]))   # 139 since 2026-11-18
+        self.assertEqual(len(rows), len(self.ed.tables["offices"]))   # 138 since 2026-11-18
         self.assertTrue(all("data-here-layer" in r for r in rows))
         self.assertRegex(h, r'<p class="here-pre ofh-pre" id="ofh-pre" hidden')
 

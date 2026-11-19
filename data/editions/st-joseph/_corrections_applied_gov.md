@@ -172,3 +172,6 @@ Source: `planning/gapfill/MERGE-PLAN.md`, applied by `planning/gapfill/merge/mer
 - Owner 2026-11-18: Reagan and Marnocha offices next_election 2032 (IC 33-33-71-42, six-year terms after the 2026 county retentions).
 - Follow-ups resolved in the merge script: Sherman and Teshka term notes now quote the official county figures (both terms stay unofficial); South Bend and John Glenn contact_url hold one URL each (the council e-mail and the form label moved to notes); the truncated Osceola page address is not cited (the row cites the town site); stale notes on six boards rewritten from the reviewer's readings; South Bend Redevelopment Commission appointers in the wording the appeal ruling (item 3) accepted.
 - Left as they are: the Greene trustee phone already in units.csv and GOV-165 notes (owner 2026-11-18); the county Redevelopment Commission's what_it_decides ("detail not verified"; no reviewed replacement).
+
+### 2026-11-18 (later): Indiana House District 48 office removed
+- offices.csv: row `state-house-48` (2001-2011 map; contests 2010 only), added earlier the same day, removed on the owner's decision ("We don't need district 48"). The two 2010 contests stay in results.csv and overall_results.csv; they have no office page.

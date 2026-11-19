@@ -1711,7 +1711,8 @@ def build_judges(site):
                         h("h3", {"class": "elx-qgroup-h"}, jur, h("span", {"class": "elx-qgroup-n muted"},
                                                                   f" · {n} question{'s' if n != 1 else ''}")),
                         h("p", {"class": "muted elx-qgroup-note"},
-                          "The county tally only; the statewide result is decided by all counties."
+                          "The St. Joseph County tally. The statewide result is decided by all counties and is shown with the "
+                          "question where the guide has it."
                           if jur == "Statewide" else "Decided by voters in this area."),
                         entity_list(f"q-list-{_slug(jur)}", items, noun="question", heading_tag="h4",
                                     label=f"{jur} questions, newest first")))
@@ -1719,7 +1720,7 @@ def build_judges(site):
                      h("p", None, f"Every public question on ballots in the county in the guide's data, {len(qs)} in all, "
                                   "grouped by who voted on it and newest first. Each row shows the year, the outcome and the "
                                   "yes and no shares, and opens to the question's wording and result. Statewide questions "
-                                  "show the county tally only."),
+                                  "show the St. Joseph County tally, with the statewide result where the guide has it."),
                      here_slot("first", "q-groups"),
                      h("div", {"class": "elx-qgroups", "id": "q-groups"}, blocks), scope="county", ed=ed))
 

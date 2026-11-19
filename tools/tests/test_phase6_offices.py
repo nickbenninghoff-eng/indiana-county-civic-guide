@@ -77,8 +77,8 @@ class Model(unittest.TestCase):
     def test_every_office_has_exactly_its_tabs_in_the_sitemap(self):
         by_path = self.site.by_path
         self.assertIn(om.HUB, by_path)
-        # 2026-11-18 (gap-fill round 2): 127 + State House 48 + 3 federal + 8 statewide/appellate = 139
-        self.assertEqual(len(self.ed.tables["offices"]), 139)
+        # 2026-11-18 (gap-fill round 2): 127 + 3 federal + 8 statewide/appellate = 138 (State House 48 removed)
+        self.assertEqual(len(self.ed.tables["offices"]), 138)
         for o in self.ed.tables["offices"]:
             oid = o["office_id"]
             keys = om.office_tabs(self.ed, oid)
