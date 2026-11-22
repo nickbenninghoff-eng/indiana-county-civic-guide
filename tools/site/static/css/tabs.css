@@ -85,3 +85,8 @@ a.smark:hover { color: var(--ink); }
 @media print {
   .tabs { display: none; }
 }
+/* Sources tab (2026-11-18, maps-cleanup brief part B item 3): the sources grouped by kind, each group a fold showing
+   its count, stacked without gaps so the tab reads as one short list of groups */
+.src-groups > .src-group { margin: 0; }
+.src-groups > .src-group > .source-list { margin-top: 6px; }
+.tab-fold { margin: 0; }

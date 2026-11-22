@@ -15,7 +15,8 @@
   var site = doc.getElementById("site");
   var ROOT = (site && site.getAttribute("data-root")) || "./";
   var H = null;
-  try { H = JSON.parse((doc.getElementById("here-data") || {}).textContent || "null"); } catch (e) { H = null; }
+  /* shared data (assets/site-data.js, loaded before this script; 2026-11-18: no longer inlined on every page) */
+  H = (window.civicData && window.civicData.here) || null;
   if (!H || !H.places) return;
   function has(o, k) { return !!o && Object.prototype.hasOwnProperty.call(o, k); }
   function each(list, fn) { Array.prototype.forEach.call(list, fn); }

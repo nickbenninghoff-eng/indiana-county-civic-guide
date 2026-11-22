@@ -208,9 +208,9 @@ def entries(ed) -> list[Entry]:
         _e("teach/index.html", "For teachers and groups", "For teachers",
            "Lesson kits built on the learning paths, with objectives, prompts and handouts.", "mixed"),
         _e("about/index.html", "About and methods", "About & methods",
-           "Methods, neutrality policy, status badges, who made this, corrections and changelog.",
+           "Methods, neutrality policy, how figures are marked, who made this, corrections and changelog.",
            "mixed", "",
-           [("methods", "How we choose what to include"), ("badges", "Status and scope badges"),
+           [("methods", "How we choose what to include"), ("badges", "How figures are marked"),
             ("neutrality", "Neutrality policy"), ("counting", "How the layer diagram counts seats"),
             ("author", "Who made this"), ("corrections", "Corrections"), ("changelog", "Changelog"),
             ("sources", "Sources index")]),
@@ -391,7 +391,7 @@ FOOTER_COLUMNS = [
                           ("about/index.html#corrections", "Corrections log")]),
     ("About the guide", [("about/index.html", "About and methods"),
                          ("about/index.html#methods", "How we choose what to include"),
-                         ("about/index.html#badges", "What the badges mean"), ("about/index.html#looks", "Choose a look"),
+                         ("about/index.html#badges", "What the marks mean"), ("about/index.html#looks", "Choose a look"),
                          ("about/index.html#changelog", "Changelog")]),
 ]
 # The breadcrumb's first item for a page in an old topic: the nav item it now sits under

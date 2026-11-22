@@ -188,10 +188,10 @@ def build_about(site):
     c = page.cites
     c.href_base = page.rel("about/sources/index.html")   # citations open the entry on the sources page
     toc = [("author", "Who made this"), ("methods", "How it was made"), ("neutrality", "Neutrality policy"),
-           ("badges", "Badges"), ("counting", "Seat counting"), ("corrections", "Corrections"),
+           ("badges", "Marks"), ("counting", "Seat counting"), ("corrections", "Corrections"),
            ("changelog", "Changelog"), ("looks", "Choose a look"), ("gaps", "Gaps"), ("sources", "Sources index")]
     _hero(page, "About", "About and methods",
-          "Who made this guide, how it was made, the rules it follows to stay neutral, what the badges mean, "
+          "Who made this guide, how it was made, the rules it follows to stay neutral, how figures are marked, "
           "and every source it uses.",
           [scope_badge("indiana", ed), scope_badge("county", ed)], toc)
 
@@ -403,7 +403,7 @@ def build_about(site):
                      ed=ed))
 
     # ------------------------------------------------------------------ badges (foundation definitions kept)
-    page.add(section("badges", 4, "Status and scope badges",
+    page.add(section("badges", 4, "How figures are marked",
                      # 2026-11-18 (phase 6, "About these figures"): the normal case carries no mark; an exception is one
                      # small symbol beside the figure, explained once in the note at the bottom of each page
                      h("p", None, "A figure that is official and complete carries no mark. A figure that is an exception "
@@ -1052,7 +1052,7 @@ def build_teach(site):
                            h("p", None, "Follow-up: ", rv_link, " shows how published studies state their geography, "
                                         "method and limits."))),
                        h("li", None, "Two sources report different numbers for the same result. Which would you trust, and "
-                                     "why? Check the status badges."),
+                                     "why? Check the status marks."),
                        h("li", None, "What is one question about your local government you could not answer today? Where "
                                      "would you look next?")),
                      ed=ed))
@@ -1115,7 +1115,7 @@ def build_teach(site):
                        h("li", None, "Prompts ask for evidence: what the guide shows, what it does not show, and where to "
                                      "look next."),
                        h("li", None, "Prompts about community data talk about places, never about groups of people as voters."),
-                       h("li", None, "Facts in a lesson come from the guide's pages, with their sources and badges. "
+                       h("li", None, "Facts in a lesson come from the guide's pages, with their sources and status marks. "
                                      "The ", h("a", {"href": page.rel("about/index.html#neutrality")}, "neutrality policy"),
                          " applies to lessons too.")),
                      ed=ed))

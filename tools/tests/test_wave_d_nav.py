@@ -31,6 +31,7 @@ from civic.layers import build_layers  # noqa: E402
 from civic.shell import Site  # noqa: E402
 from pages import elections as E  # noqa: E402
 
+from anchor_fixtures import anchor_fixture  # noqa: E402  (old-anchor fixtures without retired data-block ids)
 FIXTURE = Path(__file__).parent / "fixtures" / "anchors_before_wave_d6.json"
 ID_RE = re.compile(r'\sid="([^"]+)"')
 HUB, HOW, YP, HOME = "elections/index.html", "elections/how-it-works/index.html", "your-governments/index.html", "index.html"
@@ -220,7 +221,7 @@ class Built(unittest.TestCase):
 
     # ------------------------------------------------------------------ elections hub + how-it-works
     def test_every_old_elections_index_id_resolves(self):
-        before = json.loads(FIXTURE.read_text(encoding="utf-8"))["ids"][HUB]
+        before = anchor_fixture(FIXTURE)["ids"][HUB]
         mm = moved_map(self.html[HUB])
         lost = []
         for i in before:
@@ -304,7 +305,7 @@ class Built(unittest.TestCase):
             self.assertIn(self.resolve(YP, href)[0], self.site.by_path, pid)
 
     def test_your_place_old_ids_kept_or_forwarded(self):
-        before = json.loads(FIXTURE.read_text(encoding="utf-8"))["ids"][YP]
+        before = anchor_fixture(FIXTURE)["ids"][YP]
         mm = moved_map(self.html[YP])["a"]
         lost = []
         for i in before:

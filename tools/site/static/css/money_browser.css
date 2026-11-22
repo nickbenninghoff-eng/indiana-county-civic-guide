@@ -66,3 +66,10 @@
 .mh-fact-v { display: block; font: 600 1.25rem/1.2 var(--f-mono); color: var(--ink); font-variant-numeric: tabular-nums; }
 .mh-fact-l { display: block; font-size: .86rem; color: var(--ink-2); }
 .cb-intro { margin: 0 0 8px; } .cb-intro .dek { font-size: 1rem; max-width: var(--measure); }
+/* Compare budgets (2026-11-18, maps-cleanup brief part B item 7): three per-resident lists side by side on a wide
+   screen, and a shorter money map; every row and figure is still on the page. */
+@media (min-width: 1180px) {
+  .cb-two.cb-three { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr); gap: 0 24px; }
+  .cb-three .mrw-row, .cb-three .mrw-axis { grid-template-columns: minmax(6rem, 9rem) minmax(0, 1fr); }
+}
+.cb-map .cmap-stage svg { max-height: 440px; }

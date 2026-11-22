@@ -43,7 +43,7 @@ from pages.elections import (BANDS, MUNICIPAL_TYPES, SCHOOLS, TOWNS, TYPE_LABEL,
                              _election_name, _election_short, _elections, _gaps, _hero, _holders_now, _opts, _place_order,
                              _plabel, _rest, _rule_p, _search_text, _src, _straight_party_years, _turnout_chart,
                              _unit_attrs, _unit_controls, candidates, classify, contest_status, is_question,
-                             is_writein_total, margin, moved_anchors, plain_badge, badge_key, first_by_text)
+                             is_writein_total, margin, moved_anchors, plain_badge, badge_key, first_by_text, _nav)
 
 # contests that are in the guide's results but not races decided by this county's voters between candidates
 SCOPE_OUT = ("Straight-party ballots", "Public questions", "Superior Court retention")
@@ -969,7 +969,9 @@ def build_officeholders(site):
             since = fmt_date(t["start"]) or "not in sources"
             hrows.append([o["title"], t["person"], _plabel(t.get("party")), how, now, since, badges])
             card = office_card_href(page, ed, o)
-            lis.append(h("li", {**a, **here_attrs(ed, o["unit_id"]), "class": "oh-row", "data-tf-row": True},
+            from civic import navmap as nm
+            lis.append(h("li", {**a, **here_attrs(ed, o["unit_id"]), "class": "oh-row", "data-tf-row": True,
+                                "data-nm": nm.tags_for(page).office(o["office_id"]) or None},
                          h("p", {"class": "oh-office"}, h("a", {"href": card}, o["title"]) if card else o["title"]),
                          h("p", {"class": "oh-who"}, h("strong", None, _person_link(page, t["person"])),
                            f" · {_plabel(t.get('party'))}",
@@ -987,6 +989,9 @@ def build_officeholders(site):
                      h("p", None, "Governments in the guide's order (county, courts, townships, cities, towns, school boards, "
                                   "legislature); inside each, offices in office order, never by party. Each office links to "
                                   "its card on the government's page."),
+                     _nav(page, "oh-list", "officeholder", "officeholders", "overview", folded=False,
+                          what="Choose a layer, then select an area to list only its seats and who holds them. Select "
+                               "it again to open its page."),
                      table_filter("oh-list", _unit_controls(ed, [o for o, _ in cur])
                                   + [{"key": "how", "label": "First took office by", "all": "Any way", "options": how_opts}],
                                   len(cur), noun="officeholder", search="Office or holder name",

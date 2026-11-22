@@ -179,31 +179,58 @@ def marks_key(keys=("official", "unofficial", "computed", "from_scan", "secondar
     return h("ul", {"class": "marks-key", "id": "marks"}, rows)
 
 
-def gaps_list(rows: list[dict], what: str) -> Markup:
-    """The gaps as a plain, always-open section (id="gaps"): on a Sources tab they are the content, not a fold."""
+def _gaps_body(rows: list[dict], what: str) -> Markup:
     if not rows:
-        body = h("p", None, f"No open gaps are recorded for {what}.")
-    else:
-        body = h("ul", {"class": "gaps-list"}, [
-            h("li", None, h("strong", None, g.get("item", "")),
-              h("span", {"class": "gap-why"}, f"Why missing: {g.get('why_missing', '')}") if g.get("why_missing") else None,
-              h("span", {"class": "gap-how"}, f"How to fill: {g.get('how_to_fill', '')}") if g.get("how_to_fill") else None)
-            for g in rows])
-    return tab_section("gaps", f"Gaps ({len(rows)})", body,
+        return h("p", None, f"No open gaps are recorded for {what}.")
+    return h("ul", {"class": "gaps-list"}, [
+        h("li", None, h("strong", None, g.get("item", "")),
+          h("span", {"class": "gap-why"}, f"Why missing: {g.get('why_missing', '')}") if g.get("why_missing") else None,
+          h("span", {"class": "gap-how"}, f"How to fill: {g.get('how_to_fill', '')}") if g.get("how_to_fill") else None)
+        for g in rows])
+
+
+def gaps_list(rows: list[dict], what: str) -> Markup:
+    """The gaps as a plain, always-open section (id="gaps")."""
+    return tab_section("gaps", f"Gaps ({len(rows)})", _gaps_body(rows, what),
                        lead=f"What the guide looked for about {what} and hasn't found or confirmed yet.")
 
 
+GAPS_FOLD_FROM = 4     # a Sources tab's gaps list this long or longer sits in a fold
+
+
+def _fold(fid: str, label: str, count: int | None, body) -> Markup:
+    """A fold on a Sources tab: ships open (JavaScript off: everything is on the page); static/js/folds.js closes it
+    on load and opens it when a link or the address points inside (#src-<id>, #marks, #gaps)."""
+    return h("details", {"class": "fold-details tab-fold", "id": fid, "data-fold": "sources", "open": True},
+             h("summary", {"class": "fold-summary"}, h("span", None, label),
+               (" ", h("span", {"class": "fold-count"}, f"({count})")) if count is not None else None,
+               h("span", {"class": "fold-toggle", "aria-hidden": "true"})),
+             body)
+
+
 def sources_body(page, gaps: list[dict] | None, *, notes: list | None = None, title: str = "") -> list:
-    """The Sources tab's body: notes on the figures, what the marks mean, the gaps and every source the thing's tabs
-    cite (one list, numbered as the footnotes on every tab; ids src-<id>, so every footnote link lands on its row).
-    Nothing here is folded: on this tab the lists are the content."""
+    """The Sources tab's body: notes on the figures, the gaps, every source the thing's tabs cite (numbered as the
+    footnotes on every tab; ids src-<id>, so every footnote link lands on its row) and what the marks mean.
+    Changed 2026-11-18 (maps-cleanup brief, part B item 3: these tabs ran 4 to 8 screens): the sources are grouped by
+    kind in folds with their counts (Citations.render_grouped), a long gaps list and the marks key are folds too.
+    Every fold ships open and folds.js opens the one a link points into, so every #src-, #gaps and #marks link lands."""
     out = []
     if notes:
         out.append(tab_section("notes", "Notes on these figures", h("ul", {"class": "tnotes"},
                                                                  [h("li", None, n) for n in notes])))
     if gaps is not None:
-        out.append(gaps_list(gaps, title or "this"))
-    out.append(tab_section("sources", f"Sources ({len(page.cites.order)})", page.cites.render_list(),
-                           lead=f"Every source cited on the tabs for {title or 'this page'}, numbered as the footnotes are."))
-    out.append(tab_section("marks-sec", "What the marks mean", marks_key()))
+        what = title or "this"
+        if len(gaps) >= GAPS_FOLD_FROM:
+            out.append(tab_section("gaps", f"Gaps ({len(gaps)})",
+                                   _fold("gaps-fold", "Show every gap", len(gaps), _gaps_body(gaps, what)),
+                                   lead=f"What the guide looked for about {what} and hasn't found or confirmed yet."))
+        else:
+            out.append(gaps_list(gaps, what))
+    n = len(page.cites.order)
+    out.append(tab_section("sources", f"Sources ({n})", page.cites.render_grouped(),
+                           lead=f"Every source cited on the tabs for {title or 'this page'}, numbered as the footnotes "
+                                "are" + (", grouped by kind: open a group to see its sources." if n >= page.cites.GROUP_FROM
+                                         else ".")))
+    out.append(tab_section("marks-sec", "What the marks mean", _fold("marks-fold", "Show every mark", None,
+                                                                     marks_key())))
     return out

@@ -28,7 +28,8 @@
     if (!el) return null;
     try { return JSON.parse(el.textContent); } catch (e) { return null; }
   }
-  var H = readJSON("here-data");
+  /* shared data (assets/site-data.js, loaded before this script; 2026-11-18: no longer inlined on every page) */
+  var H = (window.civicData && window.civicData.here) || null;
   if (!H || !H.places) return;
   function has(o, k) { return !!o && Object.prototype.hasOwnProperty.call(o, k); }
   function each(list, fn) { Array.prototype.forEach.call(list, fn); }

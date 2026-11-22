@@ -23,7 +23,12 @@ from collections import Counter, OrderedDict
 from pathlib import Path
 
 from .campaign_money import STATE_AREA, TYPES, party_parts, usd, usd_round, ytd_uses
-from .components import party_label
+from .components import FIGURE_MARKS, figure_mark, party_label
+
+# 2026-11-18 (maps-cleanup brief, part B item 4): an incomplete record is the fixed symbol of the status-marks system
+# (components.FIGURE_MARKS) in map labels and panel text, which cannot hold a link; the page's legend line carries the
+# linked mark, and the page's "About these figures" note says what it means once.
+INC = FIGURE_MARKS["incomplete"][0]
 from .data import fmt_date, split_ids
 from .html import Markup, h, json_script
 from .map import _label_boxes, shade_defs
@@ -176,7 +181,7 @@ def candidate_bars(race: dict) -> list:
             out.append([cand_label(c), "reports can't be added up", 0, ""])
         else:
             share = c["spent"] / tot * 100 if tot else 0.0
-            tag = "" if not c["missing"] else ", incomplete"
+            tag = "" if not c["missing"] else f" {INC}"
             out.append([cand_label(c) + tag, f"{share:.0f}%", round(share, 1), usd_round(c["spent"])])
     return out
 
@@ -185,7 +190,7 @@ def race_bars(races: list[dict]) -> list:
     tot = sum(r["spent"] or 0 for r in races)
     out = []
     for r in races:
-        lab = r["office"] + ("" if r["complete"] else " (incomplete)")
+        lab = r["office"] + ("" if r["complete"] else f" {INC}")
         if r["spent"] is None:
             out.append([lab, "no reports on file", 0, ""])
         else:
@@ -199,10 +204,10 @@ def record_line(races: list[dict]) -> str:
     if not races:
         return "No race in the guide's 2023 to 2026 results"
     if not inc:
-        return "Complete: every expected report is on file for every candidate"
+        return "Every expected report is on file for every candidate"
     if len(races) == 1:
-        return "Incomplete: " + " ".join(races[0]["reasons"][:2]) + (" More on the page." if len(races[0]["reasons"]) > 2 else "")
-    return f"Incomplete: {len(inc)} of {len(races)} races are missing at least one expected report"
+        return f"{INC} " + " ".join(races[0]["reasons"][:2]) + (" More on the page." if len(races[0]["reasons"]) > 2 else "")
+    return f"{INC} {len(inc)} of {len(races)} races are missing at least one expected report"
 
 
 def race_entry(ed, page, race: dict, href: str, d: str, layer: str, extra_cav=()) -> dict:
@@ -361,8 +366,10 @@ def _area_of_set(ds, areas) -> str:
 def _aria(name, spent, year, complete) -> str:
     if spent is None:
         return f"{name}: no reports on file for the {year} election. Open its page."
-    return (f"{name}: {usd(spent)} spent by all candidates for the {year} election, "
-            f"{'complete' if complete else 'incomplete'} record. Open its page.")
+    # the normal case (every report on file) says nothing; an incomplete record keeps its word for screen readers,
+    # where the bare symbol would be read as "star"
+    return (f"{name}: {usd(spent)} spent by all candidates for the {year} election"
+            f"{'' if complete else ', incomplete record (marked ' + INC + ')'}. Open its page.")
 
 
 def _area_item(ed, page, a, d, typ, it) -> dict:
@@ -410,9 +417,9 @@ def _legend(L: dict, ed, on: bool) -> Markup:
     notes = []
     if n:
         notes.append(h("p", {"class": "cf-legend-note"},
-                       f"{inc} of {n} shaded {'areas have' if n != 1 else 'area has'} an incomplete record: at least one "
-                       "expected report is not on file, so the figure is a floor, not a final total. The panel says "
-                       "which." if inc else "Every shaded area has every expected report on file."))
+                       f"{inc} of {n} shaded {'areas are' if n != 1 else 'area is'} marked ", figure_mark("incomplete"),
+                       " (the panel says which).") if inc else
+                     h("p", {"class": "cf-legend-note"}, "Every shaded area has every expected report on file."))
     notes += [h("p", {"class": "cf-legend-note"}, s["note"]) for s in L["sets"]]
     if L["kind"] == "area" and L["type"] in NO_SHAPES:
         notes.append(h("p", {"class": "cf-legend-note"}, NO_SHAPES[L["type"]]))
@@ -696,24 +703,24 @@ def _shared_legend(L: dict, on: bool) -> Markup:
         # one office on the map: nothing to compare, so no steps; the box has the figure
         title = "Spent by all candidates, latest election" + (f" ({sh['years'][0]})" if sh["years"] else "")
         one = ("No reports on file: not the same as $0." if not sh["n"] else
-               "Incomplete record: at least one expected report is not on file, so the figure is a floor. The box "
-               "says which." if sh["inc"] else "Every expected report is on file.")
+               h("span", None, "Marked ", figure_mark("incomplete"), " (the box says which).") if sh["inc"] else
+               "Every expected report is on file.")
         return h("div", {"class": "cmap-mlegend" + (" is-on" if on else ""), "data-layer": L["id"]},
                  h("p", {"class": "cmap-mlegend-h"}, title),
                  h("p", {"class": "cf-legend-note"}, "One office on this map, so it isn't shaded against others; "
-                                                     "its figures are in the box. " + one))
+                                                     "its figures are in the box. ", one))
     else:
         title = "Spent by all candidates, each office's latest election" + (
             f" ({' or '.join(sh['years'])})" if sh["years"] else "")
         lead = (f"The steps are shared by the {sh['count']} offices on these tabs, so the shade compares this office "
                 "with the others. ")
-    tail = (f"{sh['inc']} of {sh['n']} with reports have an incomplete record: at least one expected report is not "
-            "on file, so the figure is a floor. The panel says which." if sh["inc"] else
+    tail = (h("span", None, f"{sh['inc']} of {sh['n']} with reports are marked ", figure_mark("incomplete"),
+              " (the panel says which).") if sh["inc"] else
             ("Every expected report is on file." if sh["n"] else "No reports on file: not the same as $0."))
     return h("div", {"class": "cmap-mlegend" + (" is-on" if on else ""), "data-layer": L["id"]},
              h("p", {"class": "cmap-mlegend-h"}, title),
              h("ul", {"class": "cmap-legend is-on", "aria-label": f"Legend: {title}"}, items),
-             h("p", {"class": "cf-legend-note"}, lead + tail))
+             h("p", {"class": "cf-legend-note"}, lead, tail))
 
 
 def area_campaign_map(page, ed, shapes: dict, area: dict, layers: list[dict], types: OrderedDict,

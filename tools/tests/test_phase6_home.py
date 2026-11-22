@@ -35,6 +35,7 @@ from civic import sitemap  # noqa: E402
 from civic.data import Edition  # noqa: E402
 from civic.shell import Site  # noqa: E402
 
+from anchor_fixtures import anchor_fixture  # noqa: E402  (old-anchor fixtures without retired data-block ids)
 FIXTURE = ROOT / "tools" / "tests" / "fixtures" / "anchors_before_home.json"
 # the home page's size budget (bytes). The page before the redesign was 261,570 bytes with three map layers; the new
 # one carries nine layers and every area's links, about 286 kB at the 2026-11-18 build.
@@ -258,7 +259,7 @@ class Home(unittest.TestCase):
 
     # ------------------------------------------------------------------ old ids
     def test_every_old_anchor_resolves(self):
-        old = json.loads(FIXTURE.read_text(encoding="utf-8"))["ids"]
+        old = anchor_fixture(FIXTURE)["ids"]
         moved = json.loads(_between(self.html, '<script type="application/json" id="moved-anchors">', "</script>")
                            .split(">", 1)[1])
         missing = []

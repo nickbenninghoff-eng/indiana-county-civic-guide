@@ -18,8 +18,45 @@ def _round_path(d: str, places: int = 0) -> str:
     return _NUM.sub(r, d)
 
 
+GLYPH_ASSET = "assets/indiana-glyph.svg"
+
+
+def glyph_asset_svg(ed) -> str:
+    """assets/indiana-glyph.svg (2026-11-18, maps-cleanup brief part B item 2: the masthead drew the 92 county paths
+    inline on every page, ~12 KB each): the other counties as one group (#in-rest) and the edition county
+    (#in-edition). No colour in the file: each page's <use class="glyph-county|glyph-edition"> passes its CSS fill and
+    stroke down (inherited), so every look and theme still colours it; vector-effect is not inherited, so it is here."""
+    svg = ed.counties_svg
+    fips = ed.config["fips"]
+    rest = " ".join(_round_path(c["d"]) for c in svg["counties"] if c["fips"] != fips)
+    mine = " ".join(_round_path(c["d"]) for c in svg["counties"] if c["fips"] == fips)
+    # str(): esc() returns Markup, and Markup + str would escape the plain string (the whole file came out escaped)
+    vb, rest, mine = str(esc(svg["viewBox"])), str(esc(rest)), str(esc(mine))
+    return (f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="{vb}"><defs>'
+            f'<path id="in-rest" vector-effect="non-scaling-stroke" d="{rest}"/>'
+            f'<path id="in-edition" vector-effect="non-scaling-stroke" d="{mine}"/>'
+            '</defs></svg>\n')
+
+
+def write_glyph_asset(site) -> int:
+    dest = site.out / GLYPH_ASSET
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    text = glyph_asset_svg(site.ed)
+    dest.write_text(text, encoding="utf-8", newline="\n")
+    return len(text.encode("utf-8"))
+
+
+def indiana_glyph_use(ed, href: str, css_class: str = "glyph", title: str | None = None) -> Markup:
+    """The masthead glyph from the shared asset (``href`` = the page's relative link to GLYPH_ASSET)."""
+    t = title or f"Indiana, with {ed.county_label} filled in"
+    return h("svg", {"class": css_class, "viewBox": ed.counties_svg["viewBox"], "role": "img", "aria-label": t,
+                     "focusable": "false"}, h("title", None, t),
+             h("use", {"class": "glyph-county", "href": f"{href}#in-rest"}),
+             h("use", {"class": "glyph-edition", "href": f"{href}#in-edition"}))
+
+
 def indiana_glyph(ed, css_class: str = "glyph", title: str | None = None) -> Markup:
-    """Small locator glyph: faint county grid, edition county filled."""
+    """Small locator glyph: faint county grid, edition county filled (inline paths)."""
     svg = ed.counties_svg
     fips = ed.config["fips"]
     paths = []

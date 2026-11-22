@@ -41,6 +41,7 @@ from civic.data import Edition  # noqa: E402
 from civic.shell import ONPAGE_PAGES, Site  # noqa: E402
 from gov_moved import follow  # noqa: E402
 
+from anchor_fixtures import anchor_fixture  # noqa: E402  (old-anchor fixtures without retired data-block ids)
 FIXTURE = Path(__file__).resolve().parent / "fixtures" / "anchors_before_phase6_money.json"
 ID_RE = re.compile(r'\sid="([^"]+)"')
 HREF_RE = re.compile(r'href="([^"]*)"')
@@ -221,7 +222,7 @@ class Built(unittest.TestCase):
         self.assertIn("No adopted budget series in the guide's data", _text(html.unescape(h)))
 
     def test_budget_detail_is_on_government_money_tabs(self):
-        old = json.loads(FIXTURE.read_text(encoding="utf-8"))[BUDGETS]
+        old = anchor_fixture(FIXTURE)[BUDGETS]
         from pages.money import money
         mo = money(self.ed)
         for i in old:
@@ -249,7 +250,7 @@ class Built(unittest.TestCase):
 
     # ---------------------------------------------------------------- old URLs and anchors
     def test_every_old_anchor_resolves(self):
-        old = json.loads(FIXTURE.read_text(encoding="utf-8"))
+        old = anchor_fixture(FIXTURE)
         missing = []
         for page, ids in old.items():
             self.assertIn(page, self.html, f"{page} is no longer built")

@@ -614,6 +614,41 @@ class Citations:
             return h("p", None, "No sources are cited on these pages.")
         return h("ol", {"class": "source-list"}, items)
 
+    # the kinds of sources (sources_*.csv "kind"), in the order a Sources tab groups them (render_grouped)
+    KIND_GROUPS = [("primary", "Official records"), ("statute", "Laws and rules"), ("dataset", "Datasets"),
+                   ("derived", "Files the guide derived from these"), ("secondary", "Secondary sources"),
+                   ("news", "News reports")]
+    GROUP_FROM = 9      # a list this long or longer is grouped into folds
+
+    def render_grouped(self, fold_attrs: dict | None = None) -> Markup:
+        """The numbered source list grouped by kind (added 2026-11-18, maps-cleanup brief part B item 3: Sources tabs
+        ran 4 to 8 screens). Each kind is a fold showing its count; every item keeps its footnote number (``value``)
+        and its id src-<id>, so every footnote link lands on its row: the folds ship open (JavaScript off, every row
+        is on the page) and static/js/folds.js closes them on load and opens the one a link points into. A short list
+        (under GROUP_FROM) stays one plain list, as render_list."""
+        items = self._items()
+        if len(items) < self.GROUP_FROM:
+            return self.render_list()
+        labels = dict(self.KIND_GROUPS)
+        groups: dict = {}
+        for n, (sid, li) in enumerate(zip(self.order, items), 1):
+            kind = (self.ed.sources.get(sid) or {}).get("kind", "")
+            groups.setdefault(kind if kind in labels else "", []).append(
+                Markup(str(li).replace("<li ", f'<li value="{n}" ', 1)))
+        out = []
+        for kind, label in self.KIND_GROUPS + [("", "Other sources")]:
+            lis = groups.get(kind)
+            if not lis:
+                continue
+            out.append(h("details", {"class": "fold-details src-group", "id": f"src-kind-{kind or 'other'}",
+                                     "data-fold": "sources", "open": True, **(fold_attrs or {})},
+                         h("summary", {"class": "fold-summary src-group-sum"},
+                           h("span", {"class": "src-group-name"}, label), " ",
+                           h("span", {"class": "fold-count"}, f"({len(lis)})"),
+                           h("span", {"class": "fold-toggle", "aria-hidden": "true"})),
+                         h("ol", {"class": "source-list"}, lis)))
+        return h("div", {"class": "src-groups"}, out)
+
     def _items(self) -> list:
         items = []
         cited = set(self.order)

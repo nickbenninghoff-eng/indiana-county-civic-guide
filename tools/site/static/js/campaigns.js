@@ -70,7 +70,10 @@
     return a;
   }
 
+  /* the map navigator's area (static/js/navmap.js "nm-scope" on the table, data-nm-own): a row test, or null */
+  var nmTest = null;
   function matches(r, useComm) {
+    if (nmTest && !nmTest(r.tr)) return false;
     if (selCycle.value !== "" && r.cy !== selCycle.value) return false;
     if (selGroup.value !== "" && r.gi !== selGroup.value) return false;
     if (useComm && selComm.value !== "" && String(r.ci) !== selComm.value) return false;
@@ -301,6 +304,11 @@
   selGroup.addEventListener("change", function () { fillCommittees(); render(); });
   selComm.addEventListener("change", render);
   selSort.addEventListener("change", render);
+  table.addEventListener("nm-scope", function (ev) {
+    nmTest = ev.detail && typeof ev.detail.test === "function" ? ev.detail.test : null;
+    fillCommittees();
+    render();
+  });
   fillCommittees();
   render();
 })();

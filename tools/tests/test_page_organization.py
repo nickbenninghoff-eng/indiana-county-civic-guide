@@ -23,6 +23,7 @@ from civic.components import Citations, fold_section, gaps_section, table_filter
 from civic.data import Edition  # noqa: E402
 from civic.shell import Site  # noqa: E402
 
+from anchor_fixtures import anchor_fixture  # noqa: E402  (old-anchor fixtures without retired data-block ids)
 FIXTURE = Path(__file__).parent / "fixtures" / "anchors_before_page_split.json"
 ID_RE = re.compile(r'\sid="([^"]+)"')
 HREF_RE = re.compile(r'<a\b[^>]*\shref="([^"]+)"')
@@ -60,7 +61,7 @@ class Built(unittest.TestCase):
     def test_every_old_anchor_still_resolves(self):
         """Each id the old pages carried is still on its page, or is forwarded: data ids by the moved-anchors map
         (static/js/moved.js), about source ids by the about/ -> about/sources/ rule."""
-        before = json.loads(FIXTURE.read_text(encoding="utf-8"))["ids"]
+        before = anchor_fixture(FIXTURE)["ids"]
         moved = json.loads(re.search(r'id="moved-anchors">(.*?)</script>', self.html["data/index.html"]).group(1).replace("<\\/", "</"))
         lost = []
         for page, ids in before.items():
@@ -79,7 +80,7 @@ class Built(unittest.TestCase):
         self.assertEqual(lost, [])
 
     def test_calendar_ids_unchanged(self):
-        before = json.loads(FIXTURE.read_text(encoding="utf-8"))["ids"]["elections/calendar/index.html"]
+        before = anchor_fixture(FIXTURE)["ids"]["elections/calendar/index.html"]
         self.assertEqual([i for i in before if i not in self.ids["elections/calendar/index.html"]], [])
 
     def test_old_margin_controls_replaced(self):

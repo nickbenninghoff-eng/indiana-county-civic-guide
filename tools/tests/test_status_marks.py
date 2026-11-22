@@ -143,7 +143,7 @@ class Helpers(unittest.TestCase):
 
     def test_copy_csv_writes_the_word(self):
         js = (SITE_DIR / "static" / "app.js").read_text(encoding="utf-8")
-        self.assertIn('querySelectorAll(".fmark")', js)
+        self.assertIn('querySelectorAll(".fmark, .fquiet")', js)
         self.assertIn('getAttribute("data-word")', js)
 
 
@@ -219,9 +219,9 @@ class Built(unittest.TestCase):
         bad = []
         for path in self.paths:
             html = self.html(path)
-            if "fmark" not in html and "figure-notes" not in html:
+            if "fmark" not in html and "fquiet" not in html and "figure-notes" not in html:
                 continue
-            used = {k for k, _s, _h in L.symbols(html)} | L.scope_kinds(html)
+            used = {k for k, _s, _h in L.symbols(html)} | L.scope_kinds(html) | L.quiet_kinds(html)
             notes = L.note_entries(html)
             if not used and not notes:
                 continue                     # a legend only (the Sources tab's key): no figure marks, no note
@@ -250,7 +250,7 @@ class Built(unittest.TestCase):
         n_without = 0
         for path in self.paths:
             main = self.main(path)
-            if 'data-fmark="' not in main and 'data-fscope="' not in main:
+            if 'data-fmark="' not in main and 'data-fscope="' not in main and 'data-fquiet="' not in main:
                 n_without += 1
                 self.assertNotIn("figure-notes", main, path)
             # the old one-glyph marks are gone everywhere

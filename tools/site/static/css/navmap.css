@@ -1,0 +1,59 @@
+/* navmap.css: the map navigator (civic/navmap.py, static/js/navmap.js; maps on every major page, 2026-11-18).
+   The same tool as the home and Offices hub maps: the boundary map's fills (map.css, district_map.css: kinds of
+   government and neighboring districts only, never party or an amount) and the looks' segmented layer control
+   (looks.css .cmap-tabs / .cmap-tab). Calm: no box around the map, one hairline above the side column. Existing
+   tokens only, so all three looks and both themes follow; no literal colors. */
+.nm { margin: 6px 0 18px; }
+.nm-bar:not([hidden]) { display: flex; flex-wrap: wrap; gap: 8px 22px; margin: 0 0 10px; }
+.nm-tabgroup { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; min-width: 0; }
+.nm-tg-h { font: 600 .68rem/1.2 var(--f-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); }
+:root .nm-seg { display: inline-flex; flex-wrap: wrap; max-width: 100%; }
+:root .nm .nm-tab { min-height: 36px; padding: 7px 12px; font-size: .82rem; }
+.nm-grid { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 12px 28px; align-items: start; }
+.nm-grid-nomap { grid-template-columns: minmax(0, 1fr); }
+.nm-stage { min-width: 0; }
+.nm-svg { display: block; width: 100%; height: auto; max-height: min(56vh, 460px); background: var(--surface); }
+.nm-layer { display: none; }
+.nm-layer.is-on { display: inline; }
+.nm-a { cursor: pointer; }
+.nm-a:focus { outline: none; }
+.nm-a[aria-current] .cmap-s { stroke: var(--ink); stroke-width: 2.5px; }
+.nm-hl-g { pointer-events: none; }
+.nm-hl { fill: none; stroke: var(--ink); stroke-width: 3px; }
+.nm-a:focus-visible .cmap-s { stroke: var(--focus); stroke-width: 3.5px; }
+.nm-outline { pointer-events: none; }
+.nm-key { font-size: .78rem; margin: 6px 0 0; max-width: 62ch; }
+.nm-side { min-width: 0; border-top: 1px solid var(--line); padding-top: 10px; }
+.nm-status { margin: 0; max-width: none; font-size: .95rem; color: var(--ink); }
+.nm-peek { margin: 6px 0 0; min-height: 1.3em; font-size: .86rem; max-width: none; }
+.nm-actions { margin: 8px 0 0; display: flex; flex-wrap: wrap; gap: 8px; }
+.nm-actions[hidden], .nm-actions [hidden] { display: none; }
+.nm-others { margin-top: 12px; }
+.nm-others-h { font: 600 .68rem/1.2 var(--f-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3);
+  margin: 0 0 6px; }
+.nm-chips { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+.nm-chips li { margin: 0; }
+.nm-chip { display: inline-block; font: 600 .84rem/1.2 var(--f-sans); padding: 6px 10px; min-height: 32px;
+  color: var(--ink); text-decoration: none; background: var(--surface); border: 1px solid var(--line);
+  border-radius: var(--r-btn, 3px); cursor: pointer; }
+.nm-chip:hover { border-color: var(--ink); }
+.nm-chip:focus-visible { outline: 3px solid var(--focus); outline-offset: 1px; }
+.nm-chip[aria-current] { border-color: var(--ink); box-shadow: inset 0 0 0 1px var(--ink); }
+.nm-chip-note { font-size: .78rem; margin-left: 4px; }
+/* a "Show map" fold on long browse pages */
+.nm-fold > summary { cursor: pointer; list-style: none; display: flex; align-items: center; gap: 8px; width: fit-content;
+  font: 600 .9rem/1.2 var(--f-sans); color: var(--ink-2); padding: 6px 0; }
+.nm-fold > summary::-webkit-details-marker { display: none; }
+.nm-fold > summary:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+.nm-fold[open] > summary { margin-bottom: 8px; }
+/* rows the map's choice leaves out (lists with no table filter bar) */
+.nm-out { display: none !important; }
+@media (max-width: 760px) {
+  .nm-grid { grid-template-columns: minmax(0, 1fr); }
+  .nm-svg { max-height: 62vh; }
+  .nm-tabgroup, :root .nm-seg { width: 100%; }
+  :root .nm-seg .nm-tab { flex: 1 1 auto; }
+}
+@media print {
+  .nm { display: none !important; }
+}

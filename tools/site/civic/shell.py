@@ -15,7 +15,7 @@ from . import sitemap
 from .components import (Citations, drop_scoped, figure_notes, gaps_section, section, status_badge,  # noqa: F401
                          status_label)
 from .data import fmt_date
-from .glyph import indiana_glyph
+from .glyph import GLYPH_ASSET, indiana_glyph, indiana_glyph_use, write_glyph_asset  # noqa: F401
 from .html import Markup, esc, h, join, json_script
 
 # One css2 request for every look (static/css/looks.css): Ballot = Barlow Condensed + Barlow,
@@ -169,7 +169,45 @@ class Site:
             dest.write_text(html, encoding="utf-8", newline="\n")
             written.append(dest)
         self.search_index_bytes = write_index(self, rendered)
+        # added 2026-11-18 (maps on every major page): the map navigator's shared shapes, assets/navmap.svg
+        # (civic/navmap.py), one cached file every navigator page references instead of inlining geometry
+        from .navmap import write_asset
+        self.navmap_bytes = write_asset(self)
+        self.site_data_bytes = write_site_data(self)
+        self.glyph_bytes = write_glyph_asset(self)
         return written
+
+    def site_data(self) -> dict:
+        """The data every page's scripts share (2026-11-18, maps-cleanup brief part B item 2: it was inlined as two
+        JSON blocks, ~11 KB on each of 3,500 pages): the saved-place data (here.js, your_place.js) and the learning
+        paths (app.js, community.js, moved.js). Page links in it are site-relative; scripts add #site data-root."""
+        return {"here": self.here_data,
+                "paths": {"paths": [
+                    {"id": p["id"], "title": p["title"],
+                     "stops": [{"page": s["page"], "anchor": s["anchor"], "title": s["title"], "lead": s["lead"]}
+                               for s in p["stops"]]} for p in sitemap.PATHS]}}
+
+
+SITE_DATA = "assets/site-data.js"
+
+
+def site_data_js(site) -> str:
+    """assets/site-data.js: one cached script that sets window.civicData before assets/app.js runs (both deferred, so
+    they run in document order). JSON is valid JavaScript once U+2028/U+2029 are escaped; '<' is escaped as in
+    json_script, so the text is the same either way. Allowed by the CSP's script-src 'self'."""
+    import json
+    text = json.dumps(site.site_data(), ensure_ascii=False, separators=(",", ":"))
+    text = text.replace("<", "\\u003c").replace("\u2028", "\\u2028").replace("\u2029", "\\u2029")
+    return ("/* Shared data for every page's scripts (civic/shell.py site_data): saved place, learning paths. */\n"
+            f"window.civicData = {text};\n")
+
+
+def write_site_data(site) -> int:
+    dest = site.out / SITE_DATA
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    js = site_data_js(site)
+    dest.write_text(js, encoding="utf-8", newline="\n")
+    return len(js.encode("utf-8"))
 
 
 # A page displays unofficial figures when its content carries an UNOFFICIAL status badge or mark (phase 6 step 1)
@@ -180,9 +218,18 @@ _TAGS = re.compile(r"<[^>]+>")
 # the symbol marks and section-wide statuses a page uses (components.figure_mark / scope_attrs), and the space a call
 # site left before a mark (a mark sits right against its figure, like a footnote sign)
 _FMARK_USE = re.compile(r'data-f(?:mark|scope)="([^"]+)"')
+# a computed mark (components.figure_mark("computed"), link or span, caption or figure) with its word joiner
+_COMPUTED_MARK = re.compile("⁠?<(a|span) class=\"fmark fmark-computed(?: fmark-scope)?\"[^>]*>‖</\\1>")
+_QUIET_COMPUTED = '<span class="fquiet" data-fquiet="computed" data-word="COMPUTED" hidden></span>'
 _FMARK_SPACE = re.compile("(?:[ \t\r\n]|&nbsp;|&#160;|\u00a0)+(?=\u2060<(?:a|span) class=\"fmark )")
 # legends that show every badge or mark to define it (about/#badges, an office's Sources tab #marks) are not figures
 _LEGENDS = re.compile(r'<(dl|ul) class="(?:badge-defs|marks-key)"[^>]*>.*?</\1>', re.S)
+
+
+# the one sentence that stands for every computed mark of a page (Page._with_figure_notes)
+COMPUTED_ONCE = ("Computed figures are not marked one by one: every figure on this page that is the guide's own "
+                 "arithmetic (a sum, share, per-resident amount or conversion of sourced figures) is covered by the "
+                 "‖ entry above.")
 
 
 def shows_unofficial(main_html: str, year: str | None = None) -> bool:
@@ -282,7 +329,7 @@ class Page:
         return h("header", {"class": "masthead site-head", "id": "site-head"},
                  h("a", {"class": "lockup", "href": self.rel("index.html"),
                          "aria-label": f"{cfg['series']}, {cfg['edition']}: home"},
-                   indiana_glyph(ed, "glyph"),
+                   indiana_glyph_use(ed, self.rel(GLYPH_ASSET), "glyph"),
                    h("span", {"class": "lockup-text"},
                      h("span", {"class": "series"}, cfg["series"]),
                      h("span", {"class": "series-short", "aria-hidden": "true"}, "Civic Guide"),
@@ -473,7 +520,14 @@ class Page:
         caption line, is dropped: components.drop_scoped). A tab page's note links on to the thing's Sources tab, another
         page's to the definitions on About. A page with no marks gets no note. Static HTML: works with JavaScript off."""
         html = _FMARK_SPACE.sub("", drop_scoped(str(main)))
+        # "Computed" is said once per page (owner, 2026-11-18; maps-cleanup brief part B item 5): each computed mark
+        # becomes a quiet marker (hidden, no symbol; Copy CSV still writes its word), so the status stays recorded on
+        # its figure, and the note at the bottom of the page says it once.
+        html, n_quiet = _COMPUTED_MARK.subn(_QUIET_COMPUTED, html)
+        once_computed = bool(n_quiet)
         kinds = {k for m in _FMARK_USE.finditer(html) for k in m.group(1).split()}
+        if once_computed:
+            kinds.add("computed")
         if not kinds:
             return Markup(html)
         from .tabs import tab_path
@@ -487,13 +541,11 @@ class Page:
         else:
             more = h("span", None, "Every mark is defined on ",
                      h("a", {"href": self.rel("about/index.html#badges")}, "About: how figures are marked"), ".")
+        if once_computed:
+            more = h("span", None, COMPUTED_ONCE, " ", more)
         return Markup(html + str(figure_notes(kinds, more)))
 
     def render(self) -> str:
-        paths_payload = {"root": self.root, "paths": [
-            {"id": p["id"], "title": p["title"],
-             "stops": [{"page": s["page"], "anchor": s["anchor"], "title": s["title"], "lead": s["lead"]}
-                       for s in p["stops"]]} for p in sitemap.PATHS]}
         cls = "site" + (f" {self.body_class}" if self.body_class else "")
         onpage = ' data-onpage="1"' if self.path in ONPAGE_PAGES else ""
         main = self._main()
@@ -502,6 +554,9 @@ class Page:
         from .people import link_names
         main = Markup(link_names(str(main), self))
         main = self._with_figure_notes(main)
+        # the map navigator's row keys, written once per page (civic/navmap.py)
+        from .navmap import compact_row_keys
+        main = Markup(compact_row_keys(str(main)))
         body = join([
             h("a", {"class": "skip-link", "href": "#main"}, "Skip to content"),
             Markup(f'<div class="{esc(cls)}" id="site" data-root="{esc(self.root)}" data-page="{esc(self.path)}"{onpage}>'),
@@ -511,8 +566,8 @@ class Page:
             h("main", {"id": "main", "tabindex": "-1"}, main),
             self._footer(),
             Markup("</div>"),
-            json_script("paths-data", paths_payload),
-            json_script("here-data", self.site.here_data),
+            # the shared script data (saved place, learning paths) is one cached file, not inlined on every page
+            h("script", {"src": self.rel(SITE_DATA), "defer": True}),
             h("script", {"src": self.rel("assets/app.js"), "defer": True}),
         ], "\n")
         if self.is_root_index:

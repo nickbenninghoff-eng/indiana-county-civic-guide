@@ -3,7 +3,8 @@
     python -P -E tools/site/check.py site/st-joseph
 
 Checks:
-  1. every internal link/src resolves to a file (and its #fragment to an id, except #path-* stops)
+  1. every internal link/src resolves to a file (and its #fragment to an id, except #path-* stops; a fragment into
+     an .svg file, the map navigator's <use href="assets/navmap.svg#nm-...">, to an id in that file)
   2. every page has a non-empty <title>
   3. index.html has no doctype/html/head/body tags; every other page is a full document
      (doctype, <html lang>, <head>, meta charset, viewport, claude:viewport-fit-sides, <body>)
@@ -169,6 +170,7 @@ def run(site_dir) -> int:
         pp.feed(src)
         parsed[p] = pp
 
+    svg_ids: dict[Path, set] = {}
     for p, pp in parsed.items():
         rel = p.relative_to(site_dir).as_posix()
         src = raw[p]
@@ -233,6 +235,12 @@ def run(site_dir) -> int:
                     tp = parsed.get(target)
                     if tp is not None and frag not in tp.ids:
                         problems.append(f"{rel}: link {url} points to a missing id")
+                elif target.suffix == ".svg":
+                    # a <use href="assets/navmap.svg#nm-..."> (civic/navmap.py) must name a shape in the asset
+                    if target not in svg_ids:
+                        svg_ids[target] = set(re.findall(r'\bid="([^"]+)"', target.read_text(encoding="utf-8")))
+                    if frag not in svg_ids[target]:
+                        problems.append(f"{rel}: link {url} points to a missing id in the SVG file")
         # 5 banned words
         text = " ".join(pp.text)
         for term in sorted(set(t.lower() for t in find_banned(text))):

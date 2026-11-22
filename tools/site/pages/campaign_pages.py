@@ -341,7 +341,7 @@ def map_section(ed, page, d) -> Markup:
                "county offices and some school seats, 2023 for city offices and most town offices), added up over every "
                "report of that election's cycle. Breaks are set separately for each layer; compare shades only within a "
                "layer. A figure equal to a break falls in the higher step. Hatched areas have no reports on file, or no "
-               "race in the guide's results: not $0. Most races are marked incomplete, so read the totals as floors. "
+               "race in the guide's results: not $0. Most races are marked *, so read the totals as floors. "
                "District boundaries are the official files the guide downloaded; no boundary is drawn by the guide. ",
                c.cite_compact(set_src or MAP_SOURCES)))
 
@@ -470,8 +470,8 @@ def build_area(aid: str, site):
             rest = [r for r in rs if r["spent"] is None]
             charts.append(money_rows(f"cb-{eid}", f"{_el_title(ed, eid).split(' (')[0]}: every race",
                                      [_race_row(page, r) for r in have + rest], vmax=vmax, page=page,
-                                     subtitle="All candidates, whole cycle, from the reports on file; an incomplete "
-                                              "total is a floor. Offices by what their candidates reported spending; "
+                                     subtitle="All candidates, whole cycle, from the reports on file; a total "
+                                              "marked * is a floor. Offices by what their candidates reported spending; "
                                               "one scale for every chart on this page. Select an office for its Money "
                                               "tab.", status="computed", cite=c.cite("CFM-010"),
                                      headers=["Race", "Raised", "Spent"]))
@@ -664,7 +664,7 @@ def _area_map_section(ed, page, a, mapped, n) -> Markup:
           + ("A district with no official boundary file is shown on the whole outline, and its box says so. "
              if nodraw else "")
           + "A figure equal to a break falls in the higher step. Hatched means no reports on file: not $0. Read "
-          "incomplete totals as floors. Boundaries are official files the guide downloaded; no boundary is drawn by "
+          "totals marked * as floors. Boundaries are official files the guide downloaded; no boundary is drawn by "
           "the guide. ", c.cite_compact(set_src or MAP_SOURCES)),
         scope="county", ed=ed)
 

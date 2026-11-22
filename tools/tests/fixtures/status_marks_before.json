@@ -1,5 +1,5 @@
 {
- "_about": "Status marks fixture (tools/tests/test_status_marks.py), 2026-11-18: for each sample page, every (figure context, exception status) pair the page showed BEFORE the 'About these figures' change (inline words and badges). The context is status_marks_lib.norm() of the nearest row-like element; 'h' is its sha1, 't' its first 80 characters for reading. Money campaign pages (another agent's, changing the same day) are not in the sample. Regenerated 2026-11-18 (gap-fill pages round) from the build after the gap-fill data merge: the merge changed figure statuses (the 2026 county canvass made 124 of 166 lines official; scans re-read as official) and the figures' text (counts, labels, debt years), so the old contexts no longer matched; every lost pair was reviewed (planning/qa/phase6-gapfill-pages-2026-11-18.md).",
+ "_about": "Status marks fixture (tools/tests/test_status_marks.py), 2026-11-18: for each sample page, every (figure context, exception status) pair the page showed BEFORE the 'About these figures' change (inline words and badges). The context is status_marks_lib.norm() of the nearest row-like element; 'h' is its sha1, 't' its first 80 characters for reading. Money campaign pages (another agent's, changing the same day) are not in the sample. Regenerated 2026-11-18 (gap-fill pages round) from the build after the gap-fill data merge: the merge changed figure statuses (the 2026 county canvass made 124 of 166 lines official; scans re-read as official) and the figures' text (counts, labels, debt years), so the old contexts no longer matched; every lost pair was reviewed (planning/qa/phase6-gapfill-pages-2026-11-18.md). Updated 2026-11-18 (maps-cleanup round, part B item 7): Compare budgets shows 6 rows per ranked list instead of 10, so the three chart captions read 'top 6 of N' where they read 'top 10 of N'. The six caption entries ('...top10of15', '...top10of16', '...top10of25', each as the title alone and as title plus subtitle) are replaced by the three new caption contexts with the same status (computed); no other entry changed, and rows 7 to 10 of each list, now in the 'Show the other N' fold, are matched as before (planning/qa/phase6-maps-cleanup-2026-11-18.md).",
  "pages": {
   "about/index.html": [
    {
@@ -6655,16 +6655,6 @@
    },
    {
     "k": "computed",
-    "h": "69d5bf13c97ad3d6",
-    "t": "alladvertisedfundsperresident2026top10of15"
-   },
-   {
-    "k": "computed",
-    "h": "d0efeb3be23646a6",
-    "t": "alladvertisedfundsperresident2026top10of15189countymishawakacivilcityandthetowns"
-   },
-   {
-    "k": "computed",
     "h": "5244b2a30bbc7fe7",
     "t": "centretownship$197"
    },
@@ -6682,16 +6672,6 @@
     "k": "computed",
     "h": "fbbec0b37f57846d",
     "t": "centretownshipperresident$63128"
-   },
-   {
-    "k": "computed",
-    "h": "9374128c872663a2",
-    "t": "certifiedassessedvalueperresident2026top10of16"
-   },
-   {
-    "k": "computed",
-    "h": "30bccb11af5028e1",
-    "t": "certifiedassessedvalueperresident2026top10of16108countythetwocitiesandthetownshi"
    },
    {
     "k": "computed",
@@ -7775,16 +7755,6 @@
    },
    {
     "k": "computed",
-    "h": "ac590cc1f8f1c4b6",
-    "t": "totalprincipalstillowedattheendof2025alldebtclassestop10of25"
-   },
-   {
-    "k": "computed",
-    "h": "a05b933d2ea39403",
-    "t": "totalprincipalstillowedattheendof2025alldebtclassestop10of251425unitsreportdebti"
-   },
-   {
-    "k": "computed",
     "h": "17f98752e72c1db4",
     "t": "townoflakeville2022principalduewithinoneyearalldebt$10765111sumofprincipalamount"
    },
@@ -8127,6 +8097,21 @@
     "k": "computed",
     "h": "a712d6a20a05be47",
     "t": "yearstjosephcountycityofsouthbendcityofmishawaka"
+   },
+   {
+    "k": "computed",
+    "h": "389be6f9bea1c796",
+    "t": "alladvertisedfundsperresident2026top6of15189countymishawakacivilcityandthetownsh"
+   },
+   {
+    "k": "computed",
+    "h": "1dabcd2584c0b92d",
+    "t": "certifiedassessedvalueperresident2026top6of16108countythetwocitiesandthetownship"
+   },
+   {
+    "k": "computed",
+    "h": "2212551a725bcc70",
+    "t": "totalprincipalstillowedattheendof2025alldebtclassestop6of251425unitsreportdebtin"
    }
   ],
   "money/what-is-a-budget/index.html": [

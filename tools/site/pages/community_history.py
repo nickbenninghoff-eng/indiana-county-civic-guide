@@ -457,14 +457,60 @@ def bench_bars(page, iv, fid, ind, vintage, title=None):
 
 # =============================================================================== community/index
 
+def _community_by_area(page):
+    """Every government with community figures (the fixed indicators of its Overview's community strip), one row each
+    with that strip and the community page that has it in its tables; the map navigator above it lists one area's row.
+    None when the edition has no boundary file or no area has figures."""
+    from civic import governments as gm
+    from civic import navmap as nm
+    from civic.related import _community
+    from .places import _context_rows
+    ed = page.ed
+    tags = nm.tags_for(page)
+    rows = []
+    for u in ed.tables["units"]:
+        if u["unit_type"] not in ("county", "city", "town", "township"):
+            continue
+        if not _context_rows(ed, u):
+            continue
+        strip = gm.unit_href(page, u["unit_id"], "overview", "context")
+        if not strip:
+            continue
+        links = [h("a", {"href": strip}, "Its community figures")]
+        more = _community(ed, u)
+        if more and more[0].split("#")[0] in page.site.by_path:
+            links.append(h("a", {"href": page.rel(more[0])}, more[1]))
+        rows.append(h("li", {"class": "cmh-area", "data-nm": tags.unit(u["unit_id"])},
+                      h("span", {"class": "cmh-area-name"}, u["name"]), " ", join(links, " · ")))
+    if not rows:
+        return None
+
+    def href_of(key):
+        kind, _, ident = key.partition(":")
+        return gm.unit_href(page, ident, "overview", "context") if kind == "u" else None
+    nav = nm.navigator(page, tags, "cmh-areas", noun="area", plural="areas", href_of=href_of,
+                       open_label="Open its community figures",
+                       what="Choose a layer, then select an area to see its community links below. Select it again "
+                            "to open its community figures.")
+    if nav is None:
+        return None
+    return section("by-area", 3, "The community, area by area",
+                   h("p", None, "The same fixed indicators for every city, town and township, on each government's "
+                                "page; pick an area on the map or in the list."),
+                   nav, h("ul", {"class": "cmh-areas", "id": "cmh-areas"}, rows), scope="county", ed=ed)
+
+
 def build_community_index(site):
     ed = site.ed
     iv = IV(ed)
     page = site.page("community/index.html")
     c = page.cites
     now, then = iv.acs_now, iv.acs_then
-    toc = [("benchmarks", "County, Indiana and U.S."), ("explore", "Explore the community pages"),
-           ("definitions", "What the indicators mean"), ("gaps", "Gaps"), ("sources", "Sources")]
+    # the map navigator section (built first: the table of contents names it only when it is on the page)
+    by_area = _community_by_area(page)
+    toc = ([("benchmarks", "County, Indiana and U.S."), ("explore", "Explore the community pages")]
+           + ([("by-area", "The community, area by area")] if by_area is not None else [])
+           + [("definitions", "What the indicators mean"), ("gaps", "Gaps"), ("sources", "Sources")])
     page.add(hero(page, "Reference · Community", toc,
                   "Social and economic context for the county: the same fixed indicators every time, compared only "
                   "with Indiana and the United States, with margins of error and the survey years printed."))
@@ -527,6 +573,12 @@ def build_community_index(site):
                                                 "production in South Bend in 1963) is on the ",
                        h("a", {"href": page.rel("history/index.html#turning-points")}, "History page"), ".")))
 
+    # ---- the map navigator (civic/navmap.py; maps on every major page, 2026-11-18): an area's community figures.
+    # Rule F6 holds: the map shows only governments, and the rows link to the community strip of each government's
+    # Overview, which sits after the neutral Contact section, never beside results or party control.
+    if by_area is not None:
+        page.add(by_area)
+
     # ---- 3 definitions
     drows = []
     for ind in CONTEXT_IDS:
@@ -534,7 +586,7 @@ def build_community_index(site):
         drows.append([d.get("label", ind), d.get("definition", ""), d.get("universe", ""),
                       h("span", {"class": "mono"}, d.get("table_variable", "")), d.get("moe_rule", "")])
     pop_rule = iv.defs.get("pop_total", {}).get("display_rule", "")
-    page.add(section("definitions", 3, "What the indicators mean",
+    page.add(section("definitions", 4 if by_area is not None else 3, "What the indicators mean",
                      h("p", None, "The ACS is a survey, not a full count, so each figure is an estimate with a margin of "
                                   "error. The guide's display rule for every ACS indicator: ", h("q", None, pop_rule)),
                      data_table("definitions-table", ["Indicator", "Definition", "Universe", "Census table / variable",

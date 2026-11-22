@@ -35,6 +35,7 @@ from civic.shell import Site  # noqa: E402
 from pages import elections as E  # noqa: E402
 from pages import elections_numbers as N  # noqa: E402
 
+from anchor_fixtures import anchor_fixture  # noqa: E402  (old-anchor fixtures without retired data-block ids)
 FIXTURE = Path(__file__).parent / "fixtures" / "anchors_before_wave_b2.json"
 ID_RE = re.compile(r'\sid="([^"]+)"')
 HREF_RE = re.compile(r'<a\b[^>]*\shref="([^"]+)"')
@@ -89,7 +90,7 @@ class Built(unittest.TestCase):
     # ------------------------------------------------------------------ anchors
     def test_every_old_anchor_still_resolves(self):
         """Each old id is on its page, or the page's moved map sends it to a built page that has the target id."""
-        before = json.loads(FIXTURE.read_text(encoding="utf-8"))["ids"]
+        before = anchor_fixture(FIXTURE)["ids"]
         lost = []
         for page, ids in before.items():
             moved = moved_map(self.html[page])
@@ -121,7 +122,7 @@ class Built(unittest.TestCase):
             self.assertIn(a, self.ids[LAND])
 
     def test_calendar_keeps_its_ids(self):
-        before = json.loads(FIXTURE.read_text(encoding="utf-8"))["ids"][CAL]
+        before = anchor_fixture(FIXTURE)["ids"][CAL]
         self.assertEqual([i for i in before if i not in self.ids[CAL]], [])
         for y in E.YEARS:
             self.assertIn(f"year-{y}", self.ids[CAL])
@@ -147,7 +148,7 @@ class Built(unittest.TestCase):
         contested = len(self.races) - n["unc"] - n["nc"]
         lede = re.search(r'<p class="mg-lede">(.*?)</p>', h, re.S).group(1)
         self.assertIn(f"{n['unc']:,} of the {len(self.races):,} races", html.unescape(re.sub(r"<[^>]+>", "", lede)))
-        self.assertIn('data-fmark="computed"', lede)                   # the computed mark beside the first fact
+        self.assertIn('data-fquiet="computed"', lede)                  # computed, said once per page (2026-11-18)
         self.assertLess(h.index('class="mg-lede"'), h.index('id="by-level"'))
         self.assertIn(f"{len(self.races):,} = {n['unc']:,} uncontested + {contested:,} contested + {n['nc']:,} not measurable",
                       html.unescape(h))
@@ -315,7 +316,7 @@ class Static(unittest.TestCase):
     def test_moved_js_handles_new_ids_and_path_stops(self):
         src = self.read("static/js/moved.js")
         self.assertIn('dest.indexOf("#") >= 0', src)
-        self.assertIn("paths-data", src)
+        self.assertIn("window.civicData.paths", src)   # the learning paths (assets/site-data.js, 2026-11-18)
 
     def test_tablefilter_deep_mode(self):
         src = self.read("static/js/tablefilter.js")

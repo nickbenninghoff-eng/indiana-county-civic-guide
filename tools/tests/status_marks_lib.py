@@ -105,6 +105,10 @@ def mark_kind(n: Node) -> str | None:
     c = n.classes
     if "fmark" in c and n.attrs.get("data-fmark"):
         return n.attrs["data-fmark"]
+    if "fquiet" in c and n.attrs.get("data-fquiet"):
+        # 2026-11-18 (maps-cleanup brief, part B item 5): "computed" is said once per page in its note; each computed
+        # figure keeps a hidden marker (civic/shell.py _QUIET_COMPUTED), so its status is still read on its row
+        return n.attrs["data-fquiet"]
     if "fword" in c:                       # the word beside a results heading (components.status_heading)
         return next((x[6:] for x in c if x.startswith("fword-")), None)
     if "badge" in c:
@@ -198,6 +202,12 @@ def symbols(html: str) -> list[tuple[str, str, str]]:
     root = main_tree(html)
     return [(n.attrs["data-fmark"], text(n).replace("⁠", "").strip(), n.attrs.get("href", ""))
             for n in root.iter() if "fmark" in n.classes and n.attrs.get("data-fmark") and not _is_legend(n)]
+
+
+def quiet_kinds(html: str) -> set:
+    """The kinds of the quiet markers on the page (statuses said once in the note, not beside each figure)."""
+    root = main_tree(html)
+    return {n.attrs["data-fquiet"] for n in root.iter() if "fquiet" in n.classes and n.attrs.get("data-fquiet")}
 
 
 def scope_kinds(html: str) -> set:

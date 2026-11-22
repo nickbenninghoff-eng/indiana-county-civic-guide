@@ -26,8 +26,8 @@
   var node = doc.getElementById("moved-anchors");
   if (node) { try { map = JSON.parse(node.textContent); } catch (e) { map = null; } }
   var paths = null;
-  var pnode = doc.getElementById("paths-data");
-  if (pnode) { try { paths = JSON.parse(pnode.textContent); } catch (e) { paths = null; } }
+  /* shared data (assets/site-data.js, loaded before this script; 2026-11-18: no longer inlined on every page) */
+  if (window.civicData && window.civicData.paths) paths = window.civicData.paths;
 
   function pathStop(id) {
     var m = /^path-([a-z0-9-]+)-(\d+)$/.exec(id);

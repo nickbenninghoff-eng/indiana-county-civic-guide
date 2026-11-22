@@ -22,6 +22,7 @@ import build  # noqa: E402
 from civic.data import Edition  # noqa: E402
 from civic.shell import Site  # noqa: E402
 
+from anchor_fixtures import anchor_fixture  # noqa: E402  (old-anchor fixtures without retired data-block ids)
 FIXTURE = Path(__file__).parent / "fixtures" / "anchors_before_batch4.json"
 ID_RE = re.compile(r'\sid="([^"]+)"')
 OFFICES = ["township-trustee", "township-board", "school-board", "city-council", "county-council",
@@ -54,7 +55,7 @@ class Built(unittest.TestCase):
 
     # ---------------------------------------------------------------- anchors
     def test_every_old_id_still_resolves_or_is_forwarded(self):
-        before = json.loads(FIXTURE.read_text(encoding="utf-8"))["ids"]
+        before = anchor_fixture(FIXTURE)["ids"]
         lost = []
         for page, ids in before.items():
             page = NOTABLE if page == "history/people/index.html" else page
@@ -91,7 +92,7 @@ class Built(unittest.TestCase):
     # ---------------------------------------------------------------- history/people
     def test_every_person_card_is_a_row_with_its_anchor(self):
         h = self.html[NOTABLE]
-        before = [i for i in json.loads(FIXTURE.read_text(encoding="utf-8"))["ids"]["history/people/index.html"]
+        before = [i for i in anchor_fixture(FIXTURE)["ids"]["history/people/index.html"]
                   if i.startswith("person-")]
         self.assertGreaterEqual(len(before), 30)
         rows = re.findall(r'<li class="ent-row"', h)

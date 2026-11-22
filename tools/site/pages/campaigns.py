@@ -823,6 +823,35 @@ def _coverage_block(ed, page, model) -> list:
     ]
 
 
+def _committee_offices(ed) -> dict:
+    """{committee key: [office ids]}: the offices whose races count a committee's reports (the race model's own
+    matching, cf_all), so a filing can be found from its district on the map navigator. Cached per build."""
+    got = ed.__dict__.get("_cf_committee_offices")
+    if got is not None:
+        return got
+    from civic import offices as om
+    out: dict = {}
+    for race in cf_all(ed)["races"]:
+        oid = om.race_office_id(ed, race)
+        if not oid:
+            continue
+        for cand in race["candidates"]:
+            for cm_ in cand["committees"]:
+                out.setdefault(cm_["key"], [])
+                if oid not in out[cm_["key"]]:
+                    out[cm_["key"]].append(oid)
+    ed.__dict__["_cf_committee_offices"] = out
+    return out
+
+
+def _filing_keys(ed, page, r) -> str:
+    """A filing's area keys for the map navigator (civic/navmap.py): the government its form names, and the offices
+    whose races count its committee."""
+    from civic import navmap as nm
+    t = nm.tags_for(page)
+    return t.join(t.unit(r.get("unit_id") or ""), *[t.office(o) for o in _committee_offices(ed).get(r["_key"], [])])
+
+
 def _filing_row(ed, page, r, ci, oi, gi, url_prefix) -> Markup:
     """One filing as a table row, rendered once in the HTML. campaigns.js reads its data-* attributes to filter and
     sort, and clones the row into the per-committee view; it never creates filings."""
@@ -832,6 +861,8 @@ def _filing_row(ed, page, r, ci, oi, gi, url_prefix) -> Markup:
              "data-st": r["transcription_status"] or "none"}
     for k, f in (("rec", "_receipts_period"), ("exp", "_expenditures_period"), ("cash", "_cash_end_period")):
         attrs["data-" + k] = None if r[f] is None else f"{r[f]:.2f}"
+    # the map navigator's area keys (civic/navmap.py) go last: data-ci stays the row's first attribute
+    attrs["data-nm"] = _filing_keys(ed, page, r) or None
     who = [x for x in (r["candidate"], party_label(r["party"]) if r["party"] else "No party written on the form") if x]
     note = _clean_note(r["notes"])
     url = _doc_url(ed, r)
@@ -924,7 +955,8 @@ def _explorer_block(ed, page, model) -> list:
          "Status", "Form"])]))
     table = h("div", {"class": "table-block cf-explorer", "id": "cf-explorer-block"},
               h("div", {"class": "table-wrap", "role": "region", "tabindex": "0", "aria-label": "Filings explorer"},
-                h("table", {"class": "data cf-table cf-grouped", "id": "cf-table", "style": "min-width: 60rem"},
+                h("table", {"class": "data cf-table cf-grouped", "id": "cf-table", "style": "min-width: 60rem",
+                             "data-nm-own": True},
                   h("caption", None, "Local campaign-finance filings"), thead, h("tbody", {"id": "cf-tbody"}, trs))),
               h("div", {"class": "table-tools"},
                 h("button", {"type": "button", "class": "btn btn-small", "data-copy-table": "cf-table", "id": "cf-table-copy"},
@@ -1010,7 +1042,7 @@ def _races_block(ed, page, model, races=None) -> list:
                              "covers a different period, so the figures are not set side by side. Each candidate's "
                              "posted reports are listed with the race."),
                 data_table("cf-races-partial", ["Race", "Candidate (ballot order)", "Pre-election report for this race"], prow,
-                           caption="Contested races with an incomplete set of pre-election reports", copy=False,
+                           caption="Contested races missing at least one pre-election report", copy=False,
                            min_width="40rem")]
     if empty:
         out.append(h("details", {"class": "cf-details"},
@@ -1239,8 +1271,12 @@ def build_all(site):
                  h("a", {"href": page.rel(HOW_PAGE + "#method")}, "How campaign finance reporting works"), "."),
                h("nav", {"class": "toc", "aria-label": "On this page"},
                  h("ol", None, [h("li", None, h("a", {"href": f"#{a}"}, t)) for a, t in toc]))))
-    page.add(section("explorer", 1, "Every filing, by office and committee", *_explorer_block(ed, page, model),
-                     scope="county", ed=ed))
+    explorer = _explorer_block(ed, page, model)
+    # the campaign money browser's map navigator (civic/navmap.py): campaigns.js filters the filings to the chosen
+    # area through the "nm-scope" event (the table is its own filter: data-nm-own)
+    from pages.money_browser import browser_map
+    page.add(section("explorer", 1, "Every filing, by office and committee",
+                     browser_map(page, "cf-table", "filing", "filings"), *explorer, scope="county", ed=ed))
     page.add(section("large", 2, "Large contributions (CFA-11 notices)", *_large_block(ed, page, model),
                      scope="county", ed=ed))
     page.finish(gaps=_gaps(ed, page, model))

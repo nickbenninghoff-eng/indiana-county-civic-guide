@@ -111,3 +111,8 @@
 .cmap-level-sub { font-size: 13px; font-weight: 600; fill: var(--ink-2); }
 .cmap-level-note { display: none; margin: 6px 0 0; font-size: .9rem; color: var(--ink-2); max-width: var(--measure); }
 .cmap-level-note.is-on { display: block; }
+/* a side column holding the panel and notes under it (embedded_map side=, 2026-11-18): the panel does not stick
+   there, so it never covers the notes */
+.cmap-side { min-width: 0; }
+.cmap-side .cmap-panel { position: static; }
+.cmap-side > p { margin: 12px 0 0; }

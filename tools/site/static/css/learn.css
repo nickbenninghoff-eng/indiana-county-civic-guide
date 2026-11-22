@@ -21,3 +21,8 @@
 .learn-path-meta { font-size: .72rem; color: var(--ink-3); }
 .learn-path-blurb { font-size: .9rem; color: var(--ink-2); }
 @media (max-width: 480px) { .learn-grid { gap: 10px; } }
+/* Lighter card borders (owner, 2026-11-18: the heavy black borders read louder than the calm look): one hairline in
+   the line token on every side, in every look, light and dark; hover darkens the line a step. The looks' .card rules
+   (looks.css: 2 to 4 px in the rule or ink token) are overridden for the Learn hub's cards only. */
+:root .card.learn-card, :root[data-look] .card.learn-card { border: 1px solid var(--line); border-radius: var(--r, 0); }
+:root .card.learn-card:hover, :root[data-look] .card.learn-card:hover { border-color: var(--ink-3); }

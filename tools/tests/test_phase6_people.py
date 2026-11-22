@@ -31,6 +31,7 @@ from civic.components import name_with_party, table_filter  # noqa: E402
 from civic.data import Edition  # noqa: E402
 from civic.shell import Site  # noqa: E402
 
+from anchor_fixtures import anchor_fixture  # noqa: E402  (old-anchor fixtures without retired data-block ids)
 FIXTURE = Path(__file__).parent / "fixtures" / "anchors_before_people.json"
 ID_RE = re.compile(r'\sid="([^"]+)"')
 
@@ -309,7 +310,7 @@ class Built(unittest.TestCase):
             self.assertIn(f'href="{p.pid}/index.html"', hub)
 
     def test_notable_view_and_old_anchors(self):
-        old = json.loads(FIXTURE.read_text(encoding="utf-8"))["ids"][pm.OLD_NOTABLE]
+        old = anchor_fixture(FIXTURE)["ids"][pm.OLD_NOTABLE]
         new_ids = set(ID_RE.findall(self.html[pm.NOTABLE]))
         fwd = self.html[pm.OLD_NOTABLE]
         fwd_ids = set(ID_RE.findall(fwd))

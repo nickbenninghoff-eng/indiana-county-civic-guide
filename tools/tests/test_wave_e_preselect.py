@@ -67,6 +67,9 @@ class PreselectTests(unittest.TestCase):
             build.BUILDERS[p](site)
         site.write()
         cls.html = {p: (out / p).read_text(encoding="utf-8") for p in PAGES}
+        # 2026-11-18: the saved-place data is the shared assets/site-data.js (window.civicData.here), not inlined
+        js = (out / "assets" / "site-data.js").read_text(encoding="utf-8")
+        cls.site_data = json.loads(js[js.index("window.civicData = ") + len("window.civicData = "):js.rindex(";")])
         cls.votes = load_votes(cls.ed)
 
     @classmethod
@@ -171,7 +174,7 @@ class PreselectTests(unittest.TestCase):
         """Every saved place the picker can store, as (place id, place, township, school, township chosen, school
         chosen): township and school either chosen by the reader ("set") or filled in by here.js as the guide's
         defaults (not in "set"), or "any"."""
-        H = _json(self.html[TAX], "here-data")
+        H = self.site_data["here"]
         out = []
         for pid, p in H["places"].items():
             towns = [p["t"]] if p["t"] else ["any"] + list(p["it"] or H["townships"])

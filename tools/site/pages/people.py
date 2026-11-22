@@ -590,6 +590,16 @@ def _letter(p) -> str:
     return ch if ch.isalpha() else "#"
 
 
+def _person_keys(page, p) -> str:
+    """The area keys of every office a person held or ran for (civic/navmap.py), from the same records as the hub's
+    Level filter (civic/people.py terms and contests)."""
+    from civic import navmap as nm
+    t = nm.tags_for(page)
+    oids = [x["office_id"] for x in pm.terms(page.ed, p.pid)]
+    oids += [x["contest"].get("office_id") or "" for x in pm.contests(page.ed, p.pid)]
+    return t.join(*[t.office(o) for o in dict.fromkeys(o for o in oids if o)])
+
+
 def build_hub(site):
     ed = site.ed
     reg = pm.registry(ed)
@@ -630,7 +640,7 @@ def build_hub(site):
         for p in ps:
             st = pm.status_tokens(ed, p)
             items.append(h("li", {"class": "pph-row", "data-tf-row": True, "data-tf-status": st,
-                                  "data-tf-level": pm.level_tokens(ed, p),
+                                  "data-tf-level": pm.level_tokens(ed, p), "data-nm": _person_keys(page, p) or None,
                                   "data-tf-notable": "yes" if p.notable is not None else "no",
                                   "data-tf-text": " ".join([p.name] + [n for n in p.names if n != p.name])},
                            h("a", {"class": "pph-name", "href": page.rel(pm.path(p.pid))}, p.name),
@@ -641,6 +651,22 @@ def build_hub(site):
                           h("span", {"class": "pph-letter-k"}, k), h("span", {"class": "pph-letter-n"},
                                                                        _plural(len(ps), "person", "people"))),
                         h("ul", {"class": "pph-list"}, items)))
+    # the map navigator (civic/navmap.py; maps on every major page, 2026-11-18): the people who hold or have run for
+    # an area's seats; the hub's list goes right under it
+    from civic import navmap as nm
+    from civic import governments as gm
+
+    def href_of(key):
+        kind, _, ident = key.partition(":")
+        if kind == "u":
+            return gm.unit_href(page, ident, "history") or gm.unit_href(page, ident)
+        return None
+    nav = nm.navigator(page, nm.tags_for(page), "people-all", noun="person", plural="people", href_of=href_of,
+                       open_label="Open its page",
+                       what="Choose a layer, then select an area to list only the people who hold or have run for its "
+                            "seats. Select it again to open its page.")
+    if nav is not None:
+        page.add(T.tab_section("by-area", "People by area", nav))
     page.add(h("section", {"class": "tsec pph-all-sec", "id": "list", "aria-labelledby": "list-h"},
                h("h2", {"class": "tsec-h", "id": "list-h"}, "Everyone with a page, A to Z"),
                h("p", {"class": "tf-empty muted", "data-tf-empty": "people-all", "hidden": True, "role": "status"},

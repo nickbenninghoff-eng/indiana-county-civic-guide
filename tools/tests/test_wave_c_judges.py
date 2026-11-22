@@ -20,6 +20,7 @@ from civic.shell import Site  # noqa: E402
 from pages import elections as E  # noqa: E402
 
 PAGE = "elections/judges-and-questions/index.html"
+from anchor_fixtures import anchor_fixture  # noqa: E402  (old-anchor fixtures without retired data-block ids)
 FIXTURE = Path(__file__).parent / "fixtures" / "anchors_before_wave_c5.json"
 
 
@@ -41,7 +42,7 @@ class Built(unittest.TestCase):
         cls.tmp.cleanup()
 
     def test_every_old_id_still_resolves(self):
-        before = json.loads(FIXTURE.read_text(encoding="utf-8"))["ids"][PAGE]
+        before = anchor_fixture(FIXTURE)["ids"][PAGE]
         gone = [i for i in before if i not in self.ids]
         # 2026-11-18: a source the page no longer cites (ELX-003/ELX-004, the old wording sources; RES-029, superseded
         # by the official canvass RES-048) is forwarded by #moved-anchors to the sources index, which has the same id

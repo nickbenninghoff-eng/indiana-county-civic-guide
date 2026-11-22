@@ -617,6 +617,9 @@ def rank_rows(fid: str, title: str, rows: list[dict], subtitle=None, note=None, 
 
 
 RANK_TOP = 10    # rows a ranked list shows before "Show all N"
+# Compare budgets shows fewer rows per list before its "Show the other N" fold (2026-11-18, maps-cleanup brief part B
+# item 7: the page ran 4.6 screens); every row stays on the page, in the fold, on the same scale.
+BUDGETS_TOP = 6
 
 
 def ranked(fid: str, title: str, rows: list[dict], top: int = RANK_TOP, **kw) -> list:
@@ -624,7 +627,9 @@ def ranked(fid: str, title: str, rows: list[dict], top: int = RANK_TOP, **kw) ->
     vmax = max((r["value"] for r in rows if r.get("value") is not None), default=None)
     if len(rows) <= top + 2:
         return [rank_rows(fid, title, rows, vmax=vmax, **kw)]
-    rest_kw = {k: v for k, v in kw.items() if k in ("page", "headers", "word")}
+    # the rest of the ranking keeps its status (2026-11-18: rows moved into the fold when Compare budgets showed fewer
+    # rows, and test_status_marks found their "computed" status gone; the fold's chart now says it as the top one does)
+    rest_kw = {k: v for k, v in kw.items() if k in ("page", "headers", "word", "status")}
     return [rank_rows(fid, title + f" (top {top} of {len(rows)})", rows[:top], vmax=vmax, **kw),
             see_all_fold(f"{fid}-rest", len(rows) - top,
                          rank_rows(f"{fid}-more", title + f": the other {len(rows) - top}", rows[top:], vmax=vmax,
@@ -724,7 +729,8 @@ def build_budgets(site):
                 for mid, r, pop, v in got]
         if rows:
             charts.append(h("div", {"class": "cb-cell"},
-                            ranked(fid, title, rows, subtitle=sub, note=pop_note + extra, status="computed",
+                            ranked(fid, title, rows, top=BUDGETS_TOP, subtitle=sub, note=pop_note + extra,
+                                   status="computed",
                                    page=page, cite=c.cite(src), headers=["Government", "Per resident"],
                                    word="Per resident")))
     pr_at = len(page.parts)     # the per-resident section goes here once the tax base per resident is known
@@ -748,7 +754,7 @@ def build_budgets(site):
                          "text": rfmt(v), "fmt": lambda t: f"${t:.2f}"})
         pair.append(T.tab_section("rates", f"Certified property-tax rate, taxes payable in {ry}",
                                *ranked("rates-certified", f"Each government's own certified rate per $100 of assessed "
-                                                            f"value, {ry}", rows,
+                                                            f"value, {ry}", rows, top=BUDGETS_TOP,
                                          subtitle="One government's own rate; a tax bill adds the rates of every "
                                                   "government that taxes the property.",
                                          status="official" if all(r["status"] == "official" for _g, r in rates)
@@ -778,6 +784,7 @@ def build_budgets(site):
         pair.append(T.tab_section(
             "debt", f"Debt outstanding, end of {dy}",
             *ranked("debt-2024", f"Total principal still owed at the end of {dy}, all debt classes", drows,
+                    top=BUDGETS_TOP,
                       subtitle=f"{len(tot)} units report debt in the state's {dy} file. Totals include utility debt where "
                                "a unit has utilities. Each unit separately; never add two units' totals.",
                       note="Computed: the sum of each unit's debt-class rows in the state's annual financial report debt "
@@ -786,8 +793,10 @@ def build_budgets(site):
             see_all_fold("debt-by-year-all", 0, by_year,
                          label=f"Show debt by year, {dyears[0]} to {dyears[-1]}, for every unit", hint=None)
             if by_year is not None and len(dyears) > 1 else None,
-            debt_notes_block(mo, page, all_tot if by_year is not None and len(dyears) > 1 else tot),
-            whole_corporation_note(mo, page, {r["unit_id"] for r in all_tot}),
+            _folded_note("debt-notes-fold", "Notes stored with these debt totals",
+                         debt_notes_block(mo, page, all_tot if by_year is not None and len(dyears) > 1 else tot)),
+            _folded_note("whole-corporation-fold", "Whole corporation: school corporations that cross the county line",
+                         whole_corporation_note(mo, page, {r["unit_id"] for r in all_tot})),
             see_all_fold("debt-classes-all", len(cls_rows),
                          data_table("debt-classes", ["Unit", "Year", "Debt type", "Amount", "Status", "Note"], cls_rows,
                                     caption="Debt by class and unit", numeric=(3,), min_width="54rem"),
@@ -812,7 +821,7 @@ def build_budgets(site):
                               tip=f"{usd(tb.av_value(r))} / {int(float(pop['value'])):,} residents"), fmt=fmt)
                 for mid, r, pop, v in av_got]
         av_parts.extend(ranked(
-            "perres-av", f"Certified assessed value per resident, {av_year}", rows,
+            "perres-av", f"Certified assessed value per resident, {av_year}", rows, top=BUDGETS_TOP,
             subtitle="County, the two cities and the townships",
             note=("Computed: the state-certified net assessed value (the tax base property taxes are levied on) divided "
                   "by the 2020-2024 population estimate. The county's value covers everyone in the county, city "
@@ -820,12 +829,13 @@ def build_budgets(site):
                   "does."), status="computed", page=page,
             cite=c.cite(union_sources(x for _m, r, pop, _v in av_got for x in (r, pop))),
             headers=["Government", "Per resident"], word="Per resident"))
-    if len(charts) > 1:
-        charts[-1] = h("div", {"class": "cb-cell"}, charts[-1], av_parts)
-    else:
+    # 2026-11-18 (part B item 7): the three per-resident lists side by side on a wide screen (two, then one, as it
+    # narrows), not two columns with the third under the second
+    if av_parts:
         charts.append(h("div", {"class": "cb-cell"}, av_parts))
     page.parts.insert(pr_at, T.tab_section(
-        "per-resident", f"Per resident, {pr_year}", h("div", {"class": "cb-two"}, charts),
+        "per-resident", f"Per resident, {pr_year}",
+        h("div", {"class": "cb-two cb-three" if len(charts) > 2 else "cb-two"}, charts),
         lead=f"Each government's {pr_year} adopted budget, and its tax base, divided by its population; one basis per "
              "list."))
     av_parts = []
@@ -882,6 +892,12 @@ def build_budgets(site):
     return page
 
 
+def _folded_note(fid: str, label: str, note: Markup | None) -> Markup | None:
+    """A long caveat in a fold (Compare budgets, 2026-11-18): the summary says what it is about; the fold ships open
+    (JavaScript off: on the page) and folds.js opens it when a link points inside (#whole-corporation)."""
+    return None if note is None else see_all_fold(fid, 0, note, hint=None, label=label)
+
+
 def _money_map_compare(mo: Money, page) -> Markup | None:
     """The money map (civic/money_map.py): every city, town, township and school corporation shaded by counted spending
     per resident; every area links to its government's Money tab. The county as one figure, then every figure as
@@ -894,15 +910,14 @@ def _money_map_compare(mo: Money, page) -> Markup | None:
     label = lambda m: re.sub(r" \(state data: .*\)$", "", mo.label(m))
     return T.tab_section(
         "money-map", "Spending per resident: the money map",
-        h("p", {"class": "tsec-lead"}, "Each area is shaded by how much its government spent per resident in its latest "
-                                       "year in the state's annual financial reports. Point at an area (or tap it, or "
-                                       "move to it with Tab) to see where its money came from and how it was spent; "
-                                       "select it again, or press Enter, to open its government's Money tab. Pick "
-                                       "cities and towns, townships or school corporations with the buttons above the "
-                                       "map."),
-        county_figure(page, ed, mm),
-        money_map(page, ed, shapes, mm),
-        method_note(page, ed),
+        h("p", {"class": "tsec-lead"}, "Each area is shaded by its government's spending per resident in its latest "
+                                       "year in the state's annual financial reports. Point at, tap or Tab to an area "
+                                       "for where its money came from and went; select it again (or press Enter) for "
+                                       "its government's Money tab."),
+        # 2026-11-18 (maps-cleanup brief, part B item 7): a shorter map on this comparison page, with the county's
+        # figure and the method note in the map's side column under the panel (money_browser.css)
+        h("div", {"class": "cb-map"}, money_map(page, ed, shapes, mm,
+                                                side=join([county_figure(page, ed, mm), method_note(page, ed)]))),
         see_all_fold("money-map-tables", 0, money_map_tables(page, ed, mm, label), hint="Copy CSV",
                      label="Show the table: every figure on the map"))
 
@@ -2330,10 +2345,11 @@ def build_hub(site):
                   mb._legend(),
                   mb.money_rows("mh-camp-preview", "The five offices whose candidates reported the most spending",
                                 [mb._office_money_row(page, r) for r in rows], vmax=vmax, page=page,
-                                subtitle="Latest election on file, all candidates, whole cycle; an incomplete total "
+                                subtitle="Latest election on file, all candidates, whole cycle; a total marked * "
                                          "is a floor.",
                                 status="computed", cite=c.cite("CFM-010"), headers=["Office", "Raised", "Spent"]))
     page.add(h("div", {"class": "cb-two mh-doors", "id": "pages"}, gov_door, camp_door))
+    page.add(_hub_by_area(mo, page))
 
     # ---- headline figures, as one compact list
     facts = []
@@ -2393,6 +2409,69 @@ def build_hub(site):
 def cm_how() -> str:
     from civic.campaign_money import HOW_PAGE
     return HOW_PAGE
+
+
+def _hub_by_area(mo: Money, page) -> Markup | None:
+    """The Money hub's map navigator (maps on every major page, 2026-11-18; civic/navmap.py): every government with
+    money on record, one row each, carrying its area key. Choosing an area on the map lists only that government's
+    row: its Money tab (named by what the guide has for it: budget, tax rate, debt), its campaign money page and the
+    offices whose campaign money is on record. Selecting it again opens its Money tab. With JavaScript off the map's
+    areas link to the Money tabs and the whole list is on the page (in a fold that ships open)."""
+    from civic import navmap as nm
+    from civic import offices as om
+    from civic.campaign_money import area_id, area_path
+    from . import money_browser as mb
+    ed = page.ed
+    tags = nm.Tags(ed)
+    offices_by_unit: dict = {}
+    for r in mb.office_rows(ed):
+        if not r["state"]:
+            offices_by_unit.setdefault(r["unit"], []).append(r)
+    rows = []
+    for g in gm.governments(ed):
+        money_u = gm.href(page, g.gid, "money") if "money" in gm.gov_tabs(ed, g.gid) else None
+        has = []
+        if any(mo.has_budget(m) for m in g.money_ids):
+            has.append("budget")
+        if any(tb.latest_certified(ed, m) for m in g.money_ids) or any(r["unit_id"] in g.money_ids for r in mo.rates):
+            has.append("tax rate and tax base")
+        if any(r["unit_id"] in g.money_ids for r in mo.debt):
+            has.append("debt")
+        links = []
+        if money_u:
+            links.append(h("a", {"href": money_u}, "Money tab" + (f": {', '.join(has)}" if has else "")))
+        camp = area_path(area_id(g.unit_id)) if g.unit_id else None
+        offs = offices_by_unit.get(g.unit_id or "", [])
+        if camp and camp in page.site.by_path:
+            links.append(h("a", {"href": page.rel(camp)}, "Campaign money"))
+        if offs and mb.INDEX in page.site.by_path:
+            links.append(h("a", {"href": page.rel(mb.INDEX) + f"#g-{g.unit_id}"},
+                           f"{len(offs)} office{'s' if len(offs) != 1 else ''} with campaign money"))
+        if not links:
+            continue
+        rows.append(h("li", {"class": "mh-area", "data-nm": tags.gov(g)},
+                      h("a", {"class": "mh-area-name", "href": gm.href(page, g.gid)}, g.name),
+                      h("span", {"class": "mh-area-links"}, " ", join(links, " · "))))
+    if not rows:
+        return None
+
+    def money_tab(key):
+        kind, _, ident = key.partition(":")
+        g = gm.gov_for_unit(ed, ident) if kind == "u" else gm.by_id(ed).get(ident) if kind == "g" else None
+        if g and "money" in gm.gov_tabs(ed, g.gid):
+            return gm.href(page, g.gid, "money")
+        return None
+    nav = nm.navigator(page, tags, "mh-area-list", noun="government", plural="governments", href_of=money_tab,
+                       open_label="Open its Money tab",
+                       what="Choose a layer, then select an area to see only its government's money links below. "
+                            "Select it again to open its Money tab.")
+    return T.tab_section("by-area", "Money by government", nav,
+                         h("details", {"class": "fold-details mh-areas", "id": "mh-areas", "data-fold": True,
+                                       "open": True},
+                           h("summary", {"class": "fold-summary"},
+                             f"Every government with money on record ({len(rows)})",
+                             h("span", {"class": "fold-toggle", "aria-hidden": "true"})),
+                           h("ul", {"class": "mh-area-list", "id": "mh-area-list"}, rows)))
 
 
 def _door_links(page, links) -> Markup:

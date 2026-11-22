@@ -34,10 +34,9 @@
     var hash = window.location.hash || "";
     var m = /^#path-([a-z0-9-]+)-(\d+)$/.exec(hash);
     if (m) {
-      var el = doc.getElementById("paths-data");
-      var data = null;
-      try { data = el ? JSON.parse(el.textContent) : null; } catch (e) { data = null; }
-      if (!data) return "";
+      /* shared data (assets/site-data.js, loaded before this script; 2026-11-18: no longer inlined on every page) */
+      var data = (window.civicData && window.civicData.paths) || null;
+      if (!data || !data.paths) return "";
       var stopAnchor = "";
       data.paths.forEach(function (p) {
         var n = parseInt(m[2], 10);

@@ -229,7 +229,9 @@ def contest_item(page, c, hx: str, on_map: dict) -> object:
         links.append(h("a", {"href": f"{mh}#race-{rid}"}, "How areas voted"))
     q = is_question(c)
     # the line's mark speaks for the contest's chart and table too (scope), so the contest is marked once
-    return h("li", {"class": "ep-contest", "id": EP.contest_anchor(c["contest_id"]), **scope_attrs(st)},
+    from .elections import contest_keys
+    return h("li", {"class": "ep-contest", "id": EP.contest_anchor(c["contest_id"]), **scope_attrs(st),
+                    "data-nm": contest_keys(page, c) or None},
              h("div", {"class": "ep-line"},
                h(hx, {"class": "ep-what"}, h("a", {"href": oh}, name) if oh else name),
                h("span", {"class": "ep-result"}, result_text(c, ed), scope_mark(st)),
@@ -367,7 +369,7 @@ def _level_blocks(page, cs, on_map, prefix: str, hx_level: str, hx_contest: str)
         xs = sorted(groups[k], key=lambda x: GROUP_ORDER.get(classify(x)[0], 99))   # stable: canvass order inside
         sid = f"{prefix}lvl-{k}"
         n = len(xs)
-        out.append(h("section", {"class": "ep-level", "id": sid, "aria-labelledby": f"{sid}-h"},
+        out.append(h("section", {"class": "ep-level", "id": sid, "aria-labelledby": f"{sid}-h", "data-nm-group": True},
                      h(hx_level, {"class": "ep-level-h", "id": f"{sid}-h"}, LEVEL_LABEL[k],
                        h("span", {"class": "ep-level-n"}, f" · {n} contest{'s' if n != 1 else ''}")),
                      h("ul", {"class": "ep-list"}, [contest_item(page, x, hx_contest, on_map) for x in xs])))
@@ -399,17 +401,31 @@ def _contests(ed, e, page):
         page.add(h("p", {"class": "fscope-line fscope-unofficial"},
                    h("strong", None, "Unofficial"), figure_mark("unofficial", scope=True),
                    ": the contests marked so are not final yet. ", RS.summary(ed, eid)))
+    # the map navigator (civic/navmap.py; maps on every major page, 2026-11-18) goes here, above the contests, once
+    # every contest is tagged with its area; it is folded (a long list) and filters the contests to one area
+    map_at = len(page.parts)
     if primary:
         parties = _party_order({x["party_primary"] for x in cs})
+        blocks = []
         for p in parties:
             xs = [x for x in cs if x["party_primary"] == p]
             pk = party_key(p)
-            page.add(h("section", {"class": "tsec ep-party", "id": pk, "aria-labelledby": f"{pk}-h", **scope},
-                       h("h2", {"class": "tsec-h ep-party-h", "id": f"{pk}-h"}, party_title(p),
-                         h("span", {"class": "ep-level-n"}, f" · {len(xs)} contest{'s' if len(xs) != 1 else ''}")),
-                       _level_blocks(page, xs, on_map, f"{pk}-", "h3", "h4")))
+            blocks.append(h("section", {"class": "tsec ep-party", "id": pk, "aria-labelledby": f"{pk}-h", **scope,
+                                        "data-nm-group": True},
+                            h("h2", {"class": "tsec-h ep-party-h", "id": f"{pk}-h"}, party_title(p),
+                              h("span", {"class": "ep-level-n"}, f" · {len(xs)} contest{'s' if len(xs) != 1 else ''}")),
+                            _level_blocks(page, xs, on_map, f"{pk}-", "h3", "h4")))
+        page.add(h("div", {"class": "ep-parties", "id": "ep-all"}, blocks))
     else:
-        page.add(h("div", {"class": "ep-levels-all", **scope}, _level_blocks(page, cs, on_map, "", "h2", "h3")))
+        page.add(h("div", {"class": "ep-levels-all", "id": "ep-all", **scope},
+                   _level_blocks(page, cs, on_map, "", "h2", "h3")))
+    if len(cs) > 1:
+        from .elections import _nav
+        nav = _nav(page, "ep-all", "contest", "contests", folded=True,
+                   what="Choose a layer, then select an area to list only its contests on this ballot. Select it again "
+                        "to open its elections.")
+        if nav is not None:
+            page.parts.insert(map_at, nav)
     page.add(h("p", {"class": "tnote"}, "Candidate order: Indiana places parties on the county ballot in order of each "
                                          "party's county vote for Secretary of State at the last election, and the "
                                          "county's reports follow that order.", page.cites.cite("IND-056"),

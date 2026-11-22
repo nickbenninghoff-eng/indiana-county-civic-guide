@@ -294,7 +294,7 @@ def legend_title(layer: dict) -> str:
     return f"Counted spending per resident, {yr}"
 
 
-def money_map(page, ed, shapes: dict, mm: dict, default_layer: str = "cities", in_page=None) -> Markup:
+def money_map(page, ed, shapes: dict, mm: dict, default_layer: str = "cities", in_page=None, side=None) -> Markup:
     """in_page (optional): uid -> '#anchor' of the area's own block on the host page, or None. When given, a click
     shows that block (static/js/pick_one.js on the budgets page) and the panel adds a second link to the area's
     full breakdown on its own page; without it every area links to its full breakdown."""
@@ -331,7 +331,8 @@ def money_map(page, ed, shapes: dict, mm: dict, default_layer: str = "cities", i
                               "show its budgets below." if in_page else
                               "Hover, focus or tap an area to see its money here. Select it again, or use the link, to "
                               "open its full breakdown."),
-                        legend=legends, defs=shade_defs(), extra_cls="cmap-money", back_cls="cmap-s cmap-mm-back")
+                        legend=legends, defs=shade_defs(), extra_cls="cmap-money", back_cls="cmap-s cmap-mm-back",
+                        side=side)
 
 
 def county_figure(page, ed, mm: dict) -> Markup | None:

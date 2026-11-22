@@ -169,10 +169,11 @@
       if (filtered && tr.hidden && tr.parentNode && tr.parentNode.tagName === "TBODY") return;
       var cells = [];
       Array.prototype.forEach.call(tr.children, function (c) {
-        /* a status symbol (.fmark, "About these figures") is copied as its word, as the badges were before */
-        if (c.querySelector(".fmark")) {
+        /* a status symbol (.fmark, "About these figures") is copied as its word, as the badges were before; so is
+           a quiet computed marker (.fquiet: "computed" is said once per page, 2026-11-18) */
+        if (c.querySelector(".fmark, .fquiet")) {
           c = c.cloneNode(true);
-          Array.prototype.forEach.call(c.querySelectorAll(".fmark"), function (m) {
+          Array.prototype.forEach.call(c.querySelectorAll(".fmark, .fquiet"), function (m) {
             m.textContent = " " + (m.getAttribute("data-word") || "") + " ";
           });
         }
@@ -247,7 +248,8 @@
   }
 
   /* ------------------------------------------------------------ learning paths (#path-<id>-<n>) */
-  var pathsData = readJSON("paths-data");
+  /* shared data (assets/site-data.js, loaded before this script; 2026-11-18: no longer inlined on every page) */
+  var pathsData = (window.civicData && window.civicData.paths) || null;
   var bar = doc.getElementById("path-bar");
   function link(text, href, cls) {
     var a = doc.createElement("a");

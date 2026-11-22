@@ -23,9 +23,11 @@ spending; people are never ranked by money (alphabetical), and money charts neve
 """
 from __future__ import annotations
 
+import re
 from collections import OrderedDict
 
 from civic import campaign_money as cm
+from civic import navmap as nm
 from civic import offices as om
 from civic import people as pp
 from civic.charts import money_rows
@@ -80,6 +82,35 @@ def browser_head(page, current: str, facts=None, note=None) -> Markup:
 
 
 # =========================================================================== the office model (no new figures)
+
+def browser_map(page, target: str, noun: str, plural: str, office_tab: str = "money") -> Markup | None:
+    """The campaign money browser's map navigator (civic/navmap.py; maps on every major page, 2026-11-18): the same
+    tool on every view, in a "Show map" fold (these are long browse pages). Choosing an area lists only that area's
+    rows; selecting it again opens the area's campaign money page (a government) or the office's Money tab (a
+    district). The By place view keeps its own campaign-money map."""
+    ed = page.ed
+
+    def href_of(key):
+        kind, _, ident = key.partition(":")
+        if kind == "u":
+            area = cm.area_path(cm.area_id(ident))
+            if area in page.site.by_path:
+                return page.rel(area)
+        if kind == "o":
+            return om.href(page, ident, office_tab) or om.href(page, ident)
+        return None
+    return nm.navigator(page, nm.tags_for(page), target, noun=noun, plural=plural, href_of=href_of, folded=True,
+                        open_label="Open its campaign money",
+                        what=f"Choose a layer, then select an area to list only its {plural}. Select it again to "
+                             "open its campaign money.")
+
+
+def _race_keys(page, race) -> str:
+    """A race's area keys: its office (and so its government), else the government of its area page."""
+    oid = om.race_office_id(page.ed, race)
+    t = nm.tags_for(page)
+    return t.office(oid) if oid and oid in page.ed.offices else t.unit(cm.area_unit(race["area"]))
+
 
 def _race_year(race) -> str:
     return race["general_eid"][:4]
@@ -172,7 +203,8 @@ def _office_money_row(page, row, *, sub_extra=None) -> dict:
         sub.append(views)
     words = join([s for s in sub if s], " · ")   # join: the record may carry a mark (markup)
     attrs = {"data-tf-row": True, "data-tf-text": f"{row['office']['title']} {om.unit_name(page.ed, row['unit'])} "
-                                                   + " ".join(row["years"])}
+                                                   + " ".join(row["years"]),
+             "data-nm": nm.tags_for(page).office(row["id"])}
     if race is None:
         return {"name": _office_name_link(page, row), "sub": words,
                 "raised": None, "spent": None, "raised_text": "see the office's Money tab",
@@ -265,7 +297,7 @@ def build_by_office(site):
                _legend(),
                money_rows("cb-top", f"The {len(top)} offices whose candidates reported the most spending",
                           [_office_money_row(page, r) for r in top], vmax=vmax,
-                          subtitle="All candidates, whole election cycle, from the reports on file; an incomplete total is a floor. One scale for every "
+                          subtitle="All candidates, whole election cycle, from the reports on file; a total marked * is a floor. One scale for every "
                                    "chart on this page. Select an office for every election's money, primary and "
                                    "general.",
                           page=page, cite=c.cite("CFM-010"), status="computed",
@@ -307,7 +339,8 @@ def build_by_office(site):
             u = om.href(page, r["id"], "money")
             ppl = ", ".join(p["name"] for p in r["legislators"])
             items.append(h("li", {"class": "cb-srow", "data-tf-row": True,
-                                  "data-tf-text": f"{r['office']['title']} state legislature {ppl}"},
+                                  "data-tf-text": f"{r['office']['title']} state legislature {ppl}",
+                                  "data-nm": nm.tags_for(page).office(r["id"])},
                            h("a", {"href": u}, r["office"]["title"]) if u else r["office"]["title"]))
         blocks.append(h("div", {"class": "cb-level", "id": "state", "data-tf-group": True},
                         h("h3", {"class": "cb-level-h"}, "State legislature"),
@@ -325,6 +358,7 @@ def build_by_office(site):
                h("p", {"class": "tsec-lead"}, "Open a government, or type an office or place. Each bar is the office's "
                                               "latest election on file; the office's Money tab has every election, "
                                               "with a Primary / General switch and a party filter."),
+               browser_map(page, "cb-offices", "office", "offices", "money"),
                filt, filter_empty_note("cb-offices"),
                h("div", {"class": "cb-all", "id": "cb-offices", "data-tf-deep": True}, blocks),
                h("p", {"class": "tnote"}, f"{n_off - len(rows)} offices have no campaign money on record (no report "
@@ -383,6 +417,8 @@ def build_by_election(site):
                                               "earlier elections as news coverage reported them"]))
     page.add(h("p", {"class": "cb-lead"}, NOT_SUPPORT))
     page.add(_legend())
+    map_at = len(page.parts)        # the map goes here once every race row is tagged
+    targets: list[str] = []
     for cycle in reversed(list(cm.CYCLE_ELECTIONS)):
         pid, gid = cm.CYCLE_ELECTIONS[cycle]
         rs = [r for r in races if r["cycle"] == cycle]
@@ -402,20 +438,23 @@ def build_by_election(site):
                   "Election pages: " if el_links else None, join(el_links, " · ") if el_links else None)]
         title = f"{cycle[:4]} cycle: every race"
         if len(rows) > SHOW_CYCLE + 2:
-            body.append(money_rows(f"cb-{sid}", f"{cycle[:4]}: the {SHOW_CYCLE} races with the most spending",
-                                   rows[:SHOW_CYCLE], vmax=vmax, page=page, cite=c.cite("CFM-010"), status="computed",
-                                   subtitle="All candidates, whole cycle. One scale for every chart on this page.",
-                                   headers=["Race", "Raised", "Spent"]))
-            body.append(see_all_fold(f"{sid}-all", len(rows), money_rows(
+            body.append(h("div", {"data-nm-group": True}, money_rows(
+                f"cb-{sid}", f"{cycle[:4]}: the {SHOW_CYCLE} races with the most spending",
+                rows[:SHOW_CYCLE], vmax=vmax, page=page, cite=c.cite("CFM-010"), status="computed",
+                subtitle="All candidates, whole cycle. One scale for every chart on this page.",
+                headers=["Race", "Raised", "Spent"])))
+            body.append(h("div", {"data-nm-group": True}, see_all_fold(f"{sid}-all", len(rows), money_rows(
                 f"cb-{sid}-rest", f"{cycle[:4]}: the other {len(rows) - SHOW_CYCLE} races", rows[SHOW_CYCLE:],
                 vmax=vmax, page=page, headers=["Race", "Raised", "Spent"]),
-                noun="race", hint=None, label=f"Show the other {len(rows) - SHOW_CYCLE} races"))
+                noun="race", hint=None, label=f"Show the other {len(rows) - SHOW_CYCLE} races")))
         else:
-            body.append(money_rows(f"cb-{sid}", f"{cycle[:4]}: every race", rows, vmax=vmax, page=page,
-                                   cite=c.cite("CFM-010"), status="computed",
-                                   subtitle="All candidates, whole cycle. One scale for every chart on this page.",
-                                   headers=["Race", "Raised", "Spent"]))
-        page.add(h("section", {"class": "tsec", "id": sid, "aria-labelledby": f"{sid}-h"},
+            body.append(h("div", {"data-nm-group": True}, money_rows(
+                f"cb-{sid}", f"{cycle[:4]}: every race", rows, vmax=vmax, page=page,
+                cite=c.cite("CFM-010"), status="computed",
+                subtitle="All candidates, whole cycle. One scale for every chart on this page.",
+                headers=["Race", "Raised", "Spent"])))
+        targets.append(sid)
+        page.add(h("section", {"class": "tsec", "id": sid, "aria-labelledby": f"{sid}-h", "data-nm-group": True},
                    h("h2", {"class": "tsec-h", "id": f"{sid}-h"}, title), body))
     # ---- earlier elections: news reports (never added up here)
     by_year: OrderedDict = OrderedDict()
@@ -436,19 +475,23 @@ def build_by_election(site):
                          if contest["party_primary"] else "general election")
                     kinds.append(w)
                 u = om.href(page, row["id"], "money")
-                items.append(h("li", {"class": "cb-srow"},
+                items.append(h("li", {"class": "cb-srow", "data-nm": nm.tags_for(page).office(row["id"])},
                                h("span", {"class": "cb-year"}, y), " ",
                                h("a", {"href": f"{u}#y{y}"}, row["office"]["title"]) if u else row["office"]["title"],
                                h("span", {"class": "cb-srow-sub"},
                                  (", ".join(dict.fromkeys(kinds)) + ": " if kinds else "")
                                  + "figures as the articles reported them, rounded where they were")))
-        page.add(h("section", {"class": "tsec", "id": "earlier", "aria-labelledby": "earlier-h"},
+        targets.append("earlier")
+        page.add(h("section", {"class": "tsec", "id": "earlier", "aria-labelledby": "earlier-h", "data-nm-group": True},
                    h("h2", {"class": "tsec-h", "id": "earlier-h"}, "Earlier elections: figures from news reports"),
                    h("p", {"class": "tsec-lead"}, "The county's posted reports begin with 2023. For earlier elections the "
                                                   "guide has only what news coverage reported; each office's Money tab "
                                                   "shows those figures in the articles' own words, on the same scale "
                                                   "as the filed ones. They are not added up here.", c.cite("CFM-002")),
                    h("ul", {"class": "cb-slist"}, items)))
+    nav = browser_map(page, " ".join(targets), "race", "races")
+    if nav is not None:
+        page.parts.insert(map_at, nav)
     page.finish(gaps=_gaps(ed), gaps_intro=None)
     return page
 
@@ -477,7 +520,8 @@ def _race_row(page, race) -> dict:
     return {"name": link, "sub": sub, "raised": race["raised"], "spent": race["spent"],
             "raised_text": cm.usd(race["raised"], "no reports on file"),
             "spent_text": cm.usd(race["spent"], "no reports on file"),
-            "tip": f"{race['office']}: all candidates, whole {race['spec']['cycle']} cycle"}
+            "tip": f"{race['office']}: all candidates, whole {race['spec']['cycle']} cycle",
+            "attrs": {"data-nm": _race_keys(page, race)}}
 
 
 # =========================================================================== By candidate
@@ -551,6 +595,7 @@ def build_by_candidate(site):
              join([h("a", {"href": f"#l-{L.lower() if L != '#' else 'other'}"}, L) for L in letters], " "))
     page.add(h("section", {"class": "tsec", "id": "people", "aria-labelledby": "people-h"},
                h("h2", {"class": "tsec-h", "id": "people-h"}, "Every candidate and committee"),
+               browser_map(page, "cb-people", "name", "names"),
                table_filter("cb-people", [], len(model), noun="name", search="Name or office",
                             label="Filter the names"),
                filter_empty_note("cb-people"), jump,
@@ -568,6 +613,12 @@ def _cand_item(page, e) -> Markup:
     ed = page.ed
     lines = []
     texts = [e["name"]]
+    tags = nm.tags_for(page)
+    keys = [_race_keys(page, race) for race, _cand in e["races"]]
+    keys += [tags.office(contest.get("office_id") or "") for _cid, contest in e["news"]]
+    for lp in e["state"]:
+        for kind, num in re.findall(r"\b(HD|SD)0*(\d+)", f"{lp.get('now', '')} {lp.get('ballot', '')}"):
+            keys.append(tags.office(f"state-{'house' if kind == 'HD' else 'senate'}-{num}"))
     for race, cand in e["races"]:
         oid = om.race_office_id(ed, race)
         u = om.href(page, oid, "money") if oid else None
@@ -594,7 +645,8 @@ def _cand_item(page, e) -> Markup:
         oid = om.race_office_id(ed, e["races"][0][0])
         u = om.href(page, oid, "money") if oid else None
     party = " · ".join(party_label(p) for p in sorted(e["party"]))
-    return h("li", {"class": "cb-crow", "data-tf-row": True, "data-tf-text": " ".join(texts)},
+    return h("li", {"class": "cb-crow", "data-tf-row": True, "data-tf-text": " ".join(texts),
+                    "data-nm": tags.join(*keys)},
              h("span", {"class": "cb-cname"}, h("a", {"href": u}, e["name"]) if u else e["name"],
                h("span", {"class": "cb-cparty"}, party) if party else None),
              h("ul", {"class": "cb-cfacts"}, lines))

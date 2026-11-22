@@ -43,6 +43,7 @@ from civic.map import election_votes, load_votes  # noqa: E402
 from civic.shell import Site  # noqa: E402
 from pages import elections_numbers as N  # noqa: E402
 
+from anchor_fixtures import anchor_fixture  # noqa: E402  (old-anchor fixtures without retired data-block ids)
 FIXTURE = Path(__file__).parent / "fixtures" / "anchors_before_phase6_elections.json"
 ID_RE = re.compile(r'\sid="([^"]+)"')
 HUB, RES, CAL, JUDGES = ("elections/index.html", "elections/results/index.html", "elections/calendar/index.html",
@@ -240,7 +241,7 @@ class Built(unittest.TestCase):
     def test_every_old_anchor_resolves(self):
         """Every id the hub, landscape, margins, turnout and results pages had before this step is still on its page or
         forwarded by its #moved-anchors to a built page that has it (or keeps it, for a destination without #)."""
-        before = json.loads(FIXTURE.read_text(encoding="utf-8"))["ids"]
+        before = anchor_fixture(FIXTURE)["ids"]
         lost = []
         for page, ids in before.items():
             moved = moved_map(self.html(page))

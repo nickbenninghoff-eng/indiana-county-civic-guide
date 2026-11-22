@@ -280,6 +280,50 @@ def contest_layer(ed, c) -> str:
     return ""
 
 
+def _nav(page, target: str, noun: str, plural: str, tab: str = "elections", folded: bool = False, what=None,
+         count_in: str | None = None):
+    """The map navigator on an Elections page (civic/navmap.py): selecting an area again opens its government's or
+    office's ``tab`` (Elections by default), else its page."""
+    from civic import governments as gm
+    from civic import navmap as nm
+    from civic import offices as om
+
+    def href_of(key):
+        kind, _, ident = key.partition(":")
+        if kind == "u":
+            return gm.unit_href(page, ident, tab) or gm.unit_href(page, ident)
+        if kind == "o":
+            return om.href(page, ident, tab) or om.href(page, ident)
+        return None
+    return nm.navigator(page, nm.tags_for(page), target, noun=noun, plural=plural, href_of=href_of, folded=folded,
+                        open_label="Open its elections", what=what, count_in=count_in)
+
+
+def contest_keys(page, c, offices_only_districts: bool = False) -> str:
+    """A contest's area keys for the map navigator (civic/navmap.py; 2026-11-18): its office's keys when the contest
+    is linked to an office, else the government whose voters decide it (contest_layer: a city, town, township, school
+    corporation, the county) or the statewide level. "" when nothing fits (never filtered into an area it may not
+    belong to). ``offices_only_districts``: keep the office key only for a district seat (the Elections hub's
+    election rows name governments, plus the districts a reader can pick on the map)."""
+    from civic import navmap as nm
+    t = nm.tags_for(page)
+    oid = c.get("office_id") or ""
+    if oid and oid in page.ed.offices:
+        o = page.ed.offices[oid]
+        keys = t.office_keys(oid)
+        if offices_only_districts and not nm._districted(o):
+            keys = [k for k in keys if not k.startswith("o:")]
+        return t.join(" ".join(keys))
+    lay = contest_layer(page.ed, c)
+    if lay == "state":
+        return t.join(nm.level_key("statewide"))
+    if lay == "county":
+        return t.unit("county")
+    if ":" in lay:
+        return t.unit(lay.split(":", 1)[1])
+    return ""
+
+
 def contest_status(rows) -> str:
     st = {r["status"] for r in rows}
     for s in ("unofficial", "from_scan", "secondary", "single_source"):
@@ -511,8 +555,9 @@ def _hub_ballot(page, ed, y):
             lis.append(h("li", None, label,
                          h("span", {"class": "muted"}, f" · {it['seats']} seats") if (it["seats"] or 1) > 1 else None,
                          cites.cite_compact(it["src"])))
+        from civic import navmap as nm
         cards.append(h("div", {"class": "ehub-gov", "data-here-unit": uid, "data-here-layer": here_layer(ed, uid) or None,
-                               "data-here-name": name},
+                               "data-here-name": name, "data-nm": nm.tags_for(page).unit(uid) or None},
                        h("h3", {"class": "ehub-gov-h"}, name), h("ul", {"class": "ehub-gov-list"}, lis)))
     if not cards:
         return None
@@ -553,7 +598,8 @@ def _timeline_row(page, ed, e):
     kind = EP.TYPE_TITLE.get(e["type"], e["type"])
     href = page.rel(EP.path(eid)) if EP.path(eid) in page.site.by_path else None
     name = kind[:1].upper() + kind[1:]
-    return h("li", {"class": "ehub-el", "id": f"el-{eid}"},
+    keys = " ".join(contest_keys(page, c, offices_only_districts=True) for c in EP.contests(ed, eid))
+    return h("li", {"class": "ehub-el", "id": f"el-{eid}", "data-nm": " ".join(dict.fromkeys(keys.split())) or None},
              h("span", {"class": "ehub-el-what"}, h("a", {"href": href}, name) if href else name),
              h("span", {"class": "ehub-el-when"}, when),
              h("span", {"class": "ehub-el-to"}, f"{to:.1f}% turnout" if to is not None else "Turnout not recorded",
@@ -572,7 +618,7 @@ def _timeline(page, ed):
         by_year.setdefault(EP.year(e), []).append(e)
     blocks = []
     for y, es in by_year.items():
-        blocks.append(h("section", {"class": "ehub-year", "id": f"y{y}", "aria-labelledby": f"y{y}-h"},
+        blocks.append(h("section", {"class": "ehub-year", "id": f"y{y}", "aria-labelledby": f"y{y}-h", "data-nm-group": True},
                         h("h3", {"class": "ehub-year-h", "id": f"y{y}-h"}, y),
                         h("ul", {"class": "ehub-els"}, [_timeline_row(page, ed, e) for e in es])))
     recent, older = blocks[:TIMELINE_OPEN_YEARS], blocks[TIMELINE_OPEN_YEARS:]
@@ -630,7 +676,16 @@ def build_hub(site):
                      h("a", {"href": page.rel("elections/calendar/index.html#by-year")}, "Every seat, 2026 to 2030"))))
 
     # ---- every election
-    page.add(_timeline(page, ed))
+    timeline = _timeline(page, ed)
+    # ---- the map navigator (civic/navmap.py; maps on every major page, 2026-11-18): an area's seats on the next
+    # ballot and the elections that had its contests
+    nav = _nav(page, "ehub-ballot timeline", "election", "elections", count_in="timeline",
+               what="Choose a layer, then select an area: the list of elections keeps only those with its contests "
+                    "and the next ballot only its offices. Select it again to open its elections.")
+    if nav is not None:
+        from civic.tabs import tab_section
+        page.add(tab_section("by-area", "Elections by area", nav))
+    page.add(timeline)
 
     # ---- four doors, one sourced fact each
     facts: dict[str, Markup] = {}
@@ -1125,6 +1180,9 @@ def build_calendar(site):
                      h("nav", {"class": "cal-jump", "aria-label": "Jump to a year"},
                        h("ul", None, [h("li", None, h("a", {"href": f"#year-{y}"}, str(y))) for y in YEARS])),
                      badge_key(page),
+                     _nav(page, "cal-years", "seat", "seats", "elections", folded=True,
+                          what="Choose a layer, then select an area to list only its seats in every year. Select it "
+                               "again to open its page."),
                      table_filter("cal-years", controls(), n_seat_rows, noun="seat",
                                   search="Words in the office or a holder's name", label="Filter the seats in every year"),
                      here_slot("filter", "cal-years", extra={"data-here-noun": "seats"}),
@@ -1218,6 +1276,14 @@ def _up_next_rows(page, ed, items):
     return urows, uattrs, uoffices
 
 
+def _cal_keys(page, it) -> str:
+    from civic import navmap as nm
+    t = nm.tags_for(page)
+    if it["office"]:
+        return t.office(it["office"]["office_id"])
+    return t.join(nm.level_key(it["level"])) if it["level"] in nm.LEVEL_NAMES else ""
+
+
 def _year_lists(page, ed, items, tattrs):
     """§4 of the calendar: one section per year (#year-<y>), seats grouped by government in folds that ship open
     (static/js/folds.js closes them), each seat one row; 2027 and 2028 rows add the holder now. The filter bar
@@ -1261,7 +1327,9 @@ def _year_lists(page, ed, items, tattrs):
             row_attrs = {k: v for k, v in a.items() if k != "data-tf-text"}
             row_attrs.update({"class": "cal-seat", "data-tf-row": True, "data-tf-text": " ".join(words),
                               # saved-place preselect (static/js/preselect.js): statewide and federal lines are "state"
-                              "data-here-layer": here_layer(ed, o["unit_id"]) if o else "state"})
+                              "data-here-layer": here_layer(ed, o["unit_id"]) if o else "state",
+                              # the map navigator (civic/navmap.py): the seat's area, or the level of a state line
+                              "data-nm": _cal_keys(page, it)})
             grp["rows"].append(h("li", row_attrs,
                                  h("p", {"class": "cal-seat-h"}, h("span", {"class": "cal-office"}, it["label"]),
                                    h("span", {"class": "cal-meta"}, " · " + " · ".join(meta)), " ",
@@ -1365,7 +1433,7 @@ def _every_contest_table(page, ed, payload_c):
                      "; ".join(bits) + (" (county portion only)" if x["x"] else ""),
                      STATUS.get(x["s"], (x["s"].upper(),))[0]])   # plain label: 1,200 badge tooltips would double the table
         attrs.append({"data-tf-year": e["date"][:4], "data-tf-group": str(GROUP_ORDER.get(x["g"], len(GROUPS))),
-                      "data-tf-place": p_ix[x["p"]]})
+                      "data-tf-place": p_ix[x["p"]], "data-nm": contest_keys(page, c) or None})
     years = sorted({a["data-tf-year"] for a in attrs}, reverse=True)
     groups = [(str(i), g) for i, g in enumerate(GROUPS + ["Other"]) if any(a["data-tf-group"] == str(i) for a in attrs)]
     return see_all_table(
@@ -1396,7 +1464,10 @@ def build_results(site):
     els = _elections(ed)
     eids = {e["election_id"] for e in els}
     contests = [c for c in ed.contests.values() if c["election_id"] in eids]
-    toc = [("by-election", "Pick an election"), ("by-office", "Pick an office"), ("every", "Every contest in one table"),
+    from civic import navmap as nm
+    toc = ([("by-area", "Results by area")] if nm.model(ed) else []) + [
+           ("by-election", "Pick an election"), ("by-office", "Pick an office"),
+           ("every", "Every contest in one table"),
            ("how-to-read", "How to read the results"), ("gaps", "Gaps"), ("sources", "Sources")]
     page.add(_hero(page, "Reference · Elections · Results",
                    "Every election and every office has its own page of results. Pick one below, or search every "
@@ -1434,9 +1505,12 @@ def build_results(site):
             continue
         govs = []
         for uid, offs in groups[lvl].items():
-            govs.append(h("li", {"class": "fr-gov"}, h("span", {"class": "fr-gov-n"}, om.unit_name(ed, uid)), ": ",
+            from civic import navmap as nm
+            t = nm.tags_for(page)
+            govs.append(h("li", {"class": "fr-gov", "data-nm": t.join(*[t.office(o["office_id"]) for o, _u in offs])},
+                          h("span", {"class": "fr-gov-n"}, om.unit_name(ed, uid)), ": ",
                           join([h("a", {"href": u}, om.short_title(ed, o)) for o, u in offs], " · ")))
-        blocks.append(h("div", {"class": "fr-level"}, h("h3", {"class": "fr-level-h"}, lvl_label),
+        blocks.append(h("div", {"class": "fr-level", "data-nm-group": True}, h("h3", {"class": "fr-level-h"}, lvl_label),
                         h("ul", {"class": "fr-govs"}, govs)))
     n_off = sum(len(v) for g in groups.values() for v in g.values())
     page.add(section("by-office", 2, "Pick an office",
@@ -1459,6 +1533,13 @@ def build_results(site):
                      h("p", None, "Every contest since 2010 as one table, with filters and Copy CSV. Each contest is also "
                                   "on its election's page, with every candidate's result drawn."),
                      every, json_script("results-forward", fwd), scope="county", ed=ed))
+    # the map navigator (civic/navmap.py; 2026-11-18): an area's offices in "Pick an office" and its contests in the
+    # every-contest table; it goes right after the hero, once every row is tagged
+    nav = _nav(page, "by-office every-contest", "contest", "contests", count_in="every-contest",
+               what="Choose a layer, then select an area: Pick an office keeps only its offices and the every-contest "
+                    "table only its contests. Select it again to open its elections.")
+    if nav is not None:
+        page.parts.insert(1, section("by-area", None, "Results by area", nav))
 
     # ---- how to read
     n_linked = sum(1 for c in contests if c["office_id"])
@@ -1689,6 +1770,7 @@ def build_judges(site):
             title = _question_title(c)
             sw = OV.question_statewide(ed, c)   # a statewide question's overall result (2024: "Statewide: Yes (ratified)")
             items.append({
+                "attrs": {"data-nm": contest_keys(page, c) or None},
                 "key": c["contest_id"], "name": title, "item_id": f"q-{c['contest_id']}",
                 "facts": [e["date"][:4], _question_outcome(cands, cross, unoff), key_num, sw], "status": st,
                 "search": f"{jur} {c['label']} {_election_name(e)}",
@@ -1707,6 +1789,7 @@ def build_judges(site):
         # only a city or town: here.js's marker would call a default school corporation "Your school corporation"
         unit = lay.split(":", 1)[1] if lay.startswith("municipality:") else None
         blocks.append(h("div", {"class": "elx-qgroup", "id": f"q-group-{_slug(jur)}", "data-here-layer": lay or None,
+                                "data-nm-group": True,
                                 "data-here-name": jur if lay else None, "data-here-unit": unit},
                         h("h3", {"class": "elx-qgroup-h"}, jur, h("span", {"class": "elx-qgroup-n muted"},
                                                                   f" · {n} question{'s' if n != 1 else ''}")),
@@ -1721,6 +1804,11 @@ def build_judges(site):
                                   "grouped by who voted on it and newest first. Each row shows the year, the outcome and the "
                                   "yes and no shares, and opens to the question's wording and result. Statewide questions "
                                   "show the St. Joseph County tally, with the statewide result where the guide has it."),
+                     # the map navigator (civic/navmap.py; 2026-11-18): an area's own questions
+                     _nav(page, "q-groups", "question", "questions", folded=True,
+                          what="Choose a layer, then select an area to list only the questions its voters decided "
+                               "(statewide questions: Statewide, beside the map). Select it again "
+                               "to open its elections."),
                      here_slot("first", "q-groups"),
                      h("div", {"class": "elx-qgroups", "id": "q-groups"}, blocks), scope="county", ed=ed))
 

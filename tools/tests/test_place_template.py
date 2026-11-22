@@ -34,6 +34,7 @@ from civic.shell import Site  # noqa: E402
 from gov_moved import lands  # noqa: E402
 from pages import places  # noqa: E402
 
+from anchor_fixtures import anchor_fixture  # noqa: E402  (old-anchor fixtures without retired data-block ids)
 FIXTURE = Path(__file__).parent / "fixtures" / "anchors_before_place_template.json"
 ID_RE = re.compile(r'\sid="([^"]+)"')
 TOWNSHIPS = ["centre", "clay", "german", "greene", "harris", "liberty", "lincoln", "madison", "olive", "penn",
@@ -166,7 +167,7 @@ class Built(unittest.TestCase):
 
     # ------------------------------------------------------------------ anchors
     def test_every_old_anchor_lands(self):
-        before = json.loads(FIXTURE.read_text(encoding="utf-8"))["ids"]
+        before = anchor_fixture(FIXTURE)["ids"]
         self.assertEqual(sorted(before), self.old_paths)
         lost = [(p, i) for p, ids in before.items() for i in ids
                 if not lands(self.html, self.ids, p, i) and not i.startswith("banner-")]

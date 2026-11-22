@@ -40,6 +40,7 @@ from civic.data import Edition  # noqa: E402
 from civic.shell import Site  # noqa: E402
 from gov_moved import follow  # noqa: E402
 
+from anchor_fixtures import anchor_fixture  # noqa: E402  (old-anchor fixtures without retired data-block ids)
 FIXTURE = Path(__file__).resolve().parent / "fixtures" / "anchors_before_governments.json"
 ID_RE = re.compile(r'\sid="([^"]+)"')
 HREF_RE = re.compile(r'href="([^"]*)"')
@@ -175,7 +176,7 @@ class Built(unittest.TestCase):
         return follow(self.html, self.ids, page, i)
 
     def test_every_old_anchor_resolves(self):
-        fixture = json.loads(FIXTURE.read_text(encoding="utf-8"))["ids"]
+        fixture = anchor_fixture(FIXTURE)["ids"]
         self.assertIn("places/south-bend/index.html", fixture)
         bad = []
         for page, ids in fixture.items():

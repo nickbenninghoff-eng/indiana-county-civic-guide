@@ -677,3 +677,34 @@ netlify_prep: C:\Users\nickb\AppData\Local\Temp\tmpugwwozp7\st-joseph ready (ful
   tests 139 → 138, dropped "(county tally only)" from the election-page group headings and reworded three sentences.
   Re-verifying (build + full suite), then second commit, push main, deploy = fast-forward production to main + push.
 - Follow-ups are in Roadmap.md "Gap-fill follow-ups". Cleanup round still not launched.
+
+### 2026-11-18 (night): DEPLOYED
+- Commits 3d16286 and 2dee977 pushed to main; production fast-forwarded to 2dee977 (Nick: "Let's commit, push, and
+  deploy"; deploy-guard marker used; that authorization is spent). Netlify built in about 2 minutes. Live checks: home
+  shows the new headline; offices/, money/campaigns/, learn/, elections/2026g/, offices/us-house-2/, governments/ all
+  200; old URL elections/landscape/ 301; offices/state-house-48/ 404 (never existed on the live site before).
+- handoff note itself is uncommitted (this entry). Working tree otherwise clean.
+- Next: Gap-fill follow-ups and Cleanup round in Roadmap.md (neither launched; estimate + model to Nick first).
+  After noon 2026-11-20: recount re-check (New Carlisle at-large, State House 7).
+
+### 2026-11-18 (night): maps-on-every-major-page + cleanup round launched
+- Nick noticed Money and campaign-money pages have no map; restated that all major pages should have the map view for
+  navigation (saved to memory as a standing rule). He chose to combine it with the cleanup round.
+- One Opus agent launched, brief: planning/maps-cleanup-brief-2026-11-18.md (Part A shared map navigator on every
+  hub/browse page; Part B cleanup items 1-8). Report to come: planning/qa/phase6-maps-cleanup-2026-11-18.md.
+- Estimate given to Nick: maps 500-800k; with cleanup about 0.9-1.3M tokens on Opus.
+- Nothing from this round is committed or deployed; the deploy authorization of 2026-11-18 is spent.
+
+### 2026-11-18/19: maps + cleanup round finished, verified by main session, UNCOMMITTED
+- Report: planning/qa/phase6-maps-cleanup-2026-11-18.md. Shared navigator civic/navmap.py + static/js/navmap.js +
+  static/css/navmap.css, shapes once in assets/navmap.svg; shared data in assets/site-data.js. Maps open on Money hub,
+  Elections hub, Results, People hub, Officeholders, Community hub; folded on campaign By office / By election / By
+  candidate / Every filing, Calendar, Judges & questions, each election's Contests tab. No map: Committees, Turnout,
+  Tax bill, Compare overview, History, State government, Run, Who handles this.
+- Cleanup items 1-8 done; site 250 MB → 165 MB. New tests test_maps_navigator.py (14), test_maps_cleanup.py (16);
+  tools/tests/anchor_fixtures.py skips two retired data-block ids (here-data, paths-data).
+- My verification: see verify3 result in the chat (build, checkers, full suite). Screenshots viewed: money hub,
+  by office, people hub.
+- Open questions to Nick: Committees/Turnout without a map; move home/Offices/Governments maps to the shared shapes;
+  caption line for computed on chart pages; folded vs open maps on campaign money views.
+- Not committed, not deployed; needs Nick's "commit" / "deploy".

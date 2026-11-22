@@ -291,7 +291,9 @@ class Built(unittest.TestCase):
         self.assertNotIn("Won", gregg)
         holcomb = re.search(r"<tr><th scope=\"row\">.*?Eric Holcomb.*?</tr>", fig, re.S).group(0)
         self.assertIn("Won", holcomb)
-        self.assertIn('data-fmark="computed"', holcomb)   # share and winner are the guide's arithmetic
+        # share and winner are the guide's arithmetic (2026-11-18: computed is said once per page; the figure keeps a
+        # quiet marker)
+        self.assertIn('data-fquiet="computed"', holcomb)
         self.assertIn("Statewide (all counties).", text(fig))
         self.assertNotIn("Statewide: statewide", text(fig))
         self.assertIn("St. Joseph County portion", m[m.index('id="res-2016g-state-governor"'):i])

@@ -814,13 +814,16 @@ def shade_defs():
 
 def embedded_map(page, ed, shapes: dict, layers: tuple, default_layer: str, area=None, label: str | None = None,
                  hint: str | None = None, legend=None, defs=None, extra_cls: str = "", controls=None,
-                 back_cls: str = "cmap-s cmap-township cmap-back-s", attrs: dict | None = None, extra=None) -> Markup:
+                 back_cls: str = "cmap-s cmap-township cmap-back-s", attrs: dict | None = None, extra=None,
+                 side=None) -> Markup:
     """The boundary map limited to some layers, for embedding in another page (places index, Schools page). Same
     component as boundary_map: static/js/map.js gives the panel, touch select-then-open and the tabs. It never reads or
     writes the URL hash (data-hash="off"), so the host page's own #anchors keep working. With one layer the tab bar is
     hidden (cmap-single). area: a government_layers callback (default: the boundary map's facts panel).
     Shaded maps (civic/shading.py) pass their own legend blocks, the hatch defs, controls for the bar above the map,
-    the township background class for the places layer, wrapper attrs and extra markup (JSON blobs) after the map."""
+    the township background class for the places layer, wrapper attrs and extra markup (JSON blobs) after the map.
+    ``side`` (2026-11-18): markup under the panel, in the map's side column (Compare budgets puts the county figure
+    and the map's method note there, beside the map instead of under it)."""
     vb = shapes["viewBox"]
     groups, tabs, data = government_layers(page, ed, shapes, default_layer, area or facts_area(page, ed), back_cls=back_cls,
                                            only=layers)
@@ -844,7 +847,8 @@ def embedded_map(page, ed, shapes: dict, layers: tuple, default_layer: str, area
              h("div", {"class": "cmap-bar"},
                h("div", {"class": "cmap-tabs", "role": "group", "aria-label": "Map layer", "hidden": True}, tabs),
                controls),
-             h("div", {"class": "cmap-grid"}, h("div", {"class": "cmap-stage"}, svg, legend), panel),
+             h("div", {"class": "cmap-grid"}, h("div", {"class": "cmap-stage"}, svg, legend),
+               h("div", {"class": "cmap-side"}, panel, side) if side else panel),
              json_script("cmap-data", data), extra)
 
 

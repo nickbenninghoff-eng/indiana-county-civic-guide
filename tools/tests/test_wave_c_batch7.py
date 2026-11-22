@@ -40,6 +40,7 @@ from civic.pick_one import one_wrap_see_all  # noqa: E402
 from civic.shell import Site  # noqa: E402
 from gov_moved import lands  # noqa: E402
 
+from anchor_fixtures import anchor_fixture  # noqa: E402  (old-anchor fixtures without retired data-block ids)
 FIXTURE = Path(__file__).parent / "fixtures" / "anchors_before_batch7.json"
 ID_RE = re.compile(r'\sid="([^"]+)"')
 LEG, COUNTY, BUDGETS, SCHOOLS = ("state/your-legislators/index.html", "county/index.html",
@@ -117,7 +118,7 @@ class Built(unittest.TestCase):
 
     # ------------------------------------------------------------ anchors, progressive enhancement
     def test_every_old_anchor_lands(self):
-        before = json.loads(FIXTURE.read_text(encoding="utf-8"))["ids"]
+        before = anchor_fixture(FIXTURE)["ids"]
         lost = [(p, i) for p, ids in before.items() for i in ids if not lands(self.html, self.idset, p, i)]
         self.assertEqual(lost, [])
 
